@@ -55,3 +55,6 @@ vercel-env-variables.txt
 
 # n8n workflow JSONs (contain baked-in API keys)
 n8n-workflows/*.json
+
+# Auto-generated design profile
+.design-profile.json

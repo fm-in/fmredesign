@@ -41,6 +41,9 @@ export const viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://freakingminds.in'),
+  alternates: {
+    canonical: '/',
+  },
   title: {
     default: "Freaking Minds - Creative Marketing Agency | Strategy. Design. Growth.",
     template: "%s | Freaking Minds",
@@ -176,6 +179,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${instrument.variable}`}>
       <head>
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-WRBTEE11SH"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WRBTEE11SH');`,
+          }}
+        />
         <script
           src="https://observatory.goodmantech.co/api/pixel/proj_freaking-minds_misvd05m"
           async

@@ -312,7 +312,7 @@ interface TalentApprovedData {
 
 export function talentApprovedEmail(data: TalentApprovedData): { subject: string; html: string } {
   const profileUrl = `https://freakingminds.in/talent/${data.profileSlug}`;
-  const portalUrl = `https://freakingminds.in/talent/${data.profileSlug}/portal`;
+  const portalUrl = `https://freakingminds.in/creativeminds/portal/${data.profileSlug}`;
 
   // Login credentials section (only if tempPassword is provided)
   const credentialsSection = data.tempPassword && data.portalEmail ? `
