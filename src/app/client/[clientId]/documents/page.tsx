@@ -36,6 +36,8 @@ interface Document {
   fileType: string;
   fileSize: number;
   category: string;
+  projectId: string | null;
+  projectName: string | null;
   uploadedBy: string;
   uploadedByName: string;
   driveWebViewLink: string | null;
@@ -367,10 +369,15 @@ export default function ClientDocumentsPage() {
                     {doc.description && (
                       <p className="text-sm text-fm-neutral-600 mt-1 line-clamp-2">{doc.description}</p>
                     )}
-                    <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center flex-wrap gap-1.5 mt-2">
                       <Badge className={getCategoryColor(doc.category)} variant="secondary">
                         {doc.category === 'client_upload' ? 'My Upload' : doc.category}
                       </Badge>
+                      {doc.projectName && (
+                        <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200" variant="secondary">
+                          {doc.projectName}
+                        </Badge>
+                      )}
                       {doc.fileSize > 0 && (
                         <span className="text-xs text-fm-neutral-500">{formatFileSize(doc.fileSize)}</span>
                       )}

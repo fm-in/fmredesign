@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, MessageCircle, ArrowRight, ChevronDown, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { CalButton } from "@/components/ui/CalButton";
 
 const contactInfo = [
   {
@@ -140,10 +141,10 @@ export default function ContactPage() {
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="tel:+919833257659" className="v2-btn v2-btn-primary">
+              <CalButton calLink="fm-in/15min" className="v2-btn v2-btn-primary">
                 <Phone className="w-5 h-5" />
                 Schedule a Call
-              </Link>
+              </CalButton>
               <Link href="#contact-form" className="v2-btn v2-btn-secondary">
                 Get Instant Quote
               </Link>

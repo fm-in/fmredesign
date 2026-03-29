@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const clientId = searchParams.get('clientId');
   const category = searchParams.get('category');
+  const projectId = searchParams.get('projectId');
 
   if (!clientId) {
     return ApiResponse.validationError('clientId is required');
@@ -54,7 +55,26 @@ export async function GET(request: NextRequest) {
     query = query.eq('category', category);
   }
 
+  if (projectId) {
+    query = query.eq('project_id', projectId);
+  }
+
   const { data: documents, error } = await query;
+
+  // Enrich with project names
+  if (documents?.length) {
+    const projectIds = [...new Set(documents.filter(d => d.project_id).map(d => d.project_id))];
+    if (projectIds.length > 0) {
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id, name')
+        .in('id', projectIds);
+      const projectMap = new Map((projects || []).map(p => [p.id, p.name]));
+      documents.forEach(d => {
+        if (d.project_id) d.project_name = projectMap.get(d.project_id) || null;
+      });
+    }
+  }
 
   if (error) {
     console.error('Documents query error:', error);
@@ -99,6 +119,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const clientId = formData.get('clientId') as string | null;
+    const projectId = (formData.get('projectId') as string) || null;
     const category = (formData.get('category') as DocumentCategory) || 'general';
     const description = (formData.get('description') as string) || '';
     const clientVisible = formData.get('clientVisible') !== 'false';
@@ -182,6 +203,7 @@ export async function POST(request: NextRequest) {
       .from('client_documents')
       .insert({
         client_id: clientId,
+        project_id: projectId,
         name: file.name,
         description,
         file_url: uploadResult.webViewLink || '',
@@ -255,7 +277,7 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, name, description, category, clientVisible, isPublic } = body;
+    const { id, name, description, category, clientVisible, isPublic, projectId } = body;
 
     if (!id) {
       return ApiResponse.validationError('id is required');
@@ -269,6 +291,7 @@ export async function PUT(request: NextRequest) {
     if (category !== undefined) updates.category = category;
     if (clientVisible !== undefined) updates.client_visible = clientVisible;
     if (isPublic !== undefined) updates.is_public = isPublic;
+    if (projectId !== undefined) updates.project_id = projectId || null;
 
     const { data: doc, error } = await supabase
       .from('client_documents')

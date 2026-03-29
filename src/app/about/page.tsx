@@ -4,6 +4,7 @@ import { ArrowRight, Users, Target, Award, Heart, Lightbulb, Star } from "lucide
 import Image from "next/image";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { CalButton } from "@/components/ui/CalButton";
 
 const values = [
   {
@@ -198,9 +199,9 @@ export default function AboutPage() {
                 Start a Conversation
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link href="/contact" className="v2-btn v2-btn-outline">
+              <CalButton calLink="fm-in/15min" className="v2-btn v2-btn-outline">
                 Schedule a Call
-              </Link>
+              </CalButton>
             </div>
           </div>
         </div>

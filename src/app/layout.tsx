@@ -189,6 +189,10 @@ export default function RootLayout({
           }}
         />
         <script
+          async
+          src="https://cal.com/embed/embed.js"
+        />
+        <script
           src="https://observatory.goodmantech.co/api/pixel/proj_freaking-minds_misvd05m"
           async
         />

@@ -3,6 +3,7 @@
 import { ArrowRight, Award, Target } from "lucide-react";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { CalButton } from "@/components/ui/CalButton";
 
 // Portfolio Sections
 import { PortfolioGridSection } from "@/components/sections/PortfolioGridSection";
@@ -85,9 +86,9 @@ export default function WorkPage() {
                 Start Your Project
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link href="/contact" className="v2-btn v2-btn-outline">
+              <CalButton calLink="fm-in/30min" className="v2-btn v2-btn-outline">
                 Schedule Discovery Call
-              </Link>
+              </CalButton>
             </div>
           </div>
         </div>

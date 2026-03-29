@@ -15,6 +15,8 @@ export type DocumentCategory =
 export interface DocumentRecord {
   id: string;
   clientId: string;
+  projectId: string | null;
+  projectName: string | null;
   name: string;
   description: string;
   fileUrl: string;
@@ -78,6 +80,8 @@ export function transformDocumentRow(doc: Record<string, unknown>): DocumentReco
   return {
     id: doc.id as string,
     clientId: doc.client_id as string,
+    projectId: (doc.project_id as string) || null,
+    projectName: (doc.project_name as string) || null,
     name: doc.name as string,
     description: (doc.description as string) || '',
     fileUrl: (doc.file_url as string) || '',

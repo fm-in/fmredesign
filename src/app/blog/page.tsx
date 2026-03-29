@@ -5,6 +5,7 @@ import { ArrowRight, Search, TrendingUp, Lightbulb, Target, BookOpen, Star, Cloc
 import Link from "next/link";
 import Image from "next/image";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { CalButton } from "@/components/ui/CalButton";
 import { blogPosts, getAllCategories, getAllTags } from '@/lib/blog-data';
 
 const categoryGradients: Record<string, string> = {
@@ -388,9 +389,9 @@ export default function BlogPage() {
                 Get Expert Marketing Help
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link href="/contact" className="v2-btn v2-btn-outline">
+              <CalButton calLink="fm-in/15min" className="v2-btn v2-btn-outline">
                 Schedule a Call
-              </Link>
+              </CalButton>
             </div>
           </div>
         </div>

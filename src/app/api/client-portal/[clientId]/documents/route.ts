@@ -52,11 +52,31 @@ export async function GET(
       query = query.eq('category', category);
     }
 
+    const projectId = searchParams.get('projectId');
+    if (projectId) {
+      query = query.eq('project_id', projectId);
+    }
+
     const { data: documents, error } = await query;
 
     if (error) {
       console.error('Supabase documents query error:', error);
       return NextResponse.json({ success: true, data: [], total: 0 });
+    }
+
+    // Enrich with project names
+    if (documents?.length) {
+      const pIds = [...new Set(documents.filter(d => d.project_id).map(d => d.project_id))];
+      if (pIds.length > 0) {
+        const { data: projects } = await supabaseAdmin
+          .from('projects')
+          .select('id, name')
+          .in('id', pIds);
+        const pMap = new Map((projects || []).map(p => [p.id, p.name]));
+        documents.forEach(d => {
+          if (d.project_id) d.project_name = pMap.get(d.project_id) || null;
+        });
+      }
     }
 
     // Get storage info

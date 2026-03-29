@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -17,10 +17,16 @@ import { Upload, X, FileText, AlertCircle, CheckCircle, Loader2 } from 'lucide-r
 import { DOCUMENT_CATEGORIES } from '@/lib/document-types';
 import type { DocumentCategory } from '@/lib/document-types';
 
+interface ClientProject {
+  id: string;
+  name: string;
+}
+
 interface PendingFile {
   file: File;
   category: DocumentCategory;
   description: string;
+  projectId: string;
   clientVisible: boolean;
   isPublic: boolean;
   status: 'pending' | 'uploading' | 'done' | 'error';
@@ -56,13 +62,27 @@ export function UploadModal({
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [projects, setProjects] = useState<ClientProject[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && clientId) {
+      fetch(`/api/projects?clientId=${clientId}`)
+        .then(res => res.json())
+        .then(data => {
+          const items = Array.isArray(data) ? data : data.data || [];
+          setProjects(items.map((p: Record<string, string>) => ({ id: p.id, name: p.name })));
+        })
+        .catch(() => setProjects([]));
+    }
+  }, [open, clientId]);
 
   const addFiles = useCallback((fileList: FileList | File[]) => {
     const newFiles: PendingFile[] = Array.from(fileList).map((file) => ({
       file,
       category: 'general' as DocumentCategory,
       description: '',
+      projectId: '',
       clientVisible: true,
       isPublic: false,
       status: 'pending' as const,
@@ -109,6 +129,7 @@ export function UploadModal({
         formData.append('description', pf.description);
         formData.append('clientVisible', String(pf.clientVisible));
         formData.append('isPublic', String(pf.isPublic));
+        if (pf.projectId) formData.append('projectId', pf.projectId);
 
         const xhr = new XMLHttpRequest();
         await new Promise<void>((resolve, reject) => {
@@ -264,12 +285,22 @@ export function UploadModal({
                         </option>
                       ))}
                     </select>
+                    <select
+                      value={pf.projectId}
+                      onChange={(e) => updateFile(index, { projectId: e.target.value })}
+                      className="text-sm px-2 py-1.5 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                    >
+                      <option value="">No project (general)</option>
+                      {projects.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
                     <input
                       type="text"
                       placeholder="Description (optional)"
                       value={pf.description}
                       onChange={(e) => updateFile(index, { description: e.target.value })}
-                      className="text-sm px-2 py-1.5 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700"
+                      className="text-sm px-2 py-1.5 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 sm:col-span-2"
                     />
                     <label className="flex items-center gap-2 text-sm text-fm-neutral-700">
                       <input
