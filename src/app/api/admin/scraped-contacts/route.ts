@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     // Compute stats from unfiltered data
     const { data: allData, error: statsError } = await supabase
       .from('scraped_contacts')
-      .select('status, source_platform, source_file, email, phone, mobile');
+      .select('status, source_platform, source_file, email, phone, mobile, website, social_links, notes');
     if (statsError) throw statsError;
 
     const sourceFiles = new Set<string>();
@@ -122,12 +122,25 @@ export async function GET(request: NextRequest) {
       byStatus: {} as Record<string, number>,
       bySource: {} as Record<string, number>,
       sourceFiles: [] as string[],
+      noWebsite: 0,
+      noSocial: 0,
+      noEmail: 0,
+      priorityHigh: 0,
+      priorityMedium: 0,
+      priorityLow: 0,
     };
 
     for (const row of allData || []) {
       stats.byStatus[row.status as string] = (stats.byStatus[row.status as string] || 0) + 1;
       stats.bySource[row.source_platform as string] = (stats.bySource[row.source_platform as string] || 0) + 1;
       if (row.source_file) sourceFiles.add(row.source_file as string);
+      if (!row.website) stats.noWebsite++;
+      if (!row.social_links) stats.noSocial++;
+      if (!row.email) stats.noEmail++;
+      const notes = (row.notes as string) || '';
+      if (notes.includes('PRIORITY: HIGH')) stats.priorityHigh++;
+      else if (notes.includes('PRIORITY: MEDIUM')) stats.priorityMedium++;
+      else if (notes.includes('PRIORITY: LOW')) stats.priorityLow++;
     }
     stats.sourceFiles = [...sourceFiles].sort();
 

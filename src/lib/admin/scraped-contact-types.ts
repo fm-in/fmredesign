@@ -54,6 +54,37 @@ export interface ScrapedContactStats {
   byStatus: Record<ScrapedContactStatus, number>;
   bySource: Record<string, number>;
   sourceFiles?: string[];
+  noWebsite?: number;
+  noSocial?: number;
+  noEmail?: number;
+  priorityHigh?: number;
+  priorityMedium?: number;
+  priorityLow?: number;
+}
+
+/** Parse the structured notes field into priority, gaps, and recommended services */
+export function parseContactNotes(notes: string): {
+  priority: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+  gaps: string[];
+  services: string[];
+} {
+  const result: { priority: 'HIGH' | 'MEDIUM' | 'LOW' | null; gaps: string[]; services: string[] } = {
+    priority: null,
+    gaps: [],
+    services: [],
+  };
+  if (!notes) return result;
+
+  const priorityMatch = notes.match(/PRIORITY:\s*(HIGH|MEDIUM|LOW)/);
+  if (priorityMatch) result.priority = priorityMatch[1] as 'HIGH' | 'MEDIUM' | 'LOW';
+
+  const gapsMatch = notes.match(/GAPS:\s*([^|]+)/);
+  if (gapsMatch) result.gaps = gapsMatch[1].split(',').map(g => g.trim()).filter(Boolean);
+
+  const servicesMatch = notes.match(/RECOMMENDED SERVICES:\s*(.+?)(?:\||$)/);
+  if (servicesMatch) result.services = servicesMatch[1].split('|').map(s => s.trim()).filter(Boolean);
+
+  return result;
 }
 
 export const STATUS_OPTIONS: { value: ScrapedContactStatus; label: string }[] = [
