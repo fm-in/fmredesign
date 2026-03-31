@@ -47,6 +47,8 @@ export interface UseScrapedContactsReturn {
   updateNotes: (contactId: string, notes: string) => Promise<void>;
   updateProjectTag: (contactId: string, projectTag: ProjectTag) => Promise<void>;
   updateAssignedTo: (contactId: string, assignedTo: string) => Promise<void>;
+  bulkAssign: (ids: string[], assignedTo: string) => Promise<void>;
+  bulkSetProjectTag: (ids: string[], projectTag: ProjectTag) => Promise<void>;
   deleteContacts: (ids: string[]) => Promise<void>;
   importContacts: (contacts: Record<string, unknown>[], sourcePlatform: string, sourceFile?: string) => Promise<{ inserted: number; skipped: number }>;
   exportContacts: () => void;
@@ -204,6 +206,57 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
     [selectedContact]
   );
 
+  const bulkAssign = useCallback(
+    async (ids: string[], assignedTo: string) => {
+      try {
+        await Promise.all(
+          ids.map((id) =>
+            fetch('/api/admin/scraped-contacts', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id, assignedTo }),
+            })
+          )
+        );
+        setContacts((prev) =>
+          prev.map((c) => (ids.includes(c.id) ? { ...c, assignedTo } : c))
+        );
+        setSelectedContacts(new Set());
+        adminToast.success(`Assigned ${ids.length} contact(s) to ${assignedTo}`);
+      } catch (error) {
+        console.error('Error bulk assigning:', error);
+        adminToast.error('Failed to bulk assign');
+      }
+    },
+    []
+  );
+
+  const bulkSetProjectTag = useCallback(
+    async (ids: string[], projectTag: ProjectTag) => {
+      try {
+        await Promise.all(
+          ids.map((id) =>
+            fetch('/api/admin/scraped-contacts', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id, projectTag }),
+            })
+          )
+        );
+        setContacts((prev) =>
+          prev.map((c) => (ids.includes(c.id) ? { ...c, projectTag } : c))
+        );
+        setSelectedContacts(new Set());
+        const label = projectTag || 'Unassigned';
+        adminToast.success(`Tagged ${ids.length} contact(s) as ${label}`);
+      } catch (error) {
+        console.error('Error bulk tagging:', error);
+        adminToast.error('Failed to bulk tag');
+      }
+    },
+    []
+  );
+
   const deleteContacts = useCallback(
     async (ids: string[]) => {
       try {
@@ -337,6 +390,8 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
     updateNotes,
     updateProjectTag,
     updateAssignedTo,
+    bulkAssign,
+    bulkSetProjectTag,
     deleteContacts,
     importContacts,
     exportContacts,

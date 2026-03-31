@@ -10,11 +10,14 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { Download, Upload, Database, Bot } from 'lucide-react';
+import { Download, Upload, Database, Bot, UserPlus, Tag } from 'lucide-react';
 import { DashboardButton, MetricCardSkeleton } from '@/design-system';
 import { PageHeader } from '@/components/ui/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SectionErrorBoundary } from '@/components/admin/SectionErrorBoundary';
+import { TeamMemberSelect } from '@/components/admin/TeamMemberSelect';
+import { PROJECT_TAG_OPTIONS } from '@/lib/admin/scraped-contact-types';
+import type { ProjectTag } from '@/lib/admin/scraped-contact-types';
 import {
   ScrapedContactAnalytics,
   ScrapedContactFilters,
@@ -52,6 +55,8 @@ export default function ScrapedContactsDashboard() {
     updateNotes,
     updateProjectTag,
     updateAssignedTo,
+    bulkAssign,
+    bulkSetProjectTag,
     deleteContacts,
     importContacts,
     exportContacts,
@@ -88,17 +93,45 @@ export default function ScrapedContactsDashboard() {
         actions={
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {selectedContacts.size > 0 && (
-              <DashboardButton
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  if (confirm(`Delete ${selectedContacts.size} selected contact(s)?`)) {
-                    deleteContacts(Array.from(selectedContacts));
-                  }
-                }}
-              >
-                Delete ({selectedContacts.size})
-              </DashboardButton>
+              <>
+                <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1">
+                  <UserPlus className="w-3.5 h-3.5 text-emerald-600" />
+                  <TeamMemberSelect
+                    value=""
+                    onChange={(name) => {
+                      if (name) bulkAssign(Array.from(selectedContacts), name);
+                    }}
+                    placeholder={`Assign ${selectedContacts.size} to...`}
+                    className="text-xs border-0 bg-transparent text-emerald-700 focus:ring-0 py-0 pl-1 pr-6"
+                  />
+                </div>
+                <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-lg px-2 py-1">
+                  <Tag className="w-3.5 h-3.5 text-blue-600" />
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) bulkSetProjectTag(Array.from(selectedContacts), e.target.value as ProjectTag);
+                    }}
+                    className="text-xs border-0 bg-transparent text-blue-700 focus:ring-0 py-0 pl-1 pr-6"
+                  >
+                    <option value="">Tag {selectedContacts.size} as...</option>
+                    {PROJECT_TAG_OPTIONS.map((p) => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <DashboardButton
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm(`Delete ${selectedContacts.size} selected contact(s)?`)) {
+                      deleteContacts(Array.from(selectedContacts));
+                    }
+                  }}
+                >
+                  Delete ({selectedContacts.size})
+                </DashboardButton>
+              </>
             )}
             <DashboardButton variant="secondary" size="sm" onClick={exportContacts}>
               <Download className="w-4 h-4" />
