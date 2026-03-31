@@ -46,6 +46,7 @@ export interface UseScrapedContactsReturn {
   updateStatus: (contactId: string, status: ScrapedContactStatus) => Promise<void>;
   updateNotes: (contactId: string, notes: string) => Promise<void>;
   updateProjectTag: (contactId: string, projectTag: ProjectTag) => Promise<void>;
+  updateAssignedTo: (contactId: string, assignedTo: string) => Promise<void>;
   deleteContacts: (ids: string[]) => Promise<void>;
   importContacts: (contacts: Record<string, unknown>[], sourcePlatform: string, sourceFile?: string) => Promise<{ inserted: number; skipped: number }>;
   exportContacts: () => void;
@@ -73,6 +74,7 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
       if (filters.sourcePlatform?.length) params.set('sourcePlatform', filters.sourcePlatform.join(','));
       if (filters.sourceFile) params.set('sourceFile', filters.sourceFile);
       if (filters.projectTag) params.set('projectTag', filters.projectTag);
+      if (filters.assignedTo) params.set('assignedTo', filters.assignedTo);
       if (filters.country) params.set('country', filters.country);
       if (filters.hasContact === false) params.set('hasContact', 'false');
       if (searchQuery) params.set('search', searchQuery);
@@ -171,6 +173,32 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
       } catch (error) {
         console.error('Error updating project tag:', error);
         adminToast.error('Failed to update project');
+      }
+    },
+    [selectedContact]
+  );
+
+  const updateAssignedTo = useCallback(
+    async (contactId: string, assignedTo: string) => {
+      try {
+        const response = await fetch('/api/admin/scraped-contacts', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: contactId, assignedTo }),
+        });
+
+        if (response.ok) {
+          setContacts((prev) =>
+            prev.map((c) => (c.id === contactId ? { ...c, assignedTo } : c))
+          );
+          if (selectedContact?.id === contactId) {
+            setSelectedContact((prev) => prev ? { ...prev, assignedTo } : null);
+          }
+          adminToast.success('Assigned');
+        }
+      } catch (error) {
+        console.error('Error assigning contact:', error);
+        adminToast.error('Failed to assign');
       }
     },
     [selectedContact]
@@ -280,6 +308,7 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
     updateStatus,
     updateNotes,
     updateProjectTag,
+    updateAssignedTo,
     deleteContacts,
     importContacts,
     exportContacts,

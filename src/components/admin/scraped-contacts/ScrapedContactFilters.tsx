@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
 import type { ScrapedContactFilters as FiltersType, SourcePlatform, ProjectTag } from '@/lib/admin/scraped-contact-types';
 import { SOURCE_OPTIONS, PROJECT_TAG_OPTIONS } from '@/lib/admin/scraped-contact-types';
+import { TeamMemberSelect } from '@/components/admin/TeamMemberSelect';
 
 interface ScrapedContactFiltersProps {
   searchQuery: string;
@@ -137,6 +138,13 @@ export function ScrapedContactFilters({
               </option>
             ))}
           </Select>
+
+          <TeamMemberSelect
+            value={filters.assignedTo || ''}
+            onChange={(name) => onFiltersChange({ ...filters, assignedTo: name || undefined })}
+            placeholder="All Team"
+            className="text-sm px-3 py-1.5 border border-fm-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fm-magenta-700 bg-white"
+          />
 
           <div className="ml-auto">
             <Select

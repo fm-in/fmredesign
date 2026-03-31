@@ -33,6 +33,7 @@ export interface ScrapedContact {
   externalId: string | null;
   status: ScrapedContactStatus;
   projectTag: ProjectTag;
+  assignedTo: string;
   notes: string;
   tags: string[];
   linkedLeadId: string | null;
@@ -45,6 +46,7 @@ export interface ScrapedContactFilters {
   sourcePlatform?: SourcePlatform[];
   sourceFile?: string;
   projectTag?: ProjectTag;
+  assignedTo?: string;
   hasContact?: boolean;
   country?: string;
   searchQuery?: string;

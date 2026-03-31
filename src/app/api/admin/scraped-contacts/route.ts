@@ -37,6 +37,7 @@ function transformRow(row: Record<string, unknown>) {
     externalId: row.external_id,
     status: row.status,
     projectTag: row.project_tag || '',
+    assignedTo: row.assigned_to || '',
     notes: row.notes,
     tags: row.tags || [],
     linkedLeadId: row.linked_lead_id,
@@ -59,6 +60,7 @@ export async function GET(request: NextRequest) {
     const sourceFilter = searchParams.get('sourcePlatform');
     const sourceFileFilter = searchParams.get('sourceFile');
     const projectTagFilter = searchParams.get('projectTag');
+    const assignedToFilter = searchParams.get('assignedTo');
     const hasContact = searchParams.get('hasContact');
     const countryFilter = searchParams.get('country');
     const searchQuery = searchParams.get('search');
@@ -93,6 +95,9 @@ export async function GET(request: NextRequest) {
     }
     if (projectTagFilter) {
       query = query.eq('project_tag', projectTagFilter);
+    }
+    if (assignedToFilter) {
+      query = query.eq('assigned_to', assignedToFilter);
     }
 
     // Default filter: only contacts with email or phone
@@ -288,6 +293,7 @@ export async function PUT(request: NextRequest) {
     if (updateData.notes !== undefined) updates.notes = updateData.notes;
     if (updateData.tags !== undefined) updates.tags = updateData.tags;
     if (updateData.projectTag !== undefined) updates.project_tag = updateData.projectTag;
+    if (updateData.assignedTo !== undefined) updates.assigned_to = updateData.assignedTo;
     if (updateData.linkedLeadId !== undefined) updates.linked_lead_id = updateData.linkedLeadId;
 
     const supabase = getSupabaseAdmin();

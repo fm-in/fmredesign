@@ -51,6 +51,7 @@ export default function ScrapedContactsDashboard() {
     updateStatus,
     updateNotes,
     updateProjectTag,
+    updateAssignedTo,
     deleteContacts,
     importContacts,
     exportContacts,
@@ -156,6 +157,7 @@ export default function ScrapedContactsDashboard() {
           onUpdateStatus={updateStatus}
           onUpdateNotes={updateNotes}
           onUpdateProjectTag={updateProjectTag}
+          onUpdateAssignedTo={updateAssignedTo}
           onImport={() => setShowImportModal(true)}
           searchQuery={searchQuery}
           filters={filters}

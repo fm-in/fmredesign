@@ -31,6 +31,7 @@ import type {
   ProjectTag,
 } from '@/lib/admin/scraped-contact-types';
 import { STATUS_OPTIONS, SOURCE_OPTIONS, PROJECT_TAG_OPTIONS, parseContactNotes } from '@/lib/admin/scraped-contact-types';
+import { TeamMemberSelect } from '@/components/admin/TeamMemberSelect';
 
 interface ScrapedContactTableProps {
   contacts: ScrapedContact[];
@@ -43,6 +44,7 @@ interface ScrapedContactTableProps {
   onUpdateStatus: (contactId: string, status: ScrapedContactStatus) => void;
   onUpdateNotes: (contactId: string, notes: string) => void;
   onUpdateProjectTag: (contactId: string, projectTag: ProjectTag) => void;
+  onUpdateAssignedTo: (contactId: string, assignedTo: string) => void;
   onImport: () => void;
   searchQuery: string;
   filters: ScrapedContactFilters;
@@ -140,6 +142,17 @@ function ProjectTagBadge({ tag }: { tag: ProjectTag }) {
   );
 }
 
+function AssignedBadge({ name }: { name: string }) {
+  if (!name) return null;
+  const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" title={`Assigned to ${name}`}>
+      <span className="w-3.5 h-3.5 rounded-full bg-emerald-200 text-emerald-800 flex items-center justify-center text-[8px] font-bold">{initials}</span>
+      {name.split(' ')[0]}
+    </span>
+  );
+}
+
 function ServiceTags({ tags }: { tags: string[] }) {
   if (tags.length === 0) return null;
   return (
@@ -171,6 +184,7 @@ export function ScrapedContactTable({
   onUpdateStatus,
   onUpdateNotes,
   onUpdateProjectTag,
+  onUpdateAssignedTo,
   onImport,
   searchQuery,
   filters,
@@ -263,10 +277,11 @@ export function ScrapedContactTable({
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div>
-                          <div className="text-sm font-medium text-fm-neutral-900 flex items-center gap-1.5">
+                          <div className="text-sm font-medium text-fm-neutral-900 flex items-center gap-1.5 flex-wrap">
                             {contact.firstName} {contact.lastName}
                             <PriorityBadge priority={parsed.priority} />
                             <ProjectTagBadge tag={contact.projectTag} />
+                            <AssignedBadge name={contact.assignedTo} />
                           </div>
                           {contact.companyName && (
                             <div className="text-xs text-fm-neutral-500">{contact.companyName}</div>
@@ -350,6 +365,7 @@ export function ScrapedContactTable({
                       {contact.firstName} {contact.lastName}
                       <PriorityBadge priority={parsed.priority} />
                       <ProjectTagBadge tag={contact.projectTag} />
+                      <AssignedBadge name={contact.assignedTo} />
                     </h3>
                     <p className="text-sm text-fm-neutral-600">{contact.companyName || 'No company'}</p>
                   </div>
@@ -593,6 +609,15 @@ export function ScrapedContactTable({
                         <option key={p.value} value={p.value}>{p.label}</option>
                       ))}
                     </select>
+                  </div>
+                  <div>
+                    <span className="text-fm-neutral-500 block text-xs">Assigned To</span>
+                    <TeamMemberSelect
+                      value={selectedContact.assignedTo || ''}
+                      onChange={(name) => onUpdateAssignedTo(selectedContact.id, name)}
+                      placeholder="Unassigned"
+                      className="text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                    />
                   </div>
                   {selectedContact.sourceFile && (
                     <div>

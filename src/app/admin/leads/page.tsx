@@ -45,6 +45,7 @@ export default function LeadDashboard() {
     setShowAddLead,
     loadDashboardData,
     updateLeadStatus,
+    updateAssignedTo,
     convertToClient,
     exportLeads,
     formatStatus,
@@ -126,6 +127,7 @@ export default function LeadDashboard() {
           selectedLead={selectedLead}
           onSelectLead={setSelectedLead}
           onUpdateStatus={updateLeadStatus}
+          onUpdateAssignedTo={updateAssignedTo}
           onConvertToClient={convertToClient}
           onAddLead={() => setShowAddLead(true)}
           searchQuery={searchQuery}

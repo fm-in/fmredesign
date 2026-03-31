@@ -21,6 +21,7 @@ import { DashboardButton } from '@/design-system';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { LeadProfile, LeadStatus, LeadFilters as LeadFiltersType } from '@/lib/admin/lead-types';
+import { TeamMemberSelect } from '@/components/admin/TeamMemberSelect';
 
 interface LeadTableProps {
   leads: LeadProfile[];
@@ -31,6 +32,7 @@ interface LeadTableProps {
   selectedLead: LeadProfile | null;
   onSelectLead: (lead: LeadProfile | null) => void;
   onUpdateStatus: (leadId: string, status: LeadStatus) => void;
+  onUpdateAssignedTo: (leadId: string, assignedTo: string) => void;
   onConvertToClient: (leadId: string) => void;
   onAddLead: () => void;
   searchQuery: string;
@@ -96,6 +98,7 @@ export function LeadTable({
   selectedLead,
   onSelectLead,
   onUpdateStatus,
+  onUpdateAssignedTo,
   onConvertToClient,
   onAddLead,
   searchQuery,
@@ -494,7 +497,7 @@ export function LeadTable({
                   </div>
                 </div>
                 <hr className="border-fm-neutral-200" />
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                   <div>
                     <span className="text-fm-neutral-500 block">Status</span>
                     <StatusBadge status={selectedLead.status}>
@@ -510,6 +513,15 @@ export function LeadTable({
                   <div>
                     <span className="text-fm-neutral-500 block">Score</span>
                     <p className="font-bold text-fm-neutral-900">{selectedLead.leadScore}/100</p>
+                  </div>
+                  <div>
+                    <span className="text-fm-neutral-500 block text-xs mb-1">Assigned To</span>
+                    <TeamMemberSelect
+                      value={selectedLead.assignedTo || ''}
+                      onChange={(name) => onUpdateAssignedTo(selectedLead.id, name)}
+                      placeholder="Unassigned"
+                      className="text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                    />
                   </div>
                 </div>
                 <div className="text-xs text-fm-neutral-500">
