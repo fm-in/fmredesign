@@ -254,27 +254,55 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
 
   const exportContacts = useCallback(() => {
     if (contacts.length === 0) return;
+
+    // Import parseContactNotes inline to avoid circular deps
+    const parseNotes = (notes: string) => {
+      const r: { priority: string; gaps: string; services: string } = { priority: '', gaps: '', services: '' };
+      if (!notes) return r;
+      const pm = notes.match(/PRIORITY:\s*(HIGH|MEDIUM|LOW)/);
+      if (pm) r.priority = pm[1];
+      const gm = notes.match(/GAPS:\s*([^|]+)/);
+      if (gm) r.gaps = gm[1].trim();
+      const sm = notes.match(/RECOMMENDED SERVICES:\s*(.+?)(?:\||$)/);
+      if (sm) r.services = sm[1].trim();
+      return r;
+    };
+
     const headers = [
       'First Name', 'Last Name', 'Email', 'Phone', 'Mobile', 'Company',
-      'Category', 'City', 'State', 'Country', 'Website', 'Source', 'Status', 'Created',
+      'Category', 'City', 'State', 'Country', 'Website', 'Social Links',
+      'Google Maps', 'Source', 'Status', 'Project', 'Assigned To',
+      'Priority', 'Gaps', 'Recommended Services', 'Tags', 'Notes', 'Created',
     ];
-    const rows = contacts.map((c) => [
-      c.firstName,
-      c.lastName,
-      c.email || '',
-      c.phone || '',
-      c.mobile || '',
-      c.companyName || '',
-      c.category || '',
-      c.city || '',
-      c.state || '',
-      c.country || '',
-      c.website || '',
-      c.sourcePlatform,
-      c.status,
-      new Date(c.createdAt).toLocaleDateString(),
-    ]);
-    const csv = [headers.join(','), ...rows.map((r) => r.map((v) => `"${v}"`).join(','))].join('\n');
+    const rows = contacts.map((c) => {
+      const parsed = parseNotes(c.notes);
+      return [
+        c.firstName,
+        c.lastName,
+        c.email || '',
+        c.phone || '',
+        c.mobile || '',
+        c.companyName || '',
+        c.category || '',
+        c.city || '',
+        c.state || '',
+        c.country || '',
+        c.website || '',
+        c.socialLinks || '',
+        c.profileUrl || '',
+        c.sourcePlatform,
+        c.status,
+        c.projectTag || '',
+        c.assignedTo || '',
+        parsed.priority,
+        parsed.gaps,
+        parsed.services,
+        (c.tags || []).join('; '),
+        c.notes.replace(/PRIORITY:.*?\|/g, '').replace(/GAPS:.*?\|/g, '').replace(/RECOMMENDED SERVICES:.*$/g, '').trim(),
+        new Date(c.createdAt).toLocaleDateString(),
+      ];
+    });
+    const csv = [headers.join(','), ...rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
