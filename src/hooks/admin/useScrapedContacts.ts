@@ -13,6 +13,7 @@ import type {
   ScrapedContactStatus,
   ScrapedContactFilters,
   ScrapedContactStats,
+  ProjectTag,
 } from '@/lib/admin/scraped-contact-types';
 
 export interface UseScrapedContactsReturn {
@@ -44,6 +45,7 @@ export interface UseScrapedContactsReturn {
   loadData: () => Promise<void>;
   updateStatus: (contactId: string, status: ScrapedContactStatus) => Promise<void>;
   updateNotes: (contactId: string, notes: string) => Promise<void>;
+  updateProjectTag: (contactId: string, projectTag: ProjectTag) => Promise<void>;
   deleteContacts: (ids: string[]) => Promise<void>;
   importContacts: (contacts: Record<string, unknown>[], sourcePlatform: string, sourceFile?: string) => Promise<{ inserted: number; skipped: number }>;
   exportContacts: () => void;
@@ -70,6 +72,7 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
       if (filters.status?.length) params.set('status', filters.status.join(','));
       if (filters.sourcePlatform?.length) params.set('sourcePlatform', filters.sourcePlatform.join(','));
       if (filters.sourceFile) params.set('sourceFile', filters.sourceFile);
+      if (filters.projectTag) params.set('projectTag', filters.projectTag);
       if (filters.country) params.set('country', filters.country);
       if (filters.hasContact === false) params.set('hasContact', 'false');
       if (searchQuery) params.set('search', searchQuery);
@@ -142,6 +145,32 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
       } catch (error) {
         console.error('Error updating notes:', error);
         adminToast.error('Failed to update notes');
+      }
+    },
+    [selectedContact]
+  );
+
+  const updateProjectTag = useCallback(
+    async (contactId: string, projectTag: ProjectTag) => {
+      try {
+        const response = await fetch('/api/admin/scraped-contacts', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: contactId, projectTag }),
+        });
+
+        if (response.ok) {
+          setContacts((prev) =>
+            prev.map((c) => (c.id === contactId ? { ...c, projectTag } : c))
+          );
+          if (selectedContact?.id === contactId) {
+            setSelectedContact((prev) => prev ? { ...prev, projectTag } : null);
+          }
+          adminToast.success('Project updated');
+        }
+      } catch (error) {
+        console.error('Error updating project tag:', error);
+        adminToast.error('Failed to update project');
       }
     },
     [selectedContact]
@@ -250,6 +279,7 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
     loadData,
     updateStatus,
     updateNotes,
+    updateProjectTag,
     deleteContacts,
     importContacts,
     exportContacts,

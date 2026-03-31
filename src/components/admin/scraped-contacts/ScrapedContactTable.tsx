@@ -28,8 +28,9 @@ import type {
   ScrapedContact,
   ScrapedContactStatus,
   ScrapedContactFilters,
+  ProjectTag,
 } from '@/lib/admin/scraped-contact-types';
-import { STATUS_OPTIONS, SOURCE_OPTIONS, parseContactNotes } from '@/lib/admin/scraped-contact-types';
+import { STATUS_OPTIONS, SOURCE_OPTIONS, PROJECT_TAG_OPTIONS, parseContactNotes } from '@/lib/admin/scraped-contact-types';
 
 interface ScrapedContactTableProps {
   contacts: ScrapedContact[];
@@ -41,6 +42,7 @@ interface ScrapedContactTableProps {
   onSelectContact: (contact: ScrapedContact | null) => void;
   onUpdateStatus: (contactId: string, status: ScrapedContactStatus) => void;
   onUpdateNotes: (contactId: string, notes: string) => void;
+  onUpdateProjectTag: (contactId: string, projectTag: ProjectTag) => void;
   onImport: () => void;
   searchQuery: string;
   filters: ScrapedContactFilters;
@@ -127,6 +129,17 @@ function GapChips({ gaps }: { gaps: string[] }) {
   );
 }
 
+function ProjectTagBadge({ tag }: { tag: ProjectTag }) {
+  if (!tag) return null;
+  const opt = PROJECT_TAG_OPTIONS.find((p) => p.value === tag);
+  if (!opt) return null;
+  return (
+    <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded border ${opt.color}`}>
+      {opt.label}
+    </span>
+  );
+}
+
 function ServiceTags({ tags }: { tags: string[] }) {
   if (tags.length === 0) return null;
   return (
@@ -157,6 +170,7 @@ export function ScrapedContactTable({
   onSelectContact,
   onUpdateStatus,
   onUpdateNotes,
+  onUpdateProjectTag,
   onImport,
   searchQuery,
   filters,
@@ -252,6 +266,7 @@ export function ScrapedContactTable({
                           <div className="text-sm font-medium text-fm-neutral-900 flex items-center gap-1.5">
                             {contact.firstName} {contact.lastName}
                             <PriorityBadge priority={parsed.priority} />
+                            <ProjectTagBadge tag={contact.projectTag} />
                           </div>
                           {contact.companyName && (
                             <div className="text-xs text-fm-neutral-500">{contact.companyName}</div>
@@ -331,9 +346,10 @@ export function ScrapedContactTable({
               <div className="p-4 sm:p-5">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 className="text-base font-semibold text-fm-neutral-900 flex items-center gap-1.5">
+                    <h3 className="text-base font-semibold text-fm-neutral-900 flex items-center gap-1.5 flex-wrap">
                       {contact.firstName} {contact.lastName}
                       <PriorityBadge priority={parsed.priority} />
+                      <ProjectTagBadge tag={contact.projectTag} />
                     </h3>
                     <p className="text-sm text-fm-neutral-600">{contact.companyName || 'No company'}</p>
                   </div>
@@ -564,6 +580,19 @@ export function ScrapedContactTable({
                       value={selectedContact.status}
                       onChange={(status) => onUpdateStatus(selectedContact.id, status)}
                     />
+                  </div>
+                  <div>
+                    <span className="text-fm-neutral-500 block text-xs">Project</span>
+                    <select
+                      value={selectedContact.projectTag || ''}
+                      onChange={(e) => onUpdateProjectTag(selectedContact.id, e.target.value as ProjectTag)}
+                      className="text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                    >
+                      <option value="">Unassigned</option>
+                      {PROJECT_TAG_OPTIONS.map((p) => (
+                        <option key={p.value} value={p.value}>{p.label}</option>
+                      ))}
+                    </select>
                   </div>
                   {selectedContact.sourceFile && (
                     <div>

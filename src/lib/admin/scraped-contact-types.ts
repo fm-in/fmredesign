@@ -5,6 +5,7 @@
 
 export type ScrapedContactStatus = 'new' | 'contacted' | 'converted' | 'invalid' | 'archived';
 export type SourcePlatform = 'bni' | 'linkedin' | 'google_maps' | 'indeed' | 'csv_import' | 'other';
+export type ProjectTag = 'fm' | 'restronaut' | 'goodmantech' | 'cycen' | '';
 
 export interface ScrapedContact {
   id: string;
@@ -31,6 +32,7 @@ export interface ScrapedContact {
   membershipStatus: string | null;
   externalId: string | null;
   status: ScrapedContactStatus;
+  projectTag: ProjectTag;
   notes: string;
   tags: string[];
   linkedLeadId: string | null;
@@ -42,6 +44,7 @@ export interface ScrapedContactFilters {
   status?: ScrapedContactStatus[];
   sourcePlatform?: SourcePlatform[];
   sourceFile?: string;
+  projectTag?: ProjectTag;
   hasContact?: boolean;
   country?: string;
   searchQuery?: string;
@@ -102,4 +105,11 @@ export const SOURCE_OPTIONS: { value: SourcePlatform; label: string }[] = [
   { value: 'indeed', label: 'Indeed' },
   { value: 'csv_import', label: 'CSV Import' },
   { value: 'other', label: 'Other' },
+];
+
+export const PROJECT_TAG_OPTIONS: { value: ProjectTag; label: string; color: string }[] = [
+  { value: 'fm', label: 'Freaking Minds', color: 'bg-fm-magenta-50 text-fm-magenta-700 border-fm-magenta-200' },
+  { value: 'restronaut', label: 'Restronaut', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { value: 'goodmantech', label: 'GoodmanTech', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { value: 'cycen', label: 'Cypher Central', color: 'bg-violet-50 text-violet-700 border-violet-200' },
 ];

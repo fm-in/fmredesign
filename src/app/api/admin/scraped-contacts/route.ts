@@ -36,6 +36,7 @@ function transformRow(row: Record<string, unknown>) {
     membershipStatus: row.membership_status,
     externalId: row.external_id,
     status: row.status,
+    projectTag: row.project_tag || '',
     notes: row.notes,
     tags: row.tags || [],
     linkedLeadId: row.linked_lead_id,
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest) {
     const statusFilter = searchParams.get('status');
     const sourceFilter = searchParams.get('sourcePlatform');
     const sourceFileFilter = searchParams.get('sourceFile');
+    const projectTagFilter = searchParams.get('projectTag');
     const hasContact = searchParams.get('hasContact');
     const countryFilter = searchParams.get('country');
     const searchQuery = searchParams.get('search');
@@ -88,6 +90,9 @@ export async function GET(request: NextRequest) {
     }
     if (sourceFileFilter) {
       query = query.eq('source_file', sourceFileFilter);
+    }
+    if (projectTagFilter) {
+      query = query.eq('project_tag', projectTagFilter);
     }
 
     // Default filter: only contacts with email or phone
@@ -282,6 +287,7 @@ export async function PUT(request: NextRequest) {
     if (updateData.status !== undefined) updates.status = updateData.status;
     if (updateData.notes !== undefined) updates.notes = updateData.notes;
     if (updateData.tags !== undefined) updates.tags = updateData.tags;
+    if (updateData.projectTag !== undefined) updates.project_tag = updateData.projectTag;
     if (updateData.linkedLeadId !== undefined) updates.linked_lead_id = updateData.linkedLeadId;
 
     const supabase = getSupabaseAdmin();

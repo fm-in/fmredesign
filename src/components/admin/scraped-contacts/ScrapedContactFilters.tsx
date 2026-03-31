@@ -9,8 +9,8 @@ import { Search } from 'lucide-react';
 import { DashboardButton, DashboardCard } from '@/design-system';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
-import type { ScrapedContactFilters as FiltersType, SourcePlatform } from '@/lib/admin/scraped-contact-types';
-import { SOURCE_OPTIONS } from '@/lib/admin/scraped-contact-types';
+import type { ScrapedContactFilters as FiltersType, SourcePlatform, ProjectTag } from '@/lib/admin/scraped-contact-types';
+import { SOURCE_OPTIONS, PROJECT_TAG_OPTIONS } from '@/lib/admin/scraped-contact-types';
 
 interface ScrapedContactFiltersProps {
   searchQuery: string;
@@ -120,6 +120,23 @@ export function ScrapedContactFilters({
               ))}
             </Select>
           )}
+
+          <Select
+            value={filters.projectTag || ''}
+            onChange={(e) => {
+              onFiltersChange({
+                ...filters,
+                projectTag: (e.target.value as ProjectTag) || undefined,
+              });
+            }}
+          >
+            <option value="">All Projects</option>
+            {PROJECT_TAG_OPTIONS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </Select>
 
           <div className="ml-auto">
             <Select
