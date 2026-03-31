@@ -17,8 +17,8 @@ import { emitEvent } from '@/lib/events/emitter';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -31,6 +31,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
+    // Non-admin users only see their assigned leads
+    const isAdmin = auth.user.role === 'super_admin' || auth.user.role === 'admin';
+    const myLeadsOnly = !isAdmin;
+
     // Shared filter params
     const statusFilter = searchParams.get('status');
     const priorityFilter = searchParams.get('priority');
@@ -38,7 +42,7 @@ export async function GET(request: NextRequest) {
     const projectTypeFilter = searchParams.get('projectType');
     const budgetRangeFilter = searchParams.get('budgetRange');
     const companySizeFilter = searchParams.get('companySize');
-    const assignedToFilter = searchParams.get('assignedTo');
+    const assignedToFilter = myLeadsOnly ? auth.user.name : searchParams.get('assignedTo');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const searchQuery = searchParams.get('search');

@@ -46,9 +46,9 @@ function transformRow(row: Record<string, unknown>) {
   };
 }
 
-// GET /api/admin/scraped-contacts
+// GET /api/admin/scraped-contacts — admin/super_admin only
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, 'content.read');
+  const auth = await requirePermission(request, 'users.read');
   if ('error' in auth) return auth.error;
 
   try {
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/scraped-contacts — Bulk import
 export async function POST(request: NextRequest) {
-  const auth = await requirePermission(request, 'content.write');
+  const auth = await requirePermission(request, 'users.write');
   if ('error' in auth) return auth.error;
 
   try {
@@ -274,7 +274,7 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/admin/scraped-contacts — Update contact
 export async function PUT(request: NextRequest) {
-  const auth = await requirePermission(request, 'content.write');
+  const auth = await requirePermission(request, 'users.write');
   if ('error' in auth) return auth.error;
 
   try {

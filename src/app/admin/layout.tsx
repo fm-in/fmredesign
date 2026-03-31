@@ -65,7 +65,7 @@ const NAV_PERMISSIONS: Record<string, string> = {
   '/admin/invoices': 'finance.read',
   '/admin/proposals': 'finance.read',
   '/admin/leads': 'clients.read',
-  '/admin/scraped-contacts': 'content.read',
+  '/admin/scraped-contacts': 'users.read',    // Admin/super_admin only
   '/admin/support': 'clients.read',
   '/admin/team': 'users.read',
   '/admin/discovery': 'clients.read',
