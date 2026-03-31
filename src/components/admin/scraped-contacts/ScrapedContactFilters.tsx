@@ -39,10 +39,10 @@ export function ScrapedContactFilters({
 }: ScrapedContactFiltersProps) {
   return (
     <DashboardCard variant="admin" className="p-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        {/* Left side: search + filters */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-          <div className="w-full sm:w-64">
+      <div className="space-y-3">
+        {/* Row 1: Search + View toggle */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
             <Input
               placeholder="Search contacts..."
               value={searchQuery}
@@ -50,8 +50,28 @@ export function ScrapedContactFilters({
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
+          <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1 flex-shrink-0">
+            <DashboardButton
+              variant={viewMode === 'table' ? 'primary' : 'ghost'}
+              size="sm"
+              onClick={() => onViewModeChange('table')}
+              className="text-xs"
+            >
+              Table
+            </DashboardButton>
+            <DashboardButton
+              variant={viewMode === 'cards' ? 'primary' : 'ghost'}
+              size="sm"
+              onClick={() => onViewModeChange('cards')}
+              className="text-xs"
+            >
+              Cards
+            </DashboardButton>
+          </div>
+        </div>
 
-          {/* Has Contact toggle */}
+        {/* Row 2: Filters + Sort */}
+        <div className="flex items-center gap-3 flex-wrap">
           <label className="inline-flex items-center gap-2 text-sm text-fm-neutral-700 cursor-pointer whitespace-nowrap">
             <input
               type="checkbox"
@@ -64,7 +84,6 @@ export function ScrapedContactFilters({
             Has contact info
           </label>
 
-          {/* Source filter */}
           <Select
             value={filters.sourcePlatform?.[0] || ''}
             onChange={(e) => {
@@ -83,7 +102,6 @@ export function ScrapedContactFilters({
             ))}
           </Select>
 
-          {/* Scrape batch filter */}
           {sourceFiles.length > 0 && (
             <Select
               value={filters.sourceFile || ''}
@@ -102,41 +120,21 @@ export function ScrapedContactFilters({
               ))}
             </Select>
           )}
-        </div>
 
-        {/* Right side: sort + view mode */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <Select
-            value={`${sortBy}-${sortDirection}`}
-            onChange={(e) => {
-              const [field, direction] = e.target.value.split('-');
-              onSortChange(field, direction as 'asc' | 'desc');
-            }}
-          >
-            <option value="createdAt-desc">Newest First</option>
-            <option value="createdAt-asc">Oldest First</option>
-            <option value="companyName-asc">Company A-Z</option>
-            <option value="companyName-desc">Company Z-A</option>
-            <option value="country-asc">Country A-Z</option>
-          </Select>
-
-          <div className="flex items-center gap-1 bg-white border border-fm-neutral-200 rounded-lg p-1">
-            <DashboardButton
-              variant={viewMode === 'table' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('table')}
-              className="text-xs"
+          <div className="ml-auto">
+            <Select
+              value={`${sortBy}-${sortDirection}`}
+              onChange={(e) => {
+                const [field, direction] = e.target.value.split('-');
+                onSortChange(field, direction as 'asc' | 'desc');
+              }}
             >
-              Table
-            </DashboardButton>
-            <DashboardButton
-              variant={viewMode === 'cards' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => onViewModeChange('cards')}
-              className="text-xs"
-            >
-              Cards
-            </DashboardButton>
+              <option value="createdAt-desc">Newest First</option>
+              <option value="createdAt-asc">Oldest First</option>
+              <option value="companyName-asc">Company A-Z</option>
+              <option value="companyName-desc">Company Z-A</option>
+              <option value="country-asc">Country A-Z</option>
+            </Select>
           </div>
         </div>
       </div>
