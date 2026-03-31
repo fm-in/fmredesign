@@ -22,6 +22,7 @@ interface ScrapedContactFiltersProps {
   onSortChange: (field: string, direction: 'asc' | 'desc') => void;
   viewMode: 'table' | 'cards';
   onViewModeChange: (mode: 'table' | 'cards') => void;
+  sourceFiles?: string[];
 }
 
 export function ScrapedContactFilters({
@@ -34,6 +35,7 @@ export function ScrapedContactFilters({
   onSortChange,
   viewMode,
   onViewModeChange,
+  sourceFiles = [],
 }: ScrapedContactFiltersProps) {
   return (
     <DashboardCard variant="admin" className="p-4">
@@ -80,6 +82,26 @@ export function ScrapedContactFilters({
               </option>
             ))}
           </Select>
+
+          {/* Scrape batch filter */}
+          {sourceFiles.length > 0 && (
+            <Select
+              value={filters.sourceFile || ''}
+              onChange={(e) => {
+                onFiltersChange({
+                  ...filters,
+                  sourceFile: e.target.value || undefined,
+                });
+              }}
+            >
+              <option value="">All Batches</option>
+              {sourceFiles.map((sf) => (
+                <option key={sf} value={sf}>
+                  {sf}
+                </option>
+              ))}
+            </Select>
+          )}
         </div>
 
         {/* Right side: sort + view mode */}

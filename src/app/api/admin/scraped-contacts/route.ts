@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
     // Filters
     const statusFilter = searchParams.get('status');
     const sourceFilter = searchParams.get('sourcePlatform');
+    const sourceFileFilter = searchParams.get('sourceFile');
     const hasContact = searchParams.get('hasContact');
     const countryFilter = searchParams.get('country');
     const searchQuery = searchParams.get('search');
@@ -85,6 +86,9 @@ export async function GET(request: NextRequest) {
     if (countryFilter) {
       query = query.eq('country', countryFilter);
     }
+    if (sourceFileFilter) {
+      query = query.eq('source_file', sourceFileFilter);
+    }
 
     // Default filter: only contacts with email or phone
     if (hasContact !== 'false') {
@@ -107,21 +111,25 @@ export async function GET(request: NextRequest) {
     // Compute stats from unfiltered data
     const { data: allData, error: statsError } = await supabase
       .from('scraped_contacts')
-      .select('status, source_platform, email, phone, mobile');
+      .select('status, source_platform, source_file, email, phone, mobile');
     if (statsError) throw statsError;
 
+    const sourceFiles = new Set<string>();
     const stats = {
       total: allData?.length || 0,
       withEmail: allData?.filter((r) => r.email).length || 0,
       withPhone: allData?.filter((r) => r.phone || r.mobile).length || 0,
       byStatus: {} as Record<string, number>,
       bySource: {} as Record<string, number>,
+      sourceFiles: [] as string[],
     };
 
     for (const row of allData || []) {
       stats.byStatus[row.status as string] = (stats.byStatus[row.status as string] || 0) + 1;
       stats.bySource[row.source_platform as string] = (stats.bySource[row.source_platform as string] || 0) + 1;
+      if (row.source_file) sourceFiles.add(row.source_file as string);
     }
+    stats.sourceFiles = [...sourceFiles].sort();
 
     return NextResponse.json({
       success: true,

@@ -41,6 +41,7 @@ export interface ScrapedContact {
 export interface ScrapedContactFilters {
   status?: ScrapedContactStatus[];
   sourcePlatform?: SourcePlatform[];
+  sourceFile?: string;
   hasContact?: boolean;
   country?: string;
   searchQuery?: string;
@@ -52,6 +53,7 @@ export interface ScrapedContactStats {
   withPhone: number;
   byStatus: Record<ScrapedContactStatus, number>;
   bySource: Record<string, number>;
+  sourceFiles?: string[];
 }
 
 export const STATUS_OPTIONS: { value: ScrapedContactStatus; label: string }[] = [

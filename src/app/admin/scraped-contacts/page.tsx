@@ -138,6 +138,7 @@ export default function ScrapedContactsDashboard() {
           }}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          sourceFiles={stats?.sourceFiles || []}
         />
       </SectionErrorBoundary>
 

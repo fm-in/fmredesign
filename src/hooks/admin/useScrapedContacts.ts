@@ -69,6 +69,7 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
 
       if (filters.status?.length) params.set('status', filters.status.join(','));
       if (filters.sourcePlatform?.length) params.set('sourcePlatform', filters.sourcePlatform.join(','));
+      if (filters.sourceFile) params.set('sourceFile', filters.sourceFile);
       if (filters.country) params.set('country', filters.country);
       if (filters.hasContact === false) params.set('hasContact', 'false');
       if (searchQuery) params.set('search', searchQuery);
