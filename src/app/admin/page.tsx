@@ -94,15 +94,172 @@ const quickActions = [
   { title: 'Add Client', href: '/admin/clients', icon: Users, color: 'bg-emerald-50 text-emerald-700', action: 'client', requiresFinance: false },
 ];
 
+/* ── Personal dashboard for non-admin users ── */
+function PersonalDashboard({ userName }: { userName: string }) {
+  const [myWork, setMyWork] = useState<{ assignments: any[]; projects: any[]; clients: any[] } | null>(null);
+  const [myLeads, setMyLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [workRes, leadsRes] = await Promise.all([
+          fetch('/api/admin/my-work'),
+          fetch('/api/leads?sortBy=createdAt&sortDirection=desc'),
+        ]);
+        const workJson = await workRes.json();
+        const leadsJson = await leadsRes.json();
+        if (workJson.success) setMyWork(workJson.data);
+        if (leadsJson.success) setMyLeads(leadsJson.data || []);
+      } catch (e) {
+        console.error('Error loading personal dashboard:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return <DashboardSkeleton />;
+
+  const newLeads = myLeads.filter((l: any) => l.status === 'new').length;
+  const contactedLeads = myLeads.filter((l: any) => l.status === 'contacted').length;
+  const activeProjects = myWork?.projects?.filter((p: any) => p.status === 'active' || p.status === 'in_progress') || [];
+
+  return (
+    <div className="space-y-5 sm:space-y-8">
+      <PageHeader
+        title={`${getGreeting()}, ${userName.split(' ')[0]}`}
+        description="Here's what's on your plate today."
+      />
+
+      {/* Personal Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+        <MetricCard
+          title="My Leads"
+          value={myLeads.length}
+          subtitle={`${newLeads} new, ${contactedLeads} contacted`}
+          icon={<Users className="w-6 h-6" />}
+          variant="admin"
+        />
+        <MetricCard
+          title="Active Projects"
+          value={activeProjects.length}
+          subtitle="Assigned to you"
+          icon={<Briefcase className="w-6 h-6" />}
+          variant="admin"
+        />
+        <MetricCard
+          title="Hot Leads"
+          value={myLeads.filter((l: any) => l.priority === 'hot').length}
+          subtitle="High priority"
+          icon={<FileText className="w-6 h-6" />}
+          variant="admin"
+        />
+        <MetricCard
+          title="This Week"
+          value={myLeads.filter((l: any) => {
+            const d = new Date(l.createdAt);
+            const now = new Date();
+            return d >= new Date(now.setDate(now.getDate() - 7));
+          }).length}
+          subtitle="New leads this week"
+          icon={<Calendar className="w-6 h-6" />}
+          variant="admin"
+        />
+      </div>
+
+      {/* Quick Actions for team */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <Link
+          href="/admin/leads"
+          className="group flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-fm-neutral-200 bg-white p-3 sm:p-5 transition-all duration-200 hover:border-fm-magenta-200 hover:shadow-fm-sm"
+        >
+          <div className="p-3 rounded-xl bg-fm-magenta-50 text-fm-magenta-700 transition-transform duration-200 group-hover:scale-110">
+            <Users className="w-5 h-5" />
+          </div>
+          <span className="text-sm font-medium text-fm-neutral-700 group-hover:text-fm-neutral-900">My Leads</span>
+        </Link>
+        <Link
+          href="/admin/my-work"
+          className="group flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-fm-neutral-200 bg-white p-3 sm:p-5 transition-all duration-200 hover:border-fm-magenta-200 hover:shadow-fm-sm"
+        >
+          <div className="p-3 rounded-xl bg-violet-50 text-violet-700 transition-transform duration-200 group-hover:scale-110">
+            <Briefcase className="w-5 h-5" />
+          </div>
+          <span className="text-sm font-medium text-fm-neutral-700 group-hover:text-fm-neutral-900">My Work</span>
+        </Link>
+        <Link
+          href="/admin/content"
+          className="group flex flex-col items-center gap-2 sm:gap-3 rounded-xl border border-fm-neutral-200 bg-white p-3 sm:p-5 transition-all duration-200 hover:border-fm-magenta-200 hover:shadow-fm-sm"
+        >
+          <div className="p-3 rounded-xl bg-sky-50 text-sky-700 transition-transform duration-200 group-hover:scale-110">
+            <Calendar className="w-5 h-5" />
+          </div>
+          <span className="text-sm font-medium text-fm-neutral-700 group-hover:text-fm-neutral-900">Content</span>
+        </Link>
+      </div>
+
+      {/* My Leads List */}
+      {myLeads.length > 0 && (
+        <TodaySection title="My Leads" count={myLeads.length} viewAllHref="/admin/leads">
+          <div className="divide-y divide-fm-neutral-100">
+            {myLeads.slice(0, 8).map((lead: any) => (
+              <Link
+                key={lead.id}
+                href="/admin/leads"
+                className="flex items-center justify-between px-4 sm:px-5 py-3 hover:bg-fm-neutral-50/50 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-fm-neutral-900">{lead.name || lead.company}</span>
+                    <StatusBadge status={lead.priority}>{lead.priority}</StatusBadge>
+                    {lead.leadSource === 'scraped' && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200">Scraped</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-fm-neutral-500 mt-0.5">
+                    {lead.company && lead.company !== lead.name ? lead.company + ' · ' : ''}{lead.phone || lead.email || 'No contact'}
+                  </p>
+                </div>
+                <StatusBadge status={lead.status}>{lead.status}</StatusBadge>
+              </Link>
+            ))}
+          </div>
+        </TodaySection>
+      )}
+
+      {/* My Projects */}
+      {activeProjects.length > 0 && (
+        <TodaySection title="My Projects" count={activeProjects.length} viewAllHref="/admin/my-work">
+          <ProjectPulse projects={activeProjects} />
+        </TodaySection>
+      )}
+
+      {/* Empty state */}
+      {myLeads.length === 0 && activeProjects.length === 0 && (
+        <div className="bg-white rounded-xl border border-fm-neutral-200 p-8" style={{ textAlign: 'center' }}>
+          <p className="text-fm-neutral-500 text-sm">No leads or projects assigned to you yet. Check back soon!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Main dashboard ── */
 export default function AdminDashboard() {
   const router = useRouter();
-  const { hasPermission } = useAdminAuth();
+  const { hasPermission, currentUser } = useAdminAuth();
   const canViewFinance = hasPermission('finance.read');
+  const isAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'admin';
   const [data, setData] = useState<TodayData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAdmin) {
+      setIsLoading(false);
+      return;
+    }
     const loadData = async () => {
       try {
         const res = await fetch('/api/admin/today');
@@ -120,7 +277,12 @@ export default function AdminDashboard() {
       }
     };
     loadData();
-  }, []);
+  }, [isAdmin]);
+
+  // Non-admin users get a personalized dashboard
+  if (!isAdmin && !isLoading) {
+    return <PersonalDashboard userName={currentUser?.name || 'Team'} />;
+  }
 
   if (isLoading || !data) return <DashboardSkeleton />;
 
