@@ -18,22 +18,27 @@ export function ChatbotWidget() {
 
   // Toggle visibility of the widget container when route changes
   useEffect(() => {
-    // The widget injects elements with a known structure — find and hide/show them
-    const hide = () => {
-      const els = document.querySelectorAll<HTMLElement>('[id^="aw-"], [class*="aw-widget"]');
+    const toggle = () => {
+      // Match all possible widget-injected elements
+      const selectors = '[id^="aw-"], [class*="aw-widget"], [data-agentworks-widget], iframe[src*="agentworks"], [class*="agentworks"]';
+      const els = document.querySelectorAll<HTMLElement>(selectors);
       els.forEach((el) => {
         el.style.display = isPrivateRoute ? 'none' : '';
       });
-      // Also try the shadow host if the widget uses one
-      const bubble = document.querySelector<HTMLElement>('[data-agentworks-widget]');
-      if (bubble) bubble.style.display = isPrivateRoute ? 'none' : '';
+      // Also hide any fixed-position chat bubbles at bottom-right
+      document.querySelectorAll<HTMLElement>('div[style*="position: fixed"][style*="bottom"]').forEach((el) => {
+        if (el.querySelector('iframe') || el.id?.startsWith('aw-') || el.className?.includes('aw-')) {
+          el.style.display = isPrivateRoute ? 'none' : '';
+        }
+      });
     };
 
-    // Run immediately and after a short delay (widget may inject async)
-    hide();
-    const timer = setTimeout(hide, 1000);
-    return () => clearTimeout(timer);
-  }, [isPrivateRoute]);
+    // Run immediately, after 1s, and after 3s (widget loads lazily)
+    toggle();
+    const t1 = setTimeout(toggle, 1000);
+    const t2 = setTimeout(toggle, 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [isPrivateRoute, pathname]);
 
   // Only load the script on first render (not conditional — we toggle visibility instead)
   return (
