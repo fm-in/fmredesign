@@ -111,14 +111,54 @@ export async function GET(request: NextRequest) {
 
     // Transform to camelCase for frontend
     const leadDefaults = { additionalChallenges: [], tags: [], customFields: {} };
-    const leads = (data || []).map((row: Record<string, unknown>) =>
-      toCamelCaseKeys(row, leadDefaults)
-    );
+    const leads = (data || []).map((row: Record<string, unknown>) => ({
+      ...toCamelCaseKeys(row, leadDefaults),
+      leadSource: 'website',
+    }));
+
+    // For non-admin users, also fetch their assigned scraped contacts
+    let scrapedAsLeads: Record<string, unknown>[] = [];
+    if (myLeadsOnly) {
+      const { data: scrapedData } = await supabase
+        .from('scraped_contacts')
+        .select('*')
+        .eq('assigned_to', auth.user.name)
+        .order('created_at', { ascending: false });
+
+      scrapedAsLeads = (scrapedData || []).map((row) => ({
+        id: row.id,
+        name: [row.first_name, row.last_name].filter(Boolean).join(' ') || row.company_name || '',
+        email: row.email,
+        phone: row.phone || row.mobile,
+        company: row.company_name,
+        source: row.source_platform,
+        status: row.status === 'new' ? 'new' : row.status === 'contacted' ? 'contacted' : row.status,
+        priority: row.notes?.includes('PRIORITY: HIGH') ? 'hot' : row.notes?.includes('PRIORITY: MEDIUM') ? 'warm' : 'cool',
+        leadScore: row.notes?.includes('PRIORITY: HIGH') ? 80 : row.notes?.includes('PRIORITY: MEDIUM') ? 50 : 30,
+        notes: row.notes,
+        tags: row.tags || [],
+        website: row.website,
+        city: row.city,
+        state: row.state,
+        country: row.country,
+        projectType: row.category,
+        assignedTo: row.assigned_to,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        leadSource: 'scraped',
+        projectTag: row.project_tag,
+        socialLinks: row.social_links,
+        profileUrl: row.profile_url,
+        businessDescription: row.business_description,
+      }));
+    }
+
+    const allLeads = [...leads, ...scrapedAsLeads];
 
     const responseBody: Record<string, unknown> = {
       success: true,
-      data: leads,
-      total: isPaginated ? totalItems : leads.length,
+      data: allLeads,
+      total: isPaginated ? totalItems + scrapedAsLeads.length : allLeads.length,
     };
 
     if (isPaginated) {

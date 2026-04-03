@@ -59,7 +59,7 @@ import React from 'react';
 const NAV_PERMISSIONS: Record<string, string> = {
   '/admin': '',                           // Dashboard — all roles
   '/admin/my-work': '',                   // My Work — all roles
-  '/admin/clients': 'clients.read',
+  '/admin/clients': 'users.read',        // Admin/super_admin only
   '/admin/projects': 'projects.read',
   '/admin/content': 'content.read',
   '/admin/invoices': 'finance.read',
