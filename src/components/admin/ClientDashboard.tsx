@@ -406,8 +406,8 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
                     </div>
                     
                     <div>
-                      <p className="text-sm text-fm-neutral-600">{client.name}</p>
-                      <p className="text-xs text-fm-neutral-500">{client.email || 'N/A'}</p>
+                      <p className="text-sm text-fm-neutral-600">{client.email || 'No email'}</p>
+                      <p className="text-xs text-fm-neutral-500">{client.phone || 'No phone'}</p>
                     </div>
                     
                     <div className="flex items-center space-x-2">

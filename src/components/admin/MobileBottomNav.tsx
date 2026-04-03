@@ -11,7 +11,16 @@ interface MobileBottomNavProps {
   navigation: NavigationGroup[];
 }
 
-const PRIMARY_TABS: { label: string; href: string; icon: typeof LayoutDashboard }[] = [
+const ICON_MAP: Record<string, typeof LayoutDashboard> = {
+  '/admin': LayoutDashboard,
+  '/admin/projects': Briefcase,
+  '/admin/content': Calendar,
+  '/admin/clients': Users,
+  '/admin/leads': Users,
+  '/admin/my-work': Briefcase,
+};
+
+const DEFAULT_TABS: { label: string; href: string; icon: typeof LayoutDashboard }[] = [
   { label: 'Home', href: '/admin', icon: LayoutDashboard },
   { label: 'Projects', href: '/admin/projects', icon: Briefcase },
   { label: 'Content', href: '/admin/content', icon: Calendar },
@@ -21,6 +30,16 @@ const PRIMARY_TABS: { label: string; href: string; icon: typeof LayoutDashboard 
 export function MobileBottomNav({ navigation }: MobileBottomNavProps) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+
+  // Derive primary tabs from the first 4 visible nav items (permission-filtered)
+  const allNavItems = navigation.flatMap((g) => g.items);
+  const PRIMARY_TABS = allNavItems.length > 0
+    ? allNavItems.slice(0, 4).map((item) => ({
+        label: item.label,
+        href: item.href,
+        icon: ICON_MAP[item.href] || LayoutDashboard,
+      }))
+    : DEFAULT_TABS;
 
   const primaryHrefs = new Set(PRIMARY_TABS.map((t) => t.href));
 

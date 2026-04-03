@@ -281,7 +281,7 @@ export default function AuditLogPage() {
                       {entry.created_at ? timeAgo(entry.created_at) : '---'}
                     </div>
                     {entry.ip_address && entry.ip_address !== 'unknown' && (
-                      <div className="text-xs text-fm-neutral-400 mt-0.5 font-mono">
+                      <div className="text-xs text-fm-neutral-400 mt-0.5 font-mono break-all">
                         {entry.ip_address}
                       </div>
                     )}

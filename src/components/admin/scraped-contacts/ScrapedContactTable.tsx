@@ -65,7 +65,7 @@ function StatusSelect({
       onChange={(e) => onChange(e.target.value as ScrapedContactStatus)}
       className={
         className ??
-        'text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent'
+        'text-xs font-medium rounded-full px-3 py-1.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent min-h-[36px]'
       }
     >
       {STATUS_OPTIONS.map((opt) => (
@@ -436,7 +436,7 @@ export function ScrapedContactTable({
         return (
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={() => onSelectContact(null)} />
-          <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto">
+          <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto pb-[env(safe-area-inset-bottom,20px)]">
             <div className="p-4 sm:p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-5">
@@ -602,7 +602,7 @@ export function ScrapedContactTable({
                     <select
                       value={selectedContact.projectTag || ''}
                       onChange={(e) => onUpdateProjectTag(selectedContact.id, e.target.value as ProjectTag)}
-                      className="text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                      className="text-xs font-medium rounded-full px-3 py-1.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent min-h-[36px]"
                     >
                       <option value="">Unassigned</option>
                       {PROJECT_TAG_OPTIONS.map((p) => (
@@ -616,7 +616,7 @@ export function ScrapedContactTable({
                       value={selectedContact.assignedTo || ''}
                       onChange={(name) => onUpdateAssignedTo(selectedContact.id, name)}
                       placeholder="Unassigned"
-                      className="text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                      className="text-xs font-medium rounded-full px-3 py-1.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent min-h-[36px]"
                     />
                   </div>
                   {selectedContact.sourceFile && (

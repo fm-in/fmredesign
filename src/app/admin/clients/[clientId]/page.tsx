@@ -137,7 +137,7 @@ export default function AdminClientDetail() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
           {/* Scrollable tab bar with fade hints on mobile */}
           <div className="relative">
-            <TabsList className="w-full sm:w-fit">
+            <TabsList className="w-full sm:w-fit overflow-x-auto scrollbar-none flex-nowrap">
               {/* Core Work */}
               <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
               <TabsTrigger value="projects" className="text-xs sm:text-sm">Projects</TabsTrigger>

@@ -94,25 +94,25 @@ export default function ScrapedContactsDashboard() {
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {selectedContacts.size > 0 && (
               <>
-                <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1">
-                  <UserPlus className="w-3.5 h-3.5 text-emerald-600" />
+                <div className="flex items-center gap-1 bg-emerald-50 border border-emerald-200 rounded-lg px-2 py-1.5 min-h-[40px]">
+                  <UserPlus className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                   <TeamMemberSelect
                     value=""
                     onChange={(name) => {
                       if (name) bulkAssign(Array.from(selectedContacts), name);
                     }}
-                    placeholder={`Assign ${selectedContacts.size} to...`}
-                    className="text-xs border-0 bg-transparent text-emerald-700 focus:ring-0 py-0 pl-1 pr-6"
+                    placeholder={`Assign ${selectedContacts.size}`}
+                    className="text-xs border-0 bg-transparent text-emerald-700 focus:ring-0 py-1 pl-1 pr-6 min-w-[100px]"
                   />
                 </div>
-                <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-lg px-2 py-1">
-                  <Tag className="w-3.5 h-3.5 text-blue-600" />
+                <div className="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-lg px-2 py-1.5 min-h-[40px]">
+                  <Tag className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                   <select
                     value=""
                     onChange={(e) => {
                       if (e.target.value) bulkSetProjectTag(Array.from(selectedContacts), e.target.value as ProjectTag);
                     }}
-                    className="text-xs border-0 bg-transparent text-blue-700 focus:ring-0 py-0 pl-1 pr-6"
+                    className="text-xs border-0 bg-transparent text-blue-700 focus:ring-0 py-1 pl-1 pr-6 min-w-[90px]"
                   >
                     <option value="">Tag {selectedContacts.size} as...</option>
                     {PROJECT_TAG_OPTIONS.map((p) => (

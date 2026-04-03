@@ -100,16 +100,16 @@ export default function MyWorkPage() {
               const project = projects.find(p => p.id === a.projectId);
               const client = clients.find(c => c.id === a.clientId);
               return (
-                <div key={a.id} className="rounded-lg border border-fm-neutral-200 bg-white p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-fm-neutral-900">
+                <div key={a.id} className="rounded-lg border border-fm-neutral-200 bg-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium text-fm-neutral-900 truncate">
                       {project?.name || 'Unknown Project'}
                     </p>
-                    <p className="text-sm text-fm-neutral-600">
+                    <p className="text-sm text-fm-neutral-600 truncate">
                       {client?.name || 'Unknown Client'} &middot; Role: {a.role || 'Member'}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     {a.hoursAllocated > 0 && (
                       <span className="text-xs text-fm-neutral-500">{a.hoursAllocated}h allocated</span>
                     )}

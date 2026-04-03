@@ -90,7 +90,7 @@ const buttonVariants = {
   },
 
   size: {
-    sm: 'h-9 px-3 text-sm rounded-lg gap-1.5',
+    sm: 'h-10 min-w-[40px] px-3 text-sm rounded-lg gap-1.5',
     md: 'h-10 px-4 text-sm rounded-xl gap-2',
     lg: 'h-12 px-6 text-base rounded-xl gap-2',
     xl: 'h-14 px-8 text-lg rounded-2xl gap-3'

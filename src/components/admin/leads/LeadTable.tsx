@@ -77,7 +77,7 @@ function StatusSelect({
       onChange={(e) => onChange(e.target.value as LeadStatus)}
       className={
         className ??
-        'text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent'
+        'text-xs font-medium rounded-full px-3 py-1.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent min-h-[36px]'
       }
     >
       {STATUS_OPTIONS.map((opt) => (
@@ -407,7 +407,7 @@ export function LeadTable({
       {selectedLead && (
         <>
           <div className="fixed inset-0 bg-black/30 z-40" onClick={() => onSelectLead(null)} />
-          <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto">
+          <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto pb-[env(safe-area-inset-bottom,20px)]">
             <div className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <h2 className="text-lg sm:text-xl font-bold text-fm-neutral-900">Lead Details</h2>
@@ -520,7 +520,7 @@ export function LeadTable({
                       value={selectedLead.assignedTo || ''}
                       onChange={(name) => onUpdateAssignedTo(selectedLead.id, name)}
                       placeholder="Unassigned"
-                      className="text-xs font-medium rounded-full px-2.5 py-0.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                      className="text-xs font-medium rounded-full px-3 py-1.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent min-h-[36px]"
                     />
                   </div>
                 </div>

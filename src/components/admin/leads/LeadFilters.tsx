@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { DashboardButton, DashboardCard } from '@/design-system';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/select-native';
@@ -41,10 +41,7 @@ export function LeadFilters({
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
-          <DashboardButton variant="secondary" size="sm">
-            <Filter className="w-4 h-4" />
-            Filters
-          </DashboardButton>
+          {/* Filter controls are inline — no separate button needed */}
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">

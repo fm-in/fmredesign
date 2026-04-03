@@ -48,7 +48,7 @@ export function SlideOverPanel({ open, onClose, title, children }: SlideOverPane
       <div
         ref={panelRef}
         className={cn(
-          'fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl flex flex-col',
+          'fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl flex flex-col pb-[env(safe-area-inset-bottom,20px)]',
           'transition-transform duration-300 ease-in-out',
           open ? 'translate-x-0' : 'translate-x-full'
         )}

@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import type { ContentItem, ContentStatus } from '@/lib/admin/project-types';
 import { KanbanColumn } from './KanbanColumn';
+import { KanbanCard } from './KanbanCard';
 import { adminToast } from '@/lib/admin/toast';
 
 interface KanbanBoardProps {
@@ -60,18 +61,45 @@ export function KanbanBoard({ items, onStatusChange }: KanbanBoardProps) {
   };
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4">
-      {COLUMNS.map((col) => (
-        <KanbanColumn
-          key={col.status}
-          status={col.status}
-          label={col.label}
-          items={grouped[col.status]}
-          color={col.color}
-          onDrop={handleDrop}
-          onStatusChange={(id, newStatus) => handleDrop(id, newStatus)}
-        />
-      ))}
-    </div>
+    <>
+      {/* Desktop: horizontal kanban columns */}
+      <div className="hidden md:flex gap-3 overflow-x-auto pb-4">
+        {COLUMNS.map((col) => (
+          <KanbanColumn
+            key={col.status}
+            status={col.status}
+            label={col.label}
+            items={grouped[col.status]}
+            color={col.color}
+            onDrop={handleDrop}
+            onStatusChange={(id, newStatus) => handleDrop(id, newStatus)}
+          />
+        ))}
+      </div>
+
+      {/* Mobile: stacked list with status select per card */}
+      <div className="md:hidden space-y-4">
+        {COLUMNS.map((col) => {
+          const colItems = grouped[col.status];
+          if (colItems.length === 0) return null;
+          return (
+            <div key={col.status}>
+              <div className="flex items-center gap-2 mb-2 px-1">
+                <div className={`w-2 h-2 rounded-full ${col.color}`} />
+                <span className="text-sm font-semibold text-fm-neutral-900">{col.label}</span>
+                <span className="text-xs text-fm-neutral-500 bg-fm-neutral-200 px-1.5 py-0.5 rounded-full">
+                  {colItems.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {colItems.map((item) => (
+                  <KanbanCard key={item.id} item={item} onStatusChange={(id, newStatus) => handleDrop(id, newStatus)} />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }

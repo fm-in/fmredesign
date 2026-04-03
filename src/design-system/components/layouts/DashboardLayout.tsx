@@ -537,16 +537,27 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Right — search trigger + actions */}
           <div className="flex items-center gap-1">
             {onCommandPalette && (
-              <button
-                onClick={onCommandPalette}
-                className="hidden sm:flex items-center gap-2 h-8 px-3 rounded-lg border border-fm-neutral-200 text-sm text-fm-neutral-500 hover:text-fm-neutral-700 hover:border-fm-neutral-300 transition-colors"
-              >
-                <Search className="w-3.5 h-3.5" />
-                <span>Search...</span>
-                <kbd className="ml-2 text-[10px] font-mono bg-fm-neutral-100 rounded px-1.5 py-0.5 text-fm-neutral-400">
-                  {'\u2318'}K
-                </kbd>
-              </button>
+              <>
+                {/* Mobile: icon-only search button */}
+                <IconBtn
+                  label="Search"
+                  className="sm:hidden"
+                  onClick={onCommandPalette}
+                >
+                  <Search className="w-[18px] h-[18px]" />
+                </IconBtn>
+                {/* Desktop: full search bar */}
+                <button
+                  onClick={onCommandPalette}
+                  className="hidden sm:flex items-center gap-2 h-8 px-3 rounded-lg border border-fm-neutral-200 text-sm text-fm-neutral-500 hover:text-fm-neutral-700 hover:border-fm-neutral-300 transition-colors"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Search...</span>
+                  <kbd className="ml-2 text-[10px] font-mono bg-fm-neutral-100 rounded px-1.5 py-0.5 text-fm-neutral-400">
+                    {'\u2318'}K
+                  </kbd>
+                </button>
+              </>
             )}
             {/* Notification bell + dropdown */}
             <div className="relative" ref={notifRef}>
@@ -651,10 +662,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </main>
       </div>
 
-      {/* Mobile bottom navigation */}
-      {variant === 'admin' && (
-        <MobileBottomNav navigation={allGroups} />
-      )}
+      {/* Mobile bottom navigation — all dashboard variants */}
+      <MobileBottomNav navigation={allGroups} />
 
       {/* ─────────────── Mobile overlay (always rendered for smooth transitions) ─────────────── */}
       <div
