@@ -84,10 +84,10 @@ export interface ScrapeRotationSuggestion {
   metric?: string;
 }
 
-export const SOURCE_PLATFORM_OPTIONS: { value: ScrapeSourcePlatform; label: string; description: string }[] = [
+export const SOURCE_PLATFORM_OPTIONS: { value: ScrapeSourcePlatform; label: string; description: string; disabled?: boolean }[] = [
   { value: 'bni', label: 'BNI', description: 'BNI Connect Global directory' },
   { value: 'google_maps', label: 'Google Maps', description: 'Google Places API (official)' },
-  { value: 'linkedin', label: 'LinkedIn', description: 'LinkedIn (coming soon)' },
+  { value: 'linkedin', label: 'LinkedIn', description: 'LinkedIn (not yet implemented)', disabled: true },
   { value: 'other', label: 'Other', description: 'Custom source' },
 ];
 

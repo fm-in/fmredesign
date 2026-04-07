@@ -433,176 +433,241 @@ export function ScrapedContactTable({
       {/* Detail Drawer */}
       {selectedContact && (() => {
         const drawerParsed = parseContactNotes(selectedContact.notes);
+
+        // Parse social links into structured array
+        const socialEntries: { platform: string; url: string }[] = [];
+        if (selectedContact.socialLinks) {
+          for (const part of selectedContact.socialLinks.split(';')) {
+            const trimmed = part.trim();
+            const colonIdx = trimmed.indexOf(': ');
+            if (colonIdx > 0) {
+              socialEntries.push({ platform: trimmed.slice(0, colonIdx).trim(), url: trimmed.slice(colonIdx + 2).trim() });
+            }
+          }
+        }
+
+        const newnessStyles = {
+          NEW: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          GROWING: 'bg-blue-50 text-blue-700 border-blue-200',
+          ESTABLISHED: 'bg-fm-neutral-100 text-fm-neutral-600 border-fm-neutral-200',
+        };
+
+        // Strip parsed fields from notes to get custom user notes
+        const userNotes = (selectedContact.notes || '')
+          .replace(/PRIORITY:\s*(HIGH|MEDIUM|LOW)\s*\|?\s*/g, '')
+          .replace(/NEWNESS:\s*(NEW|GROWING|ESTABLISHED)\s*\|?\s*/g, '')
+          .replace(/GAPS:\s*[^|]+\|?\s*/g, '')
+          .replace(/RECOMMENDED SERVICES:\s*.+$/g, '')
+          .replace(/\|\s*$/g, '')
+          .trim();
+
         return (
         <>
-          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => onSelectContact(null)} />
-          <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto pb-[env(safe-area-inset-bottom,20px)]">
-            <div className="p-4 sm:p-6">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg sm:text-xl font-bold text-fm-neutral-900">Contact Details</h2>
-                <DashboardButton variant="ghost" size="sm" onClick={() => onSelectContact(null)}>
-                  <X className="w-5 h-5" />
-                </DashboardButton>
-              </div>
+          <div className="fixed inset-0 bg-black/40 z-40" style={{ backdropFilter: 'blur(2px)' }} onClick={() => onSelectContact(null)} />
+          <div className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto">
 
-              <div className="space-y-5">
-                {/* Name & Company + Priority */}
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-fm-neutral-900">
-                      {selectedContact.firstName} {selectedContact.lastName}
-                    </h3>
-                    <PriorityBadge priority={drawerParsed.priority} />
-                  </div>
-                  {selectedContact.companyName && (
-                    <p className="text-sm text-fm-neutral-600">{selectedContact.companyName}</p>
-                  )}
-                  {selectedContact.category && (
-                    <p className="text-xs text-fm-neutral-500 mt-0.5">{selectedContact.category}</p>
+            {/* ── Header ────────────────────────────────────────── */}
+            <div className="sticky top-0 bg-white border-b border-fm-neutral-200 px-5 py-4 flex items-start justify-between" style={{ zIndex: 10 }}>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg font-bold text-fm-neutral-900 truncate">
+                    {selectedContact.firstName} {selectedContact.lastName}
+                  </h2>
+                  <PriorityBadge priority={drawerParsed.priority} />
+                  {drawerParsed.newness && (
+                    <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded border ${newnessStyles[drawerParsed.newness]}`}>
+                      {drawerParsed.newness === 'NEW' && <span className="mr-0.5">*</span>}
+                      {drawerParsed.newness}
+                    </span>
                   )}
                 </div>
-
-                {/* Gaps & Services Section */}
-                {(drawerParsed.gaps.length > 0 || drawerParsed.services.length > 0) && (
-                  <div className="space-y-3">
-                    {drawerParsed.gaps.length > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <span className="text-xs font-bold text-red-700 uppercase tracking-wider block mb-2">Gaps Identified</span>
-                        <GapChips gaps={drawerParsed.gaps} />
-                      </div>
-                    )}
-                    {drawerParsed.services.length > 0 && (
-                      <div className="bg-fm-magenta-50 border border-fm-magenta-200 rounded-lg p-3">
-                        <span className="text-xs font-bold text-fm-magenta-700 uppercase tracking-wider block mb-2">Recommended Services</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {drawerParsed.services.map((svc) => (
-                            <span
-                              key={svc}
-                              className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md bg-white text-fm-magenta-700 border border-fm-magenta-200 shadow-sm"
-                            >
-                              <Briefcase className="w-3 h-3" />
-                              {svc}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                {selectedContact.companyName && (
+                  <p className="text-sm text-fm-neutral-600 mt-0.5 truncate">{selectedContact.companyName}</p>
                 )}
+                {selectedContact.category && (
+                  <p className="text-xs text-fm-neutral-400 mt-0.5">{selectedContact.category}</p>
+                )}
+              </div>
+              <button
+                onClick={() => onSelectContact(null)}
+                className="ml-3 p-1.5 rounded-lg text-fm-neutral-400 hover:text-fm-neutral-700 hover:bg-fm-neutral-100 transition-colors shrink-0"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-                {/* Contact Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  {selectedContact.email && (
-                    <div>
-                      <span className="text-fm-neutral-500 block text-xs">Email</span>
-                      <a href={`mailto:${selectedContact.email}`} className="text-fm-magenta-600 font-medium">
+            <div className="p-5 space-y-5 pb-[env(safe-area-inset-bottom,24px)]">
+
+              {/* ── Gaps & Services ──────────────────────────────── */}
+              {(drawerParsed.gaps.length > 0 || drawerParsed.services.length > 0) && (
+                <div className="space-y-2.5">
+                  {drawerParsed.gaps.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3.5">
+                      <span className="text-[10px] font-bold text-red-700 uppercase tracking-wider block mb-2">Gaps Identified</span>
+                      <GapChips gaps={drawerParsed.gaps} />
+                    </div>
+                  )}
+                  {drawerParsed.services.length > 0 && (
+                    <div className="bg-fm-magenta-50/50 border border-fm-magenta-200 rounded-xl p-3.5">
+                      <span className="text-[10px] font-bold text-fm-magenta-700 uppercase tracking-wider block mb-2">Recommended Services</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {drawerParsed.services.map((svc) => (
+                          <span
+                            key={svc}
+                            className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg bg-white text-fm-magenta-700 border border-fm-magenta-200 shadow-sm"
+                          >
+                            <Briefcase className="w-3 h-3 shrink-0" />
+                            {svc}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Contact Info Card ───────────────────────────── */}
+              <div className="bg-fm-neutral-50 rounded-xl border border-fm-neutral-200 divide-y divide-fm-neutral-200">
+                {/* Email */}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-fm-neutral-200 flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4 text-fm-neutral-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-medium text-fm-neutral-400 uppercase tracking-wider">Email</span>
+                    {selectedContact.email ? (
+                      <a href={`mailto:${selectedContact.email}`} className="block text-sm font-medium text-fm-magenta-600 truncate">
                         {selectedContact.email}
                       </a>
-                    </div>
-                  )}
-                  {selectedContact.phone && (
-                    <div>
-                      <span className="text-fm-neutral-500 block text-xs">Phone</span>
-                      <a href={`tel:${selectedContact.phone}`} className="text-fm-magenta-600 font-medium">
-                        {selectedContact.phone}
+                    ) : (
+                      <span className="block text-sm text-fm-neutral-300 italic">No email found</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-fm-neutral-200 flex items-center justify-center shrink-0">
+                    <Phone className="w-4 h-4 text-fm-neutral-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-medium text-fm-neutral-400 uppercase tracking-wider">Phone</span>
+                    {selectedContact.phone || selectedContact.mobile ? (
+                      <a href={`tel:${selectedContact.phone || selectedContact.mobile}`} className="block text-sm font-medium text-fm-magenta-600">
+                        {selectedContact.phone || selectedContact.mobile}
                       </a>
-                    </div>
-                  )}
-                  {selectedContact.mobile && (
-                    <div>
-                      <span className="text-fm-neutral-500 block text-xs">Mobile</span>
-                      <a href={`tel:${selectedContact.mobile}`} className="text-fm-magenta-600 font-medium">
-                        {selectedContact.mobile}
-                      </a>
-                    </div>
-                  )}
-                  {selectedContact.website && (
-                    <div>
-                      <span className="text-fm-neutral-500 block text-xs">Website</span>
+                    ) : (
+                      <span className="block text-sm text-fm-neutral-300 italic">No phone found</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Website */}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-fm-neutral-200 flex items-center justify-center shrink-0">
+                    <Globe className="w-4 h-4 text-fm-neutral-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-medium text-fm-neutral-400 uppercase tracking-wider">Website</span>
+                    {selectedContact.website ? (
                       <a
                         href={selectedContact.website.startsWith('http') ? selectedContact.website : `https://${selectedContact.website}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-fm-magenta-600 font-medium flex items-center gap-1"
+                        className="block text-sm font-medium text-fm-magenta-600 truncate"
                       >
-                        <Globe className="w-3 h-3" />
-                        <span className="truncate">{selectedContact.website.replace(/^https?:\/\//, '')}</span>
+                        {selectedContact.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                       </a>
-                    </div>
-                  )}
+                    ) : (
+                      <span className="block text-sm text-fm-neutral-300 italic">No website</span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Location */}
-                {(selectedContact.city || selectedContact.state || selectedContact.country) && (
-                  <div>
-                    <span className="text-fm-neutral-500 text-xs block mb-1">Location</span>
-                    <p className="text-sm text-fm-neutral-700 flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 shrink-0" />
-                      {[selectedContact.city, selectedContact.state, selectedContact.country].filter(Boolean).join(', ')}
-                    </p>
-                    {selectedContact.addressFull && (
-                      <p className="text-xs text-fm-neutral-500 mt-0.5">{selectedContact.addressFull}</p>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-fm-neutral-200 flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4 text-fm-neutral-400" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-medium text-fm-neutral-400 uppercase tracking-wider">Location</span>
+                    {selectedContact.city || selectedContact.state || selectedContact.country ? (
+                      <>
+                        <p className="text-sm font-medium text-fm-neutral-800">
+                          {[selectedContact.city, selectedContact.state, selectedContact.country].filter(Boolean).join(', ')}
+                        </p>
+                        {selectedContact.addressFull && (
+                          <p className="text-xs text-fm-neutral-500 mt-0.5 leading-relaxed">{selectedContact.addressFull}</p>
+                        )}
+                      </>
+                    ) : (
+                      <span className="block text-sm text-fm-neutral-300 italic">No location</span>
                     )}
                   </div>
-                )}
+                </div>
+              </div>
 
-                <hr className="border-fm-neutral-200" />
-
-                {/* Business Info */}
-                {selectedContact.businessDescription && (
-                  <div>
-                    <span className="text-fm-neutral-500 text-xs block mb-1">Business Description</span>
-                    <p className="text-sm text-fm-neutral-700">{selectedContact.businessDescription}</p>
+              {/* ── Social Links ─────────────────────────────────── */}
+              {socialEntries.length > 0 && (
+                <div>
+                  <span className="text-[10px] font-bold text-fm-neutral-500 uppercase tracking-wider block mb-2">Social Profiles</span>
+                  <div className="flex flex-wrap gap-2">
+                    {socialEntries.map(({ platform, url }) => (
+                      <a
+                        key={platform}
+                        href={url.startsWith('http') ? url : `https://${url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg bg-fm-neutral-50 text-fm-neutral-700 border border-fm-neutral-200 hover:bg-fm-neutral-100 hover:border-fm-neutral-300 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3 shrink-0" />
+                        {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                      </a>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Social Links */}
-                {selectedContact.socialLinks && (
-                  <div>
-                    <span className="text-fm-neutral-500 text-xs block mb-1">Social Links</span>
-                    <p className="text-sm text-fm-neutral-700">{selectedContact.socialLinks}</p>
-                  </div>
-                )}
+              {/* ── Business Description ─────────────────────────── */}
+              {selectedContact.businessDescription && (
+                <div>
+                  <span className="text-[10px] font-bold text-fm-neutral-500 uppercase tracking-wider block mb-1.5">About</span>
+                  <p className="text-sm text-fm-neutral-700 leading-relaxed">{selectedContact.businessDescription}</p>
+                </div>
+              )}
 
-                {/* Profile URL */}
-                {selectedContact.profileUrl && (
-                  <div>
-                    <a
-                      href={selectedContact.profileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-fm-magenta-600 font-medium flex items-center gap-1"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      View on Google Maps
-                    </a>
-                  </div>
-                )}
+              {/* ── Google Maps Link ─────────────────────────────── */}
+              {selectedContact.profileUrl && (
+                <a
+                  href={selectedContact.profileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm font-medium text-fm-magenta-600 hover:text-fm-magenta-700 bg-fm-magenta-50 border border-fm-magenta-200 rounded-xl px-4 py-2.5 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4 shrink-0" />
+                  View on Google Maps
+                </a>
+              )}
 
-                <hr className="border-fm-neutral-200" />
+              {/* ── Management Section ───────────────────────────── */}
+              <div className="bg-fm-neutral-50 rounded-xl border border-fm-neutral-200 p-4 space-y-4">
+                <span className="text-[10px] font-bold text-fm-neutral-500 uppercase tracking-wider block">Manage</span>
 
-                {/* Metadata */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-fm-neutral-500 block text-xs">Source</span>
-                    <StatusBadge status={selectedContact.sourcePlatform}>
-                      {getSourceLabel(selectedContact.sourcePlatform)}
-                    </StatusBadge>
-                  </div>
-                  <div>
-                    <span className="text-fm-neutral-500 block text-xs">Status</span>
+                    <label className="text-[10px] font-medium text-fm-neutral-500 uppercase tracking-wider block mb-1">Status</label>
                     <StatusSelect
                       value={selectedContact.status}
                       onChange={(status) => onUpdateStatus(selectedContact.id, status)}
+                      className="w-full text-xs font-medium rounded-lg px-3 py-2 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <span className="text-fm-neutral-500 block text-xs">Project</span>
+                    <label className="text-[10px] font-medium text-fm-neutral-500 uppercase tracking-wider block mb-1">Project</label>
                     <select
                       value={selectedContact.projectTag || ''}
                       onChange={(e) => onUpdateProjectTag(selectedContact.id, e.target.value as ProjectTag)}
-                      className="text-xs font-medium rounded-full px-3 py-1.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent min-h-[36px]"
+                      className="w-full text-xs font-medium rounded-lg px-3 py-2 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
                     >
                       <option value="">Unassigned</option>
                       {PROJECT_TAG_OPTIONS.map((p) => (
@@ -611,47 +676,56 @@ export function ScrapedContactTable({
                     </select>
                   </div>
                   <div>
-                    <span className="text-fm-neutral-500 block text-xs">Assigned To</span>
+                    <label className="text-[10px] font-medium text-fm-neutral-500 uppercase tracking-wider block mb-1">Assigned To</label>
                     <TeamMemberSelect
                       value={selectedContact.assignedTo || ''}
                       onChange={(name) => onUpdateAssignedTo(selectedContact.id, name)}
                       placeholder="Unassigned"
-                      className="text-xs font-medium rounded-full px-3 py-1.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent min-h-[36px]"
+                      className="w-full text-xs font-medium rounded-lg px-3 py-2 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
                     />
                   </div>
-                  {selectedContact.sourceFile && (
-                    <div>
-                      <span className="text-fm-neutral-500 block text-xs">Batch</span>
-                      <p className="font-medium text-fm-neutral-900 text-xs">{selectedContact.sourceFile}</p>
+                  <div>
+                    <label className="text-[10px] font-medium text-fm-neutral-500 uppercase tracking-wider block mb-1">Source</label>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-fm-neutral-700 px-3 py-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                      {getSourceLabel(selectedContact.sourcePlatform)}
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Notes */}
-                <div>
-                  <span className="text-fm-neutral-500 text-xs block mb-1">Internal Notes</span>
-                  <textarea
-                    value={drawerNotes}
-                    onChange={(e) => setDrawerNotes(e.target.value)}
-                    placeholder="Add notes about this contact..."
-                    className="w-full min-h-[80px] text-sm border border-fm-neutral-200 rounded-lg p-2.5 text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent resize-y"
-                  />
-                  {drawerNotes !== (selectedContact.notes || '') && (
-                    <DashboardButton
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => onUpdateNotes(selectedContact.id, drawerNotes)}
-                      className="mt-2"
-                    >
-                      Save Notes
-                    </DashboardButton>
-                  )}
-                </div>
-
-                <div className="text-xs text-fm-neutral-500">
-                  Created: {new Date(selectedContact.createdAt).toLocaleString()}
-                </div>
+                {selectedContact.sourceFile && (
+                  <div className="flex items-center gap-2 text-xs text-fm-neutral-500 pt-1 border-t border-fm-neutral-200">
+                    <span className="font-medium">Batch:</span>
+                    <span className="font-mono text-fm-neutral-600 truncate">{selectedContact.sourceFile}</span>
+                  </div>
+                )}
               </div>
+
+              {/* ── Notes ─────────────────────────────────────────── */}
+              <div>
+                <label className="text-[10px] font-bold text-fm-neutral-500 uppercase tracking-wider block mb-1.5">Internal Notes</label>
+                <textarea
+                  value={drawerNotes}
+                  onChange={(e) => setDrawerNotes(e.target.value)}
+                  placeholder="Add your own notes about this contact..."
+                  className="w-full min-h-[80px] text-sm border border-fm-neutral-200 rounded-xl p-3 text-fm-neutral-700 placeholder-fm-neutral-300 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent resize-y"
+                />
+                {drawerNotes !== (selectedContact.notes || '') && (
+                  <DashboardButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => onUpdateNotes(selectedContact.id, drawerNotes)}
+                    className="mt-2"
+                  >
+                    Save Notes
+                  </DashboardButton>
+                )}
+              </div>
+
+              {/* ── Footer ────────────────────────────────────────── */}
+              <p className="text-xs text-fm-neutral-400">
+                Added {new Date(selectedContact.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} at {new Date(selectedContact.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+              </p>
             </div>
           </div>
         </>

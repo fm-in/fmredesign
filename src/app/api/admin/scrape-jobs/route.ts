@@ -205,6 +205,35 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
       }
 
+      // Rate limit: no more than 5 runs triggered in the last 10 minutes
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { count: recentRunCount } = await supabase
+        .from('scrape_job_runs')
+        .select('id', { count: 'exact', head: true })
+        .eq('triggered_by', 'manual')
+        .gte('created_at', tenMinutesAgo);
+
+      if ((recentRunCount ?? 0) >= 5) {
+        return NextResponse.json(
+          { success: false, error: 'Rate limit: max 5 manual runs per 10 minutes. Please wait.' },
+          { status: 429 }
+        );
+      }
+
+      // Prevent duplicate: block if this job already has a pending/running run
+      const { count: activeRunCount } = await supabase
+        .from('scrape_job_runs')
+        .select('id', { count: 'exact', head: true })
+        .eq('job_id', id)
+        .in('status', ['pending', 'running']);
+
+      if ((activeRunCount ?? 0) > 0) {
+        return NextResponse.json(
+          { success: false, error: 'This job already has a pending or running run. Cancel it first.' },
+          { status: 409 }
+        );
+      }
+
       const { data: run, error: runErr } = await supabase
         .from('scrape_job_runs')
         .insert({

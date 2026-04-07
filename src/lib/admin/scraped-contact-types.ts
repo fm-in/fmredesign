@@ -67,14 +67,16 @@ export interface ScrapedContactStats {
   priorityLow?: number;
 }
 
-/** Parse the structured notes field into priority, gaps, and recommended services */
+/** Parse the structured notes field into priority, newness, gaps, and recommended services */
 export function parseContactNotes(notes: string): {
   priority: 'HIGH' | 'MEDIUM' | 'LOW' | null;
+  newness: 'NEW' | 'GROWING' | 'ESTABLISHED' | null;
   gaps: string[];
   services: string[];
 } {
-  const result: { priority: 'HIGH' | 'MEDIUM' | 'LOW' | null; gaps: string[]; services: string[] } = {
+  const result: { priority: 'HIGH' | 'MEDIUM' | 'LOW' | null; newness: 'NEW' | 'GROWING' | 'ESTABLISHED' | null; gaps: string[]; services: string[] } = {
     priority: null,
+    newness: null,
     gaps: [],
     services: [],
   };
@@ -82,6 +84,9 @@ export function parseContactNotes(notes: string): {
 
   const priorityMatch = notes.match(/PRIORITY:\s*(HIGH|MEDIUM|LOW)/);
   if (priorityMatch) result.priority = priorityMatch[1] as 'HIGH' | 'MEDIUM' | 'LOW';
+
+  const newnessMatch = notes.match(/NEWNESS:\s*(NEW|GROWING|ESTABLISHED)/);
+  if (newnessMatch) result.newness = newnessMatch[1] as 'NEW' | 'GROWING' | 'ESTABLISHED';
 
   const gapsMatch = notes.match(/GAPS:\s*([^|]+)/);
   if (gapsMatch) result.gaps = gapsMatch[1].split(',').map(g => g.trim()).filter(Boolean);

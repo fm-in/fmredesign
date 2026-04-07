@@ -8,11 +8,28 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 
-function transformSourceConfig(row: Record<string, unknown>) {
+/**
+ * Mask sensitive values in source config before sending to client.
+ * Only the last 4 chars of API keys are visible.
+ */
+function maskConfigSecrets(config: Record<string, unknown>): Record<string, unknown> {
+  if (!config || typeof config !== 'object') return config;
+  const masked = { ...config };
+  for (const key of Object.keys(masked)) {
+    const val = masked[key];
+    if (typeof val === 'string' && (key.includes('key') || key.includes('token') || key.includes('secret'))) {
+      masked[key] = val.length > 4 ? `${'•'.repeat(val.length - 4)}${val.slice(-4)}` : '••••';
+    }
+  }
+  return masked;
+}
+
+function transformSourceConfig(row: Record<string, unknown>, maskSecrets = true) {
+  const config = row.config as Record<string, unknown> | undefined;
   return {
     id: row.id,
     sourcePlatform: row.source_platform,
-    config: row.config,
+    config: maskSecrets && config ? maskConfigSecrets(config) : config,
     isValid: row.is_valid,
     lastValidatedAt: row.last_validated_at,
     validationError: row.validation_error,
@@ -119,7 +136,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        sourceConfigs: (sourceResult.data || []).map(transformSourceConfig),
+        sourceConfigs: (sourceResult.data || []).map((row) => transformSourceConfig(row)),
         rotationConfigs: (rotationResult.data || []).map(transformRotationConfig),
       },
     });
@@ -195,6 +212,17 @@ export async function PUT(request: NextRequest) {
           .single();
 
         if (error) throw error;
+
+        const auditUser = getAuditUser(request);
+        await logAuditEvent({
+          ...auditUser,
+          action: 'update',
+          resource_type: 'scrape_rotation_config',
+          resource_id: id,
+          details: { updatedFields: Object.keys(updates).filter(k => k !== 'updated_at') },
+          ip_address: getClientIP(request),
+        });
+
         return NextResponse.json({ success: true, data: transformRotationConfig(data) });
       } else {
         // Create new
@@ -211,6 +239,17 @@ export async function PUT(request: NextRequest) {
           .single();
 
         if (error) throw error;
+
+        const auditUser = getAuditUser(request);
+        await logAuditEvent({
+          ...auditUser,
+          action: 'create',
+          resource_type: 'scrape_rotation_config',
+          resource_id: data.id as string,
+          details: { name: updateData.name, sourcePlatform: updateData.sourcePlatform },
+          ip_address: getClientIP(request),
+        });
+
         return NextResponse.json(
           { success: true, data: transformRotationConfig(data) },
           { status: 201 }
@@ -249,6 +288,17 @@ export async function DELETE(request: NextRequest) {
       .eq('id', id);
 
     if (error) throw error;
+
+    const auditUser = getAuditUser(request);
+    await logAuditEvent({
+      ...auditUser,
+      action: 'delete',
+      resource_type: 'scrape_rotation_config',
+      resource_id: id,
+      details: {},
+      ip_address: getClientIP(request),
+    });
+
     return NextResponse.json({ success: true, message: 'Rotation config deleted' });
   } catch (error) {
     console.error('Error deleting rotation config:', error);

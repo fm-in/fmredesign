@@ -106,9 +106,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (searchQuery) {
-      query = query.or(
-        `first_name.ilike.%${searchQuery}%,last_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company_name.ilike.%${searchQuery}%`
-      );
+      // Sanitize search input: strip characters that could break the PostgREST filter syntax
+      const sanitized = searchQuery.replace(/[%_'"\\(),]/g, '').trim();
+      if (sanitized) {
+        query = query.or(
+          `first_name.ilike.%${sanitized}%,last_name.ilike.%${sanitized}%,email.ilike.%${sanitized}%,company_name.ilike.%${sanitized}%`
+        );
+      }
     }
 
     query = query.order(dbSortField, { ascending: sortDirection === 'asc' });

@@ -132,11 +132,14 @@ export function ScrapeJobCreateModal({ isOpen, onClose, onCreate }: ScrapeJobCre
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => setSourcePlatform(opt.value)}
+                  onClick={() => !opt.disabled && setSourcePlatform(opt.value)}
+                  disabled={opt.disabled}
                   className={`px-3 py-2.5 rounded-lg border text-sm text-left transition-colors ${
-                    sourcePlatform === opt.value
-                      ? 'border-fm-magenta-600 bg-fm-magenta-50 text-fm-neutral-900'
-                      : 'border-fm-neutral-200 bg-white text-fm-neutral-600 hover:bg-fm-neutral-50'
+                    opt.disabled
+                      ? 'border-fm-neutral-100 bg-fm-neutral-50 text-fm-neutral-300 cursor-not-allowed'
+                      : sourcePlatform === opt.value
+                        ? 'border-fm-magenta-600 bg-fm-magenta-50 text-fm-neutral-900'
+                        : 'border-fm-neutral-200 bg-white text-fm-neutral-600 hover:bg-fm-neutral-50'
                   }`}
                 >
                   <div className="font-medium">{opt.label}</div>
