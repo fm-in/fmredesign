@@ -1,21 +1,25 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Services - Brand Strategy, Design & Performance Marketing",
-  description: "Full-service marketing solutions: brand strategy, creative design, performance marketing, SEO, social media, and web development. Custom strategies for your business.",
+  title: 'Digital Marketing Services — SEO, Social Media, Branding & More',
+  description:
+    'Full-service digital marketing: SEO, social media marketing, brand design, performance ads, web development, and content marketing. Data-driven strategies that deliver real ROI.',
+  alternates: { canonical: '/services' },
+  keywords: [
+    'digital marketing services bhopal',
+    'seo services india',
+    'social media marketing agency',
+    'brand design agency',
+    'performance marketing',
+    'web development services',
+  ],
   openGraph: {
-    title: "Services - Brand Strategy, Design & Performance Marketing | Freaking Minds",
-    description: "Full-service marketing solutions: brand strategy, creative design, performance marketing, SEO, and web development.",
-  },
-  alternates: {
-    canonical: "https://freakingminds.in/services",
+    title: 'Digital Marketing Services — Freaking Minds',
+    description: 'SEO, social media, branding, performance ads, web development — everything your brand needs to dominate online.',
+    url: 'https://freakingminds.in/services',
   },
 };
 
-export default function ServicesLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ServicesLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

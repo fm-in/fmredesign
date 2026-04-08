@@ -1,24 +1,14 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Blog',
+  title: 'Blog — Digital Marketing Tips, Strategies & Insights',
   description:
-    'Stay ahead with marketing insights, SEO tips, social media strategies, and industry trends from the Freaking Minds team.',
-  keywords: [
-    'marketing blog',
-    'seo tips',
-    'social media strategy',
-    'marketing insights',
-    'content marketing tips',
-  ],
+    'Expert digital marketing insights from Freaking Minds. Learn SEO strategies, social media tips, branding advice, and growth tactics for your business.',
+  alternates: { canonical: '/blog' },
   openGraph: {
-    title: 'Blog | Freaking Minds',
-    description:
-      'Expert marketing tips, SEO guides, and industry insights.',
+    title: 'Freaking Minds Blog — Marketing Tips & Strategies',
+    description: 'Actionable digital marketing insights. SEO, social media, branding, and growth strategies from our team.',
     url: 'https://freakingminds.in/blog',
-  },
-  alternates: {
-    canonical: 'https://freakingminds.in/blog',
   },
 };
 

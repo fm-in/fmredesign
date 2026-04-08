@@ -496,13 +496,25 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
 
 /* Form styles — in @layer base so Tailwind utilities can override */
 @layer base {
-  /* Default focus ring — overridden by component-level focus:ring/focus:border */
-  input:focus,
-  select:focus,
-  textarea:focus {
+  /* Default focus ring — only on keyboard navigation (focus-visible), not mouse clicks.
+     Overridden by component-level focus:ring/focus:border. */
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(201, 50, 93, 0.15);
+    box-shadow: 0 0 0 3px rgba(201, 50, 93, 0.2);
     border-color: #c9325d;
+  }
+
+  /* Remove outline on mouse click */
+  input:focus:not(:focus-visible),
+  select:focus:not(:focus-visible),
+  textarea:focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
   }
 
   /* Required field indicator */

@@ -88,7 +88,7 @@ export function UserFormModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-4">
           <div className="flex items-center justify-between">

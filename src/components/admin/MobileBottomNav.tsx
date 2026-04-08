@@ -144,12 +144,14 @@ export function MobileBottomNav({ navigation }: MobileBottomNavProps) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors',
+                  'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-[48px] transition-colors',
                   active ? 'text-fm-magenta-600' : 'text-fm-neutral-400'
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{tab.label}</span>
+                <span className="flex items-center justify-center w-8 h-8">
+                  <Icon className="w-5 h-5" />
+                </span>
+                <span className="text-[10px] font-medium leading-none">{tab.label}</span>
               </Link>
             );
           })}
@@ -158,12 +160,14 @@ export function MobileBottomNav({ navigation }: MobileBottomNavProps) {
           <button
             onClick={() => setMoreOpen((p) => !p)}
             className={cn(
-              'flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors',
+              'flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-[48px] transition-colors',
               moreOpen || isMoreActive ? 'text-fm-magenta-600' : 'text-fm-neutral-400'
             )}
           >
-            <MoreHorizontal className="w-5 h-5" />
-            <span className="text-[10px] font-medium">More</span>
+            <span className="flex items-center justify-center w-8 h-8">
+              <MoreHorizontal className="w-5 h-5" />
+            </span>
+            <span className="text-[10px] font-medium leading-none">More</span>
           </button>
         </div>
       </nav>

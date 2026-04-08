@@ -1,24 +1,14 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'CreativeMinds Talent Network',
+  title: 'CreativeMinds — Join Our Talent Network',
   description:
-    'Join the CreativeMinds talent network — a curated community of designers, marketers, writers, and creators. Apply today and connect with top brands.',
-  keywords: [
-    'creativeminds talent network',
-    'freelance creative jobs india',
-    'digital marketing talent',
-    'creative community',
-    'freelancer network India',
-  ],
+    'Designers, developers, marketers — join the CreativeMinds talent network. Work on exciting projects with top brands. Apply to collaborate with Freaking Minds.',
+  alternates: { canonical: '/creativeminds' },
   openGraph: {
-    title: 'CreativeMinds Talent Network | Freaking Minds',
-    description:
-      'A curated community of verified creative professionals. Apply to join and connect with brands.',
+    title: 'CreativeMinds Talent Network — Freaking Minds',
+    description: 'Join our network of creative professionals. Work on exciting brand projects.',
     url: 'https://freakingminds.in/creativeminds',
-  },
-  alternates: {
-    canonical: 'https://freakingminds.in/creativeminds',
   },
 };
 

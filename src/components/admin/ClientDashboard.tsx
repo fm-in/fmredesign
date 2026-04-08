@@ -63,13 +63,16 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showAddClient, setShowAddClient] = useState(false);
   const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initializeData = async () => {
+      setLoading(true);
       await loadClients();
       await loadDashboardStats();
+      setLoading(false);
     };
-    
+
     initializeData();
   }, []);
 
@@ -156,17 +159,22 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
 
   const getStatusBadge = (status: ClientStatus) => {
     const colors = {
-      active: 'bg-green-100 text-green-800',
-      inactive: 'bg-fm-neutral-100 text-fm-neutral-800',
-      paused: 'bg-yellow-100 text-yellow-800',
-      churned: 'bg-red-100 text-red-800'
+      active: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+      inactive: 'bg-fm-neutral-50 text-fm-neutral-600 border border-fm-neutral-200',
+      paused: 'bg-amber-50 text-amber-700 border border-amber-200',
+      churned: 'bg-red-50 text-red-700 border border-red-200',
     };
 
     // Handle null, undefined, or invalid status
     const safeStatus = status || 'active';
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[safeStatus] || colors.active}`}>
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${colors[safeStatus] || colors.active}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${
+          safeStatus === 'active' ? 'bg-emerald-500' :
+          safeStatus === 'paused' ? 'bg-amber-500' :
+          safeStatus === 'churned' ? 'bg-red-500' : 'bg-fm-neutral-400'
+        }`} />
         {safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1)}
       </span>
     );
@@ -177,6 +185,49 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
       onClientSelect(client);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        {/* Header skeleton */}
+        <div className="bg-white rounded-xl border border-fm-neutral-200 p-4 sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="h-8 w-56 bg-fm-neutral-200 rounded-lg animate-pulse" />
+              <div className="h-4 w-80 bg-fm-neutral-100 rounded mt-2 animate-pulse" />
+            </div>
+            <div className="h-10 w-36 bg-fm-neutral-200 rounded-lg animate-pulse" />
+          </div>
+        </div>
+        {/* Stats skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl border border-fm-neutral-200 p-4 sm:p-5">
+              <div className="h-3 w-20 bg-fm-neutral-100 rounded animate-pulse mb-3" />
+              <div className="h-7 w-16 bg-fm-neutral-200 rounded animate-pulse mb-2" />
+              <div className="h-3 w-24 bg-fm-neutral-100 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+        {/* Client cards skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-white rounded-xl border border-fm-neutral-200 p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-fm-neutral-200 animate-pulse" />
+                <div className="flex-1">
+                  <div className="h-4 w-32 bg-fm-neutral-200 rounded animate-pulse" />
+                  <div className="h-3 w-20 bg-fm-neutral-100 rounded mt-1 animate-pulse" />
+                </div>
+              </div>
+              <div className="h-3 w-full bg-fm-neutral-100 rounded animate-pulse mb-2" />
+              <div className="h-3 w-2/3 bg-fm-neutral-100 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">

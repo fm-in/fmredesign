@@ -36,7 +36,7 @@ export function SlideOverPanel({ open, onClose, title, children }: SlideOverPane
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 bg-black/30 transition-opacity duration-300',
+          'fixed inset-0 bg-black/40 transition-opacity duration-300',
           open ? 'opacity-100' : 'opacity-0 pointer-events-none'
         )}
         style={{ zIndex: 40 }}

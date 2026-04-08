@@ -129,7 +129,17 @@ async function getValidClientSession(
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  const host = request.headers.get('host') || '';
+
+  /* ── SEO: Canonical redirect — www → non-www, http → https ── */
+  if (
+    host.startsWith('www.') ||
+    request.nextUrl.protocol === 'http:'
+  ) {
+    const canonicalUrl = new URL(`https://freakingminds.in${pathname}${search}`);
+    return NextResponse.redirect(canonicalUrl, 301);
+  }
 
   /* ── Admin routes ── */
   if (pathname.startsWith('/admin')) {
@@ -282,5 +292,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/client/:path*', '/creativeminds/portal/:path*'],
+  matcher: [
+    /*
+     * Match all paths except static files and Next.js internals.
+     * This ensures the www→non-www redirect fires on all public pages too.
+     */
+    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|css|js|map)).*)',
+  ],
 };

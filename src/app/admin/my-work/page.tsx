@@ -59,18 +59,53 @@ export default function MyWorkPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-fm-magenta-600" />
+      <div className="space-y-8">
+        {/* Header skeleton */}
+        <div>
+          <div className="h-7 w-32 bg-fm-neutral-200 rounded-lg animate-pulse" />
+          <div className="h-4 w-64 bg-fm-neutral-100 rounded mt-2 animate-pulse" />
+        </div>
+        {/* Assignment cards skeleton */}
+        <div>
+          <div className="h-5 w-48 bg-fm-neutral-200 rounded animate-pulse mb-4" />
+          <div className="grid gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-lg border border-fm-neutral-200 bg-white p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 w-48 bg-fm-neutral-200 rounded animate-pulse" />
+                  <div className="h-3 w-36 bg-fm-neutral-100 rounded animate-pulse" />
+                </div>
+                <div className="h-6 w-16 bg-fm-neutral-100 rounded-full animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Project cards skeleton */}
+        <div>
+          <div className="h-5 w-40 bg-fm-neutral-200 rounded animate-pulse mb-4" />
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+            {[1, 2].map((i) => (
+              <div key={i} className="rounded-lg border border-fm-neutral-200 bg-white p-4">
+                <div className="h-4 w-40 bg-fm-neutral-200 rounded animate-pulse" />
+                <div className="flex items-center justify-between mt-3">
+                  <div className="h-5 w-16 bg-fm-neutral-100 rounded-full animate-pulse" />
+                  <div className="h-3 w-20 bg-fm-neutral-100 rounded animate-pulse" />
+                </div>
+                <div className="mt-2 h-1.5 bg-fm-neutral-100 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   const statusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-700';
-      case 'completed': return 'bg-blue-100 text-blue-700';
-      case 'on_hold': return 'bg-yellow-100 text-yellow-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'active': return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+      case 'completed': return 'bg-blue-50 text-blue-700 border border-blue-200';
+      case 'on_hold': return 'bg-amber-50 text-amber-700 border border-amber-200';
+      default: return 'bg-fm-neutral-50 text-fm-neutral-600 border border-fm-neutral-200';
     }
   };
 
@@ -131,7 +166,7 @@ export default function MyWorkPage() {
             <Briefcase className="w-5 h-5" />
             My Projects ({projects.length})
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             {projects.map(p => (
               <a key={p.id} href={`/admin/projects/${p.id}`} className="rounded-lg border border-fm-neutral-200 bg-white p-4 hover:border-fm-magenta-300 transition-colors">
                 <p className="font-medium text-fm-neutral-900">{p.name}</p>

@@ -172,6 +172,23 @@ export default function RootLayout({
         url: 'https://freakingminds.in',
         name: 'Freaking Minds',
         publisher: { '@id': 'https://freakingminds.in/#organization' },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: 'https://freakingminds.in/blog?q={search_term_string}',
+          'query-input': 'required name=search_term_string',
+        },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        '@id': 'https://freakingminds.in/#breadcrumb',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://freakingminds.in' },
+          { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://freakingminds.in/services' },
+          { '@type': 'ListItem', position: 2, name: 'Work', item: 'https://freakingminds.in/work' },
+          { '@type': 'ListItem', position: 2, name: 'About', item: 'https://freakingminds.in/about' },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://freakingminds.in/blog' },
+          { '@type': 'ListItem', position: 2, name: 'Contact', item: 'https://freakingminds.in/contact' },
+        ],
       },
     ],
   };

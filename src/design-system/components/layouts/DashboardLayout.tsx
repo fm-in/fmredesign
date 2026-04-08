@@ -528,9 +528,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <Menu className="w-5 h-5" />
             </button>
 
-            {/* Breadcrumb slot */}
+            {/* Breadcrumb: full on desktop, page title only on mobile */}
             {breadcrumb && (
-              <div className="hidden md:block min-w-0">{breadcrumb}</div>
+              <>
+                <div className="hidden md:block min-w-0">{breadcrumb}</div>
+                <span className="md:hidden text-sm font-semibold text-fm-neutral-900 truncate min-w-0">
+                  {(() => {
+                    const allItems = navigation.flatMap(g => g.items);
+                    const active = allItems.find(item => isActive(item.href));
+                    return active?.label || '';
+                  })()}
+                </span>
+              </>
             )}
           </div>
 
