@@ -132,11 +132,10 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const host = request.headers.get('host') || '';
 
-  /* ── SEO: Canonical redirect — www → non-www, http → https ── */
-  if (
-    host.startsWith('www.') ||
-    request.nextUrl.protocol === 'http:'
-  ) {
+  /* ── SEO: Canonical redirect — www → non-www ── */
+  /* Note: Vercel handles HTTPS enforcement automatically at the edge.
+     We only need to handle the www→non-www redirect here. */
+  if (host.startsWith('www.')) {
     const canonicalUrl = new URL(`https://freakingminds.in${pathname}${search}`);
     return NextResponse.redirect(canonicalUrl, 301);
   }
