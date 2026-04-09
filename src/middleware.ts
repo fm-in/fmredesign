@@ -129,16 +129,12 @@ async function getValidClientSession(
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
-  const host = request.headers.get('host') || '';
-
-  /* ── SEO: Canonical redirect — www → non-www ── */
-  /* Note: Vercel handles HTTPS enforcement automatically at the edge.
-     We only need to handle the www→non-www redirect here. */
-  if (host.startsWith('www.')) {
-    const canonicalUrl = new URL(`https://freakingminds.in${pathname}${search}`);
-    return NextResponse.redirect(canonicalUrl, 301);
-  }
+  const { pathname } = request.nextUrl;
+  /* ── SEO note ── */
+  /* Vercel's domain config redirects non-www → www automatically (307).
+     Do NOT add a www→non-www redirect here — it creates a loop.
+     To switch canonical to non-www, update Vercel dashboard:
+     Project Settings → Domains → set freakingminds.in as primary. */
 
   /* ── Admin routes ── */
   if (pathname.startsWith('/admin')) {
@@ -291,11 +287,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all paths except static files and Next.js internals.
-     * This ensures the www→non-www redirect fires on all public pages too.
-     */
-    '/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot|css|js|map)).*)',
-  ],
+  matcher: ['/admin/:path*', '/client/:path*', '/creativeminds/portal/:path*'],
 };
