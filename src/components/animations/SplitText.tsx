@@ -101,6 +101,12 @@ export function SplitText({
       `.split-${type === 'chars' ? 'char' : type === 'words' ? 'word' : 'line'}`
     );
 
+    // Guard: skip animation if no elements found (prevents GSAP warnings)
+    if (elements.length === 0) {
+      setIsReady(true);
+      return;
+    }
+
     const animProps = getAnimationProps();
 
     const ctx = gsap.context(() => {

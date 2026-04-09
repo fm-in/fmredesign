@@ -21,10 +21,21 @@ export function CalButton({ calLink, className, children }: CalButtonProps) {
   const openCal = useCallback(() => {
     if (window.Cal) {
       window.Cal('modal', calLink, { layout: 'month_view' });
-    } else {
-      // Fallback if embed script hasn't loaded
-      window.open(`https://cal.com/${calLink}`, '_blank');
+      return;
     }
+    // Script still loading — retry up to 3 times with 500ms intervals
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (window.Cal) {
+        clearInterval(interval);
+        window.Cal('modal', calLink, { layout: 'month_view' });
+      } else if (attempts >= 3) {
+        clearInterval(interval);
+        // Final fallback: open in new tab
+        window.open(`https://cal.com/${calLink}`, '_blank');
+      }
+    }, 500);
   }, [calLink]);
 
   return (

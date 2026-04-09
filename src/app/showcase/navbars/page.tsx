@@ -21,7 +21,7 @@ function NavbarMegaMenu() {
   const tools = [
     { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: '/tools/deep-dive', color: 'from-violet-500 to-purple-600' },
     { name: 'Brand Skits', icon: Video, desc: 'Viral video creator', href: '/tools/brand-skits', color: 'from-pink-500 to-rose-600' },
-    { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '/tools/webuild', color: 'from-cyan-500 to-blue-600' },
+    { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '#', color: 'from-cyan-500 to-blue-600' },
     { name: 'WeCraft', icon: PenTool, desc: 'Design system generator', href: '/tools/wecraft', color: 'from-orange-500 to-amber-600' },
   ];
 

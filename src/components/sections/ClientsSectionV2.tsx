@@ -46,40 +46,46 @@ export function ClientsSectionV2() {
     const ctx = gsap.context(() => {
       // Header animation with split text feel
       if (headerRef.current) {
-        const badge = headerRef.current.querySelector('.clients-badge');
-        const heading = headerRef.current.querySelector('h2');
-        const subtitle = headerRef.current.querySelector('p');
+        const targets = [
+          headerRef.current.querySelector('.clients-badge'),
+          headerRef.current.querySelector('h2'),
+          headerRef.current.querySelector('p'),
+        ].filter(Boolean);
 
-        gsap.from([badge, heading, subtitle], {
-          y: 25,
-          opacity: 0,
-          duration: 0.45,
-          stagger: 0.06,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: headerRef.current,
-            start: 'top 85%',
-            toggleActions: 'play none none none',
-          },
-        });
+        if (targets.length > 0) {
+          gsap.from(targets, {
+            y: 25,
+            opacity: 0,
+            duration: 0.45,
+            stagger: 0.06,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: headerRef.current,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+            },
+          });
+        }
       }
 
       // Stats cards
       if (statsRef.current) {
         const statCards = statsRef.current.querySelectorAll('.stat-card');
 
-        gsap.from(statCards, {
-          y: 25,
-          opacity: 0,
-          duration: 0.4,
-          stagger: 0.06,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: statsRef.current,
-            start: 'top 85%',
-            toggleActions: 'play none none none',
-          },
-        });
+        if (statCards.length > 0) {
+          gsap.from(statCards, {
+            y: 25,
+            opacity: 0,
+            duration: 0.4,
+            stagger: 0.06,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: statsRef.current,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+            },
+          });
+        }
 
         // Animate stat numbers with counting effect
         const statNumbers = statsRef.current.querySelectorAll('.stat-number');

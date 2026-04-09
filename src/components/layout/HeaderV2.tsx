@@ -14,7 +14,7 @@ import {
 const tools = [
   { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: 'https://deepdive.freakingminds.in', gradient: 'linear-gradient(135deg, #c9325d, #4a1942)', comingSoon: true },
   { name: 'Brand Kits', icon: Video, desc: 'AI logo asset generator', href: 'https://brandkits.freakingminds.in', gradient: 'linear-gradient(135deg, #e04d7d, #c9325d)', comingSoon: true },
-  { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '/tools/webuild', gradient: 'linear-gradient(135deg, #7a2155, #4a1942)', comingSoon: true },
+  { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '#', gradient: 'linear-gradient(135deg, #7a2155, #4a1942)', comingSoon: true },
   { name: 'WebCraft', icon: PenTool, desc: '7-day website builder', href: 'https://webcraft.freakingminds.in', gradient: 'linear-gradient(135deg, #c9325d, #8c213d)', comingSoon: true },
 ];
 

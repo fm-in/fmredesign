@@ -206,7 +206,7 @@ export default function RootLayout({
           }}
         />
         <script
-          async
+          defer
           src="https://cal.com/embed/embed.js"
         />
         <script
