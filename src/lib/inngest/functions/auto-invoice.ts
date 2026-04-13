@@ -26,15 +26,61 @@ export const autoInvoiceDailyCron = inngest.createFunction(
       const today = new Date();
       const dayOfMonth = today.getDate();
 
-      const { data, error } = await supabase
+      // Check if today is the last day of the month
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const isLastDayOfMonth = tomorrow.getDate() === 1;
+
+      // Fetch clients whose billing day matches today
+      // OR clients set to "last day of month" (-1) when today IS the last day
+      const { data: exactDayClients, error: err1 } = await supabase
         .from('clients')
         .select('id, name, email, phone, address, city, state, country, gst_number, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms')
         .eq('auto_invoice', true)
         .eq('status', 'active')
         .eq('auto_invoice_day', dayOfMonth);
 
-      if (error) throw new Error(`Failed to fetch clients: ${error.message}`);
-      return data || [];
+      if (err1) throw new Error(`Failed to fetch clients: ${err1.message}`);
+
+      let lastDayClients: typeof exactDayClients = [];
+      if (isLastDayOfMonth) {
+        const { data, error: err2 } = await supabase
+          .from('clients')
+          .select('id, name, email, phone, address, city, state, country, gst_number, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms')
+          .eq('auto_invoice', true)
+          .eq('status', 'active')
+          .eq('auto_invoice_day', -1);
+
+        if (err2) throw new Error(`Failed to fetch last-day clients: ${err2.message}`);
+        lastDayClients = data || [];
+      }
+
+      // Also handle day 29/30/31 clients on shorter months:
+      // If a client is set to day 31 but the month only has 30 days,
+      // generate their invoice on the last day of that month
+      let overflowClients: typeof exactDayClients = [];
+      if (isLastDayOfMonth && dayOfMonth < 31) {
+        const { data, error: err3 } = await supabase
+          .from('clients')
+          .select('id, name, email, phone, address, city, state, country, gst_number, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms')
+          .eq('auto_invoice', true)
+          .eq('status', 'active')
+          .gt('auto_invoice_day', dayOfMonth)
+          .lte('auto_invoice_day', 31);
+
+        if (err3) throw new Error(`Failed to fetch overflow clients: ${err3.message}`);
+        overflowClients = data || [];
+      }
+
+      // Deduplicate by client ID
+      const allClients = [...(exactDayClients || []), ...lastDayClients, ...overflowClients];
+      const seen = new Set<string>();
+      return allClients.filter(c => {
+        const id = c.id as string;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
     });
 
     if (clients.length === 0) {

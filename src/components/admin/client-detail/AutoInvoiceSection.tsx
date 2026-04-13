@@ -21,7 +21,7 @@ interface AutoInvoiceSectionProps {
 }
 
 const CURRENCY_OPTIONS = ['INR', 'USD', 'GBP', 'AED', 'EUR'];
-const DAY_OPTIONS = Array.from({ length: 28 }, (_, i) => i + 1);
+const DAY_OPTIONS = [...Array.from({ length: 31 }, (_, i) => i + 1), -1]; // -1 = last day of month
 
 export function AutoInvoiceSection({ clientId, clientProfile, onUpdate }: AutoInvoiceSectionProps) {
   const [enabled, setEnabled] = useState(clientProfile.autoInvoice ?? false);
@@ -141,7 +141,11 @@ export function AutoInvoiceSection({ clientId, clientProfile, onUpdate }: AutoIn
                 className="w-full px-3 py-2 rounded-lg border border-fm-neutral-200 bg-white text-fm-neutral-900 text-sm focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
               >
                 {DAY_OPTIONS.map(d => (
-                  <option key={d} value={d}>{d}{d === 1 ? 'st' : d === 2 ? 'nd' : d === 3 ? 'rd' : 'th'} of every month</option>
+                  <option key={d} value={d}>
+                    {d === -1
+                      ? 'Last day of every month'
+                      : `${d}${d === 1 || d === 21 || d === 31 ? 'st' : d === 2 || d === 22 ? 'nd' : d === 3 || d === 23 ? 'rd' : 'th'} of every month`}
+                  </option>
                 ))}
               </select>
             </div>
