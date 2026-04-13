@@ -13,6 +13,7 @@ export { deliverWebhooksFn } from './functions/webhooks';
 export { publishToSocialFn } from './functions/social';
 export { generateAIContentFn } from './functions/ai-content';
 export { platformEventFanoutFn } from './functions/platform-events';
+export { autoInvoiceDailyCron, generateAutoInvoiceFn } from './functions/auto-invoice';
 
 // All functions array for serve()
 import { logAuditEventFn } from './functions/audit';
@@ -22,6 +23,7 @@ import { deliverWebhooksFn } from './functions/webhooks';
 import { publishToSocialFn } from './functions/social';
 import { generateAIContentFn } from './functions/ai-content';
 import { platformEventFanoutFn } from './functions/platform-events';
+import { autoInvoiceDailyCron, generateAutoInvoiceFn } from './functions/auto-invoice';
 
 export const allFunctions = [
   logAuditEventFn,
@@ -33,4 +35,6 @@ export const allFunctions = [
   publishToSocialFn,
   generateAIContentFn,
   platformEventFanoutFn,
+  autoInvoiceDailyCron,
+  generateAutoInvoiceFn,
 ];

@@ -40,6 +40,15 @@ export interface ClientProfile {
   };
   accountManager: string;
   createdAt: string;
+  // Auto-invoice fields
+  autoInvoice?: boolean;
+  autoInvoiceDay?: number;
+  autoInvoiceSend?: boolean;
+  autoInvoiceTemplate?: { description: string; sacCode?: string; quantity: number; rate: number; amount: number }[];
+  autoInvoiceCurrency?: string;
+  autoInvoiceTaxRate?: number;
+  autoInvoiceNotes?: string;
+  autoInvoiceTerms?: string;
 }
 
 /**

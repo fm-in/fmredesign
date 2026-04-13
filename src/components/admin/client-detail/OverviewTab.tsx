@@ -16,8 +16,15 @@ import {
   FolderPlus,
   LifeBuoy,
   MessageSquare,
+  Zap,
+  Calendar,
+  Send,
+  Plus,
+  Trash2,
 } from 'lucide-react';
+import { DashboardButton } from '@/design-system';
 import { BrandIdentitySection } from './BrandIdentitySection';
+import { AutoInvoiceSection } from './AutoInvoiceSection';
 
 interface OverviewTabProps {
   clientProfile: ClientProfile;
@@ -208,6 +215,13 @@ export function OverviewTab({ clientProfile, onProfileUpdate, onTabChange }: Ove
           </div>
         </CardContent>
       </Card>
+
+      {/* Auto Invoice */}
+      <AutoInvoiceSection
+        clientId={clientProfile.id}
+        clientProfile={clientProfile}
+        onUpdate={onProfileUpdate || (() => {})}
+      />
 
       {/* Brand Identity */}
       <BrandIdentitySection

@@ -85,6 +85,19 @@ export interface AIGenerateContentData {
   ipAddress?: string;
 }
 
+export interface AutoInvoiceGenerateData {
+  clientId: string;
+  clientName: string;
+  clientEmail: string;
+  billingDay: number;
+  autoSend: boolean;
+  lineItems: { description: string; sacCode?: string; quantity: number; rate: number; amount: number }[];
+  currency: string;
+  taxRate: number;
+  notes?: string;
+  terms?: string;
+}
+
 export interface PlatformEventData {
   eventType: PlatformEventType;
   entityId: string;
@@ -107,4 +120,5 @@ export type InngestEvents = {
   'social/publish': { data: SocialPublishData };
   'ai/generate-content': { data: AIGenerateContentData };
   'platform/event': { data: PlatformEventData };
+  'invoice/auto-generate': { data: AutoInvoiceGenerateData };
 };

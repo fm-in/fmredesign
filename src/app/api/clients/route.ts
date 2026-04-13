@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (id) {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url, content_pillars, content_events, content_preferences, competitor_social_urls')
+        .select('id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url, content_pillars, content_events, content_preferences, competitor_social_urls, auto_invoice, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms')
         .eq('id', id)
         .single();
 
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data: formatted });
     }
 
-    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url, content_pillars, content_events, content_preferences, competitor_social_urls';
+    const selectCols = 'id, name, email, phone, address, city, state, zip_code, country, gst_number, industry, company_size, website, status, health, account_manager, contract_type, contract_value, contract_start_date, contract_end_date, billing_cycle, services, created_at, updated_at, total_value, tags, notes, brand_name, parent_client_id, is_brand_group, logo_url, brand_colors, brand_fonts, tagline, brand_guidelines_url, content_pillars, content_events, content_preferences, competitor_social_urls, auto_invoice, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms';
 
     // Pagination: only active when `page` param is provided (backwards compat)
     const pageParam = searchParams.get('page');
@@ -343,6 +343,15 @@ export async function PUT(request: NextRequest) {
     if (formData.contentEvents !== undefined) updates.content_events = formData.contentEvents;
     if (formData.contentPreferences !== undefined) updates.content_preferences = formData.contentPreferences;
     if (formData.competitorSocialUrls !== undefined) updates.competitor_social_urls = formData.competitorSocialUrls;
+    // Auto-invoice fields
+    if (formData.autoInvoice !== undefined) updates.auto_invoice = !!formData.autoInvoice;
+    if (formData.autoInvoiceDay !== undefined) updates.auto_invoice_day = parseInt(formData.autoInvoiceDay, 10) || 1;
+    if (formData.autoInvoiceSend !== undefined) updates.auto_invoice_send = !!formData.autoInvoiceSend;
+    if (formData.autoInvoiceTemplate !== undefined) updates.auto_invoice_template = formData.autoInvoiceTemplate;
+    if (formData.autoInvoiceCurrency !== undefined) updates.auto_invoice_currency = formData.autoInvoiceCurrency || 'INR';
+    if (formData.autoInvoiceTaxRate !== undefined) updates.auto_invoice_tax_rate = parseFloat(formData.autoInvoiceTaxRate) || 18;
+    if (formData.autoInvoiceNotes !== undefined) updates.auto_invoice_notes = formData.autoInvoiceNotes || null;
+    if (formData.autoInvoiceTerms !== undefined) updates.auto_invoice_terms = formData.autoInvoiceTerms || null;
     if (formData.portalPassword !== undefined) {
       updates.portal_password = formData.portalPassword
         ? await bcrypt.hash(formData.portalPassword, 12)
