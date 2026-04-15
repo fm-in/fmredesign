@@ -140,8 +140,12 @@ export function useLeads(): UseLeadsReturn {
           }),
         });
 
-        if (response.ok) {
+        const json = await response.json();
+        if (response.ok && json.success) {
+          adminToast.success(`Status updated to ${status}`);
           await loadDashboardData();
+        } else {
+          adminToast.error(json.error || 'Failed to update status');
         }
       } catch (error) {
         console.error('Error updating lead status:', error);
