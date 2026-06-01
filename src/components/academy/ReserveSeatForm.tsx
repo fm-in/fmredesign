@@ -1,27 +1,28 @@
 /**
  * Reserve Seat form — public-facing CTA on each program detail page.
  *
- * Flow (Phase 2):
- *   1. Submit hits /api/academy/enroll → creates a `reserved` enrollment row
- *      and a Razorpay order in the same call.
- *   2. Response includes `razorpay.orderId/keyId/amount` — we load the
- *      checkout.js script (if not already loaded) and open the Razorpay
- *      modal.
- *   3. Razorpay's success handler is informational only. The actual
- *      transition to `paid` happens server-side via the webhook handler at
- *      /api/academy/razorpay-webhook (single source of truth, immune to
- *      client tampering).
+ * Flow (Phase 2 — Razorpay Checkout):
+ *   1. Submit → POST /api/academy/enroll → creates a `reserved` enrollment
+ *      row AND a Razorpay order in one call.
+ *   2. Response includes `razorpay.{orderId, keyId, amount}`. We load
+ *      checkout.js (preloaded on mount) and open the Razorpay modal.
+ *   3. Razorpay's `handler` callback runs on success — we flip to the
+ *      success state. Source of truth for `paid` status is the webhook at
+ *      /api/academy/razorpay-webhook, which auto-flips the row server-side.
+ *   4. Razorpay's `ondismiss` runs on cancel — we flip to a cancelled
+ *      state showing a retry CTA. (We DO NOT show a green "Seat reserved"
+ *      success card on dismiss — that misled buyers into thinking they had
+ *      a seat without paying.)
  *
- * Fallback: if the API returns no `razorpay` block (e.g. order creation
- * failed or program has no price → manual flow), and a `paymentLinkUrl` is
- * configured on the program, we open that in a new tab — same UX as
- * Phase 1 so we degrade cleanly.
+ * Fallback: if the server can't create an order (Razorpay outage, missing
+ * keys, etc.) and the program has a manual `paymentLinkUrl`, we open
+ * that in a new tab and show the manual flow.
  */
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Loader2, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -44,7 +45,7 @@ interface RazorpayOptions {
     razorpay_order_id: string;
     razorpay_signature: string;
   }) => void;
-  modal?: { ondismiss?: () => void };
+  modal?: { ondismiss?: () => void; escape?: boolean };
 }
 
 interface ReserveSeatFormProps {
@@ -77,6 +78,22 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
+type Phase =
+  | 'idle'              // empty form
+  | 'submitting'        // POST in flight
+  | 'awaiting_payment'  // Razorpay modal is/was open
+  | 'cancelled'         // buyer closed the modal without paying
+  | 'paid'              // payment success (client side — webhook confirms)
+  | 'manual_fallback';  // Razorpay couldn't open; admin will follow up
+
+interface PendingOrder {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  prefill: { name?: string; email?: string; contact?: string };
+}
+
 export function ReserveSeatForm({
   programId,
   programTitle,
@@ -88,17 +105,48 @@ export function ReserveSeatForm({
   const [phone, setPhone] = useState('');
   const [company, setCompany] = useState('');
   const [message, setMessage] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [paid, setPaid] = useState(false);
-  const [reserved, setReserved] = useState(false);
+  const [phase, setPhase] = useState<Phase>('idle');
   const [err, setErr] = useState<string | null>(null);
+  const [pendingOrder, setPendingOrder] = useState<PendingOrder | null>(null);
   const submittedRef = useRef(false);
 
-  // Preload the Razorpay script on mount so the modal opens instantly
-  // when the buyer submits. Non-blocking — failures are handled at submit.
+  // Preload checkout.js on mount so the modal opens instantly on submit.
   useEffect(() => {
     loadRazorpayScript().catch(() => {});
   }, []);
+
+  const openModal = useCallback((order: PendingOrder) => {
+    if (typeof window === 'undefined' || !window.Razorpay) {
+      setErr('Could not load the payment widget — refresh and try again.');
+      setPhase('cancelled');
+      return;
+    }
+    const rzp = new window.Razorpay({
+      key: order.keyId,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'Freaking Minds',
+      description: programTitle,
+      order_id: order.orderId,
+      prefill: order.prefill,
+      theme: { color: '#c9325d' },
+      handler: () => {
+        // Client-side success. The webhook is the actual source of truth
+        // and will flip the row to `paid` server-side within seconds.
+        setPhase('paid');
+        setErr(null);
+      },
+      modal: {
+        ondismiss: () => {
+          // Buyer closed without paying. Their reservation is held but
+          // the seat is NOT confirmed — make that explicit.
+          setPhase('cancelled');
+        },
+      },
+    });
+    rzp.open();
+    setPhase('awaiting_payment');
+  }, [programTitle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +156,7 @@ export function ReserveSeatForm({
       return;
     }
     submittedRef.current = true;
-    setSubmitting(true);
+    setPhase('submitting');
     setErr(null);
 
     try {
@@ -127,12 +175,13 @@ export function ReserveSeatForm({
       const json = await res.json();
       if (!json.success) {
         setErr(json.error || 'Could not reserve seat — please try again.');
+        setPhase('idle');
         return;
       }
 
-      // Buyer already enrolled (idempotent path returned an existing 'paid' row).
+      // Idempotent return: server says this buyer is already paid.
       if (json.data?.status === 'paid') {
-        setPaid(true);
+        setPhase('paid');
         return;
       }
 
@@ -141,71 +190,43 @@ export function ReserveSeatForm({
         | undefined;
 
       if (rzp?.orderId && rzp.keyId) {
-        await openRazorpayModal({
-          orderId: rzp.orderId,
-          amount: rzp.amount,
-          currency: rzp.currency,
-          keyId: rzp.keyId,
-          programTitle,
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setErr('Could not load the payment widget — refresh and try again.');
+          setPhase('cancelled');
+          return;
+        }
+        const order: PendingOrder = {
+          ...rzp,
           prefill: { name: name.trim(), email: email.trim(), contact: phone.trim() || undefined },
-        });
-        // openRazorpayModal handles success → setPaid(true) inside.
+        };
+        setPendingOrder(order);
+        openModal(order);
         return;
       }
 
-      // Fallback to manual payment link if the server couldn't create an order.
-      setReserved(true);
+      // Server couldn't create the Razorpay order — fall back to manual flow.
+      setPhase('manual_fallback');
       if (paymentLinkUrl) {
         window.open(paymentLinkUrl, '_blank', 'noopener,noreferrer');
       }
     } catch {
       setErr('Network error — please try again.');
+      setPhase('idle');
     } finally {
-      setSubmitting(false);
       submittedRef.current = false;
     }
   };
 
-  async function openRazorpayModal(opts: {
-    orderId: string;
-    amount: number;
-    currency: string;
-    keyId: string;
-    programTitle: string;
-    prefill: { name?: string; email?: string; contact?: string };
-  }) {
-    const loaded = await loadRazorpayScript();
-    if (!loaded || !window.Razorpay) {
-      setErr('Could not load the payment widget — please refresh and try again.');
-      return;
+  const retryPayment = () => {
+    setErr(null);
+    if (pendingOrder) {
+      openModal(pendingOrder);
     }
+  };
 
-    const rzp = new window.Razorpay({
-      key: opts.keyId,
-      amount: opts.amount,
-      currency: opts.currency,
-      name: 'Freaking Minds',
-      description: opts.programTitle,
-      order_id: opts.orderId,
-      prefill: opts.prefill,
-      theme: { color: '#c9325d' },
-      handler: () => {
-        // Source of truth = webhook. We optimistically show success but the
-        // backend will flip 'paid' independently within a few seconds.
-        setPaid(true);
-      },
-      modal: {
-        ondismiss: () => {
-          // Buyer closed the modal without paying — leave the reservation
-          // in place so they can retry, but show the "reserved" state.
-          setReserved(true);
-        },
-      },
-    });
-    rzp.open();
-  }
-
-  if (paid) {
+  // ── Phase: paid ───────────────────────────────────────────
+  if (phase === 'paid') {
     return (
       <div className="space-y-3" style={{ textAlign: 'center' }}>
         <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
@@ -218,14 +239,46 @@ export function ReserveSeatForm({
     );
   }
 
-  if (reserved) {
+  // ── Phase: cancelled (modal dismissed) ────────────────────
+  if (phase === 'cancelled') {
+    return (
+      <div className="space-y-3" style={{ textAlign: 'center' }}>
+        <XCircle className="w-10 h-10 text-amber-600 mx-auto" />
+        <h4 className="font-semibold text-fm-neutral-900">Payment not completed</h4>
+        <p className="text-sm text-fm-neutral-600">
+          You closed the payment window before finishing. Your seat in{' '}
+          <strong>{programTitle}</strong> isn&rsquo;t confirmed yet.
+        </p>
+        {err && <p className="text-xs text-red-700">{err}</p>}
+        {pendingOrder && (
+          <button
+            type="button"
+            onClick={retryPayment}
+            className="v2-btn v2-btn-magenta w-full inline-flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Retry payment
+          </button>
+        )}
+        <p className="text-[11px] text-fm-neutral-500">
+          Trouble paying? Email us at{' '}
+          <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-magenta-600 hover:underline">
+            freakingmindsdigital@gmail.com
+          </a>
+        </p>
+      </div>
+    );
+  }
+
+  // ── Phase: manual_fallback (server couldn't create order) ──
+  if (phase === 'manual_fallback') {
     return (
       <div className="space-y-3" style={{ textAlign: 'center' }}>
         <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-        <h4 className="font-semibold text-fm-neutral-900">Seat reserved</h4>
+        <h4 className="font-semibold text-fm-neutral-900">Reservation received</h4>
         <p className="text-sm text-fm-neutral-600">
-          We&apos;ve held your spot in <strong>{programTitle}</strong>.
-          Complete the payment to confirm your seat — our team will follow up if needed.
+          We&rsquo;ve held your interest in <strong>{programTitle}</strong>.
+          Our team will email a secure payment link shortly.
         </p>
         {paymentLinkUrl && (
           <a
@@ -235,15 +288,17 @@ export function ReserveSeatForm({
             className="v2-btn v2-btn-magenta w-full"
             style={{ textAlign: 'center' }}
           >
-            Re-open payment page
+            Open payment page
           </a>
         )}
       </div>
     );
   }
 
+  // ── Phase: idle / submitting / awaiting_payment (form visible) ──
   const inputCls =
-    'w-full px-3 py-2 rounded-lg border border-fm-neutral-200 bg-white text-fm-neutral-900 text-sm focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent';
+    'w-full px-3 py-2 rounded-lg border border-fm-neutral-200 bg-white text-fm-neutral-900 text-sm focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent disabled:opacity-50';
+  const formDisabled = phase === 'submitting' || phase === 'awaiting_payment';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
@@ -255,6 +310,7 @@ export function ReserveSeatForm({
         onChange={(e) => setName(e.target.value)}
         required
         autoComplete="name"
+        disabled={formDisabled}
       />
       <input
         type="email"
@@ -264,6 +320,7 @@ export function ReserveSeatForm({
         onChange={(e) => setEmail(e.target.value)}
         required
         autoComplete="email"
+        disabled={formDisabled}
       />
       <input
         type="tel"
@@ -272,6 +329,7 @@ export function ReserveSeatForm({
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
         autoComplete="tel"
+        disabled={formDisabled}
       />
       <input
         type="text"
@@ -280,6 +338,7 @@ export function ReserveSeatForm({
         value={company}
         onChange={(e) => setCompany(e.target.value)}
         autoComplete="organization"
+        disabled={formDisabled}
       />
       <textarea
         className={inputCls}
@@ -287,17 +346,29 @@ export function ReserveSeatForm({
         placeholder="Why do you want to join? (optional)"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        disabled={formDisabled}
       />
 
       {err && <p className="text-xs text-red-700">{err}</p>}
 
       <button
         type="submit"
-        disabled={submitting}
+        disabled={formDisabled}
         className="v2-btn v2-btn-magenta w-full inline-flex items-center justify-center gap-2"
       >
-        {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-        Reserve & pay {formatInr(amountInr)}
+        {phase === 'submitting' && (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Preparing checkout…
+          </>
+        )}
+        {phase === 'awaiting_payment' && (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Complete payment in popup…
+          </>
+        )}
+        {(phase === 'idle') && <>Reserve &amp; pay {formatInr(amountInr)}</>}
       </button>
 
       <p className="text-[11px] text-fm-neutral-500" style={{ textAlign: 'center' }}>
