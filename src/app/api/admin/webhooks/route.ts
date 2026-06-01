@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'create',
@@ -81,6 +81,8 @@ export async function POST(request: NextRequest) {
       resource_id: data.id,
       details: { name, url, events },
       ip_address: getClientIP(request),
+    }).catch((err) => {
+      console.error('Audit log for webhook create failed:', err);
     });
 
     return ApiResponse.success(
@@ -121,7 +123,7 @@ export async function PUT(request: NextRequest) {
 
     if (error) throw error;
 
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'update',
@@ -129,6 +131,8 @@ export async function PUT(request: NextRequest) {
       resource_id: id,
       details: updates,
       ip_address: getClientIP(request),
+    }).catch((err) => {
+      console.error('Audit log for webhook update failed:', err);
     });
 
     return ApiResponse.success(data);
@@ -158,13 +162,15 @@ export async function DELETE(request: NextRequest) {
 
     if (error) throw error;
 
-    logAuditEvent({
+    await logAuditEvent({
       user_id: auth.user.id,
       user_name: auth.user.name,
       action: 'delete',
       resource_type: 'outgoing_webhook',
       resource_id: id,
       ip_address: getClientIP(request),
+    }).catch((err) => {
+      console.error('Audit log for webhook delete failed:', err);
     });
 
     return ApiResponse.success(null);

@@ -24,6 +24,9 @@ const KeyboardShortcutsHelp = dynamic(
   () => import('@/components/admin/KeyboardShortcutsHelp').then(m => ({ default: m.KeyboardShortcutsHelp })),
   { ssr: false }
 );
+// MobileBottomNav is small and visible on every page below md — eagerly
+// import so it appears on first paint with the rest of the chrome.
+import { MobileBottomNav } from '@/components/admin/MobileBottomNav';
 import { ToastProvider } from '@/components/ui/toast-provider';
 import { useBreadcrumbs } from '@/hooks/useBreadcrumbs';
 import {
@@ -52,6 +55,7 @@ import {
   MessageSquare,
   Database,
   ClipboardList,
+  GraduationCap,
 } from 'lucide-react';
 import React from 'react';
 
@@ -66,6 +70,9 @@ const NAV_PERMISSIONS: Record<string, string> = {
   '/admin/proposals': 'finance.read',
   '/admin/leads': 'clients.read',
   '/admin/scraped-contacts': 'users.read',    // Admin/super_admin only
+  '/admin/scraped-contacts/scrape-jobs': 'users.read', // Sub-page surfaced in nav
+  '/admin/academy': 'content.read',          // FM Academy — programs CRUD
+  '/admin/academy/enrollments': 'content.read',
   '/admin/support': 'clients.read',
   '/admin/team': 'users.read',
   '/admin/discovery': 'clients.read',
@@ -92,7 +99,22 @@ function filterNavigation(
     .filter(group => group.items.length > 0);
 }
 
-/* ── Navigation configuration ── */
+/* ── Navigation configuration ──
+ * Grouping rationale (post-audit, 2026-05):
+ *   Main       — daily-use anchors (Dashboard, work view, books, delivery).
+ *   Operations — pre-sale → delivery flow (Leads next to Discovery; Content;
+ *                Support; CreativeMinds is talent-side ops).
+ *   Finance    — split out from "Content" so editorial and billing aren't
+ *                in the same group; gated by finance.read.
+ *   Growth     — lead-gen tooling. Scrape Jobs is a new top-level entry
+ *                (previously only reachable from inside the Scraped Contacts
+ *                page) so power users can jump to it directly.
+ *   People & System — internal admin, RBAC, observability.
+ *
+ * "Admin System" was renamed "System Console" because "Admin System" inside
+ * a group also titled "System" was confusing; the page contains API keys,
+ * webhooks and event-bus diagnostics.
+ */
 const adminNavigation: NavigationGroup[] = [
   {
     title: 'Main',
@@ -104,30 +126,37 @@ const adminNavigation: NavigationGroup[] = [
     ],
   },
   {
-    title: 'Content',
+    title: 'Operations',
     items: [
+      { label: 'Leads', href: '/admin/leads', icon: <Target className="w-5 h-5" /> },
+      { label: 'Discovery', href: '/admin/discovery', icon: <Search className="w-5 h-5" /> },
       { label: 'Content Calendar', href: '/admin/content', icon: <Calendar className="w-5 h-5" /> },
+      { label: 'Support', href: '/admin/support', icon: <MessageSquare className="w-5 h-5" /> },
+      { label: 'CreativeMinds', href: '/admin/creativeminds', icon: <Sparkles className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: 'Finance',
+    items: [
       { label: 'Invoices', href: '/admin/invoices', icon: <FileText className="w-5 h-5" /> },
       { label: 'Proposals', href: '/admin/proposals', icon: <Presentation className="w-5 h-5" /> },
     ],
   },
   {
-    title: 'Management',
+    title: 'Growth',
     items: [
-      { label: 'Leads', href: '/admin/leads', icon: <Target className="w-5 h-5" /> },
       { label: 'Scraped Contacts', href: '/admin/scraped-contacts', icon: <Database className="w-5 h-5" /> },
-      { label: 'Support', href: '/admin/support', icon: <MessageSquare className="w-5 h-5" /> },
-      { label: 'Team', href: '/admin/team', icon: <UsersRound className="w-5 h-5" /> },
-      { label: 'Discovery', href: '/admin/discovery', icon: <Search className="w-5 h-5" /> },
-      { label: 'CreativeMinds', href: '/admin/creativeminds', icon: <Sparkles className="w-5 h-5" /> },
+      { label: 'Scrape Jobs', href: '/admin/scraped-contacts/scrape-jobs', icon: <Database className="w-5 h-5" /> },
+      { label: 'FM Academy', href: '/admin/academy', icon: <GraduationCap className="w-5 h-5" /> },
     ],
   },
   {
-    title: 'System',
+    title: 'People & System',
     items: [
+      { label: 'Team', href: '/admin/team', icon: <UsersRound className="w-5 h-5" /> },
       { label: 'Users', href: '/admin/users', icon: <UserCog className="w-5 h-5" /> },
       { label: 'Audit Log', href: '/admin/audit', icon: <ScrollText className="w-5 h-5" /> },
-      { label: 'Admin System', href: '/admin/system', icon: <Shield className="w-5 h-5" /> },
+      { label: 'System Console', href: '/admin/system', icon: <Shield className="w-5 h-5" /> },
       { label: 'Settings', href: '/admin/settings', icon: <Settings className="w-5 h-5" /> },
     ],
   },
@@ -306,12 +335,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  // Compute filtered nav once so we can pass identical data to both the
+  // desktop sidebar and the mobile bottom nav. Permission filtering is the
+  // same in both surfaces.
+  const filteredNav = filterNavigation(adminNavigation, hasPermission);
+
   // Authenticated — full admin layout
   return (
     <>
       <DashboardLayout
         variant="admin"
-        navigation={filterNavigation(adminNavigation, hasPermission)}
+        navigation={filteredNav}
         user={user}
         onLogout={handleLogout}
         onCommandPalette={handleCommandPalette}
@@ -328,6 +362,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       >
         <AdminErrorBoundary>{children}</AdminErrorBoundary>
       </DashboardLayout>
+
+      {/* Mobile-only bottom nav (renders below md via component's own class) */}
+      <MobileBottomNav navigation={filteredNav} />
 
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} />
       <KeyboardShortcutsHelp open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />

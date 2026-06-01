@@ -19,7 +19,7 @@ import {
   deleteFile,
   findSubFolder,
 } from '@/lib/google-drive';
-import { logAuditEvent } from '@/lib/admin/audit-log';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { notifyClient } from '@/lib/notifications';
 import { notifyRecipient, documentSharedEmail } from '@/lib/email/send';
 import {
@@ -226,14 +226,19 @@ export async function POST(request: NextRequest) {
       return ApiResponse.error('Failed to save document record');
     }
 
-    // Audit log (fire-and-forget)
-    logAuditEvent({
-      user_id: 'system-admin',
-      user_name: 'Admin',
+    // Audit log — await so we surface failures of a security-relevant
+    // action, and attribute to the real operator (was previously hardcoded
+    // to "system-admin", which made the audit log useless for accountability).
+    await logAuditEvent({
+      user_id: auth.user.id,
+      user_name: auth.user.name,
       action: 'create',
       resource_type: 'document',
       resource_id: doc.id,
       details: { fileName: file.name, clientId, category },
+      ip_address: getClientIP(request),
+    }).catch((err) => {
+      console.error('Audit log for document upload failed:', err);
     });
 
     // Notify client if visible
@@ -357,14 +362,17 @@ export async function DELETE(request: NextRequest) {
     return ApiResponse.error('Failed to delete document');
   }
 
-  // Audit log
-  logAuditEvent({
-    user_id: 'system-admin',
-    user_name: 'Admin',
+  // Audit log — await so deletes are reliably traced to the real operator.
+  await logAuditEvent({
+    user_id: auth.user.id,
+    user_name: auth.user.name,
     action: 'delete',
     resource_type: 'document',
     resource_id: doc.id,
     details: { fileName: doc.name, clientId: doc.client_id },
+    ip_address: getClientIP(request),
+  }).catch((err) => {
+    console.error('Audit log for document delete failed:', err);
   });
 
   return ApiResponse.success(null);

@@ -109,14 +109,24 @@ export default function TeamDashboardPage() {
         icon={<Users className="w-6 h-6" />}
         description="Manage your in-house employees and freelancers"
         actions={
-          <DashboardButton
-            variant="primary"
-            className="flex items-center gap-2"
-            onClick={() => router.push('/admin/team/new')}
-          >
-            <Plus className="w-4 h-4" />
-            Add Team Member
-          </DashboardButton>
+          <div className="flex items-center gap-2">
+            <DashboardButton
+              variant="secondary"
+              className="flex items-center gap-2"
+              onClick={() => router.push('/admin/team/workload')}
+            >
+              <TrendingUp className="w-4 h-4" />
+              Workload
+            </DashboardButton>
+            <DashboardButton
+              variant="primary"
+              className="flex items-center gap-2"
+              onClick={() => router.push('/admin/team/new')}
+            >
+              <Plus className="w-4 h-4" />
+              Add Team Member
+            </DashboardButton>
+          </div>
         }
       />
 

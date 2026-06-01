@@ -151,7 +151,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
           </div>
 
           {formData.keyObjectives.length === 0 ? (
-            <div className="text-center py-8 text-fm-neutral-500">
+            <div style={{ textAlign: 'center' }} className="py-8 text-fm-neutral-500">
               <Target className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No objectives defined yet</p>
               <p className="text-sm">Add your main project goals and objectives</p>
@@ -263,7 +263,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
             ))}
             
             {formData.projectScope.length === 0 && (
-              <p className="text-fm-neutral-500 text-center py-4">
+              <p style={{ textAlign: 'center' }} className="text-fm-neutral-500 py-4">
                 Define what will be included in your project scope
               </p>
             )}
@@ -303,7 +303,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
             ))}
             
             {formData.successMetrics.length === 0 && (
-              <p className="text-fm-neutral-500 text-center py-4">
+              <p style={{ textAlign: 'center' }} className="text-fm-neutral-500 py-4">
                 Define how you'll measure project success (KPIs, metrics, goals)
               </p>
             )}
@@ -343,7 +343,7 @@ export function ProjectOverviewForm({ session, onUpdate }: ProjectOverviewFormPr
             ))}
             
             {formData.constraints.length === 0 && (
-              <p className="text-fm-neutral-500 text-center py-4">
+              <p style={{ textAlign: 'center' }} className="text-fm-neutral-500 py-4">
                 Any technical, legal, or business constraints? (Optional)
               </p>
             )}

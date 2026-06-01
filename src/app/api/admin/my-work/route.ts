@@ -4,10 +4,11 @@
  * Reads team_member_id from fm-admin-user cookie.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { ApiResponse } from '@/lib/api-response';
 
 const ADMIN_USER_COOKIE = 'fm-admin-user';
 
@@ -49,11 +50,10 @@ export async function GET(request: NextRequest) {
     const teamMemberId = getTeamMemberIdFromCookie(request);
 
     if (!teamMemberId) {
-      return NextResponse.json({
-        success: true,
-        data: { assignments: [], projects: [], clients: [] },
-        message: 'No team member profile linked to this account.',
-      });
+      return ApiResponse.success(
+        { assignments: [], projects: [], clients: [] },
+        { message: 'No team member profile linked to this account.' },
+      );
     }
 
     const supabase = getSupabaseAdmin();
@@ -93,42 +93,36 @@ export async function GET(request: NextRequest) {
       clients = data || [];
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        assignments: assignmentList.map(a => ({
-          id: a.id,
-          teamMemberId: a.team_member_id,
-          clientId: a.client_id,
-          projectId: a.project_id,
-          role: a.role,
-          hoursAllocated: a.hours_allocated,
-          status: a.status,
-          createdAt: a.created_at,
-        })),
-        projects: projects.map(p => ({
-          id: p.id,
-          name: p.name,
-          status: p.status,
-          progress: p.progress,
-          clientId: p.client_id,
-          createdAt: p.created_at,
-        })),
-        clients: clients.map(c => ({
-          id: c.id,
-          name: c.name,
-          slug: c.slug,
-          status: c.status,
-          health: c.health,
-          industry: c.industry,
-        })),
-      },
+    return ApiResponse.success({
+      assignments: assignmentList.map(a => ({
+        id: a.id,
+        teamMemberId: a.team_member_id,
+        clientId: a.client_id,
+        projectId: a.project_id,
+        role: a.role,
+        hoursAllocated: a.hours_allocated,
+        status: a.status,
+        createdAt: a.created_at,
+      })),
+      projects: projects.map(p => ({
+        id: p.id,
+        name: p.name,
+        status: p.status,
+        progress: p.progress,
+        clientId: p.client_id,
+        createdAt: p.created_at,
+      })),
+      clients: clients.map(c => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        status: c.status,
+        health: c.health,
+        industry: c.industry,
+      })),
     });
   } catch (error) {
     console.error('Error fetching my work:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch work data' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Failed to fetch work data');
   }
 }

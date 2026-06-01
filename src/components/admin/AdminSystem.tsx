@@ -421,7 +421,7 @@ export function AdminSystem() {
         {activeTab === 'system' && renderSystemTab()}
         {activeTab === 'audit' && renderAuditTab()}
         {activeTab === 'permissions' && (
-          <div className="text-center py-12">
+          <div style={{ textAlign: 'center' }} className="py-12">
             <Shield className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
             <h4 className="font-semibold text-fm-neutral-900 mb-2">Permissions Management</h4>
             <p className="text-fm-neutral-600">

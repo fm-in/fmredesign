@@ -5,9 +5,10 @@
  * POST — Atomically increment and return the next invoice number
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requirePermission } from '@/lib/admin-auth-middleware';
+import { ApiResponse } from '@/lib/api-response';
 
 // ---------------------------------------------------------------------------
 // GET — preview next number without incrementing
@@ -38,20 +39,14 @@ export async function GET(request: NextRequest) {
 
     const next = `${data.prefix}${counter + 1}/${currentYear}`;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        counter: data.current_counter,
-        year: data.current_year,
-        next,
-      },
+    return ApiResponse.success({
+      counter: data.current_counter,
+      year: data.current_year,
+      next,
     });
   } catch (error) {
     console.error('Error fetching invoice sequence:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch invoice sequence' },
-      { status: 500 },
-    );
+    return ApiResponse.error('Failed to fetch invoice sequence');
   }
 }
 
@@ -68,7 +63,7 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const currentYear = now.getFullYear();
 
-    // Fetch current sequence
+    // Read prefix (rarely changes) — needed regardless of which path increments.
     const { data: seq, error: fetchError } = await supabase
       .from('invoice_sequences')
       .select('prefix, current_counter, current_year')
@@ -77,42 +72,49 @@ export async function POST(request: NextRequest) {
 
     if (fetchError) throw fetchError;
 
-    let newCounter: number;
-
-    if (seq.current_year !== currentYear) {
-      // Year rollover — reset counter to 1
-      newCounter = 1;
-    } else {
-      newCounter = seq.current_counter + 1;
+    // Preferred path: atomic increment via Postgres RPC — single statement,
+    // race-safe under concurrent invoice creation. Same RPC used by
+    // `auto-invoice.ts`'s scheduled job.
+    let newCounter: number | null = null;
+    try {
+      const { data: rpcCounter, error: rpcError } = await supabase.rpc(
+        'increment_invoice_counter',
+        { p_year: currentYear },
+      );
+      if (!rpcError && typeof rpcCounter === 'number') {
+        newCounter = rpcCounter;
+      }
+    } catch {
+      // Fall through to legacy path below.
     }
 
-    // Update atomically
-    const { error: updateError } = await supabase
-      .from('invoice_sequences')
-      .update({
-        current_counter: newCounter,
-        current_year: currentYear,
-        updated_at: now.toISOString(),
-      })
-      .eq('id', 'default');
+    // Legacy fallback (kept for environments where the RPC is not installed):
+    // read-modify-write is non-atomic, but preserves behaviour for those envs.
+    if (newCounter === null) {
+      const baseCounter = seq.current_year !== currentYear ? 0 : seq.current_counter;
+      newCounter = baseCounter + 1;
 
-    if (updateError) throw updateError;
+      const { error: updateError } = await supabase
+        .from('invoice_sequences')
+        .update({
+          current_counter: newCounter,
+          current_year: currentYear,
+          updated_at: now.toISOString(),
+        })
+        .eq('id', 'default');
+
+      if (updateError) throw updateError;
+    }
 
     const invoiceNumber = `${seq.prefix}${newCounter}/${currentYear}`;
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        invoiceNumber,
-        counter: newCounter,
-        year: currentYear,
-      },
+    return ApiResponse.success({
+      invoiceNumber,
+      counter: newCounter,
+      year: currentYear,
     });
   } catch (error) {
     console.error('Error incrementing invoice sequence:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to generate invoice number' },
-      { status: 500 },
-    );
+    return ApiResponse.error('Failed to generate invoice number');
   }
 }

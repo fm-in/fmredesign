@@ -209,11 +209,11 @@ export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-green-50 rounded-lg p-3 text-center">
+                <div style={{ textAlign: 'center' }} className="bg-green-50 rounded-lg p-3">
                   <p className="text-2xl font-bold text-green-700">{result.inserted}</p>
                   <p className="text-xs text-green-600">Imported</p>
                 </div>
-                <div className="bg-fm-neutral-50 rounded-lg p-3 text-center">
+                <div style={{ textAlign: 'center' }} className="bg-fm-neutral-50 rounded-lg p-3">
                   <p className="text-2xl font-bold text-fm-neutral-700">{result.skipped}</p>
                   <p className="text-xs text-fm-neutral-500">Skipped (duplicates)</p>
                 </div>

@@ -112,14 +112,17 @@ export function useScrapedContacts(): UseScrapedContactsReturn {
           body: JSON.stringify({ id: contactId, status }),
         });
 
-        if (response.ok) {
-          // Optimistic update
+        const json = await response.json();
+        if (response.ok && json.success) {
           setContacts((prev) =>
             prev.map((c) => (c.id === contactId ? { ...c, status } : c))
           );
           if (selectedContact?.id === contactId) {
             setSelectedContact((prev) => prev ? { ...prev, status } : null);
           }
+          adminToast.success(`Status updated to ${status}`);
+        } else {
+          adminToast.error(json.error || 'Failed to update status');
         }
       } catch (error) {
         console.error('Error updating contact status:', error);

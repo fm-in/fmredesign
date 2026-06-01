@@ -5,13 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import { createDiscoverySchema, updateDiscoverySchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const { searchParams } = new URL(request.url);
@@ -138,7 +138,7 @@ export async function PUT(request: NextRequest) {
     const body = rawBody;
     const { sessionId, updates } = body;
 
-    const dbUpdates: Record<string, any> = {};
+    const dbUpdates: Record<string, unknown> = {};
     if (updates.status !== undefined) dbUpdates.status = updates.status;
     if (updates.currentSection !== undefined) dbUpdates.current_section = updates.currentSection;
     if (updates.completedSections !== undefined) dbUpdates.completed_sections = updates.completedSections;
@@ -244,7 +244,7 @@ export async function DELETE(request: NextRequest) {
 }
 
 /** Transform Supabase row to API response shape */
-function transformSession(row: any) {
+function transformSession(row: Record<string, unknown>) {
   return {
     id: row.id,
     clientId: row.client_id,

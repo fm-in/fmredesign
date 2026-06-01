@@ -493,7 +493,7 @@ export function ClientDashboard({ onClientSelect }: ClientDashboardProps) {
 
       {/* Empty State */}
       {filteredClients.length === 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6 sm:p-12 text-center">
+        <div style={{ textAlign: 'center' }} className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-6 sm:p-12">
           <Users className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-fm-neutral-900 mb-2">
             No clients found

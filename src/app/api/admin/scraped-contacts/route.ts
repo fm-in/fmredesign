@@ -122,41 +122,94 @@ export async function GET(request: NextRequest) {
 
     const contacts = (data || []).map(transformRow);
 
-    // Compute stats from unfiltered data
-    const { data: allData, error: statsError } = await supabase
-      .from('scraped_contacts')
-      .select('status, source_platform, source_file, email, phone, mobile, website, social_links, notes');
-    if (statsError) throw statsError;
+    // ── Stats over the unfiltered table ─────────────────────────────────
+    // Previously: single unbounded SELECT of 9 columns including the long
+    // `notes` text, then aggregated in JS. That scaled linearly with the
+    // lead pipeline (~700 rows today, will keep growing) and was the
+    // slowest hot path in admin.
+    //
+    // New approach: parallel HEAD-only count queries for everything that
+    // can be a count, plus a single tightly-projected select for grouped
+    // stats (status / source_platform / source_file). The notes-based
+    // priority counts use ILIKE so the row body never leaves Postgres.
+    const [
+      totalRes,
+      withEmailRes,
+      withPhoneRes,
+      noWebsiteRes,
+      noSocialRes,
+      noEmailRes,
+      priorityHighRes,
+      priorityMediumRes,
+      priorityLowRes,
+      groupedRes,
+    ] = await Promise.all([
+      supabase.from('scraped_contacts').select('id', { count: 'exact', head: true }),
+      supabase
+        .from('scraped_contacts')
+        .select('id', { count: 'exact', head: true })
+        .not('email', 'is', null),
+      supabase
+        .from('scraped_contacts')
+        .select('id', { count: 'exact', head: true })
+        .or('phone.not.is.null,mobile.not.is.null'),
+      supabase
+        .from('scraped_contacts')
+        .select('id', { count: 'exact', head: true })
+        .is('website', null),
+      supabase
+        .from('scraped_contacts')
+        .select('id', { count: 'exact', head: true })
+        .is('social_links', null),
+      supabase
+        .from('scraped_contacts')
+        .select('id', { count: 'exact', head: true })
+        .is('email', null),
+      supabase
+        .from('scraped_contacts')
+        .select('id', { count: 'exact', head: true })
+        .ilike('notes', '%PRIORITY: HIGH%'),
+      supabase
+        .from('scraped_contacts')
+        .select('id', { count: 'exact', head: true })
+        .ilike('notes', '%PRIORITY: MEDIUM%'),
+      supabase
+        .from('scraped_contacts')
+        .select('id', { count: 'exact', head: true })
+        .ilike('notes', '%PRIORITY: LOW%'),
+      // Grouped stats: keep projection to 3 small columns. At 100k rows
+      // this is still ~MB-scale not GB-scale, and lets us emit the same
+      // byStatus / bySource / sourceFiles shape the dashboard expects.
+      supabase.from('scraped_contacts').select('status, source_platform, source_file'),
+    ]);
 
-    const sourceFiles = new Set<string>();
-    const stats = {
-      total: allData?.length || 0,
-      withEmail: allData?.filter((r) => r.email).length || 0,
-      withPhone: allData?.filter((r) => r.phone || r.mobile).length || 0,
-      byStatus: {} as Record<string, number>,
-      bySource: {} as Record<string, number>,
-      sourceFiles: [] as string[],
-      noWebsite: 0,
-      noSocial: 0,
-      noEmail: 0,
-      priorityHigh: 0,
-      priorityMedium: 0,
-      priorityLow: 0,
-    };
+    if (groupedRes.error) throw groupedRes.error;
 
-    for (const row of allData || []) {
-      stats.byStatus[row.status as string] = (stats.byStatus[row.status as string] || 0) + 1;
-      stats.bySource[row.source_platform as string] = (stats.bySource[row.source_platform as string] || 0) + 1;
-      if (row.source_file) sourceFiles.add(row.source_file as string);
-      if (!row.website) stats.noWebsite++;
-      if (!row.social_links) stats.noSocial++;
-      if (!row.email) stats.noEmail++;
-      const notes = (row.notes as string) || '';
-      if (notes.includes('PRIORITY: HIGH')) stats.priorityHigh++;
-      else if (notes.includes('PRIORITY: MEDIUM')) stats.priorityMedium++;
-      else if (notes.includes('PRIORITY: LOW')) stats.priorityLow++;
+    const byStatus: Record<string, number> = {};
+    const bySource: Record<string, number> = {};
+    const sourceFilesSet = new Set<string>();
+    for (const row of groupedRes.data || []) {
+      const s = (row.status as string) || 'unknown';
+      const sp = (row.source_platform as string) || 'unknown';
+      byStatus[s] = (byStatus[s] || 0) + 1;
+      bySource[sp] = (bySource[sp] || 0) + 1;
+      if (row.source_file) sourceFilesSet.add(row.source_file as string);
     }
-    stats.sourceFiles = [...sourceFiles].sort();
+
+    const stats = {
+      total: totalRes.count ?? 0,
+      withEmail: withEmailRes.count ?? 0,
+      withPhone: withPhoneRes.count ?? 0,
+      byStatus,
+      bySource,
+      sourceFiles: [...sourceFilesSet].sort(),
+      noWebsite: noWebsiteRes.count ?? 0,
+      noSocial: noSocialRes.count ?? 0,
+      noEmail: noEmailRes.count ?? 0,
+      priorityHigh: priorityHighRes.count ?? 0,
+      priorityMedium: priorityMediumRes.count ?? 0,
+      priorityLow: priorityLowRes.count ?? 0,
+    };
 
     return NextResponse.json({
       success: true,
@@ -338,8 +391,10 @@ export async function PUT(request: NextRequest) {
 }
 
 // DELETE /api/admin/scraped-contacts
+// Aligned with GET/POST/PUT (users.*) so a content-only editor cannot wipe
+// the scraped leads pipeline.
 export async function DELETE(request: NextRequest) {
-  const auth = await requirePermission(request, 'content.delete');
+  const auth = await requirePermission(request, 'users.write');
   if ('error' in auth) return auth.error;
 
   try {

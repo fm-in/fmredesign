@@ -8,18 +8,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import { encryptToken, decryptToken } from '@/lib/social/token-crypto';
 import { maskCredentials } from '@/lib/admin/credential-types';
 import type { ClientCredential } from '@/lib/admin/credential-types';
+import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 // ────────────────────────────────────────────────────────────
 // GET — list credentials for a client (masked)
 // ────────────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.portal');
+  if ('error' in auth) return auth.error;
 
   const { searchParams } = new URL(request.url);
   const clientId = searchParams.get('clientId');
@@ -81,8 +82,8 @@ export async function GET(request: NextRequest) {
 // ────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.portal');
+  if ('error' in auth) return auth.error;
 
   const body = await request.json();
   const { client_id, platform, credential_type, label, credentials, notes } = body;
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
       label: label || null,
       credentials: encrypted,
       notes: notes || null,
-      added_by: 'admin',
+      added_by: auth.user.id,
     })
     .select('id, platform, credential_type, label, status, notes, added_by, created_at, updated_at')
     .single();
@@ -115,6 +116,16 @@ export async function POST(request: NextRequest) {
     console.error('Error creating credential:', error);
     return NextResponse.json({ success: false, error: 'Failed to save credential' }, { status: 500 });
   }
+
+  await logAuditEvent({
+    user_id: auth.user.id,
+    user_name: auth.user.name,
+    action: 'create',
+    resource_type: 'client_credential',
+    resource_id: data.id,
+    details: { clientId: client_id, platform, credential_type: data.credential_type, label: data.label },
+    ip_address: getClientIP(request),
+  });
 
   return NextResponse.json({
     success: true,
@@ -131,8 +142,8 @@ export async function POST(request: NextRequest) {
 // ────────────────────────────────────────────────────────────
 
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.portal');
+  if ('error' in auth) return auth.error;
 
   const body = await request.json();
   const { id, platform, credential_type, label, credentials, notes, status } = body;
@@ -162,6 +173,20 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Failed to update credential' }, { status: 500 });
   }
 
+  await logAuditEvent({
+    user_id: auth.user.id,
+    user_name: auth.user.name,
+    action: 'update',
+    resource_type: 'client_credential',
+    resource_id: id,
+    details: {
+      updatedFields: Object.keys(updates),
+      // Never include credential values; record rotation flag if creds were changed.
+      credentialsRotated: 'credentials' in updates,
+    },
+    ip_address: getClientIP(request),
+  });
+
   return NextResponse.json({ success: true });
 }
 
@@ -170,8 +195,8 @@ export async function PUT(request: NextRequest) {
 // ────────────────────────────────────────────────────────────
 
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.portal');
+  if ('error' in auth) return auth.error;
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
@@ -190,6 +215,16 @@ export async function DELETE(request: NextRequest) {
     console.error('Error deleting credential:', error);
     return NextResponse.json({ success: false, error: 'Failed to delete credential' }, { status: 500 });
   }
+
+  await logAuditEvent({
+    user_id: auth.user.id,
+    user_name: auth.user.name,
+    action: 'delete',
+    resource_type: 'client_credential',
+    resource_id: id,
+    details: {},
+    ip_address: getClientIP(request),
+  });
 
   return NextResponse.json({ success: true });
 }

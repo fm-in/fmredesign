@@ -268,7 +268,8 @@ export function ContentStrategyTab({ clientId }: ContentStrategyTabProps) {
                       onChange={(e) =>
                         updatePillar(i, 'percentage', parseInt(e.target.value) || 0)
                       }
-                      className="w-16 rounded-md border border-fm-neutral-300 px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
+                      style={{ textAlign: 'center' }}
+                      className="w-16 rounded-md border border-fm-neutral-300 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-fm-magenta-500"
                     />
                     <span className="text-sm text-fm-neutral-500">%</span>
                   </div>

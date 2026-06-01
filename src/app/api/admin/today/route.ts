@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
+import { PermissionService } from '@/lib/admin/permissions';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  // Every authenticated admin role has clients.read, so this preserves
+  // dashboard access for managers/editors/viewers while letting us inspect
+  // the user's permission set for finance gating below.
+  const auth = await requirePermission(request, 'clients.read');
+  if ('error' in auth) return auth.error;
+
+  const canSeeFinance = PermissionService.hasPermission(
+    auth.user.permissions,
+    'finance.read',
+  );
 
   try {
     const supabase = getSupabaseAdmin();
@@ -23,8 +32,10 @@ export async function GET(request: NextRequest) {
     ] = await Promise.all([
       // Total clients
       supabase.from('clients').select('id', { count: 'exact', head: true }),
-      // Revenue: paid invoices
-      supabase.from('invoices').select('total, status'),
+      // Revenue: paid invoices — only fetched if caller has finance.read
+      canSeeFinance
+        ? supabase.from('invoices').select('total, status')
+        : Promise.resolve({ data: [] as Array<{ total: number; status: string }> }),
       // Overdue content: scheduled before today, not published/cancelled
       supabase
         .from('content_calendar')
@@ -70,20 +81,34 @@ export async function GET(request: NextRequest) {
         .eq('status', 'active')
         .order('progress', { ascending: true })
         .limit(8),
-      // Recent invoices
-      supabase
-        .from('invoices')
-        .select('id, invoice_number, client_id, total, status, due_date, created_at')
-        .order('created_at', { ascending: false })
-        .limit(5),
+      // Recent invoices — only fetched if caller has finance.read
+      canSeeFinance
+        ? supabase
+            .from('invoices')
+            .select('id, invoice_number, client_id, total, status, due_date, created_at')
+            .order('created_at', { ascending: false })
+            .limit(5)
+        : Promise.resolve({
+            data: [] as Array<{
+              id: string;
+              invoice_number: string;
+              client_id: string;
+              total: number;
+              status: string;
+              due_date: string;
+              created_at: string;
+            }>,
+          }),
     ]);
 
     // Calculate stats
     const totalClients = clientsRes.count ?? 0;
     const invoices = invoicesRes.data ?? [];
-    const totalRevenue = invoices
-      .filter((i) => i.status === 'paid')
-      .reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const totalRevenue = canSeeFinance
+      ? invoices
+          .filter((i) => i.status === 'paid')
+          .reduce((sum, i) => sum + (Number(i.total) || 0), 0)
+      : 0;
     const activeProjectCount = activeProjectsRes.data?.length ?? 0;
     const scheduledContent = todayContentRes.data?.length ?? 0;
 
@@ -92,6 +117,10 @@ export async function GET(request: NextRequest) {
       data: {
         stats: {
           totalClients,
+          // For non-finance roles, the invoices query above is skipped, so
+          // `invoices` is [] and totalRevenue computes to 0 naturally.
+          // We return 0 (not null) to preserve the existing number-typed
+          // shape — the dashboard UI can hide this card by role separately.
           totalRevenue,
           activeProjects: activeProjectCount,
           scheduledContent,
@@ -152,15 +181,19 @@ export async function GET(request: NextRequest) {
           clientId: p.client_id,
           type: p.type,
         })),
-        recentInvoices: (recentInvoicesRes.data ?? []).map((i) => ({
-          id: i.id,
-          invoiceNumber: i.invoice_number,
-          clientId: i.client_id,
-          total: i.total,
-          status: i.status,
-          dueDate: i.due_date,
-          createdAt: i.created_at,
-        })),
+        // Empty array for non-finance roles — preserves API shape so the
+        // dashboard renders cleanly without ad-hoc undefined checks.
+        recentInvoices: canSeeFinance
+          ? (recentInvoicesRes.data ?? []).map((i) => ({
+              id: i.id,
+              invoiceNumber: i.invoice_number,
+              clientId: i.client_id,
+              total: i.total,
+              status: i.status,
+              dueDate: i.due_date,
+              createdAt: i.created_at,
+            }))
+          : [],
       },
     });
   } catch (error) {

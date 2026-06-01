@@ -5,10 +5,11 @@
  * PUT  — mark message(s) as read
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { notifyClient } from '@/lib/notifications';
+import { ApiResponse } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
   const auth = await requirePermission(request, 'clients.read');
@@ -19,10 +20,7 @@ export async function GET(request: NextRequest) {
     const clientId = searchParams.get('clientId');
 
     if (!clientId) {
-      return NextResponse.json(
-        { success: false, error: 'Client ID is required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('Client ID is required');
     }
 
     const { data: messages, error } = await supabaseAdmin
@@ -33,7 +31,9 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Messages query error:', error);
-      return NextResponse.json({ success: true, data: [] });
+      // Soft-fail with empty list — UI handles "no messages" cleanly,
+      // and this matches the prior behavior of never failing-loud here.
+      return ApiResponse.success([]);
     }
 
     const transformed = (messages || []).map((m) => ({
@@ -48,16 +48,10 @@ export async function GET(request: NextRequest) {
       createdAt: m.created_at,
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: transformed,
-    });
+    return ApiResponse.success(transformed);
   } catch (error) {
     console.error('Error fetching messages:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch messages' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Failed to fetch messages');
   }
 }
 
@@ -70,10 +64,7 @@ export async function POST(request: NextRequest) {
     const { clientId, subject, message } = body;
 
     if (!clientId || !message?.trim()) {
-      return NextResponse.json(
-        { success: false, error: 'Client ID and message are required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('Client ID and message are required');
     }
 
     const { data: msg, error } = await supabaseAdmin
@@ -90,10 +81,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Insert message error:', error);
-      return NextResponse.json(
-        { success: false, error: 'Failed to send message' },
-        { status: 500 }
-      );
+      return ApiResponse.error('Failed to send message');
     }
 
     // Fire-and-forget: notify client
@@ -104,25 +92,19 @@ export async function POST(request: NextRequest) {
       actionUrl: `/client/${clientId}`,
     });
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: msg.id,
-        clientId: msg.client_id,
-        senderType: msg.sender_type,
-        senderName: msg.sender_name,
-        subject: msg.subject,
-        message: msg.message,
-        isRead: msg.is_read,
-        createdAt: msg.created_at,
-      },
+    return ApiResponse.success({
+      id: msg.id,
+      clientId: msg.client_id,
+      senderType: msg.sender_type,
+      senderName: msg.sender_name,
+      subject: msg.subject,
+      message: msg.message,
+      isRead: msg.is_read,
+      createdAt: msg.created_at,
     });
   } catch (error) {
     console.error('Error sending message:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to send message' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Failed to send message');
   }
 }
 
@@ -135,10 +117,7 @@ export async function PUT(request: NextRequest) {
     const { messageId, isRead } = body;
 
     if (!messageId) {
-      return NextResponse.json(
-        { success: false, error: 'Message ID is required' },
-        { status: 400 }
-      );
+      return ApiResponse.validationError('Message ID is required');
     }
 
     const updates: Record<string, unknown> = {};
@@ -154,18 +133,12 @@ export async function PUT(request: NextRequest) {
 
     if (error) {
       console.error('Update message error:', error);
-      return NextResponse.json(
-        { success: false, error: 'Failed to update message' },
-        { status: 500 }
-      );
+      return ApiResponse.error('Failed to update message');
     }
 
-    return NextResponse.json({ success: true });
+    return ApiResponse.success(null);
   } catch (error) {
     console.error('Error updating message:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to update message' },
-      { status: 500 }
-    );
+    return ApiResponse.error('Failed to update message');
   }
 }

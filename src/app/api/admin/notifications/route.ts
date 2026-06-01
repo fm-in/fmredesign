@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth } from '@/lib/admin-auth-middleware';
 import { transformNotification } from '@/lib/notifications';
+import { ApiResponse } from '@/lib/api-response';
 
 /**
  * GET /api/admin/notifications
@@ -40,14 +41,13 @@ export async function GET(request: NextRequest) {
       .eq('recipient_type', 'admin')
       .eq('is_read', false);
 
-    return NextResponse.json({
-      success: true,
-      data: (data || []).map(transformNotification),
-      unreadCount: count || 0,
-    });
+    return ApiResponse.success(
+      (data || []).map(transformNotification),
+      { unreadCount: count || 0 },
+    );
   } catch (err) {
     console.error('Error fetching admin notifications:', err);
-    return NextResponse.json({ success: false, error: 'Failed to fetch notifications' }, { status: 500 });
+    return ApiResponse.error('Failed to fetch notifications');
   }
 }
 
@@ -77,12 +77,12 @@ export async function PUT(request: NextRequest) {
         .update({ is_read: true, read_at: now })
         .in('id', body.ids);
     } else {
-      return NextResponse.json({ success: false, error: 'Provide ids or markAllRead' }, { status: 400 });
+      return ApiResponse.validationError('Provide ids or markAllRead');
     }
 
-    return NextResponse.json({ success: true });
+    return ApiResponse.success(null);
   } catch (err) {
     console.error('Error marking notifications read:', err);
-    return NextResponse.json({ success: false, error: 'Failed to update notifications' }, { status: 500 });
+    return ApiResponse.error('Failed to update notifications');
   }
 }

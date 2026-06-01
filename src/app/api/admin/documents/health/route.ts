@@ -23,8 +23,10 @@ export async function GET(request: NextRequest) {
   const impersonateEmail = process.env.GOOGLE_DRIVE_IMPERSONATE_EMAIL;
 
   checks['GOOGLE_SERVICE_ACCOUNT_EMAIL'] = email ? `SET (${email})` : 'MISSING';
+  // Never echo any prefix of the private key — even the first ~30 chars
+  // include the BEGIN PRIVATE KEY header plus the first bytes of RSA material.
   checks['GOOGLE_SERVICE_ACCOUNT_KEY'] = rawKey
-    ? `SET (length: ${rawKey.length}, starts: ${rawKey.substring(0, 30)}...)`
+    ? `SET (length: ${rawKey.length})`
     : 'MISSING';
   checks['GOOGLE_SERVICE_ACCOUNT_KEY_BASE64'] = b64Key ? `SET (length: ${b64Key.length})` : 'MISSING';
   checks['GOOGLE_DRIVE_ROOT_FOLDER_ID'] = rootFolderId ? `SET (${rootFolderId})` : 'MISSING';

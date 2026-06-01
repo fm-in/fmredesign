@@ -7,6 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { ProjectUtils } from '@/lib/admin/project-types';
+
+// Lead → Project default duration. 60 days is a reasonable rough estimate
+// for an initial engagement; the user adjusts in the project edit screen.
+const DEFAULT_PROJECT_DURATION_DAYS = 60;
 
 function slugify(name: string): string {
   return name
@@ -39,7 +44,10 @@ export async function POST(request: NextRequest) {
   if ('error' in auth) return auth.error;
 
   try {
-    const { leadId } = await request.json();
+    // Optional `createProject: true` seeds a first project from the lead's
+    // service_type and estimated value, so the user lands on a client that
+    // already has a project to plan against — instead of an empty shell.
+    const { leadId, createProject = false } = await request.json();
 
     if (!leadId) {
       return NextResponse.json(
@@ -110,6 +118,58 @@ export async function POST(request: NextRequest) {
 
     if (updateError) throw updateError;
 
+    // Optionally seed a first project. Non-fatal: a project-insert failure
+    // does not roll back the client; we still return success with a warning.
+    let projectId: string | null = null;
+    let projectWarning: string | null = null;
+    if (createProject) {
+      const now = new Date();
+      const endDate = new Date(now);
+      endDate.setDate(endDate.getDate() + DEFAULT_PROJECT_DURATION_DAYS);
+      const projectType = (lead.project_type as string) || 'consultation';
+      const projectBudget = Number(lead.estimated_value ?? lead.budget ?? 0) || 0;
+      const projectName = `${clientName} — ${projectType.replace(/[-_]/g, ' ')} engagement`;
+
+      const newProject = {
+        id: ProjectUtils.generateProjectId(),
+        client_id: clientId,
+        discovery_id: null,
+        name: projectName,
+        description: lead.notes || lead.message || '',
+        type: projectType,
+        status: 'planning',
+        priority: lead.priority || 'medium',
+        start_date: now.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+        estimated_hours: 0,
+        project_manager: lead.assigned_to || auth.user.id,
+        budget: projectBudget,
+        hourly_rate: 0,
+        progress: 0,
+        milestones: [],
+        deliverables: [],
+        content_requirements: { postsPerWeek: 0, platforms: [], contentTypes: [] },
+        assigned_talent: [],
+        tags: lead.tags || [],
+        notes: `Seeded from lead conversion (lead ${leadId}).`,
+      };
+
+      const { data: projectRow, error: projectError } = await supabase
+        .from('projects')
+        .insert(newProject)
+        .select('id')
+        .single();
+
+      if (projectError) {
+        // Don't fail the whole conversion if project seeding has issues;
+        // the client and lead are already in their new state.
+        console.error('Lead→Project seeding failed:', projectError);
+        projectWarning = 'Client created, but first project could not be seeded.';
+      } else if (projectRow) {
+        projectId = projectRow.id as string;
+      }
+    }
+
     // Audit log
     await logAuditEvent({
       user_id: auth.user.id,
@@ -117,14 +177,18 @@ export async function POST(request: NextRequest) {
       action: 'create',
       resource_type: 'client',
       resource_id: clientId,
-      details: { convertedFromLead: leadId, clientName },
+      details: { convertedFromLead: leadId, clientName, seededProjectId: projectId },
       ip_address: getClientIP(request),
     });
 
     return NextResponse.json({
       success: true,
-      data: { leadId, clientId },
-      message: 'Lead successfully converted to client',
+      data: { leadId, clientId, projectId },
+      message: projectWarning
+        ? projectWarning
+        : projectId
+          ? 'Lead converted to client and first project seeded'
+          : 'Lead successfully converted to client',
     });
   } catch (error) {
     console.error('Error converting lead to client:', error);

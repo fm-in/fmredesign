@@ -6,14 +6,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { normalizeMobileNumber, getRolePermissions, toCamelCaseKeys } from '@/lib/supabase-utils';
-import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import { createUserSchema, updateUserSchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 
 // GET - List all authorized users
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'users.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const supabase = getSupabaseAdmin();
@@ -116,7 +116,7 @@ export async function PUT(request: NextRequest) {
     const body = rawBody;
     const { id, name, email, mobileNumber, role, status, notes, teamMemberId } = body;
 
-    const updates: Record<string, any> = {};
+    const updates: Record<string, unknown> = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
     if (mobileNumber) updates.mobile_number = normalizeMobileNumber(mobileNumber);

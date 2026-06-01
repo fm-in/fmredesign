@@ -244,7 +244,7 @@ export function SupportTab({ clientId }: SupportTabProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 sm:py-12">
+          <div style={{ textAlign: 'center' }} className="py-8 sm:py-12">
             <LifeBuoy className="h-10 w-10 sm:h-12 sm:w-12 text-fm-neutral-400 mx-auto mb-4" />
             <h4 className="font-semibold text-fm-neutral-900 mb-2">
               No support tickets

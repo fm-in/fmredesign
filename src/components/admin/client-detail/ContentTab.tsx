@@ -87,7 +87,7 @@ export function ContentTab({ clientId }: ContentTabProps) {
       />
 
       {!calendarLoading && calendarItems.length === 0 && !calendarRangeRef.current && (
-        <div className="text-center py-8 sm:py-12">
+        <div style={{ textAlign: 'center' }} className="py-8 sm:py-12">
           <FolderOpen className="h-10 w-10 sm:h-12 sm:w-12 text-fm-neutral-400 mx-auto mb-4" />
           <h4 className="font-semibold text-fm-neutral-900 mb-2">No content items</h4>
           <p className="text-sm sm:text-base text-fm-neutral-600">

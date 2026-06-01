@@ -11,6 +11,49 @@
 
 import { inngest } from '../client';
 
+// SELECT columns are identical for the three day-bucket queries below, so
+// extract once to keep the function focused.
+const CLIENT_AUTO_INVOICE_COLS =
+  'id, name, email, phone, address, city, state, country, gst_number, billing_cycle, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms';
+
+/**
+ * Decide whether a client should be billed in the given calendar month
+ * based on their billing_cycle.
+ *
+ *   monthly   — every month (default, also the historical behaviour)
+ *   quarterly — Jan / Apr / Jul / Oct
+ *   annually  — January only
+ *   one_time  — skipped here; admin manually toggles auto_invoice on once
+ *               and then off again after the first issuance
+ *   milestone — never; milestone clients are billed manually
+ *
+ * The calendar alignment for quarterly/annual is intentional: it keeps the
+ * scheduler predictable and easy to communicate to clients, instead of
+ * tying every client to their individual contract anniversary. Admins who
+ * need a different cadence can change auto_invoice_day or switch to
+ * milestone + manual issuance.
+ */
+function isDueThisMonth(
+  cycle: string | null | undefined,
+  monthIndex: number, // 0-11
+): boolean {
+  switch ((cycle || 'monthly').toLowerCase()) {
+    case 'monthly':
+      return true;
+    case 'quarterly':
+      return monthIndex % 3 === 0; // Jan(0) Apr(3) Jul(6) Oct(9)
+    case 'annually':
+      return monthIndex === 0; // January
+    case 'one_time':
+    case 'milestone':
+      // Handled manually: admin sets auto_invoice=true to issue once, then
+      // toggles it off. We don't try to remember state in the cron.
+      return false;
+    default:
+      return true; // Be permissive on unknown values rather than silently skip
+  }
+}
+
 export const autoInvoiceDailyCron = inngest.createFunction(
   {
     id: 'auto-invoice-daily-cron',
@@ -25,6 +68,7 @@ export const autoInvoiceDailyCron = inngest.createFunction(
 
       const today = new Date();
       const dayOfMonth = today.getDate();
+      const monthIndex = today.getMonth();
 
       // Check if today is the last day of the month
       const tomorrow = new Date(today);
@@ -35,7 +79,7 @@ export const autoInvoiceDailyCron = inngest.createFunction(
       // OR clients set to "last day of month" (-1) when today IS the last day
       const { data: exactDayClients, error: err1 } = await supabase
         .from('clients')
-        .select('id, name, email, phone, address, city, state, country, gst_number, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms')
+        .select(CLIENT_AUTO_INVOICE_COLS)
         .eq('auto_invoice', true)
         .eq('status', 'active')
         .eq('auto_invoice_day', dayOfMonth);
@@ -46,7 +90,7 @@ export const autoInvoiceDailyCron = inngest.createFunction(
       if (isLastDayOfMonth) {
         const { data, error: err2 } = await supabase
           .from('clients')
-          .select('id, name, email, phone, address, city, state, country, gst_number, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms')
+          .select(CLIENT_AUTO_INVOICE_COLS)
           .eq('auto_invoice', true)
           .eq('status', 'active')
           .eq('auto_invoice_day', -1);
@@ -62,7 +106,7 @@ export const autoInvoiceDailyCron = inngest.createFunction(
       if (isLastDayOfMonth && dayOfMonth < 31) {
         const { data, error: err3 } = await supabase
           .from('clients')
-          .select('id, name, email, phone, address, city, state, country, gst_number, auto_invoice_day, auto_invoice_send, auto_invoice_template, auto_invoice_currency, auto_invoice_tax_rate, auto_invoice_notes, auto_invoice_terms')
+          .select(CLIENT_AUTO_INVOICE_COLS)
           .eq('auto_invoice', true)
           .eq('status', 'active')
           .gt('auto_invoice_day', dayOfMonth)
@@ -72,15 +116,22 @@ export const autoInvoiceDailyCron = inngest.createFunction(
         overflowClients = data || [];
       }
 
-      // Deduplicate by client ID
+      // Deduplicate by client ID, then apply the billing-cycle filter so
+      // quarterly / annual / one_time clients only fire in their cycle's
+      // months. This is the new behaviour — previously every client was
+      // treated as monthly regardless of contract.
       const allClients = [...(exactDayClients || []), ...lastDayClients, ...overflowClients];
       const seen = new Set<string>();
-      return allClients.filter(c => {
-        const id = c.id as string;
-        if (seen.has(id)) return false;
-        seen.add(id);
-        return true;
-      });
+      return allClients
+        .filter((c) => {
+          const id = c.id as string;
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        })
+        .filter((c) =>
+          isDueThisMonth(c.billing_cycle as string | null, monthIndex),
+        );
     });
 
     if (clients.length === 0) {

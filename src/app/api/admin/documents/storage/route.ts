@@ -5,13 +5,13 @@
  */
 
 import { NextRequest } from 'next/server';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ApiResponse } from '@/lib/api-response';
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.read');
+  if ('error' in auth) return auth.error;
 
   const clientId = request.nextUrl.searchParams.get('clientId');
   if (!clientId) {
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'clients.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const { clientId, storageLimitMb } = await request.json();

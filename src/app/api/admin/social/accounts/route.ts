@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
 
-    const accounts = (data || []).map((row: Record<string, any>) => ({
+    const accounts = (data || []).map((row: Record<string, unknown>) => ({
       id: row.id,
       clientId: row.client_id,
       platform: row.platform,
@@ -159,7 +159,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if (typeof isActive === 'boolean') updates.is_active = isActive;
     if (accessToken) updates.access_token = encryptToken(accessToken);
 

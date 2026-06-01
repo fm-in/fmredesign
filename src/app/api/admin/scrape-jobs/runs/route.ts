@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 
 function transformRun(row: Record<string, unknown>) {
   return {
@@ -29,8 +29,8 @@ function transformRun(row: Record<string, unknown>) {
 }
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -83,8 +83,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();

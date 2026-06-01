@@ -245,7 +245,7 @@ export function CompanyFundamentalsForm({ session, onUpdate }: CompanyFundamenta
           </div>
 
           {formData.keyStakeholders.length === 0 ? (
-            <div className="text-center py-8 text-fm-neutral-500">
+            <div style={{ textAlign: 'center' }} className="py-8 text-fm-neutral-500">
               <Building2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
               <p>No stakeholders added yet</p>
               <p className="text-sm">Add key decision makers and project stakeholders</p>

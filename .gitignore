@@ -56,5 +56,11 @@ vercel-env-variables.txt
 # n8n workflow JSONs (contain baked-in API keys)
 n8n-workflows/*.json
 
+# Raw credential files (CSV exports from providers, etc.)
+.secrets/
+
+# AgentWorks browser-tool downloads / screenshots
+.agentworks/
+
 # Auto-generated design profile
 .design-profile.json

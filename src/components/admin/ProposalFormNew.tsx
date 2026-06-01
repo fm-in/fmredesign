@@ -46,6 +46,7 @@ import { adminToast } from '@/lib/admin/toast';
 import { ClientService } from '@/lib/admin/client-service';
 import { ProposalNumbering } from '@/lib/admin/proposal-numbering';
 import type { ProposalPDFGenerator } from '@/lib/admin/proposal-pdf-generator';
+import { CONTRACT_TEMPLATES, getTemplate as getContractTemplate } from '@/lib/admin/contract-templates';
 import {
   type Proposal,
   type ProspectClient,
@@ -894,7 +895,38 @@ export function ProposalFormNew({ initialProposal, onSaveSuccess }: ProposalForm
                     </div>
                   </button>
                   {expandedSections[key] && (
-                    <div className="p-3">
+                    <div className="p-3 space-y-2">
+                      {/* Contract template loader — only on the T&Cs field.
+                          Loads contract-grade T&Cs into the proposal so the
+                          eventual proposal→contract handoff carries the same
+                          legal text the client already saw. */}
+                      {key === 'termsAndConditions' && (
+                        <div className="flex items-center gap-2 bg-fm-neutral-50 border border-fm-neutral-200 rounded-md px-3 py-2">
+                          <label className="text-xs font-medium text-fm-neutral-600 shrink-0">
+                            Load contract template:
+                          </label>
+                          <select
+                            className="text-xs px-2 py-1 rounded border border-fm-neutral-300 bg-white text-fm-neutral-900 flex-1"
+                            value=""
+                            onChange={(e) => {
+                              const tpl = getContractTemplate(e.target.value);
+                              if (!tpl) return;
+                              setProposal((prev) => ({
+                                ...prev,
+                                termsAndConditions: tpl.termsAndConditions,
+                              }));
+                              adminToast.success(`Loaded T&Cs from "${tpl.label}" template`);
+                            }}
+                          >
+                            <option value="">— Choose template —</option>
+                            {CONTRACT_TEMPLATES.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.label} ({t.currency})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                       <textarea
                         className={textareaCls}
                         rows={6}

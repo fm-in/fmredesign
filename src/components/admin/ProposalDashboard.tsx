@@ -22,8 +22,10 @@ import {
   CheckCircle,
   XCircle,
   Send,
-  BarChart3
+  BarChart3,
+  Receipt,
 } from 'lucide-react';
+import Link from 'next/link';
 import {
   DashboardCard as Card,
   CardContent,
@@ -431,6 +433,20 @@ export function ProposalDashboard({ onCreateNew, onEditProposal }: ProposalDashb
                           <XCircle className="w-4 h-4" />
                         </Button>
                       </div>
+                    )}
+
+                    {/* Convert to Invoice — visible once the proposal is
+                        approved. Opens the invoice form pre-filled with
+                        the proposal's line items, client and currency. */}
+                    {proposal.status === 'approved' && (
+                      <Link
+                        href={`/admin/invoice?from-proposal=${proposal.id}`}
+                        title="Convert to Invoice"
+                      >
+                        <Button variant="ghost" size="sm">
+                          <Receipt className="w-4 h-4" />
+                        </Button>
+                      </Link>
                     )}
 
                     <Button

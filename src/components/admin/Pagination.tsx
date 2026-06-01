@@ -114,7 +114,8 @@ export function Pagination({
             page === null ? (
               <span
                 key={`ellipsis-${idx}`}
-                className="w-9 text-center text-fm-neutral-400 select-none"
+                style={{ textAlign: 'center' }}
+                className="w-9 text-fm-neutral-400 select-none"
               >
                 &hellip;
               </span>

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import { logAuditEvent, getAuditUser, getClientIP } from '@/lib/admin/audit-log';
 
 /**
@@ -56,8 +56,8 @@ function transformRotationConfig(row: Record<string, unknown>) {
 
 // GET /api/admin/scrape-jobs/config
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const supabase = getSupabaseAdmin();
@@ -151,8 +151,8 @@ export async function GET(request: NextRequest) {
 
 // PUT /api/admin/scrape-jobs/config — Update source or rotation config
 export async function PUT(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const body = await request.json();
@@ -272,8 +272,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE rotation config
 export async function DELETE(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'content.write');
+  if ('error' in auth) return auth.error;
 
   try {
     const id = request.nextUrl.searchParams.get('id');

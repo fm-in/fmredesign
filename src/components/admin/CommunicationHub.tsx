@@ -335,7 +335,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
                   ))}
 
                   {messages.length === 0 && (
-                    <div className="text-center py-8">
+                    <div style={{ textAlign: 'center' }} className="py-8">
                       <MessageSquare className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
                       <h4 className="font-semibold text-fm-neutral-900 mb-2">Start the conversation</h4>
                       <p className="text-fm-neutral-600">Send your first message to {client.name}</p>
@@ -367,7 +367,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
               </>
             ) : (
               <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
+                <div style={{ textAlign: 'center' }}>
                   <MessageSquare className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
                   <h4 className="font-semibold text-fm-neutral-900 mb-2">No conversation selected</h4>
                   <p className="text-fm-neutral-600">Choose a conversation to start messaging</p>
@@ -478,7 +478,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
               ))}
               
               {meetings.length === 0 && (
-                <div className="text-center py-8">
+                <div style={{ textAlign: 'center' }} className="py-8">
                   <Calendar className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
                   <h4 className="font-semibold text-fm-neutral-900 mb-2">No meetings scheduled</h4>
                   <p className="text-fm-neutral-600">Schedule your first meeting with the client</p>
@@ -492,7 +492,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
       {/* Notes Tab */}
       {activeTab === 'notes' && (
         <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
-          <div className="text-center py-12">
+          <div style={{ textAlign: 'center' }} className="py-12">
             <FileText className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
             <h4 className="font-semibold text-fm-neutral-900 mb-2">Meeting Notes & Documentation</h4>
             <p className="text-fm-neutral-600">
@@ -505,7 +505,7 @@ export function CommunicationHub({ clientId, onScheduleMeeting }: CommunicationH
       {/* Calls Tab */}
       {activeTab === 'calls' && (
         <div className="bg-white rounded-xl shadow-sm border border-fm-neutral-200 p-4 sm:p-6">
-          <div className="text-center py-12">
+          <div style={{ textAlign: 'center' }} className="py-12">
             <Phone className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
             <h4 className="font-semibold text-fm-neutral-900 mb-2">Call History & Logs</h4>
             <p className="text-fm-neutral-600">

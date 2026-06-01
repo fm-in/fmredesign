@@ -380,7 +380,7 @@ export function GrowthEngine({ clientId, clientName }: GrowthEngineProps) {
               </div>
 
               {filteredOpportunities.length === 0 && (
-                <div className="text-center py-8">
+                <div style={{ textAlign: 'center' }} className="py-8">
                   <Target className="h-12 w-12 text-fm-neutral-400 mx-auto mb-4" />
                   <h4 className="font-semibold text-fm-neutral-900 mb-2">No opportunities found</h4>
                   <p className="text-fm-neutral-600">

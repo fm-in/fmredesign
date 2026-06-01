@@ -43,6 +43,7 @@ import { adminToast } from '@/lib/admin/toast';
 import type { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
 import { ClientService } from '@/lib/admin/client-service';
 import { InvoiceNumbering } from '@/lib/admin/invoice-numbering';
+import { DIGITAL_MARKETING_PACKAGES } from '@/lib/admin/proposal-types';
 import {
   AGENCY_SERVICES,
   SERVICE_CATEGORIES,
@@ -170,6 +171,7 @@ export function InvoiceFormNew() {
   const searchParams = useSearchParams();
   const duplicateId = searchParams.get('duplicate');
   const editId = searchParams.get('edit');
+  const fromProposalId = searchParams.get('from-proposal');
   const [isEditMode, setIsEditMode] = useState(false);
 
   const [invoice, setInvoice] = useState<Invoice>(() => {
@@ -316,6 +318,97 @@ export function InvoiceFormNew() {
     loadDuplicate();
   }, [duplicateId]);
 
+  // ---- Pre-populate from an approved proposal (?from-proposal=<id>) ----
+  // Source of truth for line items is the proposal's `investment.packages` +
+  // `customServices`. We flatten them into invoice line items so the user
+  // sees the entire quote without retyping anything. Client info is reused
+  // when the proposal targets an existing client; for prospect proposals the
+  // user picks a client in the form before saving.
+  useEffect(() => {
+    if (!fromProposalId) return;
+    const loadFromProposal = async () => {
+      try {
+        const res = await fetch(`/api/proposals?id=${fromProposalId}`);
+        const result = await res.json();
+        if (!result.success || !result.data) {
+          adminToast.error('Could not load source proposal');
+          return;
+        }
+        const p = result.data;
+
+        // Resolve a label per investment package by looking it up in the
+        // proposal's own `servicePackages` array (it was snapshotted at
+        // creation time, so this stays stable even if the catalog changes).
+        const packagesById: Record<string, { name: string; description: string }> = {};
+        for (const sp of (p.servicePackages || [])) {
+          if (sp && sp.id) {
+            packagesById[sp.id] = { name: sp.name || '', description: sp.description || '' };
+          }
+        }
+
+        const lineItemsFromPackages = (p.investment?.packages || []).map(
+          (entry: { packageId: string; variant?: string; quantity: number; price: number }, idx: number) => {
+            const meta = packagesById[entry.packageId] || { name: entry.packageId, description: '' };
+            const label = entry.variant ? `${meta.name} — ${entry.variant}` : meta.name;
+            const qty = entry.quantity || 1;
+            const rate = entry.price || 0;
+            return {
+              id: `item-prop-${Date.now()}-${idx}`,
+              serviceId: '',
+              description: label,
+              sacCode: '',
+              quantity: qty,
+              rate,
+              amount: qty * rate,
+            };
+          },
+        );
+
+        const lineItemsFromCustom = (p.customServices || []).map(
+          (entry: { name: string; description?: string; price: number }, idx: number) => ({
+            id: `item-prop-custom-${Date.now()}-${idx}`,
+            serviceId: '',
+            description: entry.description ? `${entry.name} — ${entry.description}` : entry.name,
+            sacCode: '',
+            quantity: 1,
+            rate: entry.price || 0,
+            amount: entry.price || 0,
+          }),
+        );
+
+        const allLineItems = [...lineItemsFromPackages, ...lineItemsFromCustom];
+
+        setInvoice((prev) => ({
+          ...prev,
+          id: `inv-${Date.now()}`,
+          date: new Date().toISOString().split('T')[0],
+          dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          // Pre-select the linked client only when the proposal points to a
+          // real client record; for prospect proposals we leave the
+          // selector empty so the user picks or creates one.
+          client: p.client?.isExisting && p.client?.clientId
+            ? { ...prev.client, id: p.client.clientId }
+            : prev.client,
+          lineItems: allLineItems,
+          currency: p.investment?.currency ?? prev.currency,
+          // Surface the linkage in the notes field so it's visible on the
+          // PDF and searchable in the DB. A proper `source_proposal_id`
+          // column would be cleaner; deferring that to a follow-up migration.
+          notes: prev.notes || `Generated from proposal ${p.proposalNumber || fromProposalId}`,
+          terms: prev.terms,
+          status: 'draft',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }));
+        adminToast.success('Invoice pre-filled from proposal');
+      } catch (err) {
+        console.error('Proposal→Invoice load error:', err);
+        adminToast.error('Failed to load proposal');
+      }
+    };
+    loadFromProposal();
+  }, [fromProposalId]);
+
   // ---- Pre-populate from existing invoice (edit mode) ----
   useEffect(() => {
     if (!editId) return;
@@ -408,6 +501,31 @@ export function InvoiceFormNew() {
         },
       ],
     }));
+
+  // Insert a line item from the shared service catalog (DIGITAL_MARKETING_PACKAGES).
+  // Quantity defaults to the package's `duration` for monthly retainers (so a
+  // 6-month SEO package becomes 6 × ₹35,000), or 1 for project/hourly billing.
+  const insertPackageAsLineItem = useCallback((packageId: string) => {
+    const pkg = DIGITAL_MARKETING_PACKAGES.find((p) => p.id === packageId);
+    if (!pkg) return;
+    const quantity = pkg.billingType === 'monthly' && pkg.duration ? pkg.duration : 1;
+    setInvoice((prev) => ({
+      ...prev,
+      lineItems: [
+        ...prev.lineItems,
+        {
+          id: `item-${Date.now()}`,
+          serviceId: pkg.id,
+          description: pkg.name + (pkg.description ? ` — ${pkg.description}` : ''),
+          sacCode: '',
+          quantity,
+          rate: pkg.basePrice,
+          amount: quantity * pkg.basePrice,
+        },
+      ],
+    }));
+    adminToast.success(`Inserted "${pkg.name}" from catalog`);
+  }, []);
 
   const duplicateLastItem = () => {
     const last = invoice.lineItems[invoice.lineItems.length - 1];
@@ -821,6 +939,26 @@ export function InvoiceFormNew() {
                     <Copy className="w-4 h-4" />
                     <span className="hidden sm:inline">Duplicate</span>
                   </Button>
+                  {/* Insert from service catalog — uses the same shared
+                      DIGITAL_MARKETING_PACKAGES list the proposal form uses
+                      so pricing stays consistent across quotes and invoices. */}
+                  <select
+                    aria-label="Insert from catalog"
+                    className="text-xs px-2 py-1.5 rounded border border-fm-neutral-300 bg-white text-fm-neutral-700"
+                    value=""
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      insertPackageAsLineItem(e.target.value);
+                      e.target.value = '';
+                    }}
+                  >
+                    <option value="">+ From catalog</option>
+                    {DIGITAL_MARKETING_PACKAGES.map((pkg) => (
+                      <option key={pkg.id} value={pkg.id}>
+                        {pkg.name} — ₹{pkg.basePrice.toLocaleString('en-IN')}
+                      </option>
+                    ))}
+                  </select>
                   <Button variant="ghost" size="sm" onClick={addLineItem}>
                     <Plus className="w-4 h-4" />
                     Add Item
@@ -1329,7 +1467,7 @@ function InvoicePreview({
                 Description
               </th>
               <th className="text-left py-1 px-1 font-semibold w-12">SAC</th>
-              <th className="text-center py-1 px-1 font-semibold w-8">Qty</th>
+              <th style={{ textAlign: 'center' }} className="py-1 px-1 font-semibold w-8">Qty</th>
               <th className="text-right py-1 px-1 font-semibold w-14">Rate</th>
               <th className="text-right py-1 px-1.5 font-semibold w-16">
                 Amount
@@ -1356,7 +1494,7 @@ function InvoicePreview({
                 <td className="py-1 px-1 text-[7px] text-fm-neutral-500">
                   {item.sacCode || '\u2014'}
                 </td>
-                <td className="text-center py-1 px-1">{item.quantity}</td>
+                <td style={{ textAlign: 'center' }} className="py-1 px-1">{item.quantity}</td>
                 <td className="text-right py-1 px-1">{fmt(item.rate)}</td>
                 <td className="text-right py-1 px-1.5 font-semibold">
                   {fmt(item.amount)}
