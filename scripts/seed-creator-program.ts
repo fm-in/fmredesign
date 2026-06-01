@@ -50,8 +50,8 @@ You will learn how brands create content, how social media campaigns are planned
 
 Our focus is simple: Skill-based learning. Practical exposure. Career-ready training.`,
 
-    price_inr: 14999,
-    early_bird_price_inr: 9999,
+    price_inr: 29999,
+    early_bird_price_inr: 24999,
     early_bird_until: earlyBirdUntil,
     currency: 'INR',
 

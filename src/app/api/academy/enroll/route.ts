@@ -175,9 +175,32 @@ export async function POST(request: NextRequest) {
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || '',
     };
   } catch (rzpErr) {
-    console.error('Razorpay order create failed:', rzpErr);
+    // Log everything we can — Razorpay errors carry useful detail in nested
+    // fields that JSON.stringify on `Error` won't capture.
+    const err = rzpErr as { message?: string; statusCode?: number; error?: { description?: string; code?: string; reason?: string } };
+    console.error('Razorpay order create failed:', {
+      message: err?.message,
+      statusCode: err?.statusCode,
+      description: err?.error?.description,
+      code: err?.error?.code,
+      reason: err?.error?.reason,
+      full: rzpErr,
+    });
     // Don't fail the request — admin can still mark this reservation as paid
-    // manually if the buyer pays via Payment Link instead.
+    // manually if the buyer pays via Payment Link instead. But surface the
+    // failure reason in the response meta so the client knows checkout
+    // couldn't open and the operator can read the cause in the network tab.
+    return ApiResponse.success(
+      transformEnrollmentRow(inserted),
+      {
+        razorpayError: {
+          message: err?.message || 'Unknown error',
+          description: err?.error?.description,
+          code: err?.error?.code,
+          statusCode: err?.statusCode,
+        },
+      }
+    );
   }
 
   // Admin notification — non-fatal.
