@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
       { source: '/career', destination: '/creativeminds', permanent: true },
       { source: '/connect', destination: '/contact', permanent: true },
       { source: '/know-us', destination: '/about', permanent: true },
+      // FM Academy — old single-program slug replaced by multi-course listing
+      { source: '/academy/freaking-minds-creator-program', destination: '/academy', permanent: false },
     ];
   },
 };

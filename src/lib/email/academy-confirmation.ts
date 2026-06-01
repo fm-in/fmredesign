@@ -70,7 +70,7 @@ export function buildEnrollmentConfirmationEmail(opts: BuildOpts): {
         <p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.6">
           Our team will email you the joining details (WhatsApp group + session links)
           within the next 24 hours. If you don&rsquo;t hear from us, write to
-          <a href="mailto:hello@freakingminds.in" style="color:${BRAND_MAGENTA};text-decoration:none">hello@freakingminds.in</a>.
+          <a href="mailto:freakingmindsdigital@gmail.com" style="color:${BRAND_MAGENTA};text-decoration:none">freakingmindsdigital@gmail.com</a>.
         </p>
       </td></tr>`;
 
@@ -125,7 +125,7 @@ export function buildEnrollmentConfirmationEmail(opts: BuildOpts): {
     <tr><td style="padding:8px 32px 32px 32px">
       <p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.6">
         Questions? Reply to this email or write to
-        <a href="mailto:hello@freakingminds.in" style="color:${BRAND_MAGENTA};text-decoration:none">hello@freakingminds.in</a>.
+        <a href="mailto:freakingmindsdigital@gmail.com" style="color:${BRAND_MAGENTA};text-decoration:none">freakingmindsdigital@gmail.com</a>.
       </p>
     </td></tr>
   </table>
