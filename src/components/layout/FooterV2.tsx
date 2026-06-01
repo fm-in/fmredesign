@@ -19,6 +19,7 @@ const navigation = {
   ],
   resources: [
     { name: 'Blog', href: '/blog' },
+    { name: 'FM Academy', href: '/academy' },
     { name: 'Get Started', href: '/get-started' },
     { name: 'CreativeMinds', href: '/creativeminds' },
   ],
