@@ -75,6 +75,10 @@ export function HeaderV3() {
             ? 'bg-fm-cream/95 backdrop-blur-md'
             : 'bg-transparent'
         )}
+        // GPU-promote the sticky header so the backdrop-blur is rasterized
+        // once into its own compositor layer instead of being re-blurred
+        // against the scrolling page every frame.
+        style={{ willChange: 'backdrop-filter, background-color', transform: 'translateZ(0)' }}
       >
         {/* Subtle bottom border on scroll */}
         <div

@@ -180,8 +180,19 @@ export function V2PageWrapper({
         }}
       />
 
-      {/* Layer 2: Stars — fixed */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -10 }}>
+      {/* Layer 2: Stars — fixed. Wrapper is GPU-promoted so the
+          twinkle animation runs on the compositor, not the main thread.
+          `contain: strict` walls off layout/paint impact on the rest
+          of the page. */}
+      <div
+        className="fixed inset-0 pointer-events-none overflow-hidden"
+        style={{
+          zIndex: -10,
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+          contain: 'strict',
+        }}
+      >
         {stars.map((star) => (
           <div
             key={star.id}
@@ -194,11 +205,18 @@ export function V2PageWrapper({
               background: `radial-gradient(circle, rgba(140,20,65,${star.brightness}) 0%, rgba(140,20,65,${star.brightness * 0.6}) 50%, transparent 100%)`,
               animation: `v2StarTwinkle ${star.duration}s ease-in-out infinite`,
               animationDelay: `${star.delay}s`,
+              // Promote each star to its own layer so the opacity/scale
+              // animation is a pure compositor op (no repaint).
+              willChange: 'transform, opacity',
             }}
           />
         ))}
 
-        {/* Larger accent stars with glow */}
+        {/* Larger accent stars with glow.
+            Old version used `box-shadow: 0 0 24px` (very expensive paint
+            on scroll) + `filter: blur(0.5px)` (forces re-rasterization).
+            Replaced with a radial-gradient halo on the wrapper — same
+            visual result, ~10× cheaper. */}
         {showAccentStars && [
           { left: 15, top: 20, size: 4 },
           { left: 85, top: 35, size: 3 },
@@ -213,33 +231,48 @@ export function V2PageWrapper({
             key={`accent-${i}`}
             className="absolute"
             style={{
-              left: `${star.left}%`,
-              top: `${star.top}%`,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
+              // Halo extends 6× the core star size — looks identical to
+              // the old box-shadow glow but rendered as a gradient.
+              left: `calc(${star.left}% - ${star.size * 3}px)`,
+              top: `calc(${star.top}% - ${star.size * 3}px)`,
+              width: `${star.size * 6}px`,
+              height: `${star.size * 6}px`,
+              background: 'radial-gradient(circle, rgba(140,20,65,0.35) 0%, rgba(140,20,65,0.15) 30%, transparent 65%)',
               animation: `v2StarPulse ${3 + i * 0.5}s ease-in-out infinite`,
               animationDelay: `${i * 0.7}s`,
+              willChange: 'transform, opacity',
             }}
           >
-            {/* Star shape with 4 points */}
+            {/* Star shape with 4 points — centered inside the halo. */}
             <div
-              className="absolute inset-0"
+              className="absolute"
               style={{
-                background: 'rgba(140,20,65,0.75)',
+                left: '50%',
+                top: '50%',
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                marginLeft: `-${star.size / 2}px`,
+                marginTop: `-${star.size / 2}px`,
+                background: 'rgba(140,20,65,0.85)',
                 clipPath: 'polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%)',
-                filter: 'blur(0.5px)',
-                boxShadow: '0 0 12px rgba(140,20,65,0.6), 0 0 24px rgba(140,20,65,0.35)',
               }}
             />
           </div>
         ))}
       </div>
 
-      {/* Layer 3: Mid-Ground Shapes — absolute, parallax slower (deeper) */}
+      {/* Layer 3: Mid-Ground Shapes — absolute, parallax slower (deeper).
+          GPU-promoted wrapper isolates these blurred ellipses so they
+          don't force the whole page to re-rasterize on scroll. */}
       <div
         ref={midGroundRef}
         className="absolute inset-0 pointer-events-none"
-        style={{ zIndex: -5 }}
+        style={{
+          zIndex: -5,
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+          contain: 'layout style paint',
+        }}
       >
         {midShapes.map((shape) => (
           <div
@@ -252,7 +285,11 @@ export function V2PageWrapper({
               height: `${shape.height}px`,
               background: `radial-gradient(ellipse, ${shape.color} 0%, transparent 70%)`,
               filter: `blur(${shape.blur}px)`,
-              transform: `rotate(${shape.rotation}deg)`,
+              // Compose rotation with translateZ(0) to force its own layer
+              // — the filter:blur then runs once at rasterization, not
+              // every scroll frame.
+              transform: `translateZ(0) rotate(${shape.rotation}deg)`,
+              willChange: 'transform',
             }}
           />
         ))}
@@ -263,11 +300,17 @@ export function V2PageWrapper({
         {children}
       </div>
 
-      {/* Layer 6: Foreground Particles — absolute, parallax faster (closer) */}
+      {/* Layer 6: Foreground Particles — absolute, parallax faster (closer).
+          GPU-promoted so the drift animation is pure compositor work. */}
       <div
         ref={foregroundRef}
         className="absolute inset-0 pointer-events-none hidden md:block"
-        style={{ zIndex: 5 }}
+        style={{
+          zIndex: 5,
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+          contain: 'layout style paint',
+        }}
       >
         {particles.map((p) => (
           <div
@@ -281,6 +324,7 @@ export function V2PageWrapper({
               background: `radial-gradient(circle, rgba(180, 50, 90, ${p.opacity}) 0%, transparent 70%)`,
               animation: `v2ParticleDrift ${p.driftDuration}s ease-in-out infinite`,
               animationDelay: `${p.driftDelay}s`,
+              willChange: 'transform, opacity',
             }}
           />
         ))}

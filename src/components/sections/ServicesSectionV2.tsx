@@ -265,7 +265,9 @@ export function ServicesSectionV2() {
           trigger: trigger,
           start: 'top top',
           end: () => `+=${scrollDistance}`,
-          scrub: 1.5,
+          // Lowered from 1.5 → 0.6 for snappier scroll-follow without the
+          // perceptible lag that caused jank in the horizontal pin section.
+          scrub: 0.6,
           pin: true,
           anticipatePin: 1,
           fastScrollEnd: true,
@@ -294,7 +296,8 @@ export function ServicesSectionV2() {
           opacity: 0, x: 80, scale: 0.94,
           scrollTrigger: {
             trigger: card, containerAnimation: horizontalTween,
-            start: 'left 92%', end: 'left 65%', scrub: 1,
+            // Snappier card entrance — was scrub:1, now 0.5.
+            start: 'left 92%', end: 'left 65%', scrub: 0.5,
           },
         });
       });

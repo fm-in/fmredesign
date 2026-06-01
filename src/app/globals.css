@@ -1348,11 +1348,25 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   .v2-section {
     padding-top: var(--v2-section-padding);
     padding-bottom: var(--v2-section-padding);
-    contain: layout style;
+    /* Add `paint` containment so each section gets its own paint
+       boundary — scrolling one section no longer triggers repaints in
+       other sections. NB: kept layout+style+paint and stopped short of
+       `content-visibility: auto` because the horizontal-pin section
+       (ServicesSectionV2) measures its width at GSAP setup time, and
+       content-visibility would zero that out for off-screen mounts. */
+    contain: layout style paint;
   }
 
   .v2-section-gap {
     margin-top: var(--v2-section-gap);
+  }
+
+  /* Opt-in: any below-the-fold section that DOES NOT pin/scrub can use
+     this class to skip layout/paint when off-screen. Safe for static
+     content sections. Apply to existing sections in a follow-up pass. */
+  .v2-section-defer {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 800px;
   }
 }
 
