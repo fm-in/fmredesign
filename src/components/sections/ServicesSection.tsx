@@ -104,7 +104,7 @@ export function ServicesSection() {
           {/* Brain mascot - floating decoration (3D) */}
           <div className="absolute -right-4 md:right-0 lg:right-[-140px] top-0 hidden md:block">
             <img
-              src="/3dasset/happy brain.png"
+              src="/3dasset/happy-brain.webp"
               alt="Freaking Minds Mascot"
               loading="lazy"
               className="w-36 lg:w-48 h-auto hover:scale-110 transition-transform duration-500 brain-animate-float-glow"

@@ -171,7 +171,7 @@ export function HeroSection() {
             {/* Brain mascot - Meditating zen brain (3D) */}
             <div className="flex justify-center my-6">
               <img
-                src="/3dasset/medibrain.png"
+                src="/3dasset/medibrain.webp"
                 alt="Freaking Minds - Thoughtful Strategy"
                 loading="lazy"
                 className="w-44 h-auto hover:scale-110 transition-transform duration-500 drop-shadow-lg rounded-2xl brain-animate-float"

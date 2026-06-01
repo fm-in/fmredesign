@@ -22,6 +22,9 @@ const TestimonialsSectionV3 = dynamic(
 const CreativeMindsSectionV2 = dynamic(
   () => import("@/components/sections/CreativeMindsSectionV2").then(m => ({ default: m.CreativeMindsSectionV2 }))
 );
+const AcademySectionV2 = dynamic(
+  () => import("@/components/sections/AcademySectionV2").then(m => ({ default: m.AcademySectionV2 }))
+);
 const ContactSectionV2 = dynamic(
   () => import("@/components/sections/ContactSectionV2").then(m => ({ default: m.ContactSectionV2 }))
 );
@@ -37,6 +40,7 @@ export default function Home() {
         <ClientsSectionV2 />
         <TestimonialsSectionV3 />
         <CreativeMindsSectionV2 />
+        <AcademySectionV2 />
         <ContactSectionV2 />
       </V2PageWrapper>
     </>

@@ -290,7 +290,7 @@ export function ClientsSectionV2() {
         style={{ bottom: '-120px' }}
       >
         <img
-          src="/3dasset/brain-creative.png"
+          src="/3dasset/brain-creative.webp"
           alt="FreakingMinds brain mascot"
           loading="lazy"
           className="animate-v2-clients-float"

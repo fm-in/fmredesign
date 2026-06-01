@@ -290,7 +290,7 @@ export function HeroSectionV2() {
                 }}
               />
               <Image
-                src="/3dasset/brain-rocket.png"
+                src="/3dasset/brain-rocket.webp"
                 alt="Launch Your Brand"
                 width={420}
                 height={420}

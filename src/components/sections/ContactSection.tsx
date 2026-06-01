@@ -112,7 +112,7 @@ export function ContactSection() {
           {/* Brain mascot - friendly decoration (3D) */}
           <div className="absolute -left-20 md:-left-28 lg:-left-40 top-4 hidden md:block">
             <img
-              src="/3dasset/happy brain.png"
+              src="/3dasset/happy-brain.webp"
               alt="Freaking Minds - Let's Talk"
               loading="lazy"
               className="w-32 lg:w-44 h-auto hover:scale-110 transition-transform duration-500 brain-animate-bounce"

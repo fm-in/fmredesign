@@ -237,7 +237,7 @@ export default function AdminLoginPage() {
             {/* Brain mascot */}
             <div className="relative flex-shrink-0 ml-6">
               <img
-                src="/3dasset/brain-teaching.png"
+                src="/3dasset/brain-teaching.webp"
                 alt=""
                 role="presentation"
                 loading="lazy"

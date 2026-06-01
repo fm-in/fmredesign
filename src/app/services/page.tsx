@@ -208,7 +208,7 @@ export default function ServicesPage() {
           {/* Floating Brain */}
           <div className="absolute right-8 lg:right-20 top-0 hidden lg:block" style={{ zIndex: 10 }}>
             <Image
-              src="/3dasset/brain-teaching.png"
+              src="/3dasset/brain-teaching.webp"
               alt="Our Proven Process"
               width={180}
               height={180}

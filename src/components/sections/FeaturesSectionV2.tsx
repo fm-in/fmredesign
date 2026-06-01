@@ -36,7 +36,7 @@ const features = [
     description:
       "Dominate search results with data-driven SEO strategies. We don't just chase rankings—we build sustainable organic growth that puts you in front of customers actively looking for you.",
     highlights: ['First-page rankings', '300% avg traffic growth', 'Quality lead generation'],
-    mascot: '/3dasset/brain-strategy.png',
+    mascot: '/3dasset/brain-strategy.webp',
     mascotAlt: 'Brain mascot character analyzing strategy charts',
     gradientClass: 'v2-gradient-seo',
     accentClass: 'text-fm-orange-400',
@@ -50,7 +50,7 @@ const features = [
     description:
       "Build engaged communities with thumb-stopping content that turns followers into customers. We create social strategies that don't just get likes—they get results.",
     highlights: ['Community building', '200% engagement boost', 'Influencer partnerships'],
-    mascot: '/3dasset/brain-creative.png',
+    mascot: '/3dasset/brain-creative.webp',
     mascotAlt: 'Creative brain mascot with artistic tools',
     gradientClass: 'v2-gradient-social',
     accentClass: 'text-fm-magenta-400',
@@ -64,7 +64,7 @@ const features = [
     description:
       'Laser-focused PPC campaigns that deliver qualified leads while maximizing your ROI. We obsess over your metrics so you can obsess over your business.',
     highlights: ['300% ROAS achieved', 'Cost optimization', 'Real-time analytics'],
-    mascot: '/3dasset/brain-teaching.png',
+    mascot: '/3dasset/brain-teaching.webp',
     mascotAlt: 'Brain mascot presenting performance data',
     gradientClass: 'v2-gradient-performance',
     accentClass: 'text-fm-magenta-400',
@@ -78,7 +78,7 @@ const features = [
     description:
       "Visual identities that capture attention, build trust, and make competitors jealous. Your brand deserves to be remembered—let's make that happen.",
     highlights: ['180% brand recall', 'Complete visual systems', 'Lasting impressions'],
-    mascot: '/3dasset/brain-celebrating.png',
+    mascot: '/3dasset/brain-celebrating.webp',
     mascotAlt: 'Celebrating brain mascot with design elements',
     gradientClass: 'v2-gradient-brand',
     accentClass: 'text-fm-magenta-400',

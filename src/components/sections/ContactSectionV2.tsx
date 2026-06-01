@@ -253,7 +253,7 @@ export function ContactSectionV2() {
               {/* Main Mascot */}
               <FloatingElement amplitude={15} duration={4}>
                 <Image
-                  src="/3dasset/brain-support.png"
+                  src="/3dasset/brain-support.webp"
                   alt="We're Here to Help"
                   width={420}
                   height={420}

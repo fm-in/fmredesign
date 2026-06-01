@@ -283,7 +283,7 @@ export default function CreativeMindsPage() {
                   }}
                 />
                 <img
-                  src="/3dasset/brain-celebrating.png"
+                  src="/3dasset/brain-celebrating.webp"
                   alt="CreativeMinds Network"
                   loading="lazy"
                   className="max-w-full"

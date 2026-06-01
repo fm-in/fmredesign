@@ -155,7 +155,7 @@ export default function ContactPage() {
         {/* 3D Brain Decoration */}
         <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block" style={{ zIndex: 10 }}>
           <img
-            src="/3dasset/brain-creative.png"
+            src="/3dasset/brain-creative.webp"
             alt="Creative Solutions"
             loading="lazy"
             className="h-auto animate-v2-hero-float"

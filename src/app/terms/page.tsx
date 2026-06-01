@@ -9,7 +9,7 @@ export default function TermsOfServicePage() {
           {/* 3D Brain Decoration */}
           <div className="absolute right-8 lg:right-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
             <img
-              src="/3dasset/brain-strategy.png"
+              src="/3dasset/brain-strategy.webp"
               alt="Terms & Conditions"
               loading="lazy"
               className="h-auto animate-v2-hero-float"

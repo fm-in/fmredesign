@@ -234,7 +234,7 @@ function ClientLoginForm() {
             {/* Brain mascot decoration */}
             <div className="relative flex-shrink-0 ml-6">
               <img
-                src="/3dasset/brain-strategy.png"
+                src="/3dasset/brain-strategy.webp"
                 alt=""
                 role="presentation"
                 loading="lazy"

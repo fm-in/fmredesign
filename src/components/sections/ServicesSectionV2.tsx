@@ -30,7 +30,7 @@ const services = [
       'Dominate search results with data-driven SEO strategies that put you where customers are looking.',
     features: ['Keyword Strategy', 'Technical SEO', 'Content Authority', 'Local Search'],
     colorClass: 'v2-gradient-seo',
-    bgImage: '/3dasset/seo-bg.png',
+    bgImage: '/3dasset/seo-bg.webp',
   },
   {
     icon: Megaphone,
@@ -40,7 +40,7 @@ const services = [
       'Build engaged communities with thumb-stopping content that turns followers into customers.',
     features: ['Content Strategy', 'Community Building', 'Paid Campaigns', 'Influencer Marketing'],
     colorClass: 'v2-gradient-social',
-    bgImage: '/3dasset/social-media-bg.png',
+    bgImage: '/3dasset/social-media-bg.webp',
   },
   {
     icon: BarChart3,
@@ -50,7 +50,7 @@ const services = [
       'Laser-focused PPC campaigns that deliver qualified leads while maximizing your ROI.',
     features: ['Google Ads', 'Meta Ads', 'Retargeting', 'Conversion Optimization'],
     colorClass: 'v2-gradient-performance',
-    bgImage: '/3dasset/performance-marketing-bg.png',
+    bgImage: '/3dasset/performance-marketing-bg.webp',
   },
   {
     icon: Palette,
@@ -60,7 +60,7 @@ const services = [
       'Visual identities that capture attention, build trust, and make competitors jealous.',
     features: ['Logo Design', 'Brand Guidelines', 'Visual Systems', 'Packaging'],
     colorClass: 'v2-gradient-brand',
-    bgImage: '/3dasset/brand-identity-bg.png',
+    bgImage: '/3dasset/brand-identity-bg.webp',
   },
   {
     icon: Globe,
@@ -69,7 +69,7 @@ const services = [
     description: "Lightning-fast websites that don't just look good—they close deals 24/7.",
     features: ['Custom Development', 'E-commerce', 'CMS Solutions', 'Speed Optimization'],
     colorClass: 'v2-gradient-web',
-    bgImage: '/3dasset/web-development-bg.png',
+    bgImage: '/3dasset/web-development-bg.webp',
   },
   {
     icon: Video,
@@ -78,7 +78,7 @@ const services = [
     description: 'From scroll-stopping videos to blogs that rank, content that drives real action.',
     features: ['Video Production', 'Copywriting', 'Photography', 'Email Campaigns'],
     colorClass: 'v2-gradient-content',
-    bgImage: '/3dasset/content-production-bg.png',
+    bgImage: '/3dasset/content-production-bg.webp',
   },
 ];
 

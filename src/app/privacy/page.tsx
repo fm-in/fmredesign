@@ -9,7 +9,7 @@ export default function PrivacyPolicyPage() {
           {/* 3D Brain Decoration */}
           <div className="absolute left-8 lg:left-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
             <img
-              src="/3dasset/brain-learning.png"
+              src="/3dasset/brain-learning.webp"
               alt="Your Privacy Matters"
               loading="lazy"
               className="h-auto animate-v2-hero-float"

@@ -23,7 +23,7 @@ export default function Error({
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Brain Mascot */}
             <img
-              src="/3dasset/brain-confused.png"
+              src="/3dasset/brain-confused.webp"
               alt="Something went wrong"
               loading="lazy"
               className="mx-auto mb-8"

@@ -119,7 +119,7 @@ export default function BlogPage() {
         {/* 3D Brain Decoration */}
         <div className="absolute left-8 lg:left-20 top-1/3 hidden lg:block" style={{ zIndex: 10 }}>
           <Image
-            src="/3dasset/brain-learning.png"
+            src="/3dasset/brain-learning.webp"
             alt="Learning & Insights"
             width={180}
             height={180}

@@ -97,7 +97,7 @@ export default function AboutPage() {
           {/* Floating Brain Decoration */}
           <div className="absolute left-4 lg:left-16 top-8 hidden lg:block" style={{ zIndex: 10 }}>
             <Image
-              src="/3dasset/brain-strategy.png"
+              src="/3dasset/brain-strategy.webp"
               alt="Strategic Innovation"
               width={180}
               height={180}

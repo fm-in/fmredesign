@@ -76,7 +76,7 @@ export function PageLoader() {
 
       {/* 3D Brain mascot on right */}
       <Image
-        src="/3dasset/brain-loading.png"
+        src="/3dasset/brain-loading.webp"
         alt="Loading..."
         width={300}
         height={300}

@@ -254,7 +254,7 @@ export default function GetStartedPage() {
           {/* 3D Brain Decoration */}
           <div className="absolute right-8 lg:right-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
             <img
-              src="/3dasset/brain-rocket.png"
+              src="/3dasset/brain-rocket.webp"
               alt="Launch Your Project"
               loading="lazy"
               className="h-auto animate-v2-hero-float"
