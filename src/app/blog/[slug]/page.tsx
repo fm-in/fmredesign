@@ -1,9 +1,20 @@
+/**
+ * Blog detail — server-rendered, pre-generated at build time for every
+ * currently-published slug. Renders the post's `body_html` directly
+ * (already sanitised at upload time by mammoth / marked).
+ */
+
 import type { Metadata } from 'next';
-import { getPostBySlug, blogPosts } from '@/lib/blog-data';
+import { notFound } from 'next/navigation';
+import { getPublicPostBySlug, getAllPublishedPosts } from '@/lib/blog-data-public';
 import BlogPostClient from './BlogPostClient';
 
+export const revalidate = 60;
+export const dynamicParams = true;
+
 export async function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
+  const posts = await getAllPublishedPosts();
+  return posts.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -12,15 +23,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPublicPostBySlug(slug);
 
-  if (!post) {
-    return { title: 'Article Not Found | FreakingMinds Blog' };
-  }
+  if (!post) return { title: 'Article Not Found | FreakingMinds Blog' };
 
   return {
-    title: `${post.title} | FreakingMinds Blog`,
-    description: post.excerpt,
+    title: post.seoTitle || `${post.title} | FreakingMinds Blog`,
+    description: post.seoDescription || post.excerpt,
     keywords: post.tags,
     authors: [{ name: post.author }],
     openGraph: {
@@ -31,11 +40,13 @@ export async function generateMetadata({
       authors: [post.author],
       tags: post.tags,
       siteName: 'FreakingMinds',
+      images: post.coverImage ? [{ url: post.coverImage }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
+      images: post.coverImage ? [post.coverImage] : undefined,
     },
   };
 }
@@ -46,5 +57,17 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return <BlogPostClient slug={slug} />;
+  const post = await getPublicPostBySlug(slug);
+  if (!post) notFound();
+
+  // Surface 3 related posts so the client can render the "Read next" rail
+  // without a second round-trip.
+  const all = await getAllPublishedPosts();
+  const related = (() => {
+    const sameCat = all.filter((p) => p.slug !== slug && p.category === post.category);
+    const others = all.filter((p) => p.slug !== slug && p.category !== post.category);
+    return [...sameCat, ...others].slice(0, 3);
+  })();
+
+  return <BlogPostClient post={post} related={related} />;
 }

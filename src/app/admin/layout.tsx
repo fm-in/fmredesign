@@ -73,6 +73,9 @@ const NAV_PERMISSIONS: Record<string, string> = {
   '/admin/scraped-contacts/scrape-jobs': 'users.read', // Sub-page surfaced in nav
   '/admin/academy': 'content.read',          // FM Academy — programs CRUD
   '/admin/academy/enrollments': 'content.read',
+  '/admin/blog': 'content.read',              // Blog CMS
+  '/admin/blog/upload': 'content.write',
+  '/admin/blog/new': 'content.write',
   '/admin/support': 'clients.read',
   '/admin/team': 'users.read',
   '/admin/discovery': 'clients.read',
@@ -131,6 +134,7 @@ const adminNavigation: NavigationGroup[] = [
       { label: 'Leads', href: '/admin/leads', icon: <Target className="w-5 h-5" /> },
       { label: 'Discovery', href: '/admin/discovery', icon: <Search className="w-5 h-5" /> },
       { label: 'Content Calendar', href: '/admin/content', icon: <Calendar className="w-5 h-5" /> },
+      { label: 'Blog', href: '/admin/blog', icon: <FileText className="w-5 h-5" /> },
       { label: 'Support', href: '/admin/support', icon: <MessageSquare className="w-5 h-5" /> },
       { label: 'CreativeMinds', href: '/admin/creativeminds', icon: <Sparkles className="w-5 h-5" /> },
     ],
