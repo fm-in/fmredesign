@@ -1818,6 +1818,53 @@ button.v2-btn-outline {
    V2 CENTRALIZED ANIMATIONS - All V2 keyframes in one place
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ───────────────────────────────────────────────────────────────────────────
+   Hero entrance — CSS mirror of the former GSAP timeline.
+
+   WHY: these elements were server-rendered with inline `opacity: 0` and only
+   revealed once GSAP ran after hydration. On a throttled mobile connection
+   that left the entire above-the-fold area blank for ~7s, which Lighthouse
+   scored as a 6989ms LCP render delay.
+
+   Durations, delays, offsets and easing below are identical to the GSAP
+   values they replace, so the animation looks the same — it simply starts at
+   first paint instead of waiting for JavaScript.
+
+   GSAP power2.out == cubic ease-out == cubic-bezier(0.215, 0.61, 0.355, 1).
+   ─────────────────────────────────────────────────────────────────────────── */
+@keyframes v2HeroRise {
+  from { opacity: 0; transform: translateY(var(--v2-hero-rise, 20px)); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes v2HeroFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.v2-hero-enter {
+  opacity: 0;
+  animation-name: v2HeroRise;
+  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  animation-fill-mode: both;
+}
+
+/* Per-element offsets — matched 1:1 to the old timeline positions */
+.v2-hero-enter--headline  { --v2-hero-rise: 30px; animation-duration: 0.5s;  animation-delay: 0.1s;  }
+.v2-hero-enter--rotating  { --v2-hero-rise: 25px; animation-duration: 0.45s; animation-delay: 0.25s; }
+.v2-hero-enter--subhead   { --v2-hero-rise: 20px; animation-duration: 0.4s;  animation-delay: 0.4s;  }
+.v2-hero-enter--cta       { --v2-hero-rise: 15px; animation-duration: 0.35s; animation-delay: 0.55s; }
+.v2-hero-enter--mascot    { --v2-hero-rise: 20px; animation-duration: 0.5s;  animation-delay: 0.35s; }
+.v2-hero-enter--scroll    { animation-name: v2HeroFadeIn; animation-duration: 0.3s; animation-delay: 0.8s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .v2-hero-enter {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Hero main float */
 @keyframes v2HeroFloat {
   0%, 100% { transform: translateY(0) rotate(-1deg); }

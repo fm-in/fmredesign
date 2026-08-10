@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { Star, ArrowRight, Handshake, BarChart3, Lightbulb } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -289,10 +290,19 @@ export function ClientsSectionV2() {
         className="absolute left-[10%] z-30 hidden lg:block"
         style={{ bottom: '-120px' }}
       >
-        <img
+        {/*
+          Source asset is 1024x1024 (164 KB) but renders at most 288px, and the
+          wrapper is `hidden lg:block` — a plain <img> still downloads the full
+          file on mobile where it is never shown. next/image + `sizes` serves a
+          correctly-scaled variant instead. Identical rendered output.
+        */}
+        <Image
           src="/3dasset/brain-creative.webp"
           alt="FreakingMinds brain mascot"
+          width={288}
+          height={288}
           loading="lazy"
+          sizes="(max-width: 1024px) 1px, 288px"
           className="animate-v2-clients-float"
           style={{
             width: 'min(288px, 45vw)',

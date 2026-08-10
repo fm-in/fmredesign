@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight, Facebook, Instagram, Linkedin, Twitter, Sparkles, Send, Mail, Phone, MapPin } from 'lucide-react';
 
 const navigation = {
@@ -289,11 +290,15 @@ export function FooterV2() {
         <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-20 py-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <img
+              <Image
                 src="/logo.png"
                 alt="Freaking Minds"
+                width={96}
+                height={24}
+                loading="lazy"
+                sizes="96px"
                 className="w-auto opacity-60"
-                style={{ height: '1.5rem' }}
+                style={{ height: '1.5rem', width: 'auto' }}
               />
               <span className="v2-text-muted text-[12px]">
                 &copy; {currentYear} Freaking Minds. All rights reserved.
