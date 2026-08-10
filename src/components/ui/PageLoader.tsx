@@ -3,10 +3,24 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
+/**
+ * Branded splash shown on first visit.
+ *
+ * PERFORMANCE NOTE: the fade-out is driven by a CSS animation, not by
+ * setTimeout in an effect. Previously the overlay only began fading once React
+ * had hydrated — on a throttled mobile connection that took ~6.6s, and because
+ * this is a full-viewport z-index:99999 layer it meant Lighthouse measured the
+ * *loader* as the LCP element with a 6663ms render delay. The real page could
+ * not count as painted while it was covered.
+ *
+ * With a CSS animation the overlay clears on a fixed schedule from first paint,
+ * independent of when (or whether) JS arrives. The timings below are identical
+ * to the previous JS ones, so the visual experience is unchanged:
+ *   hold 1000ms -> fade 700ms -> gone at 1700ms
+ */
 export function PageLoader() {
-  // Start visible so loader is in the initial paint (no flash of content)
+  // Only used to unmount on a repeat visit; the first-visit fade is pure CSS.
   const [visible, setVisible] = useState(true);
-  const [fadeOut, setFadeOut] = useState(false);
 
   useEffect(() => {
     // Repeat visit in same tab — hide immediately
@@ -14,12 +28,10 @@ export function PageLoader() {
       setVisible(false);
       return;
     }
-
-    // First visit — mark as loaded, then fade out after 1s
     sessionStorage.setItem('fm-loaded', '1');
-    const fadeTimer = setTimeout(() => setFadeOut(true), 1000);
+    // Unmount once the CSS animation has finished so the node leaves the tree.
     const hideTimer = setTimeout(() => setVisible(false), 1700);
-    return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
+    return () => clearTimeout(hideTimer);
   }, []);
 
   if (!visible) return null;
@@ -41,9 +53,7 @@ export function PageLoader() {
             #fae4ec 80%, #fceef3 90%, #fef7f9 100%
           )
         `,
-        opacity: fadeOut ? 0 : 1,
-        transition: 'opacity 0.7s ease-out',
-        pointerEvents: fadeOut ? 'none' as const : 'auto' as const,
+        animation: 'fmLoaderFade 1.7s ease-out forwards',
       }}
     >
       {/* Atmospheric bloom */}
@@ -67,6 +77,7 @@ export function PageLoader() {
         width={320}
         height={120}
         priority
+        sizes="(max-width: 640px) 35vw, 320px"
         style={{
           width: 'min(320px, 35vw)',
           height: 'auto',
@@ -81,6 +92,7 @@ export function PageLoader() {
         width={300}
         height={300}
         priority
+        sizes="(max-width: 640px) 30vw, 300px"
         style={{
           width: 'min(300px, 30vw)',
           height: 'auto',
@@ -94,6 +106,19 @@ export function PageLoader() {
         @keyframes loaderFloat {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-12px); }
+        }
+        /* Hold fully opaque for 1s (0 -> 58.8% of 1.7s), then fade over 700ms.
+           animation-fill-mode forwards keeps the end state, and
+           visibility:hidden removes it from hit-testing and from LCP
+           consideration without needing JS. */
+        @keyframes fmLoaderFade {
+          0%, 58.8% { opacity: 1; visibility: visible; }
+          100% { opacity: 0; visibility: hidden; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          @keyframes loaderFloat {
+            0%, 100% { transform: none; }
+          }
         }
       `}</style>
     </div>

@@ -7,6 +7,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { WebVitals } from "@/components/WebVitals";
 import { CookieConsent } from "@/components/CookieConsent";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
+import Script from "next/script";
 
 // Display font - elegant serif for headlines (authority & sophistication)
 const playfair = Playfair_Display({
@@ -21,7 +22,8 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
-  weight: ["300", "400", "500", "600", "700"],
+  // "300" dropped — `font-light` has zero usages across src/.
+  weight: ["400", "500", "600", "700"],
 });
 
 // Accent font - for special moments
@@ -196,23 +198,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${instrument.variable}`}>
       <head>
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-WRBTEE11SH"
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WRBTEE11SH');`,
-          }}
-        />
-        <script
-          defer
-          src="https://cal.com/embed/embed.js"
-        />
-        <script
-          src="https://observatory.goodmantech.co/api/pixel/proj_freaking-minds_misvd05m"
-          async
-        />
+        {/*
+          Warm up the third-party origins before the scripts below are
+          requested. Lighthouse measured ~349ms of connection setup on mobile
+          that these remove from the critical path.
+        */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+        <link rel="dns-prefetch" href="https://cal.com" />
+        <link rel="dns-prefetch" href="https://observatory.goodmantech.co" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -233,6 +227,38 @@ export default function RootLayout({
         <WebVitals />
         <CookieConsent />
         <ChatbotWidget />
+
+        {/*
+          Third-party scripts run after hydration instead of from <head>.
+          In <head> they were fetched in parallel with the hero image and
+          competed for bandwidth on throttled mobile connections; GTM alone is
+          the single largest resource on the page (166 KB).
+
+          - Analytics: `afterInteractive` — the Next.js-recommended strategy
+            for GA. Still fires on every page view, just not before paint.
+          - cal.com: `lazyOnload` — not used on the homepage at all, and
+            `CalButton` already falls back to opening cal.com in a new tab
+            when the embed has not loaded yet.
+          - Observatory pixel: `lazyOnload` — passive telemetry.
+        */}
+        <Script
+          id="ga-lib"
+          src="https://www.googletagmanager.com/gtag/js?id=G-WRBTEE11SH"
+          strategy="afterInteractive"
+        />
+        <Script id="ga-init" strategy="afterInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WRBTEE11SH');`}
+        </Script>
+        <Script
+          id="cal-embed"
+          src="https://cal.com/embed/embed.js"
+          strategy="lazyOnload"
+        />
+        <Script
+          id="observatory-pixel"
+          src="https://observatory.goodmantech.co/api/pixel/proj_freaking-minds_misvd05m"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

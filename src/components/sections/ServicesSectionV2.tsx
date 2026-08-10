@@ -113,6 +113,11 @@ function ServiceCard({
               alt=""
               width={400}
               height={400}
+              // Decorative card background rendered at 65-70% of the card.
+              // Without `sizes` the browser assumed 100vw and pulled the
+              // 828px variant for what is at most a ~260px render.
+              sizes="(max-width: 768px) 70vw, 260px"
+              quality={70}
               style={{
                 opacity: 0.25,
                 mixBlendMode: 'luminosity',

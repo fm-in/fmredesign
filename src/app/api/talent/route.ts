@@ -12,6 +12,7 @@ import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { notifyAdmins } from '@/lib/notifications';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { submitTalentApplicationSchema, validateBody } from '@/lib/validations/schemas';
 import {
@@ -136,6 +137,17 @@ export async function POST(request: NextRequest) {
       category: (application.professionalDetails?.primaryCategory as string) || undefined,
       experience: (application.professionalDetails?.experienceLevel as string) || undefined,
     };
+
+    // Surface in the admin dashboard. Email alone proved insufficient —
+    // two genuine applications sat unreviewed for months because nothing
+    // appeared in the notification bell. Mirrors the /api/leads pattern.
+    notifyAdmins({
+      type: 'general',
+      title: 'New talent application',
+      message: `${fullName}${talentData.category ? ` — ${talentData.category}` : ''}`,
+      priority: 'high',
+      actionUrl: '/admin/creativeminds',
+    });
 
     // Notify team
     const teamEmail = talentApplicationTeamEmail(talentData);
