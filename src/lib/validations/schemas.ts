@@ -355,6 +355,24 @@ export const clientUploadDocumentSchema = z.object({
 // Helper: validate request body
 // ---------------------------------------------------------------------------
 
+/**
+ * Public marketing-health scorecard submission.
+ *
+ * `answers` is an open map of question id -> option value. It is intentionally
+ * NOT validated against the current question set here: scoring.ts already
+ * discards unrecognised ids and values, and rejecting the whole submission
+ * because one question was renamed would throw away a real lead over a
+ * cosmetic mismatch. No score is accepted from the client — the server
+ * derives it from these answers.
+ */
+export const submitScorecardSchema = z.object({
+  name: nonEmptyString,
+  email: emailField,
+  company: z.string().trim().max(200).optional(),
+  phone: z.string().trim().max(40).optional(),
+  answers: z.record(z.string(), z.string()),
+});
+
 export function validateBody<T>(schema: z.ZodType<T>, body: unknown): { success: true; data: T } | { success: false; error: string } {
   const result = schema.safeParse(body);
   if (result.success) {
