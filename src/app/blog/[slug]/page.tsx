@@ -2,6 +2,16 @@
  * Blog detail — server-rendered, pre-generated at build time for every
  * currently-published slug. Renders the post's `body_html` directly
  * (already sanitised at upload time by mammoth / marked).
+ *
+ * DO NOT add a `loading.tsx` to this segment or any ancestor of it.
+ * A loading.tsx wraps the segment in a Suspense boundary, which flushes a
+ * 200 shell before `notFound()` below is reached — so unknown slugs return
+ * HTTP 200 with the not-found UI instead of a real 404, and Google indexes
+ * unlimited soft-404s. This was measured: with either
+ * `blog/loading.tsx` or `blog/[slug]/loading.tsx` present, a bad slug
+ * returned 200; with both absent it returns 404. The listing keeps its
+ * skeleton by living in the `(index)` route group, which `[slug]` does not
+ * inherit from.
  */
 
 import type { Metadata } from 'next';
@@ -32,6 +42,13 @@ export async function generateMetadata({
     description: post.seoDescription || post.excerpt,
     keywords: post.tags,
     authors: [{ name: post.author }],
+    // `blog/layout.tsx` declares canonical '/blog'. Without this override every
+    // post inherits it and tells Google the articles are duplicates of the
+    // listing page, which suppresses them from the index entirely.
+    alternates: {
+      canonical: `/blog/${slug}`,
+      types: { 'application/rss+xml': '/blog/feed.xml' },
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
