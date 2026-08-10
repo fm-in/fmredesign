@@ -22,6 +22,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { Loader2, CheckCircle2, XCircle, RotateCcw } from 'lucide-react';
 
 declare global {
@@ -105,6 +106,8 @@ export function ReserveSeatForm({
   const [phone, setPhone] = useState('');
   const [company, setCompany] = useState('');
   const [message, setMessage] = useState('');
+  // Honeypot — hidden from humans, filled by naive bots. See @/lib/spam-guard.
+  const [honeypot, setHoneypot] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
   const [err, setErr] = useState<string | null>(null);
   const [pendingOrder, setPendingOrder] = useState<PendingOrder | null>(null);
@@ -170,6 +173,7 @@ export function ReserveSeatForm({
           buyerPhone: phone.trim() || undefined,
           buyerCompany: company.trim() || undefined,
           buyerMessage: message.trim() || undefined,
+          [HONEYPOT_FIELD]: honeypot,
         }),
       });
       const json = await res.json();
@@ -302,6 +306,32 @@ export function ReserveSeatForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      {/*
+        Honeypot. Hidden from sighted users and from screen readers, and
+        removed from the tab order, so no human can reach it — anything that
+        fills it is automated. Uses inline styles rather than `hidden` so a
+        bot parsing class names cannot trivially detect it.
+      */}
+      <input
+        type="text"
+        name={HONEYPOT_FIELD}
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0,0,0,0)',
+          whiteSpace: 'nowrap',
+          border: 0,
+        }}
+      />
       <input
         type="text"
         className={inputCls}

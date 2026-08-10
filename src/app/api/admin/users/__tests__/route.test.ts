@@ -89,6 +89,12 @@ vi.mock('@/lib/supabase-utils', () => ({
     if (role === 'admin') return ['content.read', 'content.write', 'clients.read', 'clients.write'];
     return ['content.read'];
   }),
+  toCamelCaseKeys: vi.fn((row: Record<string, unknown>, defaults: Record<string, unknown> = {}) => ({
+    ...defaults,
+    ...Object.fromEntries(
+      Object.entries(row).map(([k, v]) => [k.replace(/_([a-z])/g, (_, c) => c.toUpperCase()), v])
+    ),
+  })),
 }));
 
 // ── Validation mock ──

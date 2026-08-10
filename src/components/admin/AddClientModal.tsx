@@ -128,6 +128,14 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
   };
 
   const [existingClients, setExistingClients] = useState<{ id: string; name: string }[]>([]);
+  // Set when the API rejects a create as a duplicate (409). Holds the payload
+  // so the admin can confirm and resubmit with an override.
+  const [duplicateWarning, setDuplicateWarning] = useState<{
+    message: string;
+    name: string | null;
+    matchedOn: string;
+    payload: Record<string, unknown>;
+  } | null>(null);
   useEffect(() => {
     if (!isOpen) return;
     fetch('/api/clients')
@@ -140,10 +148,8 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
       .catch(() => {});
   }, [isOpen]);
 
-  const onSubmit = async (data: ClientFormData) => {
+  const submitClient = async (payload: Record<string, unknown>) => {
     try {
-      // Ensure brandColors from local state is included
-      const payload = { ...data, brandColors: brandColorInputs.filter(c => /^#[0-9a-fA-F]{6}$/.test(c)) };
       const response = await fetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -153,18 +159,39 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
       const result = await response.json();
 
       if (result.success) {
+        setDuplicateWarning(null);
         reset();
         setLogoPreview(null);
         setBrandColorInputs(['#c9325d']);
         onClientAdded();
         onClose();
-      } else {
-        adminToast.error(result.error || 'Failed to create client');
+        return;
       }
+
+      // 409 — looks like an existing client. Offer an explicit override
+      // rather than a dead end, since two real contacts can share a line.
+      if (response.status === 409 && result.duplicateOf) {
+        setDuplicateWarning({
+          message: result.error,
+          name: result.duplicateOf.name ?? null,
+          matchedOn: result.duplicateOf.matchedOn,
+          payload,
+        });
+        return;
+      }
+
+      adminToast.error(result.error || 'Failed to create client');
     } catch (error) {
       console.error('Error creating client:', error);
       adminToast.error('Failed to create client. Please try again.');
     }
+  };
+
+  const onSubmit = async (data: ClientFormData) => {
+    setDuplicateWarning(null);
+    // Ensure brandColors from local state is included
+    const payload = { ...data, brandColors: brandColorInputs.filter(c => /^#[0-9a-fA-F]{6}$/.test(c)) };
+    await submitClient(payload);
   };
 
   if (!isOpen) return null;
@@ -441,6 +468,43 @@ export function AddClientModal({ isOpen, onClose, onClientAdded }: AddClientModa
               </select>
             </div>
           </div>
+
+          {duplicateWarning && (
+            <div
+              role="alert"
+              className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4"
+            >
+              <p className="text-sm font-semibold text-amber-900 mb-1">
+                Possible duplicate
+              </p>
+              <p className="text-sm text-amber-800 mb-3">
+                {duplicateWarning.name
+                  ? `“${duplicateWarning.name}” already has this ${duplicateWarning.matchedOn}.`
+                  : duplicateWarning.message}{' '}
+                Create this client anyway?
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setDuplicateWarning(null)}
+                  disabled={isSubmitting}
+                >
+                  Go back and edit
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() =>
+                    submitClient({ ...duplicateWarning.payload, allowDuplicate: true })
+                  }
+                  disabled={isSubmitting}
+                  loading={isSubmitting}
+                >
+                  Create anyway
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 mt-6 pt-6 border-t border-fm-neutral-200">
             <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting} fullWidth className="sm:w-auto">

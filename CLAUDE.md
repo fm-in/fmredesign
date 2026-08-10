@@ -7,7 +7,10 @@ FreakingMinds is a digital marketing agency platform built with Next.js 15 and T
 - **Admin dashboard** — Agency management (clients, projects, content, invoices, proposals, leads, team, discovery, talent, contracts, social publishing, audit)
 - **Client portal** — Client-facing dashboard (project tracking, content approval, contracts, documents, reports, support)
 - **CreativeMinds** — Talent marketplace (public application + authenticated talent portal)
-- **Blog** — Hardcoded in `src/lib/blog-data.ts` (no CMS)
+- **Blog** — Supabase-backed CMS. Admin editor (TipTap) at `/admin/blog`, public pages read
+  `blog_posts_public` via `src/lib/blog-data-public.ts`. The old hardcoded `blog-data.ts` is gone.
+- **FM Academy** — Public course listing + detail (`/academy`), paid enrollment via Razorpay.
+  Tables: `programs`, `enrollments`, `payment_events`; public view `programs_public`.
 
 ## Tech Stack
 
@@ -17,6 +20,9 @@ FreakingMinds is a digital marketing agency platform built with Next.js 15 and T
 - **Icons**: Lucide React
 - **Forms**: react-hook-form + Zod (`src/lib/validations/schemas.ts` — shared by API + forms)
 - **Database**: Supabase (PostgreSQL) — `getSupabaseAdmin()` from `src/lib/supabase.ts`
+  - 44 relations live. `migrations/2026-08-10-schema-snapshot.sql` documents all of them
+    (columns/types/PK/FK only — no defaults, indexes, RLS or triggers). Most schema was
+    applied by hand in the Supabase SQL editor; prefer adding a migration file for new changes.
 - **Data Fetching**: @tanstack/react-query 5.x, @tanstack/react-table 8.x
 - **PDF**: jsPDF + jspdf-autotable (invoices/proposals)
 - **Email**: Resend 6.x (optional, graceful degradation)
@@ -88,6 +94,30 @@ p { margin: 0; }
 - **Protects**: `/admin/*`, `/client/*`, `/creativeminds/portal/*`
 - **Cross-session prevention**: Validates session ownership against URL params
 - **Does NOT apply to**: Public pages, API routes (APIs use own guards)
+
+## Public Form Protection
+
+Every unauthenticated POST route must rate-limit **and** run the spam guard.
+
+```ts
+import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';   // server only
+
+if (!rateLimit(getClientIp(request), 3)) return ApiResponse.error('Too many requests', 429);
+
+const spam = checkSpam({ honeypot: body[HONEYPOT_FIELD], email, name });
+if (spam.isSpam) return ApiResponse.validationError('A valid email is required');
+```
+
+- **Client components** import `HONEYPOT_FIELD` from `@/lib/spam-guard-field`, NOT
+  `@/lib/spam-guard` — the heuristics must stay out of the browser bundle (same split as
+  `events/types.ts` vs `events/emitter.ts`).
+- The form renders a visually-hidden input named `HONEYPOT_FIELD` (see `ReserveSeatForm.tsx`).
+- Rejections return a generic validation message so a bot learns nothing.
+- Current limits: `/api/leads` 5/min, `/api/talent` 3/min, `/api/academy/enroll` 3/min.
+
+Any new public form must also call `notifyAdmins()` so submissions surface in the dashboard —
+email alone has silently failed before.
 
 ## Key Patterns
 
@@ -264,6 +294,8 @@ GOOGLE_SHEETS_PRIVATE_KEY, GOOGLE_SHEETS_CLIENT_EMAIL, GOOGLE_SHEETS_SPREADSHEET
 - Use `toCamelCaseKeys()` for DB→API transforms
 - Wrap nav in `NavigationGroup[]` for `DashboardLayout`
 - Add new element CSS inside `@layer base` in globals.css
+- Add new public routes to `src/app/sitemap.ts` (it reads blog + academy from the DB)
+- Call `notifyAdmins()` from any new public form route
 
 ### Don't
 - Pass flat arrays to `DashboardLayout`

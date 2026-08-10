@@ -18,11 +18,12 @@
  *   - Inserts an enrollment row with status='reserved'.
  *   - Creates a Razorpay order and writes the order_id back to the row so the
  *     webhook can look up the enrollment on `payment.captured`.
- *   - Notifies admin via Inngest so the new lead surfaces in the dashboard.
+ *   - Notifies admins so the new reservation surfaces in the dashboard.
  *
- * No auth — this is the public conversion endpoint. We rate-limit by email
- * + program (one pending reservation per buyer per program) to keep abuse
- * / accidental duplicates in check without blocking legitimate retries.
+ * No auth — this is the public conversion endpoint. Three layers of abuse
+ * control: a per-IP rate limit (3/min), a honeypot + email-pattern spam
+ * filter (see `@/lib/spam-guard`), and per-email idempotency (one pending
+ * reservation per buyer per program) so legitimate retries are not blocked.
  */
 
 import { NextRequest } from 'next/server';
@@ -34,6 +35,9 @@ import {
   transformEnrollmentRow,
 } from '@/lib/admin/academy-types';
 import { createOrder } from '@/lib/razorpay';
+import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
+import { notifyAdmins } from '@/lib/notifications';
 
 function isLikelyEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -45,6 +49,35 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return ApiResponse.validationError('Invalid JSON body');
+  }
+
+  // Rate limit before any DB work. Matches /api/leads (5/min) and
+  // /api/talent (3/min); enrollment is a deliberate action, so 3 is ample.
+  const clientIp = getClientIp(request);
+  if (!rateLimit(clientIp, 3)) {
+    return ApiResponse.error('Too many requests. Please try again in a minute.', 429);
+  }
+
+  // Bot filter. Returns the same shape as a validation failure so a bot
+  // learns nothing about why it was turned away.
+  const spam = checkSpam({
+    honeypot: body[HONEYPOT_FIELD],
+    email: body.buyerEmail as string,
+    name: body.buyerName as string,
+  });
+  if (spam.isSpam) {
+    console.warn(`[enroll] rejected submission — ${spam.reason}`, {
+      ip: clientIp,
+      email: body.buyerEmail,
+    });
+    return ApiResponse.validationError('A valid email is required');
+  }
+  if (spam.suspicions.length > 0) {
+    console.warn('[enroll] accepted with suspicions', {
+      ip: clientIp,
+      email: body.buyerEmail,
+      suspicions: spam.suspicions,
+    });
   }
 
   const programId = (body.programId as string)?.trim();
@@ -146,6 +179,17 @@ export async function POST(request: NextRequest) {
     console.error('Enrollment insert error:', insertErr);
     return ApiResponse.error('Could not create reservation');
   }
+
+  // Surface the reservation in the admin dashboard. The header used to claim
+  // this happened via Inngest, but no notification was ever sent — every
+  // enrolment since launch landed silently in the table.
+  notifyAdmins({
+    type: 'general',
+    title: 'New academy reservation',
+    message: `${buyerName} — ${(program.title as string) || programId}`,
+    priority: 'high',
+    actionUrl: '/admin/academy/enrollments',
+  });
 
   // Create the Razorpay order. If this fails the reservation row is left in
   // place (admin can still process manually via Phase 1 fallback). We return

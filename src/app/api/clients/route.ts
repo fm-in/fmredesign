@@ -9,6 +9,7 @@ import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createClientSchema, updateClientSchema, validateBody } from '@/lib/validations/schemas';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
+import { findDuplicateClient } from '@/lib/admin/client-duplicates';
 import bcrypt from 'bcryptjs';
 
 /** Generate a URL-safe slug from a company name */
@@ -159,8 +160,40 @@ export async function POST(request: NextRequest) {
     }
     const formData = rawBody;
 
-    if (!formData.id) {
+    const isNewClient = !formData.id;
+    if (isNewClient) {
       formData.id = `client-${Date.now()}`;
+    }
+
+    // Reject an accidental re-entry of an existing client. Matches on email
+    // or phone — a 2026-08-05 incident created the same person twice because
+    // the email was mistyped the first time, so email alone is not enough.
+    // `allowDuplicate: true` lets an admin override deliberately (e.g. two
+    // genuine contacts sharing an office line).
+    if (isNewClient && !formData.allowDuplicate) {
+      const { data: existingRows } = await getSupabaseAdmin()
+        .from('clients')
+        .select('id, name, email, phone');
+
+      const dupe = findDuplicateClient(
+        { email: formData.email, phone: formData.phone },
+        existingRows || []
+      );
+
+      if (dupe) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `A client with this ${dupe.matchedOn} already exists: ${dupe.client.name || dupe.client.id}. Resubmit with allowDuplicate to create anyway.`,
+            duplicateOf: {
+              id: dupe.client.id,
+              name: dupe.client.name,
+              matchedOn: dupe.matchedOn,
+            },
+          },
+          { status: 409 }
+        );
+      }
     }
 
     // Build the structured client data for the response
