@@ -692,3 +692,115 @@ export function contractStatusEmail(data: ContractStatusEmailData): { subject: s
     html: emailWrapper(`Contract ${label}`, body),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Marketing health scorecard
+// ---------------------------------------------------------------------------
+
+interface ScorecardDimensionLine {
+  label: string;
+  score: number;
+  band: string;
+  recommendation: string;
+}
+
+interface ScorecardReportData {
+  name: string;
+  overall: number;
+  bandLabel: string;
+  /** Already ordered worst-first by scoring.ts — preserve that order. */
+  dimensions: ScorecardDimensionLine[];
+}
+
+/**
+ * Colour for a band. Semantic rather than brand magenta on purpose: a weak
+ * score rendered in the brand colour reads as decoration, not as a warning.
+ * Mirrors BAND_STYLE in the scorecard UI.
+ */
+const SCORECARD_BAND_COLOR: Record<string, string> = {
+  at_risk: '#e11d48',
+  patchy: '#f59e0b',
+  solid: '#0ea5e9',
+  strong: '#10b981',
+};
+
+/**
+ * The report the visitor was promised on the form.
+ *
+ * Sent to the person who filled it in, not to the team — the team gets a
+ * dashboard notification instead. Deliberately light on selling: the report
+ * earns a conversation by being right, and one that pitches in every section
+ * gets deleted.
+ *
+ * Built from tables and inline styles because that is what mail clients
+ * render reliably; no flexbox, no external CSS.
+ */
+export function scorecardReportEmail(data: ScorecardReportData): { subject: string; html: string } {
+  const overallColor = SCORECARD_BAND_COLOR[
+    data.overall >= 80 ? 'strong' : data.overall >= 60 ? 'solid' : data.overall >= 40 ? 'patchy' : 'at_risk'
+  ];
+
+  const sections = data.dimensions
+    .map((d, i) => {
+      const color = SCORECARD_BAND_COLOR[d.band] || BRAND_MAGENTA;
+      // Bar width is a percentage of a fixed-width table — the only bar
+      // technique that survives Outlook.
+      const filled = Math.max(0, Math.min(100, d.score));
+      return `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border:1px solid ${BORDER_COLOR};border-radius:10px">
+        <tr><td style="padding:16px 18px">
+          ${i === 0 ? `<div style="margin:0 0 6px">${badge('Fix this first', BRAND_MAGENTA)}</div>` : ''}
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="color:${HEADING_COLOR};font-size:15px;font-weight:700">${d.label}</td>
+              <td align="right" style="color:${color};font-size:18px;font-weight:700">${d.score}</td>
+            </tr>
+          </table>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 12px;background:#f1eef0;border-radius:3px">
+            <tr>
+              <td style="height:6px;font-size:0;line-height:0">
+                <table width="${filled}%" cellpadding="0" cellspacing="0" style="background:${color};border-radius:3px">
+                  <tr><td style="height:6px;font-size:0;line-height:0">&nbsp;</td></tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+          <div style="color:${TEXT_COLOR};font-size:13px;line-height:1.6">${d.recommendation}</div>
+        </td></tr>
+      </table>`;
+    })
+    .join('');
+
+  const body = `
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">
+      Hi ${data.name}, here is your marketing health report — the full breakdown you saw on the site,
+      kept here so you have it to hand.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;background:#faf8f9;border-radius:12px">
+      <tr><td align="center" style="padding:26px 20px">
+        <div style="color:${MUTED_COLOR};font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px">Your score</div>
+        <div style="color:${overallColor};font-size:44px;font-weight:700;line-height:1">${data.overall}<span style="color:${MUTED_COLOR};font-size:20px;font-weight:500">/100</span></div>
+        <div style="color:${overallColor};font-size:15px;font-weight:600;margin:6px 0 0">${data.bandLabel}</div>
+      </td></tr>
+    </table>
+
+    ${sections}
+
+    <div style="height:1px;background:${BORDER_COLOR};margin:28px 0 20px"></div>
+
+    <p style="margin:0 0 4px;color:${TEXT_COLOR};font-size:14px;line-height:1.6">
+      Most of the above is work you can do yourself, and it is worth doing in that order —
+      the top item is where the next pound of effort returns the most.
+    </p>
+    <p style="margin:0;color:${MUTED_COLOR};font-size:13px;line-height:1.6">
+      If you would rather not do it yourself, that is what we do. No obligation either way.
+    </p>
+    ${ctaButton('Talk to us', `${SITE_URL}/get-started`)}
+  `;
+
+  return {
+    subject: `Your marketing health score: ${data.overall}/100`,
+    html: emailWrapper('Your Marketing Health Report', body),
+  };
+}

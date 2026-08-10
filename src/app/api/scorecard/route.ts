@@ -17,6 +17,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { captureMeta } from '@/lib/capture-meta';
 import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { notifyAdmins } from '@/lib/notifications';
+import { notifyRecipient, scorecardReportEmail } from '@/lib/email/send';
 import { submitScorecardSchema, validateBody } from '@/lib/validations/schemas';
 import { isComplete, scoreScorecard, BAND_LABELS } from '@/lib/scorecard/scoring';
 
@@ -82,6 +83,22 @@ export async function POST(request: NextRequest) {
     console.error('[scorecard] insert failed:', error);
     return ApiResponse.error('Could not save your scorecard. Please try again.');
   }
+
+  // The form promises "we will email you a copy" — honour it. Fire-and-forget:
+  // sendEmail swallows its own failures, and a delivery problem must not fail a
+  // submission the visitor has already completed.
+  const report = scorecardReportEmail({
+    name: record.name,
+    overall: result.overall,
+    bandLabel: BAND_LABELS[result.band],
+    dimensions: result.dimensions.map((d) => ({
+      label: d.label,
+      score: d.score,
+      band: d.band,
+      recommendation: d.recommendation,
+    })),
+  });
+  notifyRecipient(record.email, report.subject, report.html);
 
   // Email has silently failed before, so the dashboard is the source of truth.
   notifyAdmins({
