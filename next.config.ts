@@ -36,6 +36,14 @@ const nextConfig: NextConfig = {
       { source: '/know-us', destination: '/about', permanent: true },
       // FM Academy — old single-program slug replaced by multi-course listing
       { source: '/academy/freaking-minds-creator-program', destination: '/academy', permanent: false },
+      // Blog — the piece was re-scoped from Bhopal-specific to general advice,
+      // so the slug changed. Permanent, because the old URL was published, sat
+      // in the sitemap, and may hold inbound links; without this it now 404s.
+      {
+        source: '/blog/why-every-business-in-bhopal-needs-digital-marketing-strategy',
+        destination: '/blog/why-every-business-needs-a-digital-marketing-strategy',
+        permanent: true,
+      },
     ];
   },
 };
