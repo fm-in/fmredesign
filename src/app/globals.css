@@ -1343,6 +1343,16 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
     max-width: var(--v2-container-wide);
   }
 
+  /* Article measure.
+     v2-container-narrow (896px) minus its own 64px padding minus the card's
+     64px padding left a 608px text column — about 52 characters per line at
+     18px, where comfortable prose is 60-75. 64rem yields ~768px, or ~66
+     characters. Used by every section of the blog detail page so the title,
+     body and "read next" rail stay aligned to the same column. */
+  .v2-container-article {
+    max-width: 64rem;
+  }
+
   /* V2 Section Spacing — in @layer base so Tailwind utilities (pt-40 etc.) can override */
 @layer base {
   .v2-section {
@@ -2528,10 +2538,11 @@ button.v2-btn-outline {
 
 @layer components {
   .blog-body {
-    /* ~68 characters is the readable measure; wider and the eye loses the
-       line return. The container is wider than this on purpose so pull
-       quotes and images can break out later. */
-    max-width: 68ch;
+    /* Explicit rem, NOT ch. `ch` is the width of the "0" glyph, and Plus
+       Jakarta Sans has wide figures — 68ch resolved to ~896px here, so it
+       never constrained anything and the real measure was set by the card's
+       padding instead. 48rem is ~768px, about 66 characters at 18px. */
+    max-width: 48rem;
     font-family: var(--font-family-sans, var(--font-sans));
     font-size: 1.0625rem;
     line-height: 1.75;

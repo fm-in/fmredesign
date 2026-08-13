@@ -29,7 +29,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
     <V2PageWrapper>
       {/* Hero */}
       <section className="relative z-10 v2-section pt-40">
-        <div className="v2-container v2-container-narrow">
+        <div className="v2-container v2-container-article">
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 v2-text-secondary hover:v2-text-primary transition-colors mb-8 text-sm py-2"
@@ -89,7 +89,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
 
       {/* Article body */}
       <section className="relative z-10 v2-section pt-0">
-        <div className="v2-container v2-container-narrow">
+        <div className="v2-container v2-container-article">
           <div className="v2-paper-lg rounded-3xl p-8 md:p-12 lg:p-16">
             <div
               /* `prose prose-lg` were inert — @tailwindcss/typography is not
@@ -141,7 +141,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
       {/* Related */}
       {related.length > 0 && (
         <section className="relative z-10 v2-section">
-          <div className="v2-container v2-container-narrow">
+          <div className="v2-container v2-container-article">
             <h2 className="font-display text-2xl md:text-3xl font-bold v2-text-primary mb-8">
               Related Articles
             </h2>
@@ -169,7 +169,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
 
       {/* CTA */}
       <section className="relative z-10 v2-section pb-32">
-        <div className="v2-container v2-container-narrow">
+        <div className="v2-container v2-container-article">
           <div className="v2-paper rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
             <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6 leading-tight">
               Ready to Grow Your <span className="text-fm-magenta-600">Business</span>?
