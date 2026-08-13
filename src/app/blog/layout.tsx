@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OG_DEFAULTS } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Blog — Digital Marketing Tips, Strategies & Insights',
@@ -10,9 +11,10 @@ export const metadata: Metadata = {
     types: { 'application/rss+xml': '/blog/feed.xml' },
   },
   openGraph: {
+    ...OG_DEFAULTS,
     title: 'Freaking Minds Blog — Marketing Tips & Strategies',
     description: 'Actionable digital marketing insights. SEO, social media, branding, and growth strategies from our team.',
-    url: 'https://freakingminds.in/blog',
+    url: '/blog',
   },
 };
 

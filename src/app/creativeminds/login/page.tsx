@@ -106,7 +106,7 @@ function TalentLoginForm() {
       </form>
 
       <p className="mt-6 text-white/50 text-sm" style={{ textAlign: 'center' }}>
-        Part of the <a href="https://freakingminds.in" className="text-fm-magenta-400 hover:underline">FreakingMinds</a> network
+        Part of the <a href="/" className="text-fm-magenta-400 hover:underline">FreakingMinds</a> network
       </p>
     </div>
   );

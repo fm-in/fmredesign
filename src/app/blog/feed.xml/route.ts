@@ -1,5 +1,5 @@
 /**
- * RSS 2.0 feed for the blog — https://freakingminds.in/blog/feed.xml
+ * RSS 2.0 feed for the blog — ${SITE_URL}/blog/feed.xml
  *
  * The site had no feed of any kind. A feed is what lets an aggregator, a
  * newsreader or another site subscribe to the blog instead of re-checking it,
@@ -12,8 +12,8 @@
  */
 
 import { getAllPublishedPosts } from '@/lib/blog-data-public';
+import { SITE_URL } from '@/lib/site-url';
 
-const SITE_URL = 'https://freakingminds.in';
 
 /** Match the blog's own revalidation window. */
 export const revalidate = 60;

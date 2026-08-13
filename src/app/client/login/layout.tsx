@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: 'Client Portal Login | Freaking Minds',
     description:
       'Access your dedicated client dashboard — track project progress, approve content, download reports, and connect with your team.',
-    url: 'https://freakingminds.in/client/login',
+    url: '/client/login',
   },
   robots: {
     index: false,

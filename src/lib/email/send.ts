@@ -1,4 +1,5 @@
 import { getResend } from './resend';
+import { SITE_URL } from '@/lib/site-url';
 
 const FROM = 'FreakingMinds <notifications@freakingminds.in>';
 const FALLBACK_EMAIL = 'freakingmindsdigital@gmail.com';
@@ -69,8 +70,7 @@ const MUTED_COLOR = '#888888';
 const LIGHT_BG = '#f4f1f2';
 const CARD_BG = '#ffffff';
 const BORDER_COLOR = '#f0e8eb';
-const LOGO_URL = 'https://freakingminds.in/logo.png';
-const SITE_URL = 'https://freakingminds.in';
+const LOGO_URL = `${SITE_URL}/logo.png`;
 
 function emailWrapper(title: string, body: string): string {
   return `<!DOCTYPE html>
@@ -196,7 +196,7 @@ export function newLeadEmail(data: LeadEmailData): { subject: string; html: stri
       (data.leadScore !== undefined ? row('Score', `<strong>${data.leadScore}</strong>/100`) : '') +
       (data.priority ? row('Priority', badge(data.priority.toUpperCase(), priorityColor)) : '')
     )}
-    ${ctaButton('View in Dashboard', 'https://freakingminds.in/admin/leads')}
+    ${ctaButton('View in Dashboard', `${SITE_URL}/admin/leads`)}
   `;
 
   return {
@@ -224,7 +224,7 @@ export function newSupportTicketEmail(data: SupportTicketEmailData): { subject: 
       row('Category', data.category) +
       row('Description', data.description)
     )}
-    ${ctaButton('Manage Ticket', 'https://freakingminds.in/admin/support')}
+    ${ctaButton('Manage Ticket', `${SITE_URL}/admin/support`)}
   `;
 
   return {
@@ -252,7 +252,7 @@ export function ticketStatusUpdateEmail(data: TicketStatusUpdateData): { subject
       row('Status', badge(statusLabel)) +
       (data.assignedTo ? row('Assigned To', data.assignedTo) : '')
     )}
-    ${ctaButton('View in Client Portal', 'https://freakingminds.in/client')}
+    ${ctaButton('View in Client Portal', `${SITE_URL}/client`)}
   `;
 
   return {
@@ -294,7 +294,7 @@ export function talentApplicationTeamEmail(data: TalentApplicationData): { subje
       (data.category ? row('Category', data.category) : '') +
       (data.experience ? row('Experience', data.experience) : '')
     )}
-    ${ctaButton('Review Application', 'https://freakingminds.in/admin/creativeminds')}
+    ${ctaButton('Review Application', `${SITE_URL}/admin/creativeminds`)}
   `;
 
   return {
@@ -311,8 +311,8 @@ interface TalentApprovedData {
 }
 
 export function talentApprovedEmail(data: TalentApprovedData): { subject: string; html: string } {
-  const profileUrl = `https://freakingminds.in/talent/${data.profileSlug}`;
-  const portalUrl = `https://freakingminds.in/creativeminds/portal/${data.profileSlug}`;
+  const profileUrl = `${SITE_URL}/talent/${data.profileSlug}`;
+  const portalUrl = `${SITE_URL}/creativeminds/portal/${data.profileSlug}`;
 
   // Login credentials section (only if tempPassword is provided)
   const credentialsSection = data.tempPassword && data.portalEmail ? `
@@ -392,7 +392,7 @@ export function invoiceCreatedEmail(data: InvoiceEmailData): { subject: string; 
       (data.dueDate ? row('Due Date', data.dueDate) : '') +
       (data.status ? row('Status', badge(data.status.toUpperCase())) : '')
     )}
-    ${ctaButton('View Invoice', 'https://freakingminds.in/admin/invoices')}
+    ${ctaButton('View Invoice', `${SITE_URL}/admin/invoices`)}
   `;
 
   return {
@@ -417,7 +417,7 @@ export function proposalCreatedEmail(data: ProposalEmailData): { subject: string
       (data.clientName ? row('Client', data.clientName) : '') +
       (data.status ? row('Status', badge(data.status.toUpperCase())) : '')
     )}
-    ${ctaButton('View Proposal', 'https://freakingminds.in/admin/proposals')}
+    ${ctaButton('View Proposal', `${SITE_URL}/admin/proposals`)}
   `;
 
   return {
@@ -450,7 +450,7 @@ export function contentActionEmail(data: ContentActionEmailData): { subject: str
       row('Action', badge(label, color))
     )}
     ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${data.clientFeedback}</p></div>` : ''}
-    ${ctaButton('View Content', 'https://freakingminds.in/admin/content')}
+    ${ctaButton('View Content', `${SITE_URL}/admin/content`)}
   `;
 
   return {
@@ -492,7 +492,7 @@ export function contractCreatedEmail(data: ContractEmailData): { subject: string
       (formatted ? row('Value', `<strong style="color:${HEADING_COLOR};font-size:16px">${formatted}</strong>`) : '') +
       row('Status', badge('DRAFT'))
     )}
-    ${ctaButton('View Contract', 'https://freakingminds.in/admin/clients')}
+    ${ctaButton('View Contract', `${SITE_URL}/admin/clients`)}
   `;
 
   return {
@@ -537,7 +537,7 @@ export function proposalStatusEmail(data: ProposalStatusEmailData): { subject: s
       row('Status', badge(label, color))
     )}
     ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${escHtml(data.clientFeedback)}</p></div>` : ''}
-    ${ctaButton('View Proposal', 'https://freakingminds.in/admin/proposals')}
+    ${ctaButton('View Proposal', `${SITE_URL}/admin/proposals`)}
   `;
 
   return {
@@ -612,7 +612,7 @@ export function invoiceStatusEmail(data: InvoiceStatusEmailData): { subject: str
       (data.dueDate ? row('Due Date', data.dueDate) : '') +
       row('Status', badge(label.toUpperCase(), color))
     )}
-    ${ctaButton('View in Portal', 'https://freakingminds.in/client')}
+    ${ctaButton('View in Portal', `${SITE_URL}/client`)}
   `;
 
   return {
@@ -684,7 +684,7 @@ export function contractStatusEmail(data: ContractStatusEmailData): { subject: s
       row('Status', badge(label, color))
     )}
     ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${escHtml(data.clientFeedback)}</p></div>` : ''}
-    ${ctaButton('View Contract', 'https://freakingminds.in/admin/clients')}
+    ${ctaButton('View Contract', `${SITE_URL}/admin/clients`)}
   `;
 
   return {

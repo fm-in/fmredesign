@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/lib/site-url';
 /**
  * Admin Dashboard Types
  */
@@ -120,7 +121,7 @@ export const DEFAULT_COMPANY_INFO: CompanyInfo = {
   zipCode: "462002",
   phone: "+91 98332 57659",
   email: "freakingmindsdigital@gmail.com",
-  website: "https://freakingminds.in",
+  website: SITE_URL,
   taxId: "23BQNPM3447F1ZT",
   msmeUdyamNumber: "UDYAM-MP-10-0032670",
 };

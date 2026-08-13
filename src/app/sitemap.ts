@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getAllPublishedPosts } from '@/lib/blog-data-public';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { SITE_URL } from '@/lib/site-url';
 
 /**
  * Sitemap.
@@ -13,7 +14,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
  * transactional pages; they were previously absent entirely.
  */
 
-const baseUrl = 'https://freakingminds.in';
+const baseUrl = SITE_URL;
 
 /** Revalidate hourly so newly published posts and programs appear promptly. */
 export const revalidate = 3600;

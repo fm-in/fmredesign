@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
+import { OG_DEFAULTS } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Our Work — Portfolio & Case Studies',
   description:
-    'See real results from real brands. Explore our portfolio of web design, branding, social media campaigns, and digital marketing projects that drove measurable growth.',
+    'Real results from real brands. Our portfolio of web design, branding, social campaigns and marketing projects that drove measurable growth.',
   alternates: { canonical: '/work' },
   openGraph: {
+    ...OG_DEFAULTS,
     title: 'Portfolio & Case Studies — Freaking Minds',
     description: 'Real results for real brands. Explore our design, marketing, and growth projects.',
-    url: 'https://freakingminds.in/work',
+    url: '/work',
   },
 };
 

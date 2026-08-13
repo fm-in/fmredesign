@@ -18,6 +18,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPublicPostBySlug, getAllPublishedPosts } from '@/lib/blog-data-public';
 import BlogPostClient from './BlogPostClient';
+import { OG_IMAGE } from '@/lib/seo';
+import { SITE_URL } from '@/lib/site-url';
 
 export const revalidate = 60;
 export const dynamicParams = true;
@@ -56,14 +58,17 @@ export async function generateMetadata({
       publishedTime: post.date,
       authors: [post.author],
       tags: post.tags,
-      siteName: 'FreakingMinds',
-      images: post.coverImage ? [{ url: post.coverImage }] : undefined,
+      // Fall back to the site image rather than undefined — a post without a
+      // cover was sharing to WhatsApp and LinkedIn with a blank card.
+      images: post.coverImage ? [{ url: post.coverImage }] : [OG_IMAGE],
+      siteName: 'Freaking Minds',
+      locale: 'en_IN',
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
       description: post.excerpt,
-      images: post.coverImage ? [post.coverImage] : undefined,
+      images: post.coverImage ? [post.coverImage] : [OG_IMAGE.url],
     },
   };
 }
@@ -86,5 +91,39 @@ export default async function BlogPostPage({
     return [...sameCat, ...others].slice(0, 3);
   })();
 
-  return <BlogPostClient post={post} related={related} />;
+  /**
+   * Article structured data.
+   *
+   * The root layout supplies Organization / LocalBusiness / WebSite /
+   * BreadcrumbList, but nothing described the article itself, so posts were
+   * not eligible for article rich results at all. `publisher` points at the
+   * Organization node the root layout already declares rather than repeating
+   * it, so there is one organisation entity across the site.
+   */
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    '@id': `${SITE_URL}/blog/${post.slug}#article`,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${post.slug}` },
+    headline: post.title,
+    description: post.seoDescription || post.excerpt,
+    image: post.coverImage ? [post.coverImage] : [`${SITE_URL}${OG_IMAGE.url}`],
+    datePublished: post.date,
+    dateModified: post.date,
+    author: { '@type': 'Person', name: post.author },
+    publisher: { '@id': `${SITE_URL}/#organization` },
+    keywords: post.tags?.join(', ') || undefined,
+    articleSection: post.category,
+    inLanguage: 'en-IN',
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <BlogPostClient post={post} related={related} />
+    </>
+  );
 }
