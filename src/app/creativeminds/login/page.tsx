@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, Lock, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 
@@ -106,7 +107,7 @@ function TalentLoginForm() {
       </form>
 
       <p className="mt-6 text-white/50 text-sm" style={{ textAlign: 'center' }}>
-        Part of the <a href="/" className="text-fm-magenta-400 hover:underline">FreakingMinds</a> network
+        Part of the <Link href="/" className="text-fm-magenta-400 hover:underline">FreakingMinds</Link> network
       </p>
     </div>
   );
