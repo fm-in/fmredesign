@@ -92,7 +92,11 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper-lg rounded-3xl p-8 md:p-12 lg:p-16">
             <div
-              className="prose prose-lg max-w-none lg:max-w-3xl lg:mx-auto blog-body"
+              /* `prose prose-lg` were inert — @tailwindcss/typography is not
+                 installed. `max-w-none` also beat the measure set by
+                 .blog-body, since Tailwind utilities outrank @layer
+                 components. Typography now lives entirely in the CSS. */
+              className="blog-body mx-auto"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
 

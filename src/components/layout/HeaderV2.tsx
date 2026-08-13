@@ -158,12 +158,14 @@ export function HeaderV2() {
           backgroundColor: isScrolled || isMobileMenuOpen || activeDropdown
             ? 'var(--v2-header-bg)'
             : 'rgba(255, 255, 255, 0.6)',
-          backdropFilter: isScrolled || isMobileMenuOpen || activeDropdown
-            ? undefined
-            : 'blur(12px)',
-          WebkitBackdropFilter: isScrolled || isMobileMenuOpen || activeDropdown
-            ? undefined
-            : 'blur(12px)',
+          // Blur in BOTH states. This was inverted: it applied at the top of
+          // the page, where nothing is behind the header, and was removed on
+          // scroll — exactly when content passes underneath. The scrolled
+          // background is 0.97 alpha, so the remaining 3% bled through, and
+          // during the 500ms colour transition from 0.6 the body text was
+          // plainly readable through the bar.
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           borderBottom: isScrolled || isMobileMenuOpen || activeDropdown
             ? '1px solid rgba(201, 50, 93, 0.08)'
             : '1px solid rgba(201, 50, 93, 0.04)',
