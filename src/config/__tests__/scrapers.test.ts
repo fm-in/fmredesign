@@ -43,6 +43,10 @@ const REJECT_BANNED: Array<{ feed: string; title: string }> = [
   { feed: 'medianews4u', title: 'Godrej Industries appoints Pirojsha Godrej as Executive Chairperson; to lead Group from August 14' },
   { feed: 'social-samosa', title: 'Omnicom Media’s Fuse names Freddy Farhat as Senior Director - Sports Partnerships' },
   { feed: 'search-engine-journal', title: 'AI Overviews: How Freshpet Stands Out in SEO & GEO [Webinar]' },
+  // Imported by a live run before the patterns were widened: 'joins' and 'as'
+  // are three words apart, so the adjacent-words rule never fired.
+  { feed: 'social-samosa', title: 'Shonali Chakravarty joins United Breweries as Lead - Communications, Sustainability' },
+  { feed: 'medianews4u', title: 'Rohit Sharma named Head of Digital at Acme Media' },
 ];
 
 describe('feed configuration integrity', () => {
@@ -184,6 +188,19 @@ describe('evaluateItem — mechanics', () => {
     // The common shape in these feeds. A threshold of 4 discarded all of them.
     const e = evaluateItem({ title: 'Urban Outfitters embraces campus life in first CTV commercial' }, feed('marketing-dive'));
     expect(e.keep).toBe(true);
+  });
+
+  it('does not ban ordinary marketing language that merely contains "as"', () => {
+    // The widened appointment patterns are the easiest place to over-reach.
+    const f = feed('marketing-dive');
+    for (const title of [
+      'Gap’s fall campaign enlists ‘Obsession’ star to promote denim',
+      'Dove’s marketing mixes sports and style for US Open sponsorship return',
+      'Brands use AI as a creative partner, not a replacement',
+      'How Cava outperforms in fast casual despite frugal marketing budget',
+    ]) {
+      expect(evaluateItem({ title }, f).reason, `wrongly banned: ${title}`).not.toBe('banned_title');
+    }
   });
 
   it('has no banned pattern that matches an empty string', () => {

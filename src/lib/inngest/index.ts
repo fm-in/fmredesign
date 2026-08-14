@@ -24,6 +24,7 @@ import { publishToSocialFn } from './functions/social';
 import { generateAIContentFn } from './functions/ai-content';
 import { platformEventFanoutFn } from './functions/platform-events';
 import { autoInvoiceDailyCron, generateAutoInvoiceFn } from './functions/auto-invoice';
+import { scrapeResourcesCron } from './functions/resources-scrape';
 
 export const allFunctions = [
   logAuditEventFn,
@@ -37,4 +38,5 @@ export const allFunctions = [
   platformEventFanoutFn,
   autoInvoiceDailyCron,
   generateAutoInvoiceFn,
+  scrapeResourcesCron,
 ];

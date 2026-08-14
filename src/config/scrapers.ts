@@ -364,6 +364,14 @@ export const VOCABULARY: Record<ResourceCategory, string[]> = {
  * trade feeds. Appointments are the biggest single source of noise in the
  * Indian trade press and are deliberately excluded — a reader wanting them
  * is better served by the source directly.
+ *
+ * KNOWN COLLATERAL: /\bappoints?\b/ also catches agency wins, e.g. "Studio Blo
+ * appoints Maars Communicates as strategic communications partner", which is
+ * genuine industry news. Separating "appoints [person] as [C-level]" from
+ * "appoints [agency] as [partner]" reliably needs more than a title regex.
+ * Personnel churn outnumbers account wins heavily in these feeds, so the
+ * trade is accepted rather than hidden — revisit if account wins turn out to
+ * matter more than the noise they arrive with.
  */
 export const BANNED_TITLE_PATTERNS: RegExp[] = [
   /\bsponsored\b/i,
@@ -378,6 +386,15 @@ export const BANNED_TITLE_PATTERNS: RegExp[] = [
   /\bappoints?\b/i,
   /\bappointed\b/i,
   /\bjoins? as\b/i,
+  // The same shape with the employer in between, which the adjacent-words
+  // pattern above misses entirely. A live run imported "Shonali Chakravarty
+  // joins United Breweries as Lead - Communications" because 'joins' and 'as'
+  // were three words apart.
+  /\b(joins?|rejoins?|named|elevated|promoted|hired)\b[^.!?]{0,60}\bas\b/i,
+  // Appointments that never use "as" at all: "Rohit Sharma named Head of
+  // Digital at Acme Media". Requires an actual job title after the verb, so
+  // "named best workplace" or "appointed a new agency" are unaffected.
+  /\b(named|appointed|elevated|promoted|hired)\b[^.!?]{0,40}\b(ceo|cmo|cfo|coo|cto|chro|chief|head of|head|lead|director|president|vice president|vp|chairperson|chairman|editor|country manager)\b/i,
   /\belevates?\b/i,
   // NOTE: no /\bpromotes?\b/ here. It reads like an appointment verb but
   // overwhelmingly appears as ordinary marketing language — it discarded
@@ -386,7 +403,7 @@ export const BANNED_TITLE_PATTERNS: RegExp[] = [
   // Catches the shape rather than the verb: "X names Y as Senior Director",
   // which the verb list above misses entirely. Deliberately does not allow
   // "as a CMO" — that phrasing belongs to opinion pieces worth keeping.
-  /\bas (its |the )?(new |interim |acting )?(ceo|cmo|cfo|coo|cto|chro|chief|head of|senior director|managing director|executive director|creative director|director|president|vice president|vp|country manager|md)\b/i,
+  /\bas (its |the )?(new |interim |acting )?(ceo|cmo|cfo|coo|cto|chro|cro|cbo|chief|head of|head|lead|senior director|managing director|executive director|creative director|director|president|vice president|vp|country manager|md|partner|principal|chairperson|chairman|editor)\b/i,
   /\bsteps down\b/i,
   /\bresigns?\b/i,
   /\bobituary\b/i,
