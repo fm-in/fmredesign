@@ -34,8 +34,12 @@ const nextConfig: NextConfig = {
       { source: '/career', destination: '/creativeminds', permanent: true },
       { source: '/connect', destination: '/contact', permanent: true },
       { source: '/know-us', destination: '/about', permanent: true },
-      // FM Academy — old single-program slug replaced by multi-course listing
-      { source: '/academy/freaking-minds-creator-program', destination: '/academy', permanent: false },
+      // FM Academy — the original single Creator Program was split into six
+      // courses plus a bundle on 2026-06-01 (6557b0d). Temporary at the time
+      // in case it came back; two and a half months on it has taken no
+      // enrolments and the row is archived, so this is permanent and Google
+      // can consolidate onto /academy.
+      { source: '/academy/freaking-minds-creator-program', destination: '/academy', permanent: true },
       // Blog — the piece was re-scoped from Bhopal-specific to general advice,
       // so the slug changed. Permanent, because the old URL was published, sat
       // in the sitemap, and may hold inbound links; without this it now 404s.
