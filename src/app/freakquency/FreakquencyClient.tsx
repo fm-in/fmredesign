@@ -252,7 +252,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
           Freak<span className="v2-accent">quency</span>
         </h1>
         <p className="text-base md:text-lg v2-text-secondary leading-relaxed">
-          What actually happened in marketing, filtered — updated every two hours.
+          What actually happened in marketing, filtered — refreshed every morning.
         </p>
       </div>
 
