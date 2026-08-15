@@ -87,14 +87,21 @@ CREATE TABLE IF NOT EXISTS public.resources (
   updated_at        timestamp with time zone NOT NULL DEFAULT now()
 );
 
--- Unique only where present: many news rows have no slug, many original
--- pieces have no source_url. A plain UNIQUE would collapse all the NULLs in
--- some engines and blocks nothing useful here.
+-- TOTAL unique indexes, deliberately not partial.
+--
+-- These were originally written as `WHERE slug IS NOT NULL` on the theory that
+-- a plain UNIQUE would collapse the NULLs. That is not true of PostgreSQL —
+-- NULLs are distinct in a unique index, so many rows may hold NULL slug or
+-- NULL source_url either way. The partial form bought nothing and broke
+-- ingestion outright: Postgres will not infer an ON CONFLICT target from a
+-- partial index unless the statement repeats the predicate, which PostgREST
+-- does not emit, so every upsert failed. See
+-- migrations/2026-08-15-resources-unique-index-fix.sql.
 CREATE UNIQUE INDEX IF NOT EXISTS resources_slug_key
-  ON public.resources (slug) WHERE slug IS NOT NULL;
+  ON public.resources (slug);
 
 CREATE UNIQUE INDEX IF NOT EXISTS resources_source_url_key
-  ON public.resources (source_url) WHERE source_url IS NOT NULL;
+  ON public.resources (source_url);
 
 CREATE INDEX IF NOT EXISTS resources_type_status_published_idx
   ON public.resources (type, status, published_at DESC);
