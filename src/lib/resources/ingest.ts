@@ -89,6 +89,79 @@ export function canonicaliseUrl(raw: string): string {
   }
 }
 
+/**
+ * Publisher icon for a feed.
+ *
+ * Uses Google's favicon service rather than the publisher's own
+ * /favicon.ico, which was measured and found unusable: ET BrandEquity and
+ * Inc42 return HTTP 200 with ZERO bytes, three unrelated domains return an
+ * identical 15,086-byte generic file, and Social Samosa errors outright.
+ * This returns a consistent 64px icon for every domain. It is a third-party
+ * request, which is the trade — resolved once per source, not per card, and
+ * the browser caches it across the whole feed.
+ */
+export function faviconFor(feedUrl: string): string | null {
+  try {
+    const host = new URL(feedUrl).hostname;
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Pull og:image from an article page.
+ *
+ * Only called for items the feed gave no image for. Measured across the
+ * enabled feeds: Search Engine Journal, Semrush, Marketing Dive and others
+ * ship no image markup in their RSS at all, so 114 of 166 items had nothing
+ * to show. Eight of twelve publishers do expose og:image on the page itself,
+ * which lifts coverage from roughly a third to three quarters.
+ *
+ * Reads only the first 60KB — og:image lives in <head>, and some of these
+ * articles are enormous. Never throws; a missing image is a cosmetic loss and
+ * must not fail an ingestion.
+ */
+async function fetchOgImage(articleUrl: string): Promise<string | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const res = await fetch(articleUrl, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'text/html' },
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const head = (await res.text()).slice(0, 60_000);
+    const patterns = [
+      /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i,
+      /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)/i,
+    ];
+    for (const re of patterns) {
+      const m = re.exec(head);
+      if (m && /^https?:\/\//i.test(m[1])) return m[1];
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Run `worker` over `items` with a small concurrency cap. */
+async function mapLimit<T>(items: T[], limit: number, worker: (item: T) => Promise<void>): Promise<void> {
+  let cursor = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++;
+      await worker(items[index]);
+    }
+  });
+  await Promise.all(runners);
+}
+
 function toRow(item: ParsedFeedItem, feed: FeedSource, category: string, score: number) {
   const url = canonicaliseUrl(item.link);
   return {
@@ -100,6 +173,7 @@ function toRow(item: ParsedFeedItem, feed: FeedSource, category: string, score: 
     body_html: null,
     source_url: url,
     source_name: feed.name,
+    source_logo_url: faviconFor(feed.url),
     category,
     tags: [],
     audience: feed.audience,
@@ -111,6 +185,29 @@ function toRow(item: ParsedFeedItem, feed: FeedSource, category: string, score: 
     scraped_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
+}
+
+/**
+ * Narrow a batch to the rows whose source_url is not already stored.
+ *
+ * Returns everything on failure: re-fetching an og:image needlessly is a
+ * waste, but skipping the fetch because a lookup blipped would leave a
+ * permanent hole in the feed, since the row is only ever considered once.
+ */
+async function filterToNewRows<T extends { source_url: string }>(rows: T[]): Promise<T[]> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('resources')
+      .select('source_url')
+      .in('source_url', rows.map((r) => r.source_url));
+    if (error) throw error;
+    const known = new Set((data || []).map((d) => (d as { source_url: string }).source_url));
+    return rows.filter((r) => !known.has(r.source_url));
+  } catch (err) {
+    console.error('[ingest] could not check for existing rows:', err);
+    return rows;
+  }
 }
 
 export async function ingestFeeds(options: { dryRun?: boolean } = {}): Promise<IngestReport> {
@@ -153,6 +250,22 @@ export async function ingestFeeds(options: { dryRun?: boolean } = {}): Promise<I
       report.keptTitles.push(item.title);
     }
     report.kept = rows.length;
+
+    // Backfill images from the article page for anything the feed gave none
+    // for — but ONLY for rows we have not stored before. Without this check
+    // every run would re-fetch the same hundred-odd articles every two hours
+    // to rediscover images it already has, which is both wasteful and the
+    // fastest way to get a scraper blocked.
+    if (!dryRun && rows.length) {
+      const needsImage = await filterToNewRows(rows).then((fresh) =>
+        fresh.filter((r) => !r.cover_image_url)
+      );
+      if (needsImage.length) {
+        await mapLimit(needsImage, 6, async (row) => {
+          row.cover_image_url = await fetchOgImage(row.source_url);
+        });
+      }
+    }
 
     if (!dryRun && rows.length) {
       const supabase = getSupabaseAdmin();

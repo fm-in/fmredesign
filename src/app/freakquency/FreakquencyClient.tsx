@@ -13,7 +13,6 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ArrowUpRight, Clock, Search } from 'lucide-react';
 import type { FeedItem } from '@/lib/resources/public-data';
 import type { Audience } from '@/lib/resources/types';
@@ -166,6 +165,71 @@ export default function FreakquencyClient({
   );
 }
 
+/**
+ * Card artwork.
+ *
+ * Plain <img>, not next/image, on purpose. These come from arbitrary
+ * publisher CDNs — measured so far: img-cdn.publive.online, etimg.etb2bimg.com,
+ * inc42.com, storage.googleapis.com, and whatever each og:image resolves to.
+ * next/image would need every one allowlisted in remotePatterns, and the only
+ * way to avoid maintaining that list forever is hostname '**', which turns the
+ * image optimiser into an open proxy for any URL on the internet. Publisher
+ * artwork is already CDN-optimised, so the loss is small and the risk is zero.
+ */
+function Thumb({ item, tall = false }: { item: FeedItem; tall?: boolean }) {
+  const [broken, setBroken] = useState(false);
+  const showImage = item.imageUrl && !broken;
+
+  return (
+    <div
+      className={`relative overflow-hidden bg-fm-neutral-100 ${tall ? 'aspect-[16/10]' : 'aspect-[16/9]'}`}
+    >
+      {showImage ? (
+        // eslint-disable-next-line @next/next/no-img-element -- see note above
+        <img
+          src={item.imageUrl as string}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={() => setBroken(true)}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+        />
+      ) : (
+        // Roughly a quarter of items have no artwork anywhere — Marketing Dive,
+        // Social Media Today and Adweek publish neither. A tinted panel with the
+        // publisher mark reads as deliberate; a gap reads as broken.
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-fm-magenta-50 via-white to-fm-neutral-100">
+          {item.sourceLogoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- see note above
+            <img src={item.sourceLogoUrl} alt="" width={28} height={28} loading="lazy" className="opacity-60" />
+          ) : (
+            <span className="font-display text-2xl font-bold text-fm-magenta-600/30">FM</span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Publisher mark beside the source name, so a card shows where it leads. */
+function SourceMark({ item }: { item: FeedItem }) {
+  const [broken, setBroken] = useState(false);
+  if (!item.sourceLogoUrl || broken) return null;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- see Thumb
+    <img
+      src={item.sourceLogoUrl}
+      alt=""
+      width={14}
+      height={14}
+      loading="lazy"
+      onError={() => setBroken(true)}
+      className="inline-block rounded-sm shrink-0"
+    />
+  );
+}
+
 /** Shared chrome so the two card shapes stay visually related. */
 function Meta({ item }: { item: FeedItem }) {
   return (
@@ -173,7 +237,12 @@ function Meta({ item }: { item: FeedItem }) {
       <span className="px-2 py-0.5 rounded-full bg-fm-magenta-50 text-fm-magenta-700 font-medium">
         {RESOURCE_TYPE_LABELS[item.type] ?? item.type}
       </span>
-      {item.sourceName && <span>{item.sourceName}</span>}
+      {item.sourceName && (
+        <span className="inline-flex items-center gap-1.5">
+          <SourceMark item={item} />
+          {item.sourceName}
+        </span>
+      )}
       {item.category && <span>· {CATEGORY_LABELS[item.category] ?? item.category}</span>}
       <span>· {timeAgo(item.publishedAt)}</span>
       {item.readMinutes ? (
@@ -194,18 +263,10 @@ function FeaturedCard({ item }: { item: FeedItem }) {
   return (
     <Wrapper {...props} className="block group">
       <article className="v2-paper rounded-3xl overflow-hidden md:flex">
-        {item.imageUrl && (
-          <div className="md:w-2/5 relative aspect-[16/10] md:aspect-auto md:min-h-[240px]">
-            <Image
-              src={item.imageUrl}
-              alt=""
-              fill
-              sizes="(max-width: 768px) 100vw, 40vw"
-              className="object-cover"
-            />
-          </div>
-        )}
-        <div className={`p-6 md:p-8 flex flex-col justify-center ${item.imageUrl ? 'md:w-3/5' : 'w-full'}`}>
+        <div className="md:w-2/5">
+          <Thumb item={item} tall />
+        </div>
+        <div className="p-6 md:p-8 flex flex-col justify-center md:w-3/5">
           <Meta item={item} />
           <h2 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mt-3 mb-3 leading-snug group-hover:text-fm-magenta-700 transition-colors">
             {item.title}
@@ -228,7 +289,9 @@ function Card({ item }: { item: FeedItem }) {
 
   return (
     <Wrapper {...props} className="block group h-full">
-      <article className="v2-paper rounded-2xl p-5 h-full flex flex-col hover:-translate-y-0.5 transition-transform">
+      <article className="v2-paper rounded-2xl overflow-hidden h-full flex flex-col hover:-translate-y-0.5 transition-transform">
+        <Thumb item={item} />
+        <div className="p-5 flex flex-col flex-1">
         <Meta item={item} />
         <h3 className="font-display text-lg font-bold text-fm-neutral-900 mt-3 mb-2 leading-snug group-hover:text-fm-magenta-700 transition-colors">
           {item.title}
@@ -237,6 +300,7 @@ function Card({ item }: { item: FeedItem }) {
         {item.excerpt && (
           <p className="text-sm text-fm-neutral-600 leading-relaxed line-clamp-3">{item.excerpt}</p>
         )}
+        </div>
       </article>
     </Wrapper>
   );

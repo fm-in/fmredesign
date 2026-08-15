@@ -31,6 +31,8 @@ export interface FeedItem {
   audience: Audience[];
   publishedAt: string;
   imageUrl: string | null;
+  /** Publisher icon, so a card shows where it is sending you. */
+  sourceLogoUrl: string | null;
   readMinutes: number | null;
 }
 
@@ -44,7 +46,7 @@ interface ResourceRow {
   id: string; type: string; slug: string | null; title: string;
   excerpt: string | null; source_url: string | null; source_name: string | null;
   category: string | null; audience: unknown; published_at: string | null;
-  cover_image_url: string | null; read_minutes: number | null;
+  cover_image_url: string | null; source_logo_url: string | null; read_minutes: number | null;
 }
 
 function fromResource(r: ResourceRow): FeedItem | null {
@@ -67,6 +69,7 @@ function fromResource(r: ResourceRow): FeedItem | null {
     audience: Array.isArray(r.audience) ? (r.audience as Audience[]) : [],
     publishedAt: r.published_at || new Date().toISOString(),
     imageUrl: r.cover_image_url,
+    sourceLogoUrl: r.source_logo_url,
     readMinutes: r.read_minutes,
   };
 }
@@ -86,7 +89,7 @@ export async function getFeedItems(): Promise<FeedItem[]> {
         const { data, error } = await supabase
           .from('resources')
           .select(
-            'id,type,slug,title,excerpt,source_url,source_name,category,audience,published_at,cover_image_url,read_minutes'
+            'id,type,slug,title,excerpt,source_url,source_name,source_logo_url,category,audience,published_at,cover_image_url,read_minutes'
           )
           .eq('status', 'published')
           .is('duplicate_of', null)
@@ -116,6 +119,7 @@ export async function getFeedItems(): Promise<FeedItem[]> {
           audience: ['aspiring', 'owners'] as Audience[],
           publishedAt: p.date,
           imageUrl: p.coverImage || null,
+          sourceLogoUrl: null,
           readMinutes: parseInt(p.readTime, 10) || null,
         }));
       } catch (err) {
