@@ -13,7 +13,7 @@
 import type { Metadata } from 'next';
 import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
 import { OG_DEFAULTS } from '@/lib/seo';
-import { getFeedItems, audienceCounts } from '@/lib/resources/public-data';
+import { getFeedItems } from '@/lib/resources/public-data';
 import FreakquencyClient from './FreakquencyClient';
 
 // Aggregated news arrives on a two-hourly cron; an hour of staleness is
@@ -37,11 +37,10 @@ export const metadata: Metadata = {
 
 export default async function FreakquencyPage() {
   const items = await getFeedItems();
-  const counts = audienceCounts(items);
 
   return (
     <V2PageWrapper>
-      <FreakquencyClient items={items} counts={counts} />
+      <FreakquencyClient items={items} />
     </V2PageWrapper>
   );
 }

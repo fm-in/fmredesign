@@ -15,7 +15,7 @@
 import 'server-only';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getAllPublishedPosts } from '@/lib/blog-data-public';
-import type { Audience, ResourceCategory, ResourceType } from './types';
+import type { Audience, Region, ResourceCategory, ResourceType } from './types';
 
 export interface FeedItem {
   id: string;
@@ -34,6 +34,9 @@ export interface FeedItem {
   /** Publisher icon, so a card shows where it is sending you. */
   sourceLogoUrl: string | null;
   readMinutes: number | null;
+  region: Region | null;
+  /** Keyword relevance from the scorer — powers the 'Most relevant' sort. */
+  relevanceScore: number;
 }
 
 /** Newest first, with a stable tiebreak so pagination cannot repeat an item. */
@@ -47,6 +50,7 @@ interface ResourceRow {
   excerpt: string | null; source_url: string | null; source_name: string | null;
   category: string | null; audience: unknown; published_at: string | null;
   cover_image_url: string | null; source_logo_url: string | null; read_minutes: number | null;
+  region: string | null; relevance_score: number | null;
 }
 
 function fromResource(r: ResourceRow): FeedItem | null {
@@ -71,6 +75,8 @@ function fromResource(r: ResourceRow): FeedItem | null {
     imageUrl: r.cover_image_url,
     sourceLogoUrl: r.source_logo_url,
     readMinutes: r.read_minutes,
+    region: (r.region as Region) || null,
+    relevanceScore: r.relevance_score ?? 0,
   };
 }
 
@@ -89,7 +95,7 @@ export async function getFeedItems(): Promise<FeedItem[]> {
         const { data, error } = await supabase
           .from('resources')
           .select(
-            'id,type,slug,title,excerpt,source_url,source_name,source_logo_url,category,audience,published_at,cover_image_url,read_minutes'
+            'id,type,slug,title,excerpt,source_url,source_name,source_logo_url,category,audience,published_at,cover_image_url,read_minutes,region,relevance_score'
           )
           .eq('status', 'published')
           .is('duplicate_of', null)
@@ -121,6 +127,9 @@ export async function getFeedItems(): Promise<FeedItem[]> {
           imageUrl: p.coverImage || null,
           sourceLogoUrl: null,
           readMinutes: parseInt(p.readTime, 10) || null,
+          region: null,
+          // Ours outranks anything aggregated when sorting by relevance.
+          relevanceScore: 100,
         }));
       } catch (err) {
         console.error('[freakquency] blog posts unavailable:', err);
@@ -130,14 +139,4 @@ export async function getFeedItems(): Promise<FeedItem[]> {
   ]);
 
   return [...news, ...posts].sort(byNewest);
-}
-
-/** Counts per audience, for the filter chips. Computed once, server-side. */
-export function audienceCounts(items: FeedItem[]): Record<Audience | 'all', number> {
-  return {
-    all: items.length,
-    professionals: items.filter((i) => i.audience.includes('professionals')).length,
-    aspiring: items.filter((i) => i.audience.includes('aspiring')).length,
-    owners: items.filter((i) => i.audience.includes('owners')).length,
-  };
 }
