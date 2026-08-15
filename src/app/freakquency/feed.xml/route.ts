@@ -1,5 +1,5 @@
 /**
- * RSS 2.0 feed for the blog — ${SITE_URL}/blog/feed.xml
+ * RSS 2.0 feed for the blog — ${SITE_URL}/freakquency/feed.xml
  *
  * The site had no feed of any kind. A feed is what lets an aggregator, a
  * newsreader or another site subscribe to the blog instead of re-checking it,
@@ -52,7 +52,7 @@ export async function GET() {
 
   const items = posts
     .map((post) => {
-      const url = `${SITE_URL}/blog/${post.slug}`;
+      const url = `${SITE_URL}/freakquency/${post.slug}`;
       return `    <item>
       <title>${xmlEscape(post.title)}</title>
       <link>${xmlEscape(url)}</link>
@@ -70,12 +70,12 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
   <channel>
-    <title>Freaking Minds Blog</title>
-    <link>${SITE_URL}/blog</link>
+    <title>Freakquency — Freaking Minds</title>
+    <link>${SITE_URL}/freakquency</link>
     <description>Digital marketing insights, SEO strategy and growth tactics from the Freaking Minds agency floor in Bhopal.</description>
     <language>en-in</language>
     <lastBuildDate>${lastBuild}</lastBuildDate>
-    <atom:link href="${SITE_URL}/blog/feed.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="${SITE_URL}/freakquency/feed.xml" rel="self" type="application/rss+xml" />
 ${items}
   </channel>
 </rss>

@@ -1,23 +1,25 @@
 /**
- * Blog detail — server-rendered, pre-generated at build time for every
- * currently-published slug. Renders the post's `body_html` directly
- * (already sanitised at upload time by mammoth / marked).
+ * Freakquency article detail — original long-form.
  *
- * DO NOT add a `loading.tsx` to this segment or any ancestor of it.
- * A loading.tsx wraps the segment in a Suspense boundary, which flushes a
- * 200 shell before `notFound()` below is reached — so unknown slugs return
- * HTTP 200 with the not-found UI instead of a real 404, and Google indexes
- * unlimited soft-404s. This was measured: with either
- * `blog/loading.tsx` or `blog/[slug]/loading.tsx` present, a bad slug
- * returned 200; with both absent it returns 404. The listing keeps its
- * skeleton by living in the `(index)` route group, which `[slug]` does not
- * inherit from.
+ * Reads the same `blog_posts_public` view the old /blog route did; the posts
+ * were not copied into `resources`, because the admin editor still writes to
+ * `blog_posts` and duplicating rows would create two sources of truth. See
+ * src/lib/resources/public-data.ts.
+ *
+ * /blog and /blog/[slug] permanently redirect here, so the six indexed URLs
+ * keep their equity.
+ *
+ * DO NOT add a `loading.tsx` to this segment or any ancestor of it. A
+ * loading.tsx wraps the segment in a Suspense boundary that flushes a 200
+ * shell before `notFound()` is reached, so unknown slugs return HTTP 200 with
+ * the not-found UI instead of a real 404 — measured on the old /blog route,
+ * where it let Google index unlimited soft-404s.
  */
 
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getPublicPostBySlug, getAllPublishedPosts } from '@/lib/blog-data-public';
-import BlogPostClient from './BlogPostClient';
+import ArticleClient from './ArticleClient';
 import { OG_IMAGE } from '@/lib/seo';
 import { SITE_URL } from '@/lib/site-url';
 
@@ -37,10 +39,10 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getPublicPostBySlug(slug);
 
-  if (!post) return { title: 'Article Not Found | FreakingMinds Blog' };
+  if (!post) return { title: 'Article Not Found' };
 
   return {
-    title: post.seoTitle || `${post.title} | FreakingMinds Blog`,
+    title: post.seoTitle || `${post.title} — Freakquency`,
     description: post.seoDescription || post.excerpt,
     keywords: post.tags,
     authors: [{ name: post.author }],
@@ -48,8 +50,8 @@ export async function generateMetadata({
     // post inherits it and tells Google the articles are duplicates of the
     // listing page, which suppresses them from the index entirely.
     alternates: {
-      canonical: `/blog/${slug}`,
-      types: { 'application/rss+xml': '/blog/feed.xml' },
+      canonical: `/freakquency/${slug}`,
+      types: { 'application/rss+xml': '/freakquency/feed.xml' },
     },
     openGraph: {
       title: post.title,
@@ -103,8 +105,8 @@ export default async function BlogPostPage({
   const articleSchema = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
-    '@id': `${SITE_URL}/blog/${post.slug}#article`,
-    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${post.slug}` },
+    '@id': `${SITE_URL}/freakquency/${post.slug}#article`,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/freakquency/${post.slug}` },
     headline: post.title,
     description: post.seoDescription || post.excerpt,
     image: post.coverImage ? [post.coverImage] : [`${SITE_URL}${OG_IMAGE.url}`],
@@ -123,7 +125,7 @@ export default async function BlogPostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />
-      <BlogPostClient post={post} related={related} />
+      <ArticleClient post={post} related={related} />
     </>
   );
 }

@@ -49,7 +49,7 @@ async function getBlogEntries(): Promise<MetadataRoute.Sitemap> {
   try {
     const posts = await getAllPublishedPosts();
     return posts.map((post) => ({
-      url: `${baseUrl}/blog/${post.slug}`,
+      url: `${baseUrl}/freakquency/${post.slug}`,
       lastModified: post.date ? new Date(post.date) : new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.6,
@@ -70,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/work`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     // Academy listing — a primary conversion path, so it ranks with /services.
     { url: `${baseUrl}/academy`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${baseUrl}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/freakquency`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
     { url: `${baseUrl}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${baseUrl}/get-started`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/scorecard`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
