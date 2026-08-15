@@ -1,4 +1,5 @@
 import { getResend } from './resend';
+import { SITE_URL } from '@/lib/site-url';
 
 const FROM = 'FreakingMinds <notifications@freakingminds.in>';
 const FALLBACK_EMAIL = 'freakingmindsdigital@gmail.com';
@@ -69,8 +70,7 @@ const MUTED_COLOR = '#888888';
 const LIGHT_BG = '#f4f1f2';
 const CARD_BG = '#ffffff';
 const BORDER_COLOR = '#f0e8eb';
-const LOGO_URL = 'https://freakingminds.in/logo.png';
-const SITE_URL = 'https://freakingminds.in';
+const LOGO_URL = `${SITE_URL}/logo.png`;
 
 function emailWrapper(title: string, body: string): string {
   return `<!DOCTYPE html>
@@ -196,7 +196,7 @@ export function newLeadEmail(data: LeadEmailData): { subject: string; html: stri
       (data.leadScore !== undefined ? row('Score', `<strong>${data.leadScore}</strong>/100`) : '') +
       (data.priority ? row('Priority', badge(data.priority.toUpperCase(), priorityColor)) : '')
     )}
-    ${ctaButton('View in Dashboard', 'https://freakingminds.in/admin/leads')}
+    ${ctaButton('View in Dashboard', `${SITE_URL}/admin/leads`)}
   `;
 
   return {
@@ -224,7 +224,7 @@ export function newSupportTicketEmail(data: SupportTicketEmailData): { subject: 
       row('Category', data.category) +
       row('Description', data.description)
     )}
-    ${ctaButton('Manage Ticket', 'https://freakingminds.in/admin/support')}
+    ${ctaButton('Manage Ticket', `${SITE_URL}/admin/support`)}
   `;
 
   return {
@@ -252,7 +252,7 @@ export function ticketStatusUpdateEmail(data: TicketStatusUpdateData): { subject
       row('Status', badge(statusLabel)) +
       (data.assignedTo ? row('Assigned To', data.assignedTo) : '')
     )}
-    ${ctaButton('View in Client Portal', 'https://freakingminds.in/client')}
+    ${ctaButton('View in Client Portal', `${SITE_URL}/client`)}
   `;
 
   return {
@@ -294,7 +294,7 @@ export function talentApplicationTeamEmail(data: TalentApplicationData): { subje
       (data.category ? row('Category', data.category) : '') +
       (data.experience ? row('Experience', data.experience) : '')
     )}
-    ${ctaButton('Review Application', 'https://freakingminds.in/admin/creativeminds')}
+    ${ctaButton('Review Application', `${SITE_URL}/admin/creativeminds`)}
   `;
 
   return {
@@ -311,8 +311,8 @@ interface TalentApprovedData {
 }
 
 export function talentApprovedEmail(data: TalentApprovedData): { subject: string; html: string } {
-  const profileUrl = `https://freakingminds.in/talent/${data.profileSlug}`;
-  const portalUrl = `https://freakingminds.in/creativeminds/portal/${data.profileSlug}`;
+  const profileUrl = `${SITE_URL}/talent/${data.profileSlug}`;
+  const portalUrl = `${SITE_URL}/creativeminds/portal/${data.profileSlug}`;
 
   // Login credentials section (only if tempPassword is provided)
   const credentialsSection = data.tempPassword && data.portalEmail ? `
@@ -392,7 +392,7 @@ export function invoiceCreatedEmail(data: InvoiceEmailData): { subject: string; 
       (data.dueDate ? row('Due Date', data.dueDate) : '') +
       (data.status ? row('Status', badge(data.status.toUpperCase())) : '')
     )}
-    ${ctaButton('View Invoice', 'https://freakingminds.in/admin/invoices')}
+    ${ctaButton('View Invoice', `${SITE_URL}/admin/invoices`)}
   `;
 
   return {
@@ -417,7 +417,7 @@ export function proposalCreatedEmail(data: ProposalEmailData): { subject: string
       (data.clientName ? row('Client', data.clientName) : '') +
       (data.status ? row('Status', badge(data.status.toUpperCase())) : '')
     )}
-    ${ctaButton('View Proposal', 'https://freakingminds.in/admin/proposals')}
+    ${ctaButton('View Proposal', `${SITE_URL}/admin/proposals`)}
   `;
 
   return {
@@ -450,7 +450,7 @@ export function contentActionEmail(data: ContentActionEmailData): { subject: str
       row('Action', badge(label, color))
     )}
     ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${data.clientFeedback}</p></div>` : ''}
-    ${ctaButton('View Content', 'https://freakingminds.in/admin/content')}
+    ${ctaButton('View Content', `${SITE_URL}/admin/content`)}
   `;
 
   return {
@@ -492,7 +492,7 @@ export function contractCreatedEmail(data: ContractEmailData): { subject: string
       (formatted ? row('Value', `<strong style="color:${HEADING_COLOR};font-size:16px">${formatted}</strong>`) : '') +
       row('Status', badge('DRAFT'))
     )}
-    ${ctaButton('View Contract', 'https://freakingminds.in/admin/clients')}
+    ${ctaButton('View Contract', `${SITE_URL}/admin/clients`)}
   `;
 
   return {
@@ -537,7 +537,7 @@ export function proposalStatusEmail(data: ProposalStatusEmailData): { subject: s
       row('Status', badge(label, color))
     )}
     ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${escHtml(data.clientFeedback)}</p></div>` : ''}
-    ${ctaButton('View Proposal', 'https://freakingminds.in/admin/proposals')}
+    ${ctaButton('View Proposal', `${SITE_URL}/admin/proposals`)}
   `;
 
   return {
@@ -612,7 +612,7 @@ export function invoiceStatusEmail(data: InvoiceStatusEmailData): { subject: str
       (data.dueDate ? row('Due Date', data.dueDate) : '') +
       row('Status', badge(label.toUpperCase(), color))
     )}
-    ${ctaButton('View in Portal', 'https://freakingminds.in/client')}
+    ${ctaButton('View in Portal', `${SITE_URL}/client`)}
   `;
 
   return {
@@ -684,11 +684,123 @@ export function contractStatusEmail(data: ContractStatusEmailData): { subject: s
       row('Status', badge(label, color))
     )}
     ${data.clientFeedback ? `<div style="margin:20px 0;padding:16px 20px;background:#fff7ed;border-left:3px solid #f59e0b;border-radius:10px"><p style="margin:0 0 6px;color:${HEADING_COLOR};font-size:13px;font-weight:600">Client Feedback</p><p style="margin:0;color:${TEXT_COLOR};font-size:14px;line-height:1.5">${escHtml(data.clientFeedback)}</p></div>` : ''}
-    ${ctaButton('View Contract', 'https://freakingminds.in/admin/clients')}
+    ${ctaButton('View Contract', `${SITE_URL}/admin/clients`)}
   `;
 
   return {
     subject: `Contract ${label}: ${data.title}`,
     html: emailWrapper(`Contract ${label}`, body),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Marketing health scorecard
+// ---------------------------------------------------------------------------
+
+interface ScorecardDimensionLine {
+  label: string;
+  score: number;
+  band: string;
+  recommendation: string;
+}
+
+interface ScorecardReportData {
+  name: string;
+  overall: number;
+  bandLabel: string;
+  /** Already ordered worst-first by scoring.ts — preserve that order. */
+  dimensions: ScorecardDimensionLine[];
+}
+
+/**
+ * Colour for a band. Semantic rather than brand magenta on purpose: a weak
+ * score rendered in the brand colour reads as decoration, not as a warning.
+ * Mirrors BAND_STYLE in the scorecard UI.
+ */
+const SCORECARD_BAND_COLOR: Record<string, string> = {
+  at_risk: '#e11d48',
+  patchy: '#f59e0b',
+  solid: '#0ea5e9',
+  strong: '#10b981',
+};
+
+/**
+ * The report the visitor was promised on the form.
+ *
+ * Sent to the person who filled it in, not to the team — the team gets a
+ * dashboard notification instead. Deliberately light on selling: the report
+ * earns a conversation by being right, and one that pitches in every section
+ * gets deleted.
+ *
+ * Built from tables and inline styles because that is what mail clients
+ * render reliably; no flexbox, no external CSS.
+ */
+export function scorecardReportEmail(data: ScorecardReportData): { subject: string; html: string } {
+  const overallColor = SCORECARD_BAND_COLOR[
+    data.overall >= 80 ? 'strong' : data.overall >= 60 ? 'solid' : data.overall >= 40 ? 'patchy' : 'at_risk'
+  ];
+
+  const sections = data.dimensions
+    .map((d, i) => {
+      const color = SCORECARD_BAND_COLOR[d.band] || BRAND_MAGENTA;
+      // Bar width is a percentage of a fixed-width table — the only bar
+      // technique that survives Outlook.
+      const filled = Math.max(0, Math.min(100, d.score));
+      return `
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border:1px solid ${BORDER_COLOR};border-radius:10px">
+        <tr><td style="padding:16px 18px">
+          ${i === 0 ? `<div style="margin:0 0 6px">${badge('Fix this first', BRAND_MAGENTA)}</div>` : ''}
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="color:${HEADING_COLOR};font-size:15px;font-weight:700">${d.label}</td>
+              <td align="right" style="color:${color};font-size:18px;font-weight:700">${d.score}</td>
+            </tr>
+          </table>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 12px;background:#f1eef0;border-radius:3px">
+            <tr>
+              <td style="height:6px;font-size:0;line-height:0">
+                <table width="${filled}%" cellpadding="0" cellspacing="0" style="background:${color};border-radius:3px">
+                  <tr><td style="height:6px;font-size:0;line-height:0">&nbsp;</td></tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+          <div style="color:${TEXT_COLOR};font-size:13px;line-height:1.6">${d.recommendation}</div>
+        </td></tr>
+      </table>`;
+    })
+    .join('');
+
+  const body = `
+    <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">
+      Hi ${data.name}, here is your marketing health report — the full breakdown you saw on the site,
+      kept here so you have it to hand.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;background:#faf8f9;border-radius:12px">
+      <tr><td align="center" style="padding:26px 20px">
+        <div style="color:${MUTED_COLOR};font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px">Your score</div>
+        <div style="color:${overallColor};font-size:44px;font-weight:700;line-height:1">${data.overall}<span style="color:${MUTED_COLOR};font-size:20px;font-weight:500">/100</span></div>
+        <div style="color:${overallColor};font-size:15px;font-weight:600;margin:6px 0 0">${data.bandLabel}</div>
+      </td></tr>
+    </table>
+
+    ${sections}
+
+    <div style="height:1px;background:${BORDER_COLOR};margin:28px 0 20px"></div>
+
+    <p style="margin:0 0 4px;color:${TEXT_COLOR};font-size:14px;line-height:1.6">
+      Most of the above is work you can do yourself, and it is worth doing in that order —
+      the top item is where the next pound of effort returns the most.
+    </p>
+    <p style="margin:0;color:${MUTED_COLOR};font-size:13px;line-height:1.6">
+      If you would rather not do it yourself, that is what we do. No obligation either way.
+    </p>
+    ${ctaButton('Talk to us', `${SITE_URL}/get-started`)}
+  `;
+
+  return {
+    subject: `Your marketing health score: ${data.overall}/100`,
+    html: emailWrapper('Your Marketing Health Report', body),
   };
 }

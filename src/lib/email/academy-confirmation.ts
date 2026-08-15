@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/lib/site-url';
 /**
  * Confirmation email sent to the buyer when a Razorpay payment is captured
  * for an FM Academy enrollment.
@@ -12,8 +13,7 @@ const TEXT_COLOR = '#404040';
 const MUTED_COLOR = '#888888';
 const LIGHT_BG = '#f4f1f2';
 const CARD_BG = '#ffffff';
-const LOGO_URL = 'https://freakingminds.in/logo.png';
-const SITE_URL = 'https://freakingminds.in';
+const LOGO_URL = `${SITE_URL}/logo.png`;
 
 interface BuildOpts {
   buyerName: string;

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title><![CDATA[OpenAI News]]></title>
+        <description><![CDATA[The OpenAI blog]]></description>
+        <link>https://openai.com/news</link>
+        <image>
+            <url>https://openai.com/apple-icon.png</url>
+            <title>OpenAI News</title>
+            <link>https://openai.com/news</link>
+        </image>
+        <generator>OpenAI</generator>
+        <lastBuildDate>Fri, 14 Aug 2026 08:30:09 GMT</lastBuildDate>
+        <atom:link href="https://openai.com/news/rss.xml" rel="self" type="application/rss+xml"/>
+        <item>
+            <title><![CDATA[The builder’s guide to GPT‑5.6]]></title>
+            <description><![CDATA[Learn how startups use GPT-5.6 to build faster, more cost-efficient AI agents with smarter model selection and new Responses API capabilities.]]></description>
+            <link>https://openai.com/index/builders-guide-to-gpt-5-6</link>
+            <guid isPermaLink="true">https://openai.com/index/builders-guide-to-gpt-5-6</guid>
+            <category><![CDATA[Applied AI]]></category>
+            <pubDate>Thu, 13 Aug 2026 11:00:00 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[Previewing Ultrafast mode: GPT-5.6 Sol at up to 14X the speed]]></title>
+            <description><![CDATA[Preview Ultrafast, a new OpenAI API service tier that runs GPT-5.6 Sol up to 14× faster. Powered by Cerebras, it delivers up to 750 output tokens per second.]]></description>
+            <link>https://openai.com/index/previewing-ultrafast</link>
+            <guid isPermaLink="true">https://openai.com/index/previewing-ultrafast</guid>
+            <category><![CDATA[Product]]></category>
+            <pubDate>Thu, 13 Aug 2026 10:00:00 GMT</pubDate>
+        </item>
+        <item>
+            <title><![CDATA[OpenAI appoints Dali Rajic as Chief Revenue Officer]]></title>
+            <description><![CDATA[OpenAI appoints Dali Rajic as Chief Revenue Officer to lead its global revenue organization and help businesses realize the full value of AI.]]></description>
+            <link>https://openai.com/index/dali-rajic-chief-revenue-officer</link>
+            <guid isPermaLink="true">https://openai.com/index/dali-rajic-chief-revenue-officer</guid>
+            <category><![CDATA[Company]]></category>
+            <pubDate>Thu, 13 Aug 2026 09:00:00 GMT</pubDate>
+        </item>
+        </channel></rss>

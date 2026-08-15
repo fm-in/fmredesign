@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>SEO Blog by Ahrefs</title>
+	<atom:link href="https://ahrefs.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://ahrefs.com/blog/</link>
+	<description>Link Building Strategies &#38; SEO Tips</description>
+	<lastBuildDate>Thu, 13 Aug 2026 08:32:36 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=7.0.3</generator>
+	<item>
+		<title>37 Proven Ways to Use AI in Marketing</title>
+		<link>https://ahrefs.com/blog/how-to-use-ai-in-marketing/</link>
+		
+		<dc:creator><![CDATA[Ryan Law]]></dc:creator>
+		<pubDate>Thu, 13 Aug 2026 08:32:36 +0000</pubDate>
+				<category><![CDATA[General Marketing]]></category>
+		<guid isPermaLink="false">https://ahrefs.com/blog/?p=203623</guid>
+
+					<description><![CDATA[37 proven ways to use AI in marketing, from SEO to international marketing, each one from a marketer who has done it and shown their working.<div class="read-more">Read more &#8250;</div><!-- end of .read-more -->]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Vibe Coding for Marketers: A Beginner’s Guide</title>
+		<link>https://ahrefs.com/blog/vibe-coding-for-marketers-a-beginners-guide/</link>
+		
+		<dc:creator><![CDATA[Kamila Olexa]]></dc:creator>
+		<pubDate>Tue, 28 Jul 2026 08:06:18 +0000</pubDate>
+				<category><![CDATA[General Marketing]]></category>
+		<guid isPermaLink="false">https://ahrefs.com/blog/?p=201529</guid>
+
+					<description><![CDATA[Canva made this painfully clear: they gave 5,000 employees a full week to explore AI, and most couldn’t figure out how to start. No surprise there, most vibe-coding tools expect you to manage files, wrangle a terminal, and deploy to<span class="ellipsis">&#8230;</span><div class="read-more">Read more &#8250;</div><!-- end of .read-more -->]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>Google Doesn’t Punish AI Content; It Punishes Bad Content (331k Pages Studied)</title>
+		<link>https://ahrefs.com/blog/google-doesnt-punish-ai-content/</link>
+		
+		<dc:creator><![CDATA[Ryan Law]]></dc:creator>
+		<pubDate>Mon, 27 Jul 2026 08:00:13 +0000</pubDate>
+				<category><![CDATA[Content Marketing]]></category>
+		<category><![CDATA[Data & Studies]]></category>
+		<category><![CDATA[General SEO]]></category>
+		<guid isPermaLink="false">https://ahrefs.com/blog/?p=201489</guid>
+
+					<description><![CDATA[On the one hand, Google says they don’t care whether AI is used for content creation, as long as the content isn’t designed “with the primary purpose of manipulating ranking in search results.” On the other hand, people like Lily<span class="ellipsis">&#8230;</span><div class="read-more">Read more &#8250;</div><!-- end of .read-more -->]]></description>
+		
+		
+		
+			</item>
+		</channel></rss>

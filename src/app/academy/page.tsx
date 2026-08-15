@@ -26,9 +26,14 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 
 export const revalidate = 60;
 export const metadata = {
-  title: 'FM Academy — Creator Program | Freaking Minds',
+  // The root layout applies the template '%s | Freaking Minds' — restating it
+  // here produced "... | Freaking Minds | Freaking Minds".
+  title: 'FM Academy — Marketing, Design & Video',
+  // Without this the page inherits the root's canonical of '/' and declares
+  // itself a duplicate of the home page.
+  alternates: { canonical: '/academy' },
   description:
-    'Learn digital marketing, performance ads, design, video editing, AI filmmaking and web design — in person, from the Freaking Minds team. New batch starts 5 June 2026.',
+    'Learn digital marketing, performance ads, design, video editing and AI filmmaking in person, from the Freaking Minds agency team in Bhopal.',
 };
 
 const BUNDLE_SLUG = 'creator-program-full';

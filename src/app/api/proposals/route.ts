@@ -10,6 +10,7 @@ import { createProposalSchema, updateProposalSchema, validateBody } from '@/lib/
 import { notifyTeam, proposalCreatedEmail, notifyRecipient, proposalSentToClientEmail } from '@/lib/email/send';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { notifyClient } from '@/lib/notifications';
+import { SITE_URL } from '@/lib/site-url';
 
 // GET /api/proposals - Fetch all proposals
 export async function GET(request: NextRequest) {
@@ -353,7 +354,7 @@ export async function PUT(request: NextRequest) {
             title: proposal.title || 'Proposal',
             proposalNumber: proposal.proposal_number || undefined,
             clientName: client.name || 'Client',
-            portalUrl: `https://freakingminds.in/client/${proposal.client_id}/proposals`,
+            portalUrl: `${SITE_URL}/client/${proposal.client_id}/proposals`,
           });
           notifyRecipient(client.email, emailData.subject, emailData.html);
         }

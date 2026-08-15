@@ -36,6 +36,7 @@ import {
   type Program,
 } from '@/lib/admin/academy-types';
 import { ReserveSeatForm } from '@/components/academy/ReserveSeatForm';
+import { OG_DEFAULTS } from '@/lib/seo';
 
 export const revalidate = 60;
 // Pre-render every currently-open program at build time so the first
@@ -80,13 +81,51 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const p = await getProgramBySlug(slug);
   if (!p) return { title: 'Program not found — FM Academy' };
+  const description = (
+    p.shortDescription ||
+    p.longDescription ||
+    `Reserve your seat for ${p.title} by the Freaking Minds team.`
+  ).replace(/\s+/g, ' ').trim();
+
+  /**
+   * Programme titles are author-entered and unbounded — "Freaking Minds
+   * Creator Program — Full Bundle" plus the suffix plus the root template
+   * rendered at 74 characters, well past where Google truncates. Drop the
+   * suffix before truncating the name itself, since the name is the part a
+   * searcher is actually scanning for.
+   */
+  const SUFFIX = ' — FM Academy';
+  const MAX_PAGE_TITLE = 43; // + ' | Freaking Minds' (17) stays under 60
+  let pageTitle = `${p.title}${SUFFIX}`;
+  if (pageTitle.length > MAX_PAGE_TITLE) {
+    pageTitle =
+      p.title.length > MAX_PAGE_TITLE
+        ? p.title.slice(0, MAX_PAGE_TITLE - 1).replace(/\s+\S*$/, '') + '…'
+        : p.title;
+  }
+
   return {
-    title: `${p.title} — FM Academy | Freaking Minds`,
+    // No '| Freaking Minds' here — the root layout's template appends it, and
+    // restating it produced "... | Freaking Minds | Freaking Minds".
+    title: pageTitle,
+    // Truncated on a word boundary; Google cuts around 160 characters and a
+    // shortDescription set in the admin is not length-checked anywhere.
     description:
-      p.shortDescription ||
-      p.longDescription?.slice(0, 160) ||
-      `Reserve your seat for ${p.title} by the Freaking Minds team.`,
-    openGraph: p.coverImageUrl ? { images: [{ url: p.coverImageUrl }] } : undefined,
+      description.length > 158
+        ? description.slice(0, 158).replace(/\s+\S*$/, '') + '…'
+        : description,
+    // Without this every program page inherits the root canonical of '/' and
+    // tells Google it IS the home page — which all seven were doing.
+    alternates: { canonical: `/academy/${slug}` },
+    // Spread the defaults so a program with no cover image still shares with
+    // an image instead of a blank card.
+    openGraph: {
+      ...OG_DEFAULTS,
+      title: pageTitle,
+      description,
+      url: `/academy/${slug}`,
+      ...(p.coverImageUrl ? { images: [{ url: p.coverImageUrl }] } : {}),
+    },
   };
 }
 

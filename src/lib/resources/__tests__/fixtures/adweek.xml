@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" version="2.0">
+<channel>
+<title>Adweek Feed</title>
+<link>https://www.adweek.com</link>
+<description>Breaking News in Advertising, Media and Technology</description>
+<copyright>Copyright 2026</copyright>
+<lastBuildDate>Fri, 14 Aug 2026 08:44:17 +0000</lastBuildDate>
+<atom:link href="https://www.adweek.com/feed/" rel="self" type="application/rss+xml"/>
+<image>
+    <url>https://static-www.adweek.com/wp-content/uploads/2025/03/cropped-image-6.png?w=32</url>
+    <title>Adweek Feed</title>
+    <link>https://www.adweek.com</link>
+    <width>32</width>
+    <height>32</height>
+</image>
+<item>
+    <title><![CDATA[Week of Aug 3 Cable News Ratings: CNN Has Across-the-Board Gains]]></title>
+    <description><![CDATA[Fox News remained the most-watched cable network in both measured categories.
+]]></description>
+    <dc:creator><![CDATA[mmwachiro]]></dc:creator>
+    <link>https://www.adweek.com/tvnewser/week-of-aug-3-2026-cable-news-ratings/</link>
+    <guid isPermaLink="false">https://www.adweek.com/?p=1955838</guid>
+    <category><![CDATA[CNN]]></category>
+    <category><![CDATA[Fox News]]></category>
+    <category><![CDATA[MS NOW]]></category>
+    <category><![CDATA[Ratings]]></category>
+    <pubDate>Thu, 13 Aug 2026 17:22:26 +0000</pubDate>
+</item>
+<item>
+    <title><![CDATA[OpenAI Chief Revenue Officer Denise Dresser Steps Down, Replaced by Dali Rajic]]></title>
+    <description><![CDATA[Dresser is leaving the company after less than a year.]]></description>
+    <dc:creator><![CDATA[Lauren Johnson]]></dc:creator>
+    <link>https://www.adweek.com/media/openai-chief-revenue-officer-denise-dresser-steps-down-replaced-by-dali-rajic/</link>
+    <guid isPermaLink="false">https://www.adweek.com/?p=1955862</guid>
+    <category><![CDATA[Ad Tech Industry News]]></category>
+    <category><![CDATA[AI News]]></category>
+    <pubDate>Thu, 13 Aug 2026 17:05:28 +0000</pubDate>
+</item>
+<item>
+    <title><![CDATA[Week of Aug 3 Evening News Ratings: Nightly News Takes First in Demo]]></title>
+    <description><![CDATA[CBS Evening News was down in both categories.]]></description>
+    <dc:creator><![CDATA[mmwachiro]]></dc:creator>
+    <link>https://www.adweek.com/tvnewser/week-of-aug-3-2026-evening-news-ratings/</link>
+    <guid isPermaLink="false">https://www.adweek.com/?p=1955499</guid>
+    <category><![CDATA[ABC]]></category>
+    <category><![CDATA[CBS]]></category>
+    <category><![CDATA[Evening News]]></category>
+    <category><![CDATA[NBC]]></category>
+    <category><![CDATA[Ratings]]></category>
+    <pubDate>Thu, 13 Aug 2026 16:43:20 +0000</pubDate>
+</item>
+</channel></rss>
