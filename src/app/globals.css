@@ -2723,3 +2723,42 @@ button.v2-btn-outline {
     color: var(--color-fm-neutral-900, #0f0f0f);
   }
 }
+
+/* ==========================================================================
+   Horizontally scrolling chip rows
+   ==========================================================================
+   A native scrollbar inside a glass pill bar is thick, grey and permanently
+   visible on any machine without an overlay-scrollbar trackpad — it reads as
+   a rendering fault rather than a control.
+
+   Hiding it alone would be worse: the row silently loses the only hint that
+   more options exist off-screen. So the bar is hidden AND the edges are
+   faded, which is the affordance doing the work instead. Fades are applied
+   per side by the component so the first chip is never dimmed when there is
+   nothing to the left of it.
+   ========================================================================== */
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;            /* Firefox */
+    -ms-overflow-style: none;         /* legacy Edge */
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;                    /* WebKit */
+  }
+
+  /* Scrolling remains available by wheel, trackpad, touch and keyboard —
+     only the painted bar is gone. */
+  .fade-edge-r {
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent 100%);
+  }
+  .fade-edge-l {
+    mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 40px), transparent 100%);
+  }
+  .fade-edge-lr {
+    mask-image: linear-gradient(to right, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 40px, #000 calc(100% - 40px), transparent 100%);
+  }
+}

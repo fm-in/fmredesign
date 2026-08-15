@@ -3,49 +3,56 @@
 /**
  * Freakquency — interaction layer.
  *
- * Filters across four dimensions plus search. Counts on every option are
- * FACETED: each is computed against the set filtered by all the OTHER active
- * dimensions, not against the whole feed. That means a number on a chip is a
- * promise — clicking it yields exactly that many items — so no combination
- * ever leads to an empty screen you could have predicted was empty.
+ * The first version put four filter dimensions inline above the feed: 29
+ * interactive controls and 0.85 screens of scroll before the first headline.
+ * That is a faceted-search UI, and this is a feed — the overwhelming majority
+ * of visitors scan rather than configure, so the top of the page was
+ * optimised for the minority.
+ *
+ * Now: ONE axis inline (the stream bar, which sticks so it stays reachable
+ * anywhere in a 172-item list), everything else behind a single Filters
+ * control. Two clicks for the few who refine, no cost for everyone else.
+ *
+ * Counts everywhere remain FACETED — each is computed against the set
+ * filtered by all the OTHER active dimensions, so a number on a control is a
+ * promise that clicking it yields exactly that many items.
  */
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Clock, Search, X } from 'lucide-react';
+import { ArrowUpRight, Clock, Search, SlidersHorizontal, X } from 'lucide-react';
 import type { FeedItem } from '@/lib/resources/public-data';
 import type { Audience, Region, ResourceCategory } from '@/lib/resources/types';
 import { CATEGORY_LABELS, RESOURCE_TYPE_LABELS } from '@/lib/resources/types';
 
+/** The single inline axis: everything, our own writing, or one topic. */
+type Stream = 'all' | 'guides' | ResourceCategory;
 type Intent = Audience | 'all';
-type Topic = ResourceCategory | 'all';
 type Place = Region | 'all';
 type SortKey = 'newest' | 'relevant';
 
 interface Filters {
+  stream: Stream;
   intent: Intent;
-  topic: Topic;
   region: Place;
   /** Max age in days; null means no limit. */
   days: number | null;
   q: string;
 }
 
-const EMPTY: Filters = { intent: 'all', topic: 'all', region: 'all', days: null, q: '' };
+const EMPTY: Filters = { stream: 'all', intent: 'all', region: 'all', days: null, q: '' };
 
 const INTENTS: { key: Intent; label: string }[] = [
-  { key: 'all', label: 'Everything' },
-  { key: 'professionals', label: 'Latest' },
-  { key: 'aspiring', label: 'Learn' },
-  { key: 'owners', label: 'For your business' },
+  { key: 'all', label: 'Anyone' },
+  { key: 'professionals', label: 'Marketers' },
+  { key: 'aspiring', label: 'People learning' },
+  { key: 'owners', label: 'Business owners' },
 ];
-
 const PLACES: { key: Place; label: string }[] = [
   { key: 'all', label: 'Everywhere' },
   { key: 'india', label: 'India' },
   { key: 'global', label: 'Global' },
 ];
-
 const WINDOWS: { key: number | null; label: string }[] = [
   { key: 1, label: 'Today' },
   { key: 7, label: 'This week' },
@@ -53,22 +60,23 @@ const WINDOWS: { key: number | null; label: string }[] = [
   { key: null, label: 'All time' },
 ];
 
-/** Which dimension to ignore when computing a facet count. */
-type Dim = 'intent' | 'topic' | 'region' | 'days' | null;
+type Dim = 'stream' | 'intent' | 'region' | 'days' | null;
+
+function matchesStream(item: FeedItem, stream: Stream): boolean {
+  if (stream === 'all') return true;
+  if (stream === 'guides') return !item.external;
+  return item.category === stream;
+}
 
 function matches(item: FeedItem, f: Filters, skip: Dim = null): boolean {
+  if (skip !== 'stream' && !matchesStream(item, f.stream)) return false;
   if (skip !== 'intent' && f.intent !== 'all' && !item.audience.includes(f.intent)) return false;
-  if (skip !== 'topic' && f.topic !== 'all' && item.category !== f.topic) return false;
   if (skip !== 'region' && f.region !== 'all' && item.region !== f.region) return false;
   if (skip !== 'days' && f.days !== null) {
-    const ageDays = (Date.now() - Date.parse(item.publishedAt)) / 86_400_000;
-    if (ageDays > f.days) return false;
+    if ((Date.now() - Date.parse(item.publishedAt)) / 86_400_000 > f.days) return false;
   }
   const q = f.q.trim().toLowerCase();
-  if (q) {
-    const hay = `${item.title} ${item.excerpt} ${item.sourceName ?? ''}`.toLowerCase();
-    if (!hay.includes(q)) return false;
-  }
+  if (q && !`${item.title} ${item.excerpt} ${item.sourceName ?? ''}`.toLowerCase().includes(q)) return false;
   return true;
 }
 
@@ -83,24 +91,67 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/**
+ * Which edges of a horizontal scroller still have content beyond them.
+ *
+ * Drives the fade masks, so the row never dims a side that has nothing
+ * hidden behind it — a permanent fade on the left would just look like the
+ * first chip is broken.
+ */
+function useEdgeFade() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+
+  const measure = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setEdges({ left: el.scrollLeft > 4, right: max > 4 && el.scrollLeft < max - 4 });
+  }, []);
+
+  useEffect(() => {
+    measure();
+    const el = ref.current;
+    if (!el) return;
+    el.addEventListener('scroll', measure, { passive: true });
+    // Chip labels carry counts that change with filtering, so the row's
+    // scrollWidth changes without any scroll or window resize happening.
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    for (const child of Array.from(el.children)) ro.observe(child);
+    window.addEventListener('resize', measure);
+    return () => {
+      el.removeEventListener('scroll', measure);
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [measure]);
+
+  const fadeClass =
+    edges.left && edges.right ? 'fade-edge-lr' : edges.right ? 'fade-edge-r' : edges.left ? 'fade-edge-l' : '';
+
+  return { ref, fadeClass };
+}
+
 const PAGE_SIZE = 24;
 
-function Chip({
-  active, label, count, onClick,
-}: { active: boolean; label: string; count?: number; onClick: () => void }) {
-  // A zero-count option is left visible but disabled: hiding options as you
-  // filter makes the control shift under the cursor and hides what exists.
+function Pill({
+  active, label, count, onClick, subtle = false,
+}: { active: boolean; label: string; count?: number; onClick: () => void; subtle?: boolean }) {
+  // Zero-count options stay visible but disabled. Hiding them as you filter
+  // makes the control shift under the cursor and conceals what exists.
   const dead = count === 0 && !active;
   return (
     <button
       onClick={onClick}
       disabled={dead}
       className={[
-        'px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors whitespace-nowrap',
+        'rounded-full text-sm font-medium border transition-colors whitespace-nowrap',
+        subtle ? 'px-3 py-1.5' : 'px-4 py-2',
         active
           ? 'bg-fm-magenta-600 text-white border-fm-magenta-600'
           : dead
-            ? 'bg-white/50 text-fm-neutral-300 border-fm-neutral-100 cursor-not-allowed'
+            ? 'bg-white/40 text-fm-neutral-300 border-fm-neutral-100 cursor-not-allowed'
             : 'bg-white text-fm-neutral-700 border-fm-neutral-200 hover:border-fm-magenta-300',
       ].join(' ')}
     >
@@ -116,6 +167,14 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
   const [f, setF] = useState<Filters>(EMPTY);
   const [sort, setSort] = useState<SortKey>('newest');
   const [shown, setShown] = useState(PAGE_SIZE);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const streamScroller = useEdgeFade();
+
+  useEffect(() => {
+    if (searchOpen) searchRef.current?.focus();
+  }, [searchOpen]);
 
   const set = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
     setF((prev) => ({ ...prev, [key]: value }));
@@ -129,11 +188,20 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
       : out;
   }, [items, f, sort]);
 
-  /** Counts for one dimension, measured with that dimension released. */
   const facet = useCallback(
     (dim: Exclude<Dim, null>) => items.filter((i) => matches(i, f, dim)),
     [items, f]
   );
+
+  const streamCounts = useMemo(() => {
+    const pool = facet('stream');
+    const out: Record<string, number> = {
+      all: pool.length,
+      guides: pool.filter((i) => !i.external).length,
+    };
+    for (const i of pool) if (i.category) out[i.category] = (out[i.category] ?? 0) + 1;
+    return out;
+  }, [facet]);
 
   const intentCounts = useMemo(() => {
     const pool = facet('intent');
@@ -145,13 +213,6 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
     } as Record<Intent, number>;
   }, [facet]);
 
-  const topicCounts = useMemo(() => {
-    const pool = facet('topic');
-    const out: Record<string, number> = { all: pool.length };
-    for (const i of pool) if (i.category) out[i.category] = (out[i.category] ?? 0) + 1;
-    return out;
-  }, [facet]);
-
   const regionCounts = useMemo(() => {
     const pool = facet('region');
     return {
@@ -161,17 +222,20 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
     } as Record<Place, number>;
   }, [facet]);
 
-  // Topics present in the data, busiest first — the config has eight
-  // categories but only what actually arrived is worth offering.
+  // Only topics actually present are offered — the config declares eight, and
+  // offering one with nothing behind it is a dead end by construction.
   const topics = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const i of items) if (i.category) counts[i.category] = (counts[i.category] ?? 0) + 1;
     return (Object.keys(counts) as ResourceCategory[]).sort((a, b) => counts[b] - counts[a]);
   }, [items]);
 
-  const activeCount =
-    (f.intent !== 'all' ? 1 : 0) + (f.topic !== 'all' ? 1 : 0) +
-    (f.region !== 'all' ? 1 : 0) + (f.days !== null ? 1 : 0) + (f.q.trim() ? 1 : 0);
+  // The stream bar is not counted: it is always visible, so it is not hidden
+  // state the reader needs reminding of.
+  const refineCount =
+    (f.intent !== 'all' ? 1 : 0) + (f.region !== 'all' ? 1 : 0) +
+    (f.days !== null ? 1 : 0) + (sort !== 'newest' ? 1 : 0);
+  const anyActive = refineCount > 0 || f.stream !== 'all' || !!f.q.trim();
 
   const featured = useMemo(() => filtered.find((i) => !i.external) ?? filtered[0], [filtered]);
   const rest = useMemo(
@@ -179,85 +243,111 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
     [filtered, featured, shown]
   );
 
+  const clearAll = () => { setF(EMPTY); setSort('newest'); setShown(PAGE_SIZE); setPanelOpen(false); };
+
   return (
     <div className="v2-container v2-container-wide v2-section">
-      <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <div className="v2-badge v2-badge-glass mb-6 inline-flex">
-          <span className="v2-text-primary">Updated every two hours</span>
-        </div>
-        <h1 className="font-display text-4xl md:text-6xl font-bold v2-text-primary mb-6 leading-tight">
+      <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <h1 className="font-display text-4xl md:text-6xl font-bold v2-text-primary mb-4 leading-tight">
           Freak<span className="v2-accent">quency</span>
         </h1>
-        <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-          What actually happened in marketing, filtered — plus the guides and tools for
-          people who have to do something about it.
+        <p className="text-base md:text-lg v2-text-secondary leading-relaxed">
+          What actually happened in marketing, filtered — updated every two hours.
         </p>
       </div>
 
-      {/* ------------------------------------------------------------ filters */}
-      <div className="v2-paper rounded-3xl p-4 md:p-6 mb-8 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-fm-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="search"
-              value={f.q}
-              onChange={(e) => set('q', e.target.value)}
-              placeholder="Search titles, summaries and sources…"
-              className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-fm-neutral-200 bg-white text-fm-neutral-900 text-sm focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
-            />
-          </div>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            aria-label="Sort order"
-            className="px-3 py-2.5 rounded-lg border border-fm-neutral-200 bg-white text-fm-neutral-900 text-sm sm:w-44"
+      {/* ------------------------------------------------------ stream bar */}
+      {/* Sticks below the fixed site header (81px) so the one axis people
+          actually browse by stays reachable deep into a long list. */}
+      <div className="sticky z-30 -mx-2 px-2 py-2" style={{ top: '84px' }}>
+        <div className="v2-paper rounded-2xl px-3 py-2.5 flex items-center gap-3">
+          <div
+            ref={streamScroller.ref}
+            className={`flex gap-2 overflow-x-auto no-scrollbar flex-1 ${streamScroller.fadeClass}`}
           >
-            <option value="newest">Newest first</option>
-            <option value="relevant">Most relevant</option>
-          </select>
-        </div>
-
-        <Row label="Read as">
-          {INTENTS.map((i) => (
-            <Chip key={i.key} label={i.label} count={intentCounts[i.key]}
-              active={f.intent === i.key} onClick={() => set('intent', i.key)} />
-          ))}
-        </Row>
-
-        <Row label="Topic">
-          <Chip label="All topics" count={topicCounts.all} active={f.topic === 'all'} onClick={() => set('topic', 'all')} />
-          {topics.map((t) => (
-            <Chip key={t} label={CATEGORY_LABELS[t] ?? t} count={topicCounts[t] ?? 0}
-              active={f.topic === t} onClick={() => set('topic', t)} />
-          ))}
-        </Row>
-
-        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 pt-1">
-          <Row label="Region" tight>
-            {PLACES.map((p) => (
-              <Chip key={String(p.key)} label={p.label} count={regionCounts[p.key]}
-                active={f.region === p.key} onClick={() => set('region', p.key)} />
+            <Pill label="Everything" count={streamCounts.all} active={f.stream === 'all'} onClick={() => set('stream', 'all')} />
+            <Pill label="Our guides" count={streamCounts.guides} active={f.stream === 'guides'} onClick={() => set('stream', 'guides')} />
+            <span className="w-px bg-fm-neutral-200 shrink-0 my-1" aria-hidden />
+            {topics.map((t) => (
+              <Pill key={t} label={CATEGORY_LABELS[t] ?? t} count={streamCounts[t] ?? 0}
+                active={f.stream === t} onClick={() => set('stream', t)} />
             ))}
-          </Row>
-          <Row label="When" tight>
-            {WINDOWS.map((w) => (
-              <Chip key={String(w.key)} label={w.label}
-                active={f.days === w.key} onClick={() => set('days', w.key)} />
-            ))}
-          </Row>
-          {activeCount > 0 && (
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {searchOpen || f.q ? (
+              <div className="relative">
+                <input
+                  ref={searchRef}
+                  type="search"
+                  value={f.q}
+                  onChange={(e) => set('q', e.target.value)}
+                  onBlur={() => { if (!f.q) setSearchOpen(false); }}
+                  placeholder="Search…"
+                  className="w-40 md:w-56 pl-8 pr-2 py-2 rounded-full border border-fm-neutral-200 bg-white text-fm-neutral-900 text-sm focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                />
+                <Search className="w-4 h-4 text-fm-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              </div>
+            ) : (
+              <button onClick={() => setSearchOpen(true)} aria-label="Search the feed"
+                className="p-2 rounded-full border border-fm-neutral-200 bg-white text-fm-neutral-600 hover:border-fm-magenta-300">
+                <Search className="w-4 h-4" />
+              </button>
+            )}
+
             <button
-              onClick={() => { setF(EMPTY); setShown(PAGE_SIZE); }}
-              className="md:ml-auto inline-flex items-center gap-1.5 text-sm text-fm-magenta-600 hover:text-fm-magenta-700 font-medium whitespace-nowrap"
+              onClick={() => setPanelOpen((o) => !o)}
+              aria-expanded={panelOpen}
+              className={[
+                'inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium border transition-colors',
+                refineCount > 0
+                  ? 'bg-fm-magenta-600 text-white border-fm-magenta-600'
+                  : 'bg-white text-fm-neutral-700 border-fm-neutral-200 hover:border-fm-magenta-300',
+              ].join(' ')}
             >
-              <X className="w-4 h-4" /> Clear {activeCount} filter{activeCount > 1 ? 's' : ''}
+              <SlidersHorizontal className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+              {refineCount > 0 && <span className="text-white/80">{refineCount}</span>}
             </button>
-          )}
+          </div>
         </div>
+
+        {/* Opt-in panel. Everything here is a refinement, not a browse axis. */}
+        {panelOpen && (
+          <div className="v2-paper rounded-2xl mt-2 p-4 md:p-5 space-y-4">
+            <PanelRow label="Written for">
+              {INTENTS.map((i) => (
+                <Pill key={i.key} subtle label={i.label} count={intentCounts[i.key]}
+                  active={f.intent === i.key} onClick={() => set('intent', i.key)} />
+              ))}
+            </PanelRow>
+            <PanelRow label="Region">
+              {PLACES.map((p) => (
+                <Pill key={String(p.key)} subtle label={p.label} count={regionCounts[p.key]}
+                  active={f.region === p.key} onClick={() => set('region', p.key)} />
+              ))}
+            </PanelRow>
+            <PanelRow label="Published">
+              {WINDOWS.map((w) => (
+                <Pill key={String(w.key)} subtle label={w.label}
+                  active={f.days === w.key} onClick={() => set('days', w.key)} />
+              ))}
+            </PanelRow>
+            <PanelRow label="Order">
+              <Pill subtle label="Newest first" active={sort === 'newest'} onClick={() => setSort('newest')} />
+              <Pill subtle label="Most relevant" active={sort === 'relevant'} onClick={() => setSort('relevant')} />
+            </PanelRow>
+            {anyActive && (
+              <button onClick={clearAll}
+                className="inline-flex items-center gap-1.5 text-sm text-fm-magenta-600 hover:text-fm-magenta-700 font-medium">
+                <X className="w-4 h-4" /> Clear everything
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
-      <p className="text-sm v2-text-tertiary mb-4" style={{ textAlign: 'center' }}>
+      <p className="text-sm v2-text-tertiary mt-4 mb-4" style={{ textAlign: 'center' }}>
         {filtered.length} {filtered.length === 1 ? 'item' : 'items'}
       </p>
 
@@ -265,12 +355,10 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
         <div className="v2-paper rounded-3xl p-12" style={{ textAlign: 'center' }}>
           <p className="text-fm-neutral-700 font-medium mb-1">Nothing matches all of that.</p>
           <p className="text-sm text-fm-neutral-500 mb-5">
-            Every count above is measured against your other filters, so widening any one of
-            them will bring results back.
+            Every count is measured against your other choices, so widening any one of them
+            brings results back.
           </p>
-          <button onClick={() => { setF(EMPTY); setShown(PAGE_SIZE); }} className="v2-btn v2-btn-magenta">
-            Clear all filters
-          </button>
+          <button onClick={clearAll} className="v2-btn v2-btn-magenta">Clear everything</button>
         </div>
       ) : (
         <>
@@ -291,12 +379,11 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
   );
 }
 
-/** A labelled row of chips that scrolls rather than wrapping into a wall. */
-function Row({ label, children, tight = false }: { label: string; children: React.ReactNode; tight?: boolean }) {
+function PanelRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className={`flex items-center gap-3 ${tight ? '' : 'w-full'}`}>
-      <span className="text-xs uppercase tracking-wide text-fm-neutral-400 w-14 shrink-0">{label}</span>
-      <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">{children}</div>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+      <span className="text-xs uppercase tracking-wide text-fm-neutral-400 sm:w-24 shrink-0">{label}</span>
+      <div className="flex gap-2 flex-wrap">{children}</div>
     </div>
   );
 }
