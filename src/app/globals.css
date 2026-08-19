@@ -1090,9 +1090,24 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   --v2-text-on-white-tertiary: #4b5563;   /* Medium grey for captions */
   --v2-text-on-white-muted: #6b7280;      /* Lighter grey for subtle text */
 
-  /* V2 Section Spacing */
+  /* V2 Section Spacing — the rhythm scale is exactly two values.
+     Anything that needs a third is a composition problem, not a spacing one. */
   --v2-section-gap: 8rem;      /* 128px - space between sections */
-  --v2-section-padding: 6rem;  /* 96px - internal section padding */
+  --v2-section-padding: 6rem;  /* 96px  - standard section rhythm */
+  --v2-section-chapter: 8rem;  /* 128px - chapter break, where the page turns */
+
+  /* Ground for .v2-tone-paper — a barely-warm white that reads as a
+     deliberate band against the pink wash rather than a gap in it. */
+  --v2-tone-paper-bg: #fffdfe;
+
+  /* Accent text + chip surfaces. These exist as tokens (rather than the
+     hardcoded text-fm-magenta-600 / bg-fm-magenta-50 utilities that were
+     scattered through the sections) precisely so a section can change tone
+     without every nested element needing to know. */
+  --v2-text-accent: var(--color-fm-magenta-600, #c9325d);
+  --v2-chip-bg: var(--color-fm-magenta-50, #fdeef3);
+  --v2-chip-border: rgba(201, 50, 93, 0.16);
+  --v2-chip-text: var(--color-fm-magenta-600, #c9325d);
 
   /* V2 Container Width */
   --v2-container-max: 1280px;
@@ -1104,6 +1119,7 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   :root {
     --v2-section-gap: 5rem;
     --v2-section-padding: 4rem;
+    --v2-section-chapter: 5rem;
   }
 }
 
@@ -1111,6 +1127,7 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   :root {
     --v2-section-gap: 3rem;
     --v2-section-padding: 3rem;
+    --v2-section-chapter: 3.75rem;
   }
 }
 
@@ -1185,6 +1202,21 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   .v2-paper-static {
     position: relative;
     isolation: isolate;
+
+    /* A paper card paints its own opaque light ground, so it must restore the
+       light-ground text tokens. Without this it inherits the surrounding
+       tone's tokens — inside .v2-tone-deep / .v2-tone-accent that means white
+       text on a white card. Any surface that sets its own light background
+       needs this reset; translucent glass cards deliberately do not, because
+       they should keep taking their colour from the tone behind them. */
+    --v2-text-primary: #1a0a12;
+    --v2-text-secondary: #3d2030;
+    --v2-text-tertiary: #6b4a5a;
+    --v2-text-muted: #9a7888;
+    --v2-text-accent: var(--color-fm-magenta-600, #c9325d);
+    --v2-chip-bg: var(--color-fm-magenta-50, #fdeef3);
+    --v2-chip-border: rgba(201, 50, 93, 0.16);
+    --v2-chip-text: var(--color-fm-magenta-600, #c9325d);
   }
 
   .v2-paper::before,
@@ -1379,6 +1411,142 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
     contain-intrinsic-size: auto 800px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SECTION RHYTHM SYSTEM
+
+   Fixes two measured problems:
+
+   1. "Everything is pale pink" — every section rendered transparent over the
+      same page gradient, so 13,815px of home had no value contrast. Only the
+      features section had presence, because it hardcoded its own dark hexes.
+
+   2. "Sections don't feel related" — the site shipped NINE distinct section
+      padding pairs (64/64, 96/96, 96/128, 144/144, 160/96, 48/48, 96/64,
+      0/96, 160/128). Two of eight home sections used the .v2-section token;
+      the rest hardcoded Tailwind py-* values.
+
+   Every public section now declares exactly one TONE and one RHYTHM.
+
+   Tones redefine the --v2-text-* custom properties rather than setting colours
+   on elements, so all 230 existing .v2-text-* usages adapt automatically when
+   a section changes tone. Nothing inside a section component needs to know
+   what ground it is sitting on.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Rhythm: two values, not nine ───────────────────────────────────── */
+
+  /* .v2-section (defined in @layer base above) is the standard rhythm.
+     This is the chapter break — used only where the page changes subject. */
+  .v2-section--chapter {
+    padding-top: var(--v2-section-chapter);
+    padding-bottom: var(--v2-section-chapter);
+  }
+
+  /* Collapses the seam when two same-tone sections sit back to back, so the
+     pair reads as one movement rather than two stacked blocks. */
+  .v2-section--tight-top { padding-top: 0; }
+  .v2-section--tight-bottom { padding-bottom: 0; }
+
+  /* REQUIRED on any section that pins a child with GSAP ScrollTrigger.
+     .v2-section sets `contain: layout style paint` for scroll performance,
+     and paint containment makes the section a containing block for
+     fixed-position descendants — which is exactly how ScrollTrigger pins.
+     Without this opt-out the pinned content collapses into the section box.
+     Same failure mode as backdrop-filter on a fixed-positioned child. */
+  .v2-section--pinned { contain: none; }
+
+  /* ── Tone: tint — the page's resting state ──────────────────────────── */
+  /* Transparent, so the V2PageWrapper gradient and stars show through.
+     This is the default and should still be the most common tone. */
+  .v2-tone-tint {
+    background-color: transparent;
+  }
+
+  /* ── Tone: paper — a calm light band ────────────────────────────────── */
+  /* Opaque, so it visibly lifts out of the pink wash. Use for sections whose
+     content is dense and needs a quiet ground (feeds, grids, forms). */
+  .v2-tone-paper {
+    background-color: var(--v2-tone-paper-bg);
+  }
+
+  /* ── Tone: deep — the anchor ────────────────────────────────────────── */
+  /* The heaviest value on the page. Use sparingly: one, at most two per page.
+     Sits fractionally darker than the dark feature cards (#1c0e16–#2a1220)
+     so those cards still read as raised against it. */
+  .v2-tone-deep {
+    /* Deliberately kept below the darkest feature card (#1c0e16) at every
+       stop, so inset dark cards still read as raised panels rather than
+       dissolving into the ground. */
+    background-image: linear-gradient(
+      170deg,
+      #140a10 0%,
+      #180b13 55%,
+      #1b0d16 100%
+    );
+
+    /* Text tokens flip so .v2-text-* consumers stay legible */
+    --v2-text-primary: #fdf7fa;
+    --v2-text-secondary: rgba(253, 247, 250, 0.78);
+    --v2-text-tertiary: rgba(253, 247, 250, 0.60);
+    --v2-text-muted: rgba(253, 247, 250, 0.45);
+
+    /* Surface tokens flip so glass/solid cards don't blow out on dark */
+    --v2-glass-bg: rgba(255, 255, 255, 0.06);
+    --v2-glass-bg-hover: rgba(255, 255, 255, 0.10);
+    --v2-glass-border: rgba(255, 255, 255, 0.12);
+    --v2-glass-border-hover: rgba(255, 255, 255, 0.22);
+    --v2-card-bg: rgba(255, 255, 255, 0.05);
+    --v2-card-bg-hover: rgba(255, 255, 255, 0.08);
+
+    /* Magenta-on-magenta disappears, so the accent warms toward rose */
+    --v2-text-accent: #ff9dbd;
+    --v2-chip-bg: rgba(255, 255, 255, 0.08);
+    --v2-chip-border: rgba(255, 255, 255, 0.16);
+    --v2-chip-text: #ffc4d8;
+  }
+
+  /* ── Tone: accent — reserved for the closing CTA ────────────────────── */
+  /* One per page maximum, and only where we are asking for the click. */
+  .v2-tone-accent {
+    background-image: linear-gradient(
+      135deg,
+      var(--color-fm-magenta-800, #8c213d) 0%,
+      var(--color-fm-purple-800, #451530) 100%
+    );
+
+    --v2-text-primary: #fffafc;
+    --v2-text-secondary: rgba(255, 250, 252, 0.82);
+    --v2-text-tertiary: rgba(255, 250, 252, 0.64);
+    --v2-text-muted: rgba(255, 250, 252, 0.48);
+
+    --v2-glass-bg: rgba(255, 255, 255, 0.10);
+    --v2-glass-border: rgba(255, 255, 255, 0.18);
+
+    --v2-text-accent: #ffd0a8;
+    --v2-chip-bg: rgba(255, 255, 255, 0.12);
+    --v2-chip-border: rgba(255, 255, 255, 0.22);
+    --v2-chip-text: #fff3f7;
+  }
+
+  /* Dark tones sit on an opaque ground, so the wrapper's decorative stars
+     would be occluded anyway — drop them to save the paint. */
+  .v2-tone-deep .v2-star,
+  .v2-tone-accent .v2-star {
+    display: none;
+  }
+
+  /* ── Tone-aware consumers ───────────────────────────────────────────── */
+  .v2-text-accent { color: var(--v2-text-accent); }
+
+  .v2-chip {
+    background-color: var(--v2-chip-bg);
+    border: 1px solid var(--v2-chip-border);
+    color: var(--v2-chip-text);
+  }
+}
+
 
   /* V2 Brand Shadows */
   .shadow-fm-sm {

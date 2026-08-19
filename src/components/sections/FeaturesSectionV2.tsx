@@ -312,7 +312,7 @@ export function FeaturesSectionV2() {
   // Mobile Layout - Horizontal scroll cards
   if (isMobile || prefersReducedMotion) {
     return (
-      <section ref={mobileSectionRef} className="relative z-10 v2-section" aria-labelledby="features-heading">
+      <section ref={mobileSectionRef} className="relative z-10 v2-section v2-section--chapter v2-tone-deep" aria-labelledby="features-heading">
         <div className="v2-container mb-10">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
             <h2 id="features-heading" className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-4 leading-tight">
@@ -458,7 +458,7 @@ export function FeaturesSectionV2() {
 
   // Desktop Layout - Stacking Cards with JS-controlled transforms
   return (
-    <section className="relative z-10" aria-labelledby="features-heading">
+    <section className="relative z-10 v2-section v2-section--chapter v2-section--pinned v2-tone-deep" aria-labelledby="features-heading">
       {/* Section Header */}
       <div className="v2-container" style={{ paddingTop: 'var(--v2-section-padding)', paddingBottom: 'var(--v2-section-padding)' }}>
         <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>

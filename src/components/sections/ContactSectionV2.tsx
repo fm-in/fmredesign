@@ -124,7 +124,7 @@ export function ContactSectionV2() {
   return (
     <section
       ref={sectionRef}
-      className="relative"
+      className="relative v2-section v2-section--chapter v2-tone-accent"
       style={{
         overflowX: 'clip',
       }}
@@ -171,18 +171,18 @@ export function ContactSectionV2() {
                 className="contact-badge v2-badge v2-badge-light"
                 style={{ marginBottom: '32px' }}
               >
-                <Sparkles className="w-4 h-4 text-fm-magenta-600" />
+                <Sparkles className="w-4 h-4 v2-text-accent" />
                 <span>Ready to Grow Your Brand?</span>
               </div>
 
               {/* Main Headline */}
               <h2
-                className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-fm-neutral-900 leading-tight"
+                className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary leading-tight"
                 style={{ marginBottom: '24px' }}
               >
                 Let&apos;s Build Your{' '}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-fm-magenta-600">Next Chapter</span>
+                  <span className="relative z-10 v2-text-accent">Next Chapter</span>
                   <span
                     className="absolute inset-0 -skew-y-2 rounded-lg"
                     style={{ background: 'rgba(201, 50, 93, 0.18)', zIndex: 0 }}
@@ -192,7 +192,7 @@ export function ContactSectionV2() {
               </h2>
 
               <p
-                className="subtitle text-lg md:text-xl text-fm-neutral-600 leading-relaxed"
+                className="subtitle text-lg md:text-xl v2-text-secondary leading-relaxed"
                 style={{ marginBottom: '40px' }}
               >
                 Whether you&apos;re launching a startup or scaling an enterprise,
@@ -227,8 +227,8 @@ export function ContactSectionV2() {
                 {quickFacts.map((fact) => {
                   const Icon = fact.icon;
                   return (
-                    <div key={fact.text} className="quick-fact flex items-center gap-2 text-fm-neutral-600">
-                      <Icon className="w-4 h-4 text-fm-magenta-600" />
+                    <div key={fact.text} className="quick-fact flex items-center gap-2 v2-text-secondary">
+                      <Icon className="w-4 h-4 v2-text-accent" />
                       <span className="text-sm font-medium">{fact.text}</span>
                     </div>
                   );
@@ -278,12 +278,12 @@ export function ContactSectionV2() {
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 text-center sm:text-left">
               {/* Email */}
               <div className="contact-item flex items-center justify-center md:justify-start gap-3 group">
-                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
-                  <Mail className="w-5 h-5 text-fm-magenta-600" />
+                <div className="contact-icon w-10 h-10 rounded-full v2-chip flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:v2-chip">
+                  <Mail className="w-5 h-5 v2-text-accent" />
                 </div>
                 <div>
-                  <div className="text-fm-neutral-400 text-xs uppercase tracking-wide">Email</div>
-                  <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-neutral-900 font-medium hover:text-fm-magenta-600 transition-colors text-sm sm:text-base break-all sm:break-normal">
+                  <div className="v2-text-muted text-xs uppercase tracking-wide">Email</div>
+                  <a href="mailto:freakingmindsdigital@gmail.com" className="v2-text-primary font-medium hover:v2-text-accent transition-colors text-sm sm:text-base break-all sm:break-normal">
                     freakingmindsdigital@gmail.com
                   </a>
                 </div>
@@ -291,12 +291,12 @@ export function ContactSectionV2() {
 
               {/* Phone */}
               <div className="contact-item flex items-center justify-center md:justify-start gap-3 group">
-                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
-                  <Phone className="w-5 h-5 text-fm-magenta-600" />
+                <div className="contact-icon w-10 h-10 rounded-full v2-chip flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:v2-chip">
+                  <Phone className="w-5 h-5 v2-text-accent" />
                 </div>
                 <div>
-                  <div className="text-fm-neutral-400 text-xs uppercase tracking-wide">Phone</div>
-                  <a href="tel:+919833257659" className="text-fm-neutral-900 font-medium hover:text-fm-magenta-600 transition-colors">
+                  <div className="v2-text-muted text-xs uppercase tracking-wide">Phone</div>
+                  <a href="tel:+919833257659" className="v2-text-primary font-medium hover:v2-text-accent transition-colors">
                     +91 98332 57659
                   </a>
                 </div>
@@ -304,12 +304,12 @@ export function ContactSectionV2() {
 
               {/* Location */}
               <div className="contact-item flex items-center justify-center md:justify-start gap-3 group">
-                <div className="contact-icon w-10 h-10 rounded-full bg-fm-magenta-50 flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:bg-fm-magenta-100">
-                  <MapPin className="w-5 h-5 text-fm-magenta-600" />
+                <div className="contact-icon w-10 h-10 rounded-full v2-chip flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:v2-chip">
+                  <MapPin className="w-5 h-5 v2-text-accent" />
                 </div>
                 <div>
-                  <div className="text-fm-neutral-400 text-xs uppercase tracking-wide">Location</div>
-                  <span className="text-fm-neutral-900 font-medium">India & Worldwide</span>
+                  <div className="v2-text-muted text-xs uppercase tracking-wide">Location</div>
+                  <span className="v2-text-primary font-medium">India & Worldwide</span>
                 </div>
               </div>
             </div>

@@ -156,7 +156,7 @@ export function ClientsSectionV2() {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-visible z-20"
+      className="relative overflow-visible z-20 v2-section v2-tone-paper v2-section--tight-bottom"
     >
       {/* Ambient Gradient Orbs — reduced blur for scroll perf */}
       <GradientOrb

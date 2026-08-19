@@ -353,7 +353,7 @@ export function ServicesSectionV2() {
   // ─── Mobile / Reduced Motion ─────────────────────────
   if (prefersReducedMotion || isMobile) {
     return (
-      <section ref={sectionRef} className="relative z-10 overflow-visible pt-32 md:pt-36">
+      <section ref={sectionRef} className="relative z-10 overflow-visible v2-section v2-tone-tint">
         <div ref={headerRef} className="v2-container pb-10">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
             <div className="reveal-item v2-badge v2-badge-glass mb-6">
@@ -430,7 +430,7 @@ export function ServicesSectionV2() {
 
   // ─── Desktop: Full-Width Cinematic Horizontal Scroll ──
   return (
-    <section ref={sectionRef} className="relative z-10 overflow-hidden">
+    <section ref={sectionRef} className="relative z-10 overflow-hidden v2-section v2-section--pinned v2-tone-tint">
       {/* Header — scrolls normally, then the pin begins */}
       <div ref={headerRef} className="relative z-10 v2-container pt-36 pb-20">
         <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>

@@ -61,7 +61,7 @@ export function CreativeMindsSectionV2() {
   return (
     <section
       ref={sectionRef}
-      className="relative v2-section overflow-hidden"
+      className="relative v2-section v2-tone-tint overflow-hidden"
     >
       {/* Ambient background effects */}
       <div className="absolute inset-0 pointer-events-none" style={{ contain: 'layout style paint' }}>

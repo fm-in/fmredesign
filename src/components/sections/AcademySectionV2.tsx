@@ -34,7 +34,7 @@ const ENTRY_PRICE_REGULAR = '₹29,999';
 
 export function AcademySectionV2() {
   return (
-    <section className="v2-section relative overflow-hidden">
+    <section className="v2-section v2-tone-tint relative overflow-hidden">
       <div className="v2-container">
         {/* ── Eyebrow + headline ──────────────────────────────── */}
         <div className="max-w-4xl mx-auto mb-14 lg:mb-16" style={{ textAlign: 'center' }}>

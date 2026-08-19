@@ -134,7 +134,7 @@ export function TestimonialsSectionV3() {
   return (
     <section
       ref={sectionRef}
-      className="relative py-28 lg:py-36 bg-white overflow-hidden"
+      className="relative overflow-hidden v2-section v2-tone-paper v2-section--tight-top"
     >
       {/* Subtle background accent */}
       <div
