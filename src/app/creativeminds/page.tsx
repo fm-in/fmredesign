@@ -224,7 +224,7 @@ export default function CreativeMindsPage() {
   return (
     <V2PageWrapper>
       {/* ── Section 1: Hero — Asymmetric 2-col ──────────────────────── */}
-      <section className="relative z-10 v2-section v2-section--hero">
+      <section className="relative z-10 v2-tone-tint v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
 
@@ -301,7 +301,7 @@ export default function CreativeMindsPage() {
       </section>
 
       {/* ── Section 2: How It Works — dashed circle process ──────────── */}
-      <section className="relative z-10 v2-section v2-texture-mesh">
+      <section className="relative z-10 v2-tone-paper v2-section v2-texture-mesh">
         <div className="v2-container">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
@@ -454,7 +454,7 @@ export default function CreativeMindsPage() {
       </div>
 
       {/* ── Section 3: Categories — Asymmetric 2-col with bento ──── */}
-      <section ref={bentoSectionRef} className="relative z-10 v2-section overflow-hidden">
+      <section ref={bentoSectionRef} className="relative z-10 v2-tone-tint v2-section overflow-hidden">
         {/* Ambient background */}
         <div className="absolute inset-0 pointer-events-none" style={{ contain: 'layout style paint' }}>
           <div
@@ -638,7 +638,7 @@ export default function CreativeMindsPage() {
       </div>
 
       {/* ── Section 4: Why Businesses Choose Us — varied grid ─────── */}
-      <section className="relative z-10 v2-section v2-texture-dots">
+      <section className="relative z-10 v2-tone-deep v2-section v2-texture-dots">
         <div className="v2-container">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
@@ -724,7 +724,7 @@ export default function CreativeMindsPage() {
       </section>
 
       {/* ── Section 5: For Creatives ────────────────────────────────── */}
-      <section id="for-creatives" className="relative z-10 v2-section">
+      <section id="for-creatives" className="relative z-10 v2-tone-tint v2-section">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-8 md:p-12" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light mb-6">
@@ -769,7 +769,7 @@ export default function CreativeMindsPage() {
       </section>
 
       {/* ── Section 6: Bottom CTA — Split Design ───────────────────── */}
-      <section className="relative z-10 v2-section v2-section--outro">
+      <section className="relative z-10 v2-tone-accent v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-8 md:p-12 lg:p-14 relative overflow-hidden">
             {/* Ambient smoke blobs */}

@@ -52,7 +52,7 @@ export default function AboutPage() {
   return (
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section v2-section--hero">
+      <section className="relative z-10 v2-tone-tint v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
@@ -92,7 +92,7 @@ export default function AboutPage() {
       </div>
 
       {/* Values Section */}
-      <section className="relative z-10 v2-section v2-texture-mesh">
+      <section className="relative z-10 v2-tone-paper v2-section v2-texture-mesh">
         <div className="v2-container">
           {/* Floating Brain Decoration */}
           <div className="absolute left-4 lg:left-16 top-8 hidden lg:block" style={{ zIndex: 10 }}>
@@ -140,7 +140,7 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="relative z-10 v2-section">
+      <section className="relative z-10 v2-tone-tint v2-section">
         <div className="v2-container">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
@@ -181,7 +181,7 @@ export default function AboutPage() {
       </div>
 
       {/* CTA Section */}
-      <section className="relative z-10 v2-section v2-section--outro">
+      <section className="relative z-10 v2-tone-accent v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-6 sm:p-8 md:p-10 lg:p-14" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light mb-6">

@@ -38,7 +38,7 @@ export function VideoPortfolioSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative bg-fm-neutral-900 overflow-hidden" style={{ paddingTop: 'var(--v2-section-padding)', paddingBottom: 'var(--v2-section-padding)' }}>
+    <section ref={sectionRef} className="relative v2-tone-deep overflow-hidden" style={{ paddingTop: 'var(--v2-section-padding)', paddingBottom: 'var(--v2-section-padding)' }}>
       {/* Decorative gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-fm-magenta-900/20 to-fm-neutral-900/40" />
 

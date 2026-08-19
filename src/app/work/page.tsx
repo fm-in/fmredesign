@@ -13,7 +13,7 @@ export default function WorkPage() {
   return (
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section v2-section--hero">
+      <section className="relative z-10 v2-tone-tint v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
@@ -68,7 +68,7 @@ export default function WorkPage() {
       <VideoPortfolioSection />
 
       {/* CTA Section */}
-      <section className="relative z-10 v2-section v2-section--outro">
+      <section className="relative z-10 v2-tone-accent v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light" style={{ marginBottom: '28px' }}>

@@ -87,7 +87,7 @@ export default function ServicesPage() {
   return (<>
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section v2-section--hero">
+      <section className="relative z-10 v2-tone-tint v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
@@ -123,7 +123,7 @@ export default function ServicesPage() {
       </section>
 
       {/* Services Grid */}
-      <section className="relative z-10 v2-section">
+      <section className="relative z-10 v2-tone-paper v2-section">
         <div className="v2-container">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
             <div className="v2-badge v2-badge-glass mb-6">
@@ -203,7 +203,7 @@ export default function ServicesPage() {
       </div>
 
       {/* Process Section */}
-      <section id="process" className="relative z-10 v2-section v2-texture-mesh">
+      <section id="process" className="relative z-10 v2-tone-deep v2-section v2-texture-mesh">
         <div className="v2-container">
           {/* Floating Brain */}
           <div className="absolute right-8 lg:right-20 top-0 hidden lg:block" style={{ zIndex: 10 }}>
@@ -259,7 +259,7 @@ export default function ServicesPage() {
       </div>
 
       {/* Custom Quote CTA Section */}
-      <section className="relative z-10 v2-section v2-texture-dots">
+      <section className="relative z-10 v2-tone-tint v2-section v2-texture-dots">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-8 md:p-12 lg:p-16" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light mb-6">
@@ -302,7 +302,7 @@ export default function ServicesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 v2-section v2-section--outro">
+      <section className="relative z-10 v2-tone-accent v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-6 sm:p-8 md:p-10 lg:p-14" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light mb-6">
