@@ -119,7 +119,7 @@ export default function ContactPage() {
   return (
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section pt-40">
+      <section className="relative z-10 v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
@@ -129,7 +129,7 @@ export default function ContactPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="font-display text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
+            <h1 className="v2-display font-display font-bold v2-text-primary mb-8 leading-tight">
               Let's Talk About{' '}
               <span className="v2-accent">Your Growth</span>
             </h1>
@@ -173,7 +173,7 @@ export default function ContactPage() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
             <div className="v2-paper-lg rounded-3xl p-5 sm:p-8 lg:p-10">
-              <h2 className="font-display text-2xl font-bold text-fm-neutral-900 mb-2">
+              <h2 className="v2-h4 font-display font-bold text-fm-neutral-900 mb-2">
                 Let's Discuss Your Project
               </h2>
               <p className="text-fm-neutral-600 mb-8">
@@ -456,7 +456,7 @@ export default function ContactPage() {
       <section className="relative z-10 v2-section">
         <div className="v2-container">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-6 leading-tight">
+            <h2 className="v2-h3 font-display font-bold v2-text-primary mb-6 leading-tight">
               Find <span className="v2-accent">Us</span>
             </h2>
             <p className="v2-text-secondary">
@@ -480,10 +480,10 @@ export default function ContactPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="relative z-10 v2-section pb-32">
+      <section className="relative z-10 v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary leading-tight">
+            <h2 className="v2-h3 font-display font-bold v2-text-primary leading-tight">
               Frequently Asked <span className="v2-accent">Questions</span>
             </h2>
           </div>

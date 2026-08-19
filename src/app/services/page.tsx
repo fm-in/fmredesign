@@ -87,7 +87,7 @@ export default function ServicesPage() {
   return (<>
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section pt-40">
+      <section className="relative z-10 v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
@@ -97,7 +97,7 @@ export default function ServicesPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="font-display text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
+            <h1 className="v2-display font-display font-bold v2-text-primary mb-8 leading-tight">
               Marketing Services That{' '}
               <span className="v2-accent">Drive</span>{' '}
               Growth
@@ -130,7 +130,7 @@ export default function ServicesPage() {
               <Award className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">What We Offer</span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
+            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-8 leading-tight">
               Our <span className="v2-accent">Core Services</span>
             </h2>
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
@@ -227,7 +227,7 @@ export default function ServicesPage() {
               <Target className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">Our Proven Process</span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
+            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-8 leading-tight">
               A Systematic Approach to{' '}
               <span className="v2-accent">Success</span>
             </h2>
@@ -239,7 +239,7 @@ export default function ServicesPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-6 lg:gap-8">
             {process.map((step, index) => (
               <div key={step.step} className="v2-paper rounded-2xl p-8 text-center relative">
-                <div className="font-display text-5xl font-bold text-fm-magenta-100 mb-4">{step.step}</div>
+                <div className="v2-h2 font-display font-bold text-fm-magenta-100 mb-4">{step.step}</div>
                 <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-3">{step.title}</h3>
                 <p className="text-fm-neutral-600 text-sm leading-relaxed">{step.description}</p>
                 {index < process.length - 1 && (
@@ -266,7 +266,7 @@ export default function ServicesPage() {
               <Zap className="w-4 h-4" />
               <span>Tailored For You</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-fm-neutral-900 mb-6 leading-tight">
+            <h2 className="v2-h2 font-display font-bold text-fm-neutral-900 mb-6 leading-tight">
               Every Business Is <span className="text-fm-magenta-600">Different</span>
             </h2>
             <p className="text-fm-neutral-600 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto" style={{ marginBottom: '32px' }}>
@@ -275,15 +275,15 @@ export default function ServicesPage() {
 
             <div className="grid sm:grid-cols-3 gap-6 max-w-2xl mx-auto" style={{ marginBottom: '40px' }}>
               <div className="p-4">
-                <div className="text-3xl font-bold text-fm-magenta-600 mb-1">100%</div>
+                <div className="v2-h3 font-bold text-fm-magenta-600 mb-1">100%</div>
                 <p className="text-sm text-fm-neutral-600">Custom Strategy</p>
               </div>
               <div className="p-4">
-                <div className="text-3xl font-bold text-fm-magenta-600 mb-1">No</div>
+                <div className="v2-h3 font-bold text-fm-magenta-600 mb-1">No</div>
                 <p className="text-sm text-fm-neutral-600">Lock-in Contracts</p>
               </div>
               <div className="p-4">
-                <div className="text-3xl font-bold text-fm-magenta-600 mb-1">Free</div>
+                <div className="v2-h3 font-bold text-fm-magenta-600 mb-1">Free</div>
                 <p className="text-sm text-fm-neutral-600">Initial Consultation</p>
               </div>
             </div>
@@ -302,14 +302,14 @@ export default function ServicesPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 v2-section pb-32">
+      <section className="relative z-10 v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-6 sm:p-8 md:p-10 lg:p-14" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light mb-6">
               <Target className="w-4 h-4" />
               <span>Ready to Get Started?</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6 leading-tight">
+            <h2 className="v2-h3 font-display font-bold text-fm-neutral-900 mb-6 leading-tight">
               Ready to Accelerate Your Growth?
             </h2>
             <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">

@@ -148,7 +148,7 @@ export default function CreativeMindsPage() {
   if (showApplicationForm) {
     return (
       <V2PageWrapper>
-        <section className="relative z-10 v2-section pt-40 pb-32">
+        <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
           <div className="v2-container">
             {/* Page Header */}
             <div style={{ textAlign: 'center', marginBottom: '48px' }}>
@@ -156,7 +156,7 @@ export default function CreativeMindsPage() {
                 <Sparkles className="w-4 h-4 v2-text-primary" />
                 <span className="v2-text-primary">Join CreativeMinds</span>
               </div>
-              <h1 className="font-display text-4xl md:text-5xl lg:text-5xl font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
+              <h1 className="v2-h2 font-display font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
                 Apply to the <span className="v2-accent">Network</span>
               </h1>
               <p className="text-base md:text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
@@ -183,7 +183,7 @@ export default function CreativeMindsPage() {
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
                 <CheckCircle className="w-12 h-12 text-green-600" />
               </div>
-              <h1 className="text-3xl font-bold text-fm-neutral-900 mb-4">
+              <h1 className="v2-h3 font-bold text-fm-neutral-900 mb-4">
                 Application Submitted Successfully!
               </h1>
               <p className="text-lg text-fm-neutral-600 mb-8">
@@ -224,7 +224,7 @@ export default function CreativeMindsPage() {
   return (
     <V2PageWrapper>
       {/* ── Section 1: Hero — Asymmetric 2-col ──────────────────────── */}
-      <section className="relative z-10 v2-section pt-40">
+      <section className="relative z-10 v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
 
@@ -235,7 +235,7 @@ export default function CreativeMindsPage() {
                 <span className="v2-text-primary">CreativeMinds by FreakingMinds</span>
               </div>
 
-              <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold v2-text-primary leading-[1.08] tracking-tight" style={{ marginBottom: '28px' }}>
+              <h1 className="v2-display font-display font-bold v2-text-primary leading-[1.08] tracking-tight" style={{ marginBottom: '28px' }}>
                 Stop chasing gigs.{' '}
                 <span className="v2-accent">Start creating.</span>
               </h1>
@@ -308,7 +308,7 @@ export default function CreativeMindsPage() {
               <Target className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">Your Journey</span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
+            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-8 leading-tight">
               From application to <span className="v2-accent">earning.</span>
             </h2>
             <p className="text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
@@ -475,7 +475,7 @@ export default function CreativeMindsPage() {
                 <span className="v2-text-primary">We Need You</span>
               </div>
 
-              <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-[1.1]">
+              <h2 className="v2-h2 font-display font-bold v2-text-primary mb-6 leading-[1.1]">
                 Whatever you do,{' '}
                 <span className="v2-accent">we want you in.</span>
               </h2>
@@ -645,7 +645,7 @@ export default function CreativeMindsPage() {
               <Award className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">Why Join</span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
+            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-8 leading-tight">
               This isn&apos;t another{' '}
               <span className="v2-accent">freelance platform.</span>
             </h2>
@@ -732,7 +732,7 @@ export default function CreativeMindsPage() {
               <span>For Businesses</span>
             </div>
 
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-4 leading-tight">
+            <h2 className="v2-h3 font-display font-bold text-fm-neutral-900 mb-4 leading-tight">
               Need to <span className="text-fm-magenta-600">hire</span> instead?
             </h2>
 
@@ -769,7 +769,7 @@ export default function CreativeMindsPage() {
       </section>
 
       {/* ── Section 6: Bottom CTA — Split Design ───────────────────── */}
-      <section className="relative z-10 v2-section pb-32">
+      <section className="relative z-10 v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-8 md:p-12 lg:p-14 relative overflow-hidden">
             {/* Ambient smoke blobs */}
@@ -793,7 +793,7 @@ export default function CreativeMindsPage() {
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0" style={{ zIndex: 2 }}>
               {/* Left — Creatives (Primary) */}
               <div className="md:pr-8 lg:pr-12" style={{ textAlign: 'center' }}>
-                <h3 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4 leading-tight">
+                <h3 className="v2-h3 font-display font-bold text-fm-neutral-900 mb-4 leading-tight">
                   Ready to do some{' '}
                   <span className="text-fm-magenta-600">freaking great</span> work?
                 </h3>
@@ -821,7 +821,7 @@ export default function CreativeMindsPage() {
 
               {/* Right — Businesses (Secondary) */}
               <div className="md:pl-8 lg:pl-12" style={{ textAlign: 'center' }}>
-                <h3 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4 leading-tight">
+                <h3 className="v2-h3 font-display font-bold text-fm-neutral-900 mb-4 leading-tight">
                   Looking to{' '}
                   <span className="text-fm-magenta-600">hire</span> instead?
                 </h3>

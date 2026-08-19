@@ -315,7 +315,7 @@ export function FeaturesSectionV2() {
       <section ref={mobileSectionRef} className="relative z-10 v2-section v2-section--chapter v2-tone-deep" aria-labelledby="features-heading">
         <div className="v2-container mb-10">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
-            <h2 id="features-heading" className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-4 leading-tight">
+            <h2 id="features-heading" className="v2-h3 font-display font-bold v2-text-primary mb-4 leading-tight">
               Why Brands <span className="v2-accent">Choose Us</span>
             </h2>
             <p className="text-base v2-text-secondary leading-relaxed">
@@ -462,7 +462,7 @@ export function FeaturesSectionV2() {
       {/* Section Header */}
       <div className="v2-container" style={{ paddingTop: 'var(--v2-section-padding)', paddingBottom: 'var(--v2-section-padding)' }}>
         <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
-          <h2 id="features-heading" className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
+          <h2 id="features-heading" className="v2-h2 font-display font-bold v2-text-primary mb-6 leading-tight">
             Why Brands <span className="v2-accent">Choose Us</span>
           </h2>
           <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
@@ -576,7 +576,7 @@ export function FeaturesSectionV2() {
                           <span className="text-white/70 text-sm font-medium tracking-wide">{feature.tagline}</span>
                         </div>
 
-                        <h3 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
+                        <h3 className="v2-h3 font-display font-bold text-white mb-4 leading-tight">
                           {feature.title}
                         </h3>
 

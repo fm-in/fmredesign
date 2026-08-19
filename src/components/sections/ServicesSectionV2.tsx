@@ -360,7 +360,7 @@ export function ServicesSectionV2() {
               <Sparkles className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">Our Core Services</span>
             </div>
-            <h2 className="reveal-item font-display text-3xl sm:text-4xl md:text-5xl font-bold v2-text-primary mb-6 leading-tight">
+            <h2 className="v2-h2 reveal-item font-display font-bold v2-text-primary mb-6 leading-tight">
               Full-Service Marketing That <span className="v2-accent">Drives Growth</span>
             </h2>
             <p className="reveal-item text-base md:text-lg lg:text-xl v2-text-secondary leading-relaxed">
@@ -408,7 +408,7 @@ export function ServicesSectionV2() {
               <div className="cta-smoke-blob" style={{ width: '200px', height: '200px', bottom: '10%', left: '20%', background: 'radial-gradient(circle, rgba(255,127,80,0.1) 0%, rgba(255,127,80,0.03) 40%, transparent 70%)', animation: 'ctaSmokeFloat2 9s ease-in-out infinite 4s' }} />
             </div>
             <div className="relative z-10">
-              <h3 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '24px' }}>
+              <h3 className="v2-h3 font-display font-bold text-fm-neutral-900" style={{ marginBottom: '24px' }}>
                 Ready to see what we can do for you?
               </h3>
               <p className="text-fm-neutral-600 text-lg max-w-xl mx-auto leading-relaxed" style={{ marginBottom: '36px' }}>
@@ -438,7 +438,7 @@ export function ServicesSectionV2() {
             <Sparkles className="w-4 h-4 v2-text-primary" />
             <span className="v2-text-primary">Our Core Services</span>
           </div>
-          <h2 className="reveal-item font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
+          <h2 className="v2-h2 reveal-item font-display font-bold v2-text-primary mb-6 leading-tight">
             Full-Service Marketing That <span className="v2-accent">Drives Growth</span>
           </h2>
           <p className="reveal-item text-lg md:text-xl v2-text-secondary leading-relaxed max-w-2xl mx-auto">
@@ -508,7 +508,7 @@ export function ServicesSectionV2() {
             <div className="cta-smoke-blob" style={{ width: '280px', height: '280px', bottom: '5%', left: '15%', background: 'radial-gradient(circle, rgba(255,127,80,0.1) 0%, rgba(255,127,80,0.03) 40%, transparent 70%)', animation: 'ctaSmokeFloat2 9s ease-in-out infinite 4s' }} />
           </div>
           <div className="relative z-10">
-            <h3 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold text-fm-neutral-900" style={{ marginBottom: '32px' }}>
+            <h3 className="v2-h3 font-display font-bold text-fm-neutral-900" style={{ marginBottom: '32px' }}>
               Ready to see what we can do for you?
             </h3>
             <p className="text-fm-neutral-600 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ marginBottom: '48px' }}>

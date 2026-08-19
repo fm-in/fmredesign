@@ -85,7 +85,7 @@ export default async function AcademyPage() {
           <div className="v2-container">
             <div className="v2-paper rounded-3xl p-12 max-w-2xl mx-auto" style={{ textAlign: 'center' }}>
               <GraduationCap className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-              <h2 className="font-display text-2xl font-bold text-fm-neutral-900 mb-3">
+              <h2 className="v2-h4 font-display font-bold text-fm-neutral-900 mb-3">
                 New programs launching soon
               </h2>
               <p className="text-fm-neutral-600 mb-6">
@@ -112,7 +112,7 @@ export default async function AcademyPage() {
               <GraduationCap className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">FM Academy &middot; Creator Program</span>
             </div>
-            <h1 className="font-display text-4xl md:text-5xl lg:text-7xl font-bold v2-text-primary mb-6 leading-[1.05]">
+            <h1 className="v2-display font-display font-bold v2-text-primary mb-6 leading-[1.05]">
               Learn the skills that build <span className="v2-accent">careers, brands & businesses</span>.
             </h1>
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed max-w-2xl mx-auto mb-8">
@@ -150,7 +150,7 @@ export default async function AcademyPage() {
         <section className="py-12">
           <div className="v2-container">
             <div className="max-w-3xl mx-auto mb-10" style={{ textAlign: 'center' }}>
-              <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-4">
+              <h2 className="v2-h3 font-display font-bold v2-text-primary mb-4">
                 Or pick a single course
               </h2>
               <p className="text-base md:text-lg v2-text-secondary leading-relaxed">
@@ -213,7 +213,7 @@ function BundleCard({ p }: { p: Program }) {
             <Sparkles className="w-3.5 h-3.5" />
             Most popular &middot; All 6 courses
           </div>
-          <h3 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+          <h3 className="v2-h2 font-display font-bold leading-tight">
             The full Creator Program
           </h3>
           <p className="text-white/85 text-base md:text-lg leading-relaxed max-w-xl">
@@ -241,7 +241,7 @@ function BundleCard({ p }: { p: Program }) {
               {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
             </div>
             <div className="flex items-baseline gap-3 lg:justify-end">
-              <span className="text-4xl md:text-5xl font-bold text-white">{price.current}</span>
+              <span className="v2-h2 font-bold text-white">{price.current}</span>
               {price.earlyBirdActive && (
                 <span className="text-white/60 line-through text-lg">{price.original}</span>
               )}
@@ -319,7 +319,7 @@ function CourseCard({ p }: { p: Program }) {
         )}
 
         <div className="flex items-baseline gap-2 pt-3 border-t border-fm-neutral-100">
-          <span className="text-2xl font-bold text-fm-magenta-700">{price.current}</span>
+          <span className="v2-h4 font-bold text-fm-magenta-700">{price.current}</span>
           {price.earlyBirdActive && (
             <span className="text-sm text-fm-neutral-400 line-through">{price.original}</span>
           )}

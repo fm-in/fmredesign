@@ -12,8 +12,6 @@ export default function robots(): MetadataRoute.Robots {
           '/client/',
           '/creativeminds/portal/',
           '/diagnostic',
-          '/wehave',
-          '/showcase/',
           '/api/',
         ],
       },

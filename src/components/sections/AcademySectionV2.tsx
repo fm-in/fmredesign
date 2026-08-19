@@ -42,7 +42,7 @@ export function AcademySectionV2() {
             <GraduationCap className="w-4 h-4 v2-text-primary" />
             <span className="v2-text-primary">FM Academy &middot; New batch starts {BATCH_START}</span>
           </div>
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-[1.05]">
+          <h2 className="v2-h2 font-display font-bold v2-text-primary mb-6 leading-[1.05]">
             Learn the craft <span className="v2-accent">from the people doing it</span>.
           </h2>
           <p className="text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">

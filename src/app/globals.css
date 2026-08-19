@@ -1095,6 +1095,7 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   --v2-section-gap: 8rem;      /* 128px - space between sections */
   --v2-section-padding: 6rem;  /* 96px  - standard section rhythm */
   --v2-section-chapter: 8rem;  /* 128px - chapter break, where the page turns */
+  --v2-section-hero: 10rem;    /* 160px - page hero, clears the fixed header */
 
   /* Ground for .v2-tone-paper — a barely-warm white that reads as a
      deliberate band against the pink wash rather than a gap in it. */
@@ -1449,6 +1450,12 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   .v2-section--tight-top { padding-top: 0; }
   .v2-section--tight-bottom { padding-bottom: 0; }
 
+  /* The two recurring page-level roles. These were previously written as bare
+     pt-40 (19 uses) and pb-32 (20 uses) alongside .v2-section, which made the
+     rhythm look like ten arbitrary numbers when it was really four roles. */
+  .v2-section--hero  { padding-top: var(--v2-section-hero); }
+  .v2-section--outro { padding-bottom: var(--v2-section-chapter); }
+
   /* REQUIRED on any section that pins a child with GSAP ScrollTrigger.
      .v2-section sets `contain: layout style paint` for scroll performance,
      and paint containment makes the section a containing block for
@@ -1535,6 +1542,43 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   .v2-tone-deep .v2-star,
   .v2-tone-accent .v2-star {
     display: none;
+  }
+
+  /* ── Type scale ─────────────────────────────────────────────────────────
+     Replaces 20 distinct ad-hoc responsive size chains (text-4xl md:text-5xl
+     lg:text-6xl, text-3xl md:text-4xl, …) that produced seven different h2
+     sizes across the site with no ladder between them.
+
+     Four steps, fluid, so a heading is the same size in the same role on
+     every page. These live in @layer components, so a Tailwind text-* utility
+     still wins where a genuine one-off is needed — but the one-off then has
+     to be written deliberately rather than inherited by copy-paste. */
+
+  .v2-display {
+    font-size: clamp(2.5rem, 5.2vw, 4.25rem);   /* 40 → 68px */
+    line-height: 1.04;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+
+  .v2-h2 {
+    font-size: clamp(2rem, 3.6vw, 3rem);        /* 32 → 48px */
+    line-height: 1.1;
+    letter-spacing: -0.016em;
+    text-wrap: balance;
+  }
+
+  .v2-h3 {
+    font-size: clamp(1.5rem, 2.2vw, 2rem);      /* 24 → 32px */
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .v2-h4 {
+    font-size: clamp(1.125rem, 1.4vw, 1.375rem); /* 18 → 22px */
+    line-height: 1.3;
+    letter-spacing: -0.005em;
   }
 
   /* ── Tone-aware consumers ───────────────────────────────────────────── */
@@ -1982,6 +2026,9 @@ button.v2-btn-outline {
   padding: 1.125rem 2.5rem;
   font-size: 1rem;
   gap: 0.625rem;
+  /* sm and the default both declare a min-height; lg was inheriting the
+     default's 48px, so the three sizes were only two in practice. */
+  min-height: 56px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

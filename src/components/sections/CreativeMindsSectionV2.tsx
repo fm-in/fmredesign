@@ -92,7 +92,7 @@ export function CreativeMindsSectionV2() {
               <span className="v2-text-primary">CreativeMinds Network</span>
             </div>
 
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-[1.1]">
+            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-6 leading-[1.1]">
               Your projects,{' '}
               <span className="v2-accent">powered by experts</span>
             </h2>

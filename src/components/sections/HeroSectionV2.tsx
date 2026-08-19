@@ -134,7 +134,7 @@ export function HeroSectionV2() {
           <div className="lg:col-span-7 flex flex-col items-start">
             {/* Main Headline */}
             <h1
-              className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.05] tracking-tight"
+              className="v2-display font-display font-bold leading-[1.05] tracking-tight"
               style={{ marginBottom: '28px' }}
             >
               {/* Static part */}

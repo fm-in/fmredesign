@@ -52,7 +52,7 @@ export default function AboutPage() {
   return (
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section pt-40">
+      <section className="relative z-10 v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
@@ -62,7 +62,7 @@ export default function AboutPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="font-display text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
+            <h1 className="v2-display font-display font-bold v2-text-primary mb-8 leading-tight">
               Your Growth Is{' '}
               <span className="v2-accent">Our Mission</span>
             </h1>
@@ -116,7 +116,7 @@ export default function AboutPage() {
               <Award className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">Our Core Values</span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
+            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-8 leading-tight">
               What Drives Our{' '}
               <span className="v2-accent">Excellence</span>
             </h2>
@@ -147,7 +147,7 @@ export default function AboutPage() {
               <Star className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">Meet Our Team</span>
             </div>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
+            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-8 leading-tight">
               The <span className="v2-accent">Creative Minds</span> Behind Your Success
             </h2>
             <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
@@ -181,14 +181,14 @@ export default function AboutPage() {
       </div>
 
       {/* CTA Section */}
-      <section className="relative z-10 v2-section pb-32">
+      <section className="relative z-10 v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-6 sm:p-8 md:p-10 lg:p-14" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light mb-6">
               <Target className="w-4 h-4" />
               <span>Ready to Get Started?</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6 leading-tight">
+            <h2 className="v2-h3 font-display font-bold text-fm-neutral-900 mb-6 leading-tight">
               Let's Create Something <span className="text-fm-magenta-600">Great</span> Together
             </h2>
             <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">

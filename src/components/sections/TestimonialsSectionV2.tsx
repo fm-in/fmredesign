@@ -78,7 +78,7 @@ const testimonials = [
   },
 ];
 
-export function TestimonialsSectionV3() {
+export function TestimonialsSectionV2() {
   const [isVisible, setIsVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -145,24 +145,39 @@ export function TestimonialsSectionV3() {
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:px-20">
-        {/* Section Header */}
-        <div
-          className={`
-            flex items-center gap-4 mb-16
-            transition-all duration-700
-            ${isVisible ? 'opacity-100' : 'opacity-0'}
-          `}
-        >
+        {/* Section Header — this section was the only one on the page without
+            an h2, which broke the heading rhythm and made it read as a gap
+            between the logo wall and the CreativeMinds block rather than as
+            a section of its own. */}
+        <div className="mb-16">
           <div
             className={`
-              h-px bg-fm-magenta-600 transition-all duration-700
-              ${isVisible ? 'w-12' : 'w-0'}
+              flex items-center gap-4 mb-5
+              transition-all duration-700
+              ${isVisible ? 'opacity-100' : 'opacity-0'}
             `}
-            style={{ transitionDelay: '200ms' }}
-          />
-          <p className="text-fm-magenta-600 text-sm font-semibold tracking-[0.2em] uppercase">
-            Client Stories
-          </p>
+          >
+            <div
+              className={`
+                h-px transition-all duration-700
+                ${isVisible ? 'w-12' : 'w-0'}
+              `}
+              style={{ transitionDelay: '200ms', backgroundColor: 'var(--v2-text-accent)' }}
+            />
+            <p className="v2-text-accent text-sm font-semibold tracking-[0.2em] uppercase">
+              Client Stories
+            </p>
+          </div>
+          <h2
+            className={`
+              v2-h2 font-display font-bold v2-text-primary max-w-3xl
+              transition-all duration-700 delay-100
+              ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'}
+            `}
+          >
+            The results our clients{' '}
+            <span className="v2-text-accent">talk about</span>
+          </h2>
         </div>
 
         {/* Main Content Grid */}
@@ -205,7 +220,7 @@ export function TestimonialsSectionV3() {
                   `}
                 >
                   <span
-                    className="text-6xl lg:text-7xl font-bold text-white block leading-none"
+                    className="v2-display font-bold text-white block leading-none"
                     style={{ fontFamily: 'var(--font-display)' }}
                   >
                     {activeTestimonial.metric}

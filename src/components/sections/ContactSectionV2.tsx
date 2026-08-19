@@ -177,7 +177,7 @@ export function ContactSectionV2() {
 
               {/* Main Headline */}
               <h2
-                className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary leading-tight"
+                className="v2-h2 font-display font-bold v2-text-primary leading-tight"
                 style={{ marginBottom: '24px' }}
               >
                 Let&apos;s Build Your{' '}

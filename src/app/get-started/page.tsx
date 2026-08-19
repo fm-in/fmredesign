@@ -249,7 +249,7 @@ export default function GetStartedPage() {
 
   return (
     <V2PageWrapper>
-      <section className="relative z-10 v2-section pt-40 pb-32">
+      <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
         <div className="v2-container">
           {/* 3D Brain Decoration */}
           <div className="absolute right-8 lg:right-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
@@ -272,7 +272,7 @@ export default function GetStartedPage() {
                 <Sparkles className="w-4 h-4 v2-text-primary" />
                 <span className="v2-text-primary">Start Your Project</span>
               </div>
-              <h1 className="font-display text-4xl md:text-5xl lg:text-5xl font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
+              <h1 className="v2-h2 font-display font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
                 Let&apos;s Grow Your <span className="v2-accent">Brand</span>
               </h1>
               <p className="text-base md:text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
@@ -328,7 +328,7 @@ export default function GetStartedPage() {
                         <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <Users className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           Let&apos;s get to know you
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -437,7 +437,7 @@ export default function GetStartedPage() {
                         <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <Target className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           What do you need?
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -461,7 +461,7 @@ export default function GetStartedPage() {
                                   : 'border-fm-neutral-200'}`}
                             >
                               <div className="flex items-start space-x-3 sm:space-x-4">
-                                <span className="text-xl sm:text-2xl">{type.icon}</span>
+                                <span className="v2-h4 text-xl">{type.icon}</span>
                                 <div>
                                   <div className="font-semibold text-fm-neutral-900 mb-1">{type.label}</div>
                                   <div className="text-sm text-fm-neutral-600">{type.description}</div>
@@ -523,7 +523,7 @@ export default function GetStartedPage() {
                         <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <DollarSign className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           Budget & Timeline
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -597,7 +597,7 @@ export default function GetStartedPage() {
                         <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <AlertCircle className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           Tell us your challenges
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -763,7 +763,7 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-fm-neutral-900 mb-6">
+            <h1 className="v2-h2 font-bold text-fm-neutral-900 mb-6">
               Thank You, {formData.name}!
             </h1>
 

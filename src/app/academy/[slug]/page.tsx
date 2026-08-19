@@ -189,7 +189,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                 )}
               </div>
 
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary leading-[1.05]">
+              <h1 className="v2-h2 font-display font-bold v2-text-primary leading-[1.05]">
                 {p.title}
               </h1>
 
@@ -234,7 +234,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.4),transparent_50%)]" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8" style={{ textAlign: 'center' }}>
                     <GraduationCap className="w-20 h-20 mb-4 opacity-90" />
-                    <div className="font-display text-3xl font-bold mb-2 leading-tight">
+                    <div className="v2-h3 font-display font-bold mb-2 leading-tight">
                       {isBundle ? 'All 6 Courses' : p.title}
                     </div>
                     <div className="text-white/80 text-sm">FM Academy &middot; Creator Program</div>
@@ -399,7 +399,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                       {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
                     </div>
                     <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="text-3xl font-bold text-fm-magenta-700">{price.current}</span>
+                      <span className="v2-h3 font-bold text-fm-magenta-700">{price.current}</span>
                       {price.earlyBirdActive && (
                         <span className="text-sm text-fm-neutral-400 line-through">{price.original}</span>
                       )}
@@ -446,7 +446,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
                   </div>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-3xl font-bold text-fm-magenta-700">{price.current}</span>
+                    <span className="v2-h3 font-bold text-fm-magenta-700">{price.current}</span>
                     {price.earlyBirdActive && (
                       <span className="text-sm text-fm-neutral-400 line-through">{price.original}</span>
                     )}
@@ -525,7 +525,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 function SubSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="font-display text-2xl md:text-3xl font-bold v2-text-primary mb-5">
+      <h3 className="v2-h3 font-display font-bold v2-text-primary mb-5">
         {title}
       </h3>
       <div className="v2-paper rounded-2xl p-6 md:p-8">{children}</div>

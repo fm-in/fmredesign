@@ -13,7 +13,7 @@ export default function WorkPage() {
   return (
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section pt-40">
+      <section className="relative z-10 v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
@@ -23,7 +23,7 @@ export default function WorkPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="font-display text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
+            <h1 className="v2-display font-display font-bold v2-text-primary mb-8 leading-tight">
               Real Results for{' '}
               <span className="v2-accent">Real Brands</span>
             </h1>
@@ -68,14 +68,14 @@ export default function WorkPage() {
       <VideoPortfolioSection />
 
       {/* CTA Section */}
-      <section className="relative z-10 v2-section pb-32">
+      <section className="relative z-10 v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="v2-paper rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
             <div className="v2-badge v2-badge-light" style={{ marginBottom: '28px' }}>
               <Target className="w-4 h-4" />
               <span>Ready to Get Started?</span>
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 leading-snug" style={{ marginBottom: '20px' }}>
+            <h2 className="v2-h3 font-display font-bold text-fm-neutral-900 leading-snug" style={{ marginBottom: '20px' }}>
               Ready to Be Our Next <span className="text-fm-magenta-600">Success Story</span>?
             </h2>
             <p className="text-fm-neutral-600 max-w-xl mx-auto leading-relaxed" style={{ marginBottom: '40px' }}>
