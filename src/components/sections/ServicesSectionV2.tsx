@@ -269,7 +269,11 @@ export function ServicesSectionV2() {
         scrollTrigger: {
           trigger: trigger,
           start: 'top top',
-          end: () => `+=${scrollDistance}`,
+          // The pin holds the viewport for exactly this distance. Mapping the
+          // full horizontal travel onto 55% of it keeps every card reachable
+          // while cutting the held stretch from ~2,300px to ~1,250px — the
+          // cards simply move a little faster per unit of scroll.
+          end: () => `+=${Math.round(scrollDistance * 0.55)}`,
           // Lowered from 1.5 → 0.6 for snappier scroll-follow without the
           // perceptible lag that caused jank in the horizontal pin section.
           scrub: 0.6,

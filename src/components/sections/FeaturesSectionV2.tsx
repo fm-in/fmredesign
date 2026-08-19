@@ -471,11 +471,18 @@ export function FeaturesSectionV2() {
         </div>
       </div>
 
-      {/* Fix #4: Reduced from 100vh to 80vh per card — less scroll fatigue */}
+      {/* Scroll cost per card. This container's height IS the distance the page
+         is held: the panel below goes position:fixed for its whole length, so
+         the scrollbar moves while the view does not.
+
+         At 80vh x 4 cards that was 320vh — ~2,000px, 2.2 screens, roughly 17
+         wheel notches during which the page appears stuck. 40vh gives each
+         card ~360px of scroll (about 3 notches), which still reads as a
+         deliberate reveal but responds on the first swipe. */}
       <div
         ref={containerRef}
         className="relative"
-        style={{ height: `${features.length * 80}vh` }}
+        style={{ height: `${features.length * 40}vh` }}
       >
         {/* Cards viewport - fixed during scroll, absolute at start/end */}
         <div
