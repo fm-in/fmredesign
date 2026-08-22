@@ -3,9 +3,14 @@
 /**
  * Homepage section that introduces FM Academy / Creator Program.
  *
- * Frames around per-course entry pricing (₹24,999) — not the full bundle
- * (₹1.5L), which was making the homepage section feel expensive at a
- * glance. Six course cards lead the section, each with its own price.
+ * Frames around per-course entry pricing — not the full bundle, which was
+ * making the homepage section feel expensive at a glance. Six course cards
+ * lead the section, each with its own price.
+ *
+ * Prices arrive as props from the server (see lib/academy/home-pricing.ts).
+ * They used to be hardcoded here, which is how the home page ended up
+ * advertising an early-bird rate for ten weeks after the window closed while
+ * checkout charged the regular price.
  * A subtle bundle line below the grid mentions the "take all 6 and save"
  * option without dominating the surface.
  *
@@ -14,6 +19,7 @@
  */
 
 import Link from 'next/link';
+import type { AcademyHomePricing } from '@/lib/academy/home-pricing';
 import {
   ArrowRight, GraduationCap, Sparkles, Megaphone, BarChart3,
   Palette, Video, Film, Globe, Building2, Users, MapPin,
@@ -28,11 +34,12 @@ const COURSE_CHIPS = [
   { name: 'Website Designing',     icon: Globe,     slug: 'website-designing',     gradient: 'from-indigo-500/90 to-violet-600/90' },
 ];
 
-const BATCH_START = '5 June 2026';
-const ENTRY_PRICE_EB = '₹24,999';
-const ENTRY_PRICE_REGULAR = '₹29,999';
+/* Batches run on a rolling monthly intake, so the section states the cadence
+   rather than a specific date. A hardcoded date is guaranteed to go stale;
+   this does not. */
+const BATCH_CADENCE = 'New batch every month';
 
-export function AcademySectionV2() {
+export function AcademySectionV2({ pricing }: { pricing?: AcademyHomePricing | null }) {
   return (
     <section className="v2-section v2-tone-tint relative overflow-hidden">
       <div className="v2-container">
@@ -40,7 +47,7 @@ export function AcademySectionV2() {
         <div className="max-w-4xl mx-auto mb-14 lg:mb-16" style={{ textAlign: 'center' }}>
           <div className="v2-badge v2-badge-glass mb-6 inline-flex">
             <GraduationCap className="w-4 h-4 v2-text-primary" />
-            <span className="v2-text-primary">FM Academy &middot; New batch starts {BATCH_START}</span>
+            <span className="v2-text-primary">FM Academy &middot; {BATCH_CADENCE}</span>
           </div>
           <h2 className="v2-h2 font-display font-bold v2-text-primary mb-6 leading-[1.05]">
             Learn the craft <span className="v2-accent">from the people doing it</span>.
@@ -75,6 +82,7 @@ export function AcademySectionV2() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 max-w-6xl mx-auto">
           {COURSE_CHIPS.map((c) => {
             const Icon = c.icon;
+            const price = pricing?.courses[c.slug];
             return (
               <Link
                 key={c.slug}
@@ -88,10 +96,15 @@ export function AcademySectionV2() {
                   <div className="font-display text-lg font-semibold v2-text-primary truncate">
                     {c.name}
                   </div>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-base font-semibold v2-accent">{ENTRY_PRICE_EB}</span>
-                    <span className="text-xs v2-text-tertiary line-through">{ENTRY_PRICE_REGULAR}</span>
-                  </div>
+                  {price && (
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-base font-semibold v2-accent">{price.current}</span>
+                      {/* Only struck through while an early-bird price is genuinely live */}
+                      {price.original && (
+                        <span className="text-xs v2-text-tertiary line-through">{price.original}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <ArrowRight className="w-4 h-4 v2-text-secondary group-hover:v2-text-primary group-hover:translate-x-1 transition-all shrink-0" />
               </Link>
@@ -101,10 +114,14 @@ export function AcademySectionV2() {
 
         {/* ── Bundle nudge + primary CTA ───────────────────── */}
         <div className="mt-10 max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
-          <p className="v2-text-secondary text-sm md:text-base mb-5">
-            Want every craft? The <strong className="v2-text-primary">full Creator Program</strong> bundles all six courses
-            for <strong className="v2-text-primary">₹1,29,999</strong> early-bird — save ₹30,000 vs buying individually.
-          </p>
+          {pricing?.bundle && (
+            <p className="v2-text-secondary text-sm md:text-base mb-5">
+              Want every craft? The <strong className="v2-text-primary">full Creator Program</strong> bundles all six
+              courses for <strong className="v2-text-primary">{pricing.bundle.current}</strong>
+              {pricing.earlyBirdActive && ' early-bird'}
+              {pricing.bundleSaving && <> — save {pricing.bundleSaving} vs buying individually</>}.
+            </p>
+          )}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/academy" className="v2-btn v2-btn-primary inline-flex items-center gap-2">
               Explore FM Academy

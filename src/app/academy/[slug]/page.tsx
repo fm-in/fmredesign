@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { batchSchedule, seatScarcity, BATCH_CADENCE } from '@/lib/academy/schedule';
 import {
   FORMAT_LABELS,
   formatProgramPrice,
@@ -129,27 +130,16 @@ export async function generateMetadata({ params }: PageProps) {
   };
 }
 
-function daysUntil(iso?: string): number | null {
-  if (!iso) return null;
-  const diff = new Date(iso).getTime() - Date.now();
-  return diff > 0 ? Math.ceil(diff / 86400000) : 0;
-}
-
 export default async function ProgramDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const p = await getProgramBySlug(slug);
   if (!p) notFound();
 
   const price = formatProgramPrice(p);
-  const seatsRemaining =
-    p.seatsTotal != null ? Math.max(0, p.seatsTotal - (p.seatsTaken || 0)) : null;
-  const isSoldOut = seatsRemaining === 0;
-  const daysLeft = daysUntil(p.startsAt);
-  const startDateLong = p.startsAt
-    ? new Date(p.startsAt).toLocaleDateString('en-IN', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-      })
-    : null;
+  const scarcity = seatScarcity(p.seatsTotal, p.seatsTaken);
+  const isSoldOut = p.seatsTotal != null && scarcity.remaining === 0;
+  const schedule = batchSchedule(p.startsAt);
+  const daysLeft = schedule.daysUntil ?? null;
   const buyerAmount =
     price.earlyBirdActive && p.earlyBirdPriceInr ? p.earlyBirdPriceInr : p.priceInr;
   const isBundle = p.slug === 'creator-program-full';
@@ -173,14 +163,10 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                 <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white/90 font-medium">
                   {isBundle ? 'Creator Program — Full Bundle' : FORMAT_LABELS[p.format]}
                 </span>
-                {p.startsAt && (
-                  <span className="v2-text-secondary inline-flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
-                    Starts {new Date(p.startsAt).toLocaleDateString('en-IN', {
-                      day: 'numeric', month: 'short', year: 'numeric',
-                    })}
-                  </span>
-                )}
+                <span className="v2-text-secondary inline-flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  {schedule.isUpcoming ? `Starts ${schedule.long}` : BATCH_CADENCE}
+                </span>
                 {daysLeft != null && daysLeft > 0 && daysLeft <= 30 && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 font-medium">
                     <Sparkles className="w-3.5 h-3.5" />
@@ -414,15 +400,17 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     )}
                   </div>
 
-                  {startDateLong && (
-                    <div className="flex items-start gap-3 p-3 rounded-xl bg-fm-magenta-50">
-                      <Calendar className="w-5 h-5 text-fm-magenta-600 shrink-0 mt-0.5" />
-                      <div className="text-sm">
-                        <div className="font-semibold text-fm-neutral-900">Batch starts</div>
-                        <div className="text-fm-neutral-600">{startDateLong}</div>
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-fm-magenta-50">
+                    <Calendar className="w-5 h-5 text-fm-magenta-600 shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <div className="font-semibold text-fm-neutral-900">
+                        {schedule.isUpcoming ? 'Batch starts' : 'Intake'}
+                      </div>
+                      <div className="text-fm-neutral-600">
+                        {schedule.isUpcoming ? schedule.long : BATCH_CADENCE}
                       </div>
                     </div>
-                  )}
+                  </div>
 
                   <ReserveSeatForm
                     programId={p.id}
@@ -461,17 +449,19 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   )}
                 </div>
 
-                {startDateLong && (
                   <div className="flex items-start gap-3 p-3 rounded-xl bg-fm-magenta-50">
-                    <Calendar className="w-5 h-5 text-fm-magenta-600 shrink-0 mt-0.5" />
-                    <div className="text-sm">
-                      <div className="font-semibold text-fm-neutral-900">Batch starts</div>
-                      <div className="text-fm-neutral-600">{startDateLong}</div>
+                  <Calendar className="w-5 h-5 text-fm-magenta-600 shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <div className="font-semibold text-fm-neutral-900">
+                      {schedule.isUpcoming ? 'Batch starts' : 'Intake'}
+                    </div>
+                    <div className="text-fm-neutral-600">
+                      {schedule.isUpcoming ? schedule.long : BATCH_CADENCE}
                     </div>
                   </div>
-                )}
+                </div>
 
-                {seatsRemaining != null && (
+                {(isSoldOut || scarcity.show) && (
                   <div className="text-sm">
                     {isSoldOut ? (
                       <p className="text-red-700 font-medium inline-flex items-center gap-1">
@@ -480,7 +470,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     ) : (
                       <p className="text-fm-neutral-700 inline-flex items-center gap-1">
                         <Users className="w-4 h-4 text-fm-magenta-600" />
-                        <strong className="text-fm-neutral-900">{seatsRemaining}</strong>
+                        <strong className="text-fm-neutral-900">{scarcity.remaining}</strong>
                         <span className="ml-1">of {p.seatsTotal} seats remaining</span>
                       </p>
                     )}
@@ -555,11 +545,7 @@ function MobileStickyBar({
             )}
           </div>
           <span className="text-[11px] text-fm-neutral-500 leading-none">
-            {program.startsAt
-              ? `Starts ${new Date(program.startsAt).toLocaleDateString('en-IN', {
-                  day: 'numeric', month: 'short',
-                })}`
-              : 'Reserve your seat'}
+            {batchSchedule(program.startsAt).shortLabel}
           </span>
         </div>
         <a

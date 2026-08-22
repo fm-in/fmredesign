@@ -23,6 +23,7 @@ import {
   transformProgramRow,
 } from '@/lib/admin/academy-types';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { batchSchedule, seatScarcity } from '@/lib/academy/schedule';
 
 export const revalidate = 60;
 export const metadata = {
@@ -57,26 +58,15 @@ async function getOpenPrograms(): Promise<Program[]> {
   }
 }
 
-function formatStartDate(iso?: string): string | null {
-  if (!iso) return null;
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  });
-}
-
-function daysUntil(iso?: string): number | null {
-  if (!iso) return null;
-  const diff = new Date(iso).getTime() - Date.now();
-  return diff > 0 ? Math.ceil(diff / 86400000) : 0;
-}
-
 export default async function AcademyPage() {
   const programs = await getOpenPrograms();
   const bundle = programs.find((p) => p.slug === BUNDLE_SLUG);
   const courses = programs.filter((p) => p.slug !== BUNDLE_SLUG);
   const batchStart = bundle?.startsAt || courses[0]?.startsAt;
-  const startDateStr = formatStartDate(batchStart);
-  const daysLeft = daysUntil(batchStart);
+  const schedule = batchSchedule(batchStart);
+  // Derived, not hardcoded. The old copy said "Save ₹30,000" as literal text,
+  // so it would have kept saying so through any price change.
+  const bundleSaving = bundleSavingLabel(bundle, courses);
 
   if (programs.length === 0) {
     return (
@@ -121,17 +111,15 @@ export default async function AcademyPage() {
               Taught in our Bhopal studio.
             </p>
 
-            {startDateStr && (
-              <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-amber-50 border border-amber-200">
-                <Sparkles className="w-4 h-4 text-amber-700" />
-                <span className="text-sm font-semibold text-amber-900">
-                  New batch starts {startDateStr}
-                  {daysLeft != null && daysLeft > 0 && daysLeft <= 30 && (
-                    <span className="text-amber-700 font-normal"> &middot; {daysLeft} days to go</span>
-                  )}
-                </span>
-              </div>
-            )}
+            <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-amber-50 border border-amber-200">
+              <Sparkles className="w-4 h-4 text-amber-700" />
+              <span className="text-sm font-semibold text-amber-900">
+                {schedule.label}
+                {schedule.isUpcoming && schedule.daysUntil != null && schedule.daysUntil <= 30 && (
+                  <span className="text-amber-700 font-normal"> &middot; {schedule.daysUntil} days to go</span>
+                )}
+              </span>
+            </div>
           </div>
         </div>
       </section>
@@ -140,7 +128,7 @@ export default async function AcademyPage() {
       {bundle && (
         <section className="py-12">
           <div className="v2-container">
-            <BundleCard p={bundle} />
+            <BundleCard p={bundle} saving={bundleSaving} />
           </div>
         </section>
       )}
@@ -194,10 +182,33 @@ export default async function AcademyPage() {
   );
 }
 
-function BundleCard({ p }: { p: Program }) {
+/** Effective price now, honouring an open early-bird window. */
+function effectivePrice(p: Program): number {
+  const active =
+    !!p.earlyBirdPriceInr &&
+    !!p.earlyBirdUntil &&
+    new Date(p.earlyBirdUntil).getTime() > Date.now();
+  return active && p.earlyBirdPriceInr ? p.earlyBirdPriceInr : p.priceInr;
+}
+
+/**
+ * Saving of the bundle vs the six courses bought individually, rounded down to
+ * the nearest 100 so the figure can never overstate. Returns null when the
+ * bundle does not actually undercut them.
+ */
+function bundleSavingLabel(bundle: Program | undefined, courses: Program[]): string | null {
+  if (!bundle || !courses.length) return null;
+  const saving = courses.reduce((n, c) => n + effectivePrice(c), 0) - effectivePrice(bundle);
+  const rounded = Math.floor(saving / 100) * 100;
+  if (rounded <= 0) return null;
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
+  }).format(rounded);
+}
+
+function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
   const price = formatProgramPrice(p);
-  const seatsRemaining =
-    p.seatsTotal != null ? Math.max(0, p.seatsTotal - (p.seatsTaken || 0)) : null;
+  const scarcity = seatScarcity(p.seatsTotal, p.seatsTaken);
 
   return (
     <Link
@@ -218,8 +229,8 @@ function BundleCard({ p }: { p: Program }) {
           </h3>
           <p className="text-white/85 text-base md:text-lg leading-relaxed max-w-xl">
             Everything in one batch — digital marketing, performance ads, design,
-            video editing, AI filmmaking and web design. Save ₹30,000 vs buying
-            the courses individually.
+            video editing, AI filmmaking and web design.
+            {saving && <> Save {saving} vs buying the courses individually.</>}
           </p>
 
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80 pt-2">
@@ -246,10 +257,10 @@ function BundleCard({ p }: { p: Program }) {
                 <span className="text-white/60 line-through text-lg">{price.original}</span>
               )}
             </div>
-            {seatsRemaining != null && seatsRemaining > 0 && (
+            {scarcity.show && (
               <div className="text-amber-200 text-sm font-medium inline-flex items-center gap-1 lg:justify-end">
                 <Users className="w-4 h-4" />
-                {seatsRemaining} of {p.seatsTotal} seats remaining
+                {scarcity.remaining} of {p.seatsTotal} seats remaining
               </div>
             )}
           </div>
@@ -266,11 +277,8 @@ function BundleCard({ p }: { p: Program }) {
 
 function CourseCard({ p }: { p: Program }) {
   const price = formatProgramPrice(p);
-  const seatsRemaining =
-    p.seatsTotal != null ? Math.max(0, p.seatsTotal - (p.seatsTaken || 0)) : null;
-  const startStr = p.startsAt
-    ? new Date(p.startsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-    : null;
+  const cardScarcity = seatScarcity(p.seatsTotal, p.seatsTaken);
+  const cardSchedule = batchSchedule(p.startsAt);
 
   return (
     <Link
@@ -296,16 +304,14 @@ function CourseCard({ p }: { p: Program }) {
 
       <div className="p-6 space-y-3">
         <div className="flex items-center gap-2 text-xs flex-wrap">
-          {startStr && (
-            <span className="text-fm-neutral-500 inline-flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              Starts {startStr}
-            </span>
-          )}
-          {seatsRemaining != null && seatsRemaining > 0 && seatsRemaining <= 10 && (
+          <span className="text-fm-neutral-500 inline-flex items-center gap-1">
+            <Calendar className="w-3 h-3" />
+            {cardSchedule.shortLabel}
+          </span>
+          {cardScarcity.show && cardScarcity.remaining != null && cardScarcity.remaining <= 10 && (
             <span className="text-amber-700 inline-flex items-center gap-1 font-medium">
               <Users className="w-3 h-3" />
-              {seatsRemaining} seats left
+              {cardScarcity.remaining} seats left
             </span>
           )}
         </div>

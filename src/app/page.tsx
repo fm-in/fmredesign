@@ -1,9 +1,15 @@
-'use client';
-
+// Server component: the FM Academy block needs live pricing, and fetching it
+// here means the numbers are in the HTML rather than arriving after hydration.
+// Nothing on this page required a client boundary — the sections below are all
+// client components in their own right and stay that way.
 import dynamic from 'next/dynamic';
 import { HeroSectionV2 } from "@/components/sections/HeroSectionV2";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import { PageLoader } from "@/components/ui/PageLoader";
+import { getAcademyHomePricing } from "@/lib/academy/home-pricing";
+
+// Prices change when a promotion opens or closes, not per request.
+export const revalidate = 60;
 
 // Dynamically import below-the-fold sections to reduce initial bundle
 // SSR enabled so search engines see full content
@@ -29,7 +35,9 @@ const ContactSectionV2 = dynamic(
   () => import("@/components/sections/ContactSectionV2").then(m => ({ default: m.ContactSectionV2 }))
 );
 
-export default function Home() {
+export default async function Home() {
+  const academyPricing = await getAcademyHomePricing();
+
   return (
     <>
       <PageLoader />
@@ -40,7 +48,7 @@ export default function Home() {
         <ClientsSectionV2 />
         <TestimonialsSectionV2 />
         <CreativeMindsSectionV2 />
-        <AcademySectionV2 />
+        <AcademySectionV2 pricing={academyPricing} />
         <ContactSectionV2 />
       </V2PageWrapper>
     </>
