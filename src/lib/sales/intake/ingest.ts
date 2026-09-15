@@ -41,10 +41,15 @@ async function findByKey(key: MatchKey): Promise<LeadRow | null> {
   return Array.isArray(data) && data.length > 0 ? data[0] : null;
 }
 
-export async function findExistingLead(lead: NormalisedIntake): Promise<LeadRow | null> {
+export interface ExistingLeadMatch {
+  lead: LeadRow;
+  matchedOn: MatchKey['kind'];
+}
+
+export async function findExistingLead(lead: NormalisedIntake): Promise<ExistingLeadMatch | null> {
   for (const key of matchKeys(lead)) {
     const found = await findByKey(key);
-    if (found) return found;
+    if (found) return { lead: found, matchedOn: key.kind };
   }
   return null;
 }
@@ -62,12 +67,16 @@ async function recordSubmission(leadId: string, lead: NormalisedIntake, resubmit
       sourceDetail: lead.sourceDetail ?? null,
       resubmitted,
       customFields: lead.customFields ?? {},
+      // A merge may not copy these onto the lead (see mergeEmptyFields), so the
+      // owner still sees what this submission gave.
+      ...(resubmitted ? { submittedEmail: lead.email ?? null, submittedPhone: lead.phone ?? null } : {}),
     },
   });
 }
 
-async function mergeIntoExisting(existing: LeadRow, lead: NormalisedIntake, nowIso: string): Promise<IngestResult> {
-  const updates = mergeEmptyFields(existing, toLeadRecord(lead, existing.id, nowIso));
+async function mergeIntoExisting(match: ExistingLeadMatch, lead: NormalisedIntake, nowIso: string): Promise<IngestResult> {
+  const existing = match.lead;
+  const updates = mergeEmptyFields(existing, toLeadRecord(lead, existing.id, nowIso), match.matchedOn);
   const { error } = await getSupabaseAdmin()
     .from('leads')
     .update({ ...updates, last_activity_at: nowIso })

@@ -74,15 +74,25 @@ describe('mergeEmptyFields', () => {
   it('fills only empty columns and never overwrites', () => {
     const updates = mergeEmptyFields(
       { company: 'Acme', phone: null, website: '' },
-      { company: 'Other', phone: '9833257659', website: 'acme.in', name: 'Ignored' }
+      { company: 'Other', phone: '9833257659', website: 'acme.in', name: 'Ignored' },
+      'external'
     );
     expect(updates).toEqual({ phone: '9833257659', website: 'acme.in' });
+  });
+
+  it('fills contact columns only when the match was on the source id', () => {
+    const existing = { email: null, phone: null, phone_e164: null };
+    const incoming = { email: 'p@x.com', phone: '9833257659', phone_e164: '+919833257659' };
+    expect(mergeEmptyFields(existing, incoming, 'external')).toEqual(incoming);
+    expect(mergeEmptyFields(existing, incoming, 'email')).toEqual({ email: 'p@x.com' });
+    expect(mergeEmptyFields(existing, incoming, 'phone')).toEqual({ phone: '9833257659', phone_e164: '+919833257659' });
   });
 
   it('adds new custom field keys without replacing existing ones', () => {
     const updates = mergeEmptyFields(
       { custom_fields: { budget: '50k' } },
-      { custom_fields: { budget: '10k', city: 'Pune' } }
+      { custom_fields: { budget: '10k', city: 'Pune' } },
+      'email'
     );
     expect(updates).toEqual({ custom_fields: { budget: '50k', city: 'Pune' } });
   });

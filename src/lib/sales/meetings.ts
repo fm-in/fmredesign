@@ -17,6 +17,7 @@ import { isRecord, readString } from '@/lib/sales/intake/adapters/verify';
 import { ingestLead } from '@/lib/sales/intake/ingest';
 import { normaliseEmail } from '@/lib/sales/intake/normalise';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
+import { toE164 } from '@/lib/sales/phone';
 import { createTask, hasOpenTask } from '@/lib/sales/tasks';
 import { generateSalesId, SYSTEM_ACTOR } from '@/lib/sales/types';
 import type { Actor, LeadRow, MeetingRow } from '@/lib/sales/types';
@@ -95,10 +96,18 @@ async function findMeetingByUid(uid: string): Promise<MeetingRow | null> {
   return data ?? null;
 }
 
+/** Anyone can put a lead id in a booking link, so a hint counts only for the lead's own contact. */
+function hintMatchesAttendee(lead: LeadRow, booking: ParsedBooking): boolean {
+  const attendeeEmail = normaliseEmail(booking.attendeeEmail);
+  if (attendeeEmail && normaliseEmail(lead.email) === attendeeEmail) return true;
+  const attendeePhone = toE164(booking.attendeePhone);
+  return Boolean(attendeePhone && lead.phone_e164 === attendeePhone);
+}
+
 async function resolveLead(booking: ParsedBooking): Promise<LeadRow> {
   if (booking.leadIdHint) {
     const hinted = await loadLead(booking.leadIdHint);
-    if (hinted) return hinted;
+    if (hinted && hintMatchesAttendee(hinted, booking)) return hinted;
   }
   if (!booking.attendeeEmail && !booking.attendeePhone) {
     throw new WebhookRejection('Booking has no attendee email or phone');

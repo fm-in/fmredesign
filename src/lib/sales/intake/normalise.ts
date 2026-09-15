@@ -128,14 +128,30 @@ export function matchKeys(lead: NormalisedIntake): MatchKey[] {
   return keys;
 }
 
+/**
+ * Contact columns a merge may fill, by what matched. Only the platform's own
+ * lead id proves the email and phone belong to the same person: knowing
+ * someone's phone number must not let a stranger attach an email to their lead.
+ */
+const CONTACT_COLUMNS_FILLABLE: Record<MatchKey['kind'], ReadonlySet<string>> = {
+  external: new Set(['email', 'phone', 'phone_e164']),
+  email: new Set(['email']),
+  phone: new Set(['phone', 'phone_e164']),
+};
+
+const CONTACT_COLUMNS = new Set(['email', 'phone', 'phone_e164']);
+
 /** The subset of `incoming` that fills gaps on `existing`. Never overwrites. */
 export function mergeEmptyFields(
   existing: Record<string, unknown>,
-  incoming: Record<string, unknown>
+  incoming: Record<string, unknown>,
+  matchedOn: MatchKey['kind']
 ): Record<string, unknown> {
   const updates: Record<string, unknown> = {};
+  const fillableContacts = CONTACT_COLUMNS_FILLABLE[matchedOn];
 
   for (const column of MERGEABLE_COLUMNS) {
+    if (CONTACT_COLUMNS.has(column) && !fillableContacts.has(column)) continue;
     if (isEmpty(existing[column]) && !isEmpty(incoming[column])) {
       updates[column] = incoming[column];
     }

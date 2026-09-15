@@ -19,7 +19,7 @@ import { changeStage } from '@/lib/sales/activity';
 import { isLeadStatus } from '@/lib/sales/types';
 import { ingestLead } from '@/lib/sales/intake/ingest';
 import { IntakeError } from '@/lib/sales/errors';
-import { isSalesSource } from '@/lib/sales/types';
+import { ApiResponse } from '@/lib/api-response';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -245,7 +245,9 @@ export async function POST(request: NextRequest) {
       website: body.website,
       jobTitle: body.jobTitle,
       message: body.projectDescription,
-      source: isSalesSource(body.source) ? body.source : 'website_form',
+      // A public request cannot choose its source. No admin screen posts one either
+      // (the Add Lead modal sends none), so every submission here is a website form.
+      source: 'website_form',
       sourceDetail: formName,
       attribution: body.attribution,
       consent: fromPublicForm
@@ -268,37 +270,13 @@ export async function POST(request: NextRequest) {
       userAgent: meta.user_agent,
     });
 
-    const supabase = getSupabaseAdmin();
-    const { data: row, error } = await supabase.from('leads').select('*').eq('id', leadId).single();
-    if (error) throw error;
-
     if (created) {
-      notifyAdmins({
-        type: 'general',
-        title: 'New lead received',
-        message: `${row.name} — ${row.company || 'No company'}`,
-        priority: 'high',
-        actionUrl: `/admin/leads/${leadId}`,
-      });
-
-      const emailData = newLeadEmail({
-        name: row.name,
-        email: row.email ?? '',
-        company: row.company ?? 'Not given',
-        projectType: row.project_type ?? undefined,
-        budgetRange: row.budget_range ?? undefined,
-        timeline: row.timeline ?? undefined,
-        primaryChallenge: row.primary_challenge ?? undefined,
-        leadScore: row.lead_score ?? undefined,
-        priority: row.priority ?? undefined,
-      });
-      notifyTeam(emailData.subject, emailData.html);
+      await announceNewLead(leadId);
     }
 
-    return NextResponse.json(
-      { success: true, data: toCamelCaseKeys(row), message: created ? 'Lead created successfully' : 'Lead updated' },
-      { status: created ? 201 : 200 }
-    );
+    // Only the id of a lead this request created. A merge answers { id: null }:
+    // a public form must never reveal a record someone else submitted.
+    return created ? ApiResponse.success({ id: leadId }, undefined, 201) : ApiResponse.success({ id: null });
   } catch (error) {
     if (error instanceof IntakeError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
@@ -306,6 +284,36 @@ export async function POST(request: NextRequest) {
     console.error('Error creating lead:', error);
     return NextResponse.json({ success: false, error: 'Failed to create lead' }, { status: 500 });
   }
+}
+
+/** Tell the team about a new lead. Never fails the submission. */
+async function announceNewLead(leadId: string): Promise<void> {
+  const { data: row, error } = await getSupabaseAdmin().from('leads').select('*').eq('id', leadId).single();
+  if (error || !row) {
+    console.error('[leads] could not load the new lead to notify the team:', error?.message);
+    return;
+  }
+
+  notifyAdmins({
+    type: 'general',
+    title: 'New lead received',
+    message: `${row.name} — ${row.company || 'No company'}`,
+    priority: 'high',
+    actionUrl: `/admin/leads/${leadId}`,
+  });
+
+  const emailData = newLeadEmail({
+    name: row.name,
+    email: row.email ?? '',
+    company: row.company ?? 'Not given',
+    projectType: row.project_type ?? undefined,
+    budgetRange: row.budget_range ?? undefined,
+    timeline: row.timeline ?? undefined,
+    primaryChallenge: row.primary_challenge ?? undefined,
+    leadScore: row.lead_score ?? undefined,
+    priority: row.priority ?? undefined,
+  });
+  notifyTeam(emailData.subject, emailData.html);
 }
 
 // DELETE /api/leads - Delete lead

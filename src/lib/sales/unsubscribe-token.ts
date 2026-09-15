@@ -1,12 +1,19 @@
 /**
- * Signed unsubscribe links. The token is `base64url(email).hmac`, so a link
- * can only unsubscribe the address it was sent to.
+ * Unsubscribe links. The token is the recipient's address encrypted with
+ * AES-256-GCM, so a link can only unsubscribe the address it was sent to, and
+ * an analytics tool that records page URLs learns nothing from it.
+ *
+ * Token = base64url(iv ‖ authTag ‖ ciphertext).
  */
 
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
 import { SITE_URL } from '@/lib/site-url';
 
 const MIN_SECRET_LENGTH = 16;
+const ALGORITHM = 'aes-256-gcm';
+const IV_BYTES = 12;
+const TAG_BYTES = 16;
+const BASE64URL = /^[A-Za-z0-9_-]+$/;
 
 function secret(): string {
   const value = process.env.SALES_LINK_SECRET;
@@ -16,8 +23,8 @@ function secret(): string {
   return value;
 }
 
-function sign(payload: string): string {
-  return createHmac('sha256', secret()).update(payload).digest('base64url');
+function encryptionKey(): Buffer {
+  return createHash('sha256').update(`unsubscribe:${secret()}`).digest();
 }
 
 export function isUnsubscribeConfigured(): boolean {
@@ -26,20 +33,28 @@ export function isUnsubscribeConfigured(): boolean {
 }
 
 export function signUnsubscribeToken(email: string): string {
-  const payload = Buffer.from(email.trim().toLowerCase(), 'utf8').toString('base64url');
-  return `${payload}.${sign(payload)}`;
+  const iv = randomBytes(IV_BYTES);
+  const cipher = createCipheriv(ALGORITHM, encryptionKey(), iv, { authTagLength: TAG_BYTES });
+  const ciphertext = Buffer.concat([cipher.update(email.trim().toLowerCase(), 'utf8'), cipher.final()]);
+  return Buffer.concat([iv, cipher.getAuthTag(), ciphertext]).toString('base64url');
 }
 
 /** The email the token was issued for, or null if it is not genuine. */
 export function verifyUnsubscribeToken(token: string): string | null {
-  const dot = token.lastIndexOf('.');
-  if (dot <= 0) return null;
-  const payload = token.slice(0, dot);
-  const given = Buffer.from(token.slice(dot + 1));
-  const expected = Buffer.from(sign(payload));
-  if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
-  const email = Buffer.from(payload, 'base64url').toString('utf8');
-  return email.includes('@') ? email : null;
+  if (!isUnsubscribeConfigured() || !BASE64URL.test(token)) return null;
+  const bytes = Buffer.from(token, 'base64url');
+  if (bytes.length <= IV_BYTES + TAG_BYTES) return null;
+
+  try {
+    const decipher = createDecipheriv(ALGORITHM, encryptionKey(), bytes.subarray(0, IV_BYTES), {
+      authTagLength: TAG_BYTES,
+    });
+    decipher.setAuthTag(bytes.subarray(IV_BYTES, IV_BYTES + TAG_BYTES));
+    const email = Buffer.concat([decipher.update(bytes.subarray(IV_BYTES + TAG_BYTES)), decipher.final()]).toString('utf8');
+    return email.includes('@') ? email : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Link shown in the email footer: opens a confirmation page. */

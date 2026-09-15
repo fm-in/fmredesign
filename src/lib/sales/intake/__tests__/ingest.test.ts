@@ -67,6 +67,46 @@ describe('ingestLead', () => {
     });
   });
 
+  it('never fills the email of a lead matched by phone, but records what was submitted', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select' && eqValue(call, 'phone_e164') === '+919833257659') {
+        return {
+          data: [{ id: 'lead_old', email: null, phone: '98332 57659', phone_e164: '+919833257659', company: null, custom_fields: {} }],
+          error: null,
+        };
+      }
+      if (call.table === 'leads' && call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+
+    const result = await ingestLead(intake({ email: 'stranger@x.com', phone: '9833257659', company: 'Acme' }));
+
+    expect(result).toEqual({ leadId: 'lead_old', created: false });
+    const [update] = fake.callsTo('leads', 'update').map(payloadOf);
+    expect(update).toMatchObject({ company: 'Acme' });
+    expect(update).not.toHaveProperty('email');
+    const submission = fake.callsTo('lead_activities', 'insert').map(payloadOf).find((p) => p.type === 'form_submitted');
+    expect(submission?.metadata).toMatchObject({ submittedEmail: 'stranger@x.com' });
+  });
+
+  it('never fills the phone of a lead matched by email', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select' && eqValue(call, 'email') === 'priya@x.com') {
+        return { data: [{ id: 'lead_old', email: 'priya@x.com', phone: null, phone_e164: null, custom_fields: {} }], error: null };
+      }
+      if (call.table === 'leads' && call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+
+    await ingestLead(intake({ email: 'priya@x.com', phone: '9833257659' }));
+
+    const [update] = fake.callsTo('leads', 'update').map(payloadOf);
+    expect(update).not.toHaveProperty('phone');
+    expect(update).not.toHaveProperty('phone_e164');
+    const submission = fake.callsTo('lead_activities', 'insert').map(payloadOf).find((p) => p.type === 'form_submitted');
+    expect(submission?.metadata).toMatchObject({ submittedPhone: '9833257659' });
+  });
+
   it('recovers when a concurrent delivery inserted the same external lead first', async () => {
     let selects = 0;
     fake.respond((call) => {

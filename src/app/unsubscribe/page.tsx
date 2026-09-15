@@ -5,6 +5,8 @@ import { UnsubscribeForm } from '@/components/sales/UnsubscribeForm';
 export const metadata: Metadata = {
   title: 'Unsubscribe',
   robots: { index: false, follow: false },
+  // The token in the URL must not travel to any page this one links to.
+  referrer: 'no-referrer',
   alternates: { canonical: '/unsubscribe' },
 };
 

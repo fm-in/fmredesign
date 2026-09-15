@@ -86,6 +86,41 @@ describe('handleCalcomEvent', () => {
     expect(mocks.ingestLead).not.toHaveBeenCalled();
   });
 
+  it('BOOKING_CREATED ignores a lead-id hint that does not match the attendee', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select' && call.single && eqValue(call, 'id') === 'lead_1') {
+        return { data: leadRow({ email: 'someone-else@example.com', phone_e164: '+919800000000' }), error: null };
+      }
+      if (call.table === 'leads' && call.op === 'select' && call.single && eqValue(call, 'id') === 'lead_new') {
+        return { data: leadRow({ id: 'lead_new', status: 'new', source: 'cal_booking' }), error: null };
+      }
+      if (call.table === 'leads' && call.op === 'select') return { data: { status: 'new' }, error: null };
+      return { data: null, error: null };
+    });
+
+    await handleCalcomEvent(booking('BOOKING_CREATED'));
+
+    expect(mocks.ingestLead).toHaveBeenCalledWith(expect.objectContaining({ source: 'cal_booking', email: 'priya@example.com' }));
+    expect(payloadOf(fake.callsTo('meetings', 'upsert')[0])).toMatchObject({ lead_id: 'lead_new' });
+  });
+
+  it('BOOKING_CREATED uses a lead-id hint whose phone matches the attendee', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select' && call.single && eqValue(call, 'id') === 'lead_1') {
+        return { data: leadRow({ email: null, phone_e164: '+919833257659', status: 'new' }), error: null };
+      }
+      if (call.table === 'leads' && call.op === 'select') return { data: { status: 'new' }, error: null };
+      return { data: null, error: null };
+    });
+
+    await handleCalcomEvent(
+      booking('BOOKING_CREATED', { attendees: [{ name: 'Priya Shah', email: 'other@example.com', phoneNumber: '+91 98332 57659' }] })
+    );
+
+    expect(mocks.ingestLead).not.toHaveBeenCalled();
+    expect(payloadOf(fake.callsTo('meetings', 'upsert')[0])).toMatchObject({ lead_id: 'lead_1' });
+  });
+
   it('BOOKING_CREATED from a stranger creates the lead through intake', async () => {
     fake.respond((call) => {
       if (call.table === 'leads' && call.op === 'select' && call.single && eqValue(call, 'id') === 'lead_new') {

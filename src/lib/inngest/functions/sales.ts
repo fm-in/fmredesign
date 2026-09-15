@@ -40,29 +40,32 @@ export const salesLeadCreatedFn = inngest.createFunction(
       return owner ? owner.id : null;
     });
 
-    const draft = await step.run('write-brief', async () => {
+    // Step results are kept in Inngest's run history, which must not hold lead
+    // content. The draft is written and used inside this one step, so only a
+    // flag leaves it.
+    const brief = await step.run('write-brief', async () => {
       const lead = await loadLead(leadId);
-      if (!lead) return null;
+      if (!lead) return { written: false };
       const owner = await loadOwner(lead.owner_id);
-      const brief = await generateLeadBrief(lead, owner?.name ?? TEAM_SIGNATURE);
-      await recordActivity({ leadId, type: 'ai_brief', body: brief.brief, metadata: { aiGenerated: brief.aiGenerated } });
-      return brief.draft;
-    });
-    if (draft === null) return { skipped: 'lead_missing' };
-
-    const startSequence = await step.run('first-touch-task', async () => {
-      const lead = await loadLead(leadId);
-      if (!lead) return false;
+      const generated = await generateLeadBrief(lead, owner?.name ?? TEAM_SIGNATURE);
+      await recordActivity({ leadId, type: 'ai_brief', body: generated.brief, metadata: { aiGenerated: generated.aiGenerated } });
       if (!(await hasOpenTask(leadId, FIRST_TOUCH_TITLE))) {
         await createTask({
           leadId,
           ownerId: lead.owner_id,
           type: lead.phone_e164 ? 'whatsapp' : 'call',
           title: FIRST_TOUCH_TITLE,
-          draftBody: draft,
+          draftBody: generated.draft,
           dueAt: new Date(Date.now() + 60 * 60_000).toISOString(),
         });
       }
+      return { written: true };
+    });
+    if (!brief.written) return { skipped: 'lead_missing' };
+
+    const startSequence = await step.run('check-sequence', async () => {
+      const lead = await loadLead(leadId);
+      if (!lead) return false;
       // Bookings already have a confirmation from Cal.com; they get no sequence.
       return Boolean(lead.email) && lead.source !== 'cal_booking';
     });
