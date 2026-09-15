@@ -132,6 +132,8 @@ export interface LeadProfile {
   proposalSentAt?: Date;
   convertedToClientAt?: Date;
   clientId?: string;
+  ownerId?: string | null;
+  leadSource?: 'website' | 'scraped';
 }
 
 // Lead Creation Input (for forms)
@@ -211,6 +213,7 @@ export interface LeadFilters {
   };
   tags?: string[];
   searchQuery?: string;
+  owner?: 'mine' | 'unassigned';
 }
 
 // Lead Sort Options

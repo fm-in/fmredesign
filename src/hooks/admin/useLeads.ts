@@ -85,6 +85,7 @@ export function useLeads(): UseLeadsReturn {
       if (filters.priority) params.set('priority', filters.priority.join(','));
       if (filters.source) params.set('source', filters.source.join(','));
       if (filters.assignedTo) params.set('assignedTo', filters.assignedTo.join(','));
+      if (filters.owner) params.set('owner', filters.owner);
       if (searchQuery) params.set('search', searchQuery);
 
       params.set('sortBy', sortBy);

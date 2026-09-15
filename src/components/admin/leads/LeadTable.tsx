@@ -6,6 +6,7 @@
 
 'use client';
 
+import Link from 'next/link';
 import {
   Mail,
   Phone,
@@ -21,7 +22,6 @@ import { DashboardButton } from '@/design-system';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { LeadProfile, LeadStatus, LeadFilters as LeadFiltersType } from '@/lib/admin/lead-types';
-import { TeamMemberSelect } from '@/components/admin/TeamMemberSelect';
 
 interface LeadTableProps {
   leads: LeadProfile[];
@@ -32,7 +32,6 @@ interface LeadTableProps {
   selectedLead: LeadProfile | null;
   onSelectLead: (lead: LeadProfile | null) => void;
   onUpdateStatus: (leadId: string, status: LeadStatus) => void;
-  onUpdateAssignedTo: (leadId: string, assignedTo: string) => void;
   onConvertToClient: (leadId: string) => void;
   onAddLead: () => void;
   searchQuery: string;
@@ -98,7 +97,6 @@ export function LeadTable({
   selectedLead,
   onSelectLead,
   onUpdateStatus,
-  onUpdateAssignedTo,
   onConvertToClient,
   onAddLead,
   searchQuery,
@@ -200,9 +198,13 @@ export function LeadTable({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div>
-                          <div className="text-sm font-medium text-fm-neutral-900">
-                            {lead.name}
-                          </div>
+                          {lead.leadSource === 'scraped' ? (
+                            <div className="text-sm font-medium text-fm-neutral-900">{lead.name}</div>
+                          ) : (
+                            <Link href={`/admin/leads/${lead.id}`} className="text-sm font-medium text-fm-neutral-900 hover:text-fm-magenta-700 hover:underline">
+                              {lead.name}
+                            </Link>
+                          )}
                           <div className="text-sm text-fm-neutral-500 flex items-center">
                             <Mail className="w-3 h-3 mr-1" />
                             {lead.email}
@@ -515,18 +517,18 @@ export function LeadTable({
                     <p className="font-bold text-fm-neutral-900">{selectedLead.leadScore}/100</p>
                   </div>
                   <div>
-                    <span className="text-fm-neutral-500 block text-xs mb-1">Assigned To</span>
-                    <TeamMemberSelect
-                      value={selectedLead.assignedTo || ''}
-                      onChange={(name) => onUpdateAssignedTo(selectedLead.id, name)}
-                      placeholder="Unassigned"
-                      className="text-xs font-medium rounded-full px-3 py-1.5 border border-fm-neutral-200 bg-white text-fm-neutral-700 focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent min-h-[36px]"
-                    />
+                    <span className="text-fm-neutral-500 block text-xs mb-1">Owner</span>
+                    <p className="font-medium text-fm-neutral-900">{selectedLead.assignedTo || 'Unassigned'}</p>
                   </div>
                 </div>
                 <div className="text-xs text-fm-neutral-500">
                   Created: {new Date(selectedLead.createdAt).toLocaleString()}
                 </div>
+                {selectedLead.leadSource !== 'scraped' && (
+                  <Link href={`/admin/leads/${selectedLead.id}`} className="text-sm font-medium text-fm-magenta-700 hover:underline">
+                    Open the full lead page
+                  </Link>
+                )}
                 {CONVERTIBLE_STATUSES.includes(selectedLead.status) && (
                   <DashboardButton
                     variant="primary"

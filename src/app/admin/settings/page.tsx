@@ -28,7 +28,8 @@ import {
   ToggleLeft,
   ToggleRight,
   ExternalLink,
-  Clock
+  Clock,
+  Target
 } from 'lucide-react';
 import {
   DashboardButton,
@@ -45,6 +46,7 @@ import { Toggle } from '@/components/ui/Toggle';
 import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SocialAccountsPanel } from '@/components/admin/social/SocialAccountsPanel';
+import { SalesSettingsPanel } from '@/components/admin/sales/SalesSettingsPanel';
 import { cn } from '@/lib/utils';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 import { ALL_EVENT_TYPES } from '@/lib/events/types';
@@ -460,6 +462,10 @@ export default function SettingsPage() {
                     <Webhook className="h-4 w-4" />
                     Webhooks
                   </TabsTrigger>
+                  <TabsTrigger value="sales" className="justify-start gap-3">
+                    <Target className="h-4 w-4" />
+                    Sales
+                  </TabsTrigger>
                 </TabsList>
               </CardContent>
             </DashboardCard>
@@ -835,6 +841,10 @@ export default function SettingsPage() {
                   ))}
                 </CardContent>
               </DashboardCard>
+            </TabsContent>
+
+            <TabsContent value="sales">
+              <SalesSettingsPanel />
             </TabsContent>
 
             <TabsContent value="social">
