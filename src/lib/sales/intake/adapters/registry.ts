@@ -1,3 +1,4 @@
+import { calcomAdapter } from './calcom';
 import { connectorAdapter } from './connector';
 import { googleAdapter } from './google';
 import { metaAdapter } from './meta';
@@ -9,6 +10,7 @@ export const SALES_WEBHOOK_ADAPTERS: Readonly<Record<string, SalesWebhookAdapter
   connector: connectorAdapter,
   meta: metaAdapter,
   resend: resendAdapter,
+  calcom: calcomAdapter,
 };
 
 export function getAdapter(source: string): SalesWebhookAdapter | null {

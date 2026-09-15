@@ -15,6 +15,7 @@ import { WebhookRejection } from '@/lib/sales/errors';
 import { ingestLead } from '@/lib/sales/intake/ingest';
 import { fetchMetaLead, mapMetaLead } from '@/lib/sales/intake/meta-graph';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
+import { createPostMeetingTask, loadMeeting, sendMeetingBrief } from '@/lib/sales/meetings';
 import { nextSendTime } from '@/lib/sales/send-window';
 import { INBOUND_V1, INBOUND_V1_KEY } from '@/lib/sales/sequence';
 import {
@@ -125,5 +126,33 @@ export const salesMetaLeadgenFn = inngest.createFunction(
         throw err;
       }
     });
+  }
+);
+
+export const salesMeetingPrepFn = inngest.createFunction(
+  {
+    id: 'sales-meeting-prep',
+    retries: 3,
+    cancelOn: [{ event: 'sales/meeting.cancelled', match: 'data.meetingId' }],
+  },
+  { event: 'sales/meeting.booked' },
+  async ({ event, step }) => {
+    const { meetingId } = event.data;
+
+    const times = await step.run('load-times', async () => {
+      const meeting = await loadMeeting(meetingId);
+      return meeting && meeting.status === 'booked' ? { startsAt: meeting.starts_at, endsAt: meeting.ends_at } : null;
+    });
+    if (!times) return { skipped: 'not_booked' };
+
+    const prepAt = new Date(new Date(times.startsAt).getTime() - 2 * 60 * 60_000).toISOString();
+    await step.sleepUntil('until-prep', prepAt);
+    await step.run('send-brief', () => sendMeetingBrief(meetingId));
+
+    const afterCall = new Date(new Date(times.endsAt).getTime() + 30 * 60_000).toISOString();
+    await step.sleepUntil('until-after-call', afterCall);
+    await step.run('post-call-task', () => createPostMeetingTask(meetingId));
+
+    return { done: true };
   }
 );
