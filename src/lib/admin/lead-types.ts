@@ -17,7 +17,7 @@ export type LeadStatus =
   | 'archived';
 
 // Lead Source Tracking
-export type LeadSource = 
+export type LeadSource =
   | 'website_form'
   | 'referral'
   | 'social_media'
@@ -25,7 +25,12 @@ export type LeadSource =
   | 'cold_outreach'
   | 'event'
   | 'partner'
-  | 'other';
+  | 'other'
+  | 'meta_lead_ads'
+  | 'google_lead_form'
+  | 'connector'
+  | 'cal_booking'
+  | 'scorecard';
 
 // Project Types for Lead Classification
 export type ProjectType = 
