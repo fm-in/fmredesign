@@ -7,7 +7,7 @@ export interface Permission {
   key: string;
   name: string;
   description: string;
-  category: 'system' | 'content' | 'users' | 'clients' | 'projects' | 'finance' | 'settings';
+  category: 'system' | 'content' | 'users' | 'clients' | 'projects' | 'finance' | 'settings' | 'sales';
 }
 
 export interface Role {
@@ -182,6 +182,20 @@ export const PERMISSIONS: Permission[] = [
     name: 'Security Settings',
     description: 'Manage security settings and authentication',
     category: 'settings'
+  },
+
+  // Sales permissions
+  {
+    key: 'sales.read',
+    name: 'View Sales Pipeline',
+    description: 'View leads, activity timelines, tasks and meetings',
+    category: 'sales'
+  },
+  {
+    key: 'sales.write',
+    name: 'Work Sales Pipeline',
+    description: 'Change lead stages and owners, add notes, complete tasks',
+    category: 'sales'
   }
 ];
 
@@ -205,7 +219,8 @@ export const ROLES: Role[] = [
       'clients.read', 'clients.write', 'clients.delete', 'clients.portal',
       'projects.read', 'projects.write', 'projects.delete', 'projects.timeline',
       'finance.read', 'finance.write', 'finance.delete', 'finance.reports',
-      'settings.read', 'settings.write', 'settings.security'
+      'settings.read', 'settings.write', 'settings.security',
+      'sales.read', 'sales.write'
     ],
     hierarchy: 90
   },
@@ -217,7 +232,8 @@ export const ROLES: Role[] = [
       'system.view_analytics',
       'content.read', 'content.write', 'content.publish',
       'clients.read', 'clients.write', 'clients.portal',
-      'projects.read', 'projects.write', 'projects.timeline'
+      'projects.read', 'projects.write', 'projects.timeline',
+      'sales.read', 'sales.write'
     ],
     hierarchy: 70
   },
@@ -379,7 +395,8 @@ export class PermissionService {
       { key: 'clients' as const, name: 'Client Management' },
       { key: 'projects' as const, name: 'Project Management' },
       { key: 'finance' as const, name: 'Finance & Invoicing' },
-      { key: 'settings' as const, name: 'Settings & Configuration' }
+      { key: 'settings' as const, name: 'Settings & Configuration' },
+      { key: 'sales' as const, name: 'Sales Pipeline' }
     ];
 
     return categories.map(cat => ({

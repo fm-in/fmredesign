@@ -180,8 +180,8 @@ describe('PermissionService.getPermissionSummary', () => {
 });
 
 describe('PERMISSIONS constant', () => {
-  it('has 25 total permissions', () => {
-    expect(PERMISSIONS.length).toBe(25);
+  it('has 27 total permissions', () => {
+    expect(PERMISSIONS.length).toBe(27);
   });
 
   it('each permission has required fields', () => {
@@ -203,5 +203,27 @@ describe('ROLES constant', () => {
     const superAdmin = ROLES.find(r => r.key === 'super_admin');
     const viewer = ROLES.find(r => r.key === 'viewer');
     expect(superAdmin!.hierarchy).toBeGreaterThan(viewer!.hierarchy);
+  });
+});
+
+describe('sales permissions', () => {
+  it('declares sales.read and sales.write in the sales category', () => {
+    const keys = PERMISSIONS.filter((p) => p.category === 'sales').map((p) => p.key);
+    expect(keys).toEqual(['sales.read', 'sales.write']);
+  });
+
+  it('grants both to admin and manager only', () => {
+    const roleHas = (role: string, permission: string) =>
+      ROLES.find((r) => r.key === role)?.permissions.includes(permission) ?? false;
+    expect(roleHas('admin', 'sales.read')).toBe(true);
+    expect(roleHas('admin', 'sales.write')).toBe(true);
+    expect(roleHas('manager', 'sales.read')).toBe(true);
+    expect(roleHas('manager', 'sales.write')).toBe(true);
+    expect(roleHas('editor', 'sales.read')).toBe(false);
+    expect(roleHas('viewer', 'sales.read')).toBe(false);
+  });
+
+  it('lists a Sales category for the permissions UI', () => {
+    expect(PermissionService.getCategories().map((c) => c.key)).toContain('sales');
   });
 });
