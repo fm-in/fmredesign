@@ -100,6 +100,29 @@ describe('changeStage', () => {
     expect(mocks.emitEvent).toHaveBeenCalledWith('lead.status_changed', expect.objectContaining({ entityId: 'lead_1' }));
   });
 
+  it('emits status_changed with the updated lead, as the leads API did before', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') return { data: { status: 'new' }, error: null };
+      if (call.table === 'leads' && call.op === 'update' && payloadOf(call).status === 'contacted') {
+        return { data: { id: 'lead_1', status: 'contacted', lead_score: 60, custom_fields: {} }, error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    await changeStage('lead_1', 'contacted', actor);
+
+    expect(mocks.emitEvent).toHaveBeenCalledWith(
+      'lead.status_changed',
+      expect.objectContaining({
+        data: {
+          previousStatus: 'new',
+          newStatus: 'contacted',
+          lead: expect.objectContaining({ id: 'lead_1', status: 'contacted', leadScore: 60 }),
+        },
+      })
+    );
+  });
+
   it('stores the lost reason', async () => {
     fake.respond((call) =>
       call.table === 'leads' && call.op === 'select' ? { data: { status: 'contacted' }, error: null } : { data: [], error: null }

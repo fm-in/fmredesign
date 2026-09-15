@@ -69,9 +69,10 @@ export const metaAdapter: SalesWebhookAdapter = {
   async handle(payload) {
     // Send directly (not sendSalesEvent): if queueing fails the route must
     // answer 500 so Meta retries — these ids are the only copy of the lead.
+    // The event id makes Inngest ignore a redelivered lead (24-hour window).
     const { inngest } = await import('@/lib/inngest/client');
     for (const change of extractLeadgenChanges(payload)) {
-      await inngest.send({ name: 'sales/meta.leadgen', data: change });
+      await inngest.send({ id: `meta-leadgen-${change.leadgenId}`, name: 'sales/meta.leadgen', data: change });
     }
   },
 };

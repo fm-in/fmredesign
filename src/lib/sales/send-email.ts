@@ -52,22 +52,26 @@ export async function sendSalesEmail({ lead, template, settings, ownerName }: Se
     scorecardUrl: `${SITE_URL}/scorecard`,
   });
 
-  const { data, error } = await resend.emails.send({
-    from: process.env.SALES_FROM_EMAIL || SALES_FROM_DEFAULT,
-    to: lead.email,
-    replyTo,
-    subject: rendered.subject,
-    html: rendered.html,
-    text: rendered.text,
-    headers: {
-      'List-Unsubscribe': `<${oneClickUnsubscribeUrl(lead.email)}>, <mailto:${replyTo}?subject=unsubscribe>`,
-      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+  const { data, error } = await resend.emails.send(
+    {
+      from: process.env.SALES_FROM_EMAIL || SALES_FROM_DEFAULT,
+      to: lead.email,
+      replyTo,
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: {
+        'List-Unsubscribe': `<${oneClickUnsubscribeUrl(lead.email)}>, <mailto:${replyTo}?subject=unsubscribe>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      },
+      tags: [
+        { name: 'lead_id', value: lead.id },
+        { name: 'template', value: template },
+      ],
     },
-    tags: [
-      { name: 'lead_id', value: lead.id },
-      { name: 'template', value: template },
-    ],
-  });
+    // A retried step that already reached Resend sends nothing new (Resend keeps keys for 24 hours).
+    { idempotencyKey: `sales:${lead.id}:${template}` }
+  );
 
   // Throwing lets Inngest retry a transient Resend failure.
   if (error || !data) throw new Error(`Resend send failed: ${error?.message ?? 'no response'}`);

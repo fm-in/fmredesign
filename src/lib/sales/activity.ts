@@ -6,6 +6,7 @@
 
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { emitEvent } from '@/lib/events/emitter';
+import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { sendSalesEvent } from '@/lib/sales/events';
 import { generateSalesId, STAGES_BEYOND_CONTACTED, SYSTEM_ACTOR } from '@/lib/sales/types';
 import type { ActivityType, Actor, SequenceStopReason } from '@/lib/sales/types';
@@ -112,7 +113,7 @@ export async function changeStage(
   if (to === 'discovery_completed') updates.discovery_completed_at = now;
   if (to === 'proposal_sent') updates.proposal_sent_at = now;
 
-  const { error } = await supabase.from('leads').update(updates).eq('id', leadId);
+  const { data: row, error } = await supabase.from('leads').update(updates).eq('id', leadId).select().maybeSingle();
   if (error) throw error;
 
   await recordActivity({
@@ -130,7 +131,8 @@ export async function changeStage(
     entityId: leadId,
     actor,
     timestamp: now,
-    data: { previousStatus: from, newStatus: to },
+    // Outgoing webhook subscribers received the updated lead before this branch.
+    data: { previousStatus: from, newStatus: to, lead: row ? toCamelCaseKeys(row) : undefined },
   });
 
   return { from, to, changed: true };

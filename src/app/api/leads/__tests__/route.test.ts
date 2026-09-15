@@ -100,6 +100,46 @@ describe('POST /api/leads', () => {
 
     expect(mocks.ingestLead.mock.calls[0]?.[0].source).toBe('website_form');
   });
+
+  it('still saves the submission when the code is deployed before the migration', async () => {
+    mocks.ingestLead.mockRejectedValueOnce({
+      code: 'PGRST204',
+      message: "Could not find the 'consent_basis' column of 'leads' in the schema cache",
+    });
+
+    const res = await POST(postLead(publicSubmission));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.data).toEqual({ id: null });
+    const inserts = fake.callsTo('leads', 'insert').map(payloadOf);
+    expect(inserts).toHaveLength(1);
+    expect(inserts[0]).toMatchObject({ email: 'priya@example.com', source: 'website_form', status: 'new', ip_address: expect.any(String) });
+    expect(inserts[0]).not.toHaveProperty('consent_basis');
+    expect(mocks.notifyAdmins).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries the pre-migration insert without capture metadata when those columns are missing too', async () => {
+    mocks.ingestLead.mockRejectedValueOnce({ code: '42703', message: 'column leads.phone_e164 does not exist' });
+    let insertAttempts = 0;
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'insert') {
+        insertAttempts += 1;
+        return insertAttempts === 1
+          ? { data: null, error: { code: 'PGRST204', message: "Could not find the 'ip_address' column of 'leads' in the schema cache" } }
+          : { data: null, error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    const res = await POST(postLead(publicSubmission));
+
+    expect(res.status).toBe(200);
+    const inserts = fake.callsTo('leads', 'insert').map(payloadOf);
+    expect(inserts).toHaveLength(2);
+    expect(inserts[1]).toMatchObject({ email: 'priya@example.com' });
+    expect(inserts[1]).not.toHaveProperty('ip_address');
+  });
 });
 
 function putLead(body: Record<string, unknown>): NextRequest {

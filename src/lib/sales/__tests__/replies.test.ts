@@ -158,7 +158,7 @@ describe('email.bounced', () => {
 });
 
 describe('email.complained', () => {
-  it('suppresses with reason complaint, stops the sequence, and opens no task', async () => {
+  it('suppresses with reason complaint, stops the sequence as an unsubscribe, and opens no task', async () => {
     respond({ leadFound: true });
     await handleResendEvent({
       type: 'email.complained',
@@ -167,7 +167,7 @@ describe('email.complained', () => {
     });
 
     expect(fake.callsTo('suppression_list', 'insert').map(payloadOf)[0]).toMatchObject({ reason: 'complaint' });
-    expect(sentEvents('sales/sequence.stop')[0]?.data).toEqual({ leadId: 'lead_1', reason: 'bounced' });
+    expect(sentEvents('sales/sequence.stop')[0]?.data).toEqual({ leadId: 'lead_1', reason: 'unsubscribed' });
     expect(fake.callsTo('sales_tasks', 'insert')).toHaveLength(0);
   });
 });

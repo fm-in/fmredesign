@@ -3,7 +3,10 @@ import { fake, payloadOf } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
 
 const mocks = vi.hoisted(() => ({
-  send: vi.fn(async (_payload: unknown) => ({ data: { id: 'resend_123' }, error: null })),
+  send: vi.fn<(payload: unknown, options?: unknown) => Promise<{ data: { id: string }; error: null }>>(async () => ({
+    data: { id: 'resend_123' },
+    error: null,
+  })),
 }));
 
 vi.mock('@/lib/supabase', async () => {
@@ -59,9 +62,16 @@ describe('sendSalesEmail', () => {
         to: 'priya@example.com',
         replyTo: 'replies@reply.freakingminds.in',
         headers: expect.objectContaining({ 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' }),
-      })
+      }),
+      expect.anything()
     );
     const activity = fake.callsTo('lead_activities', 'insert').map(payloadOf).find((p) => p.type === 'email_sent');
     expect(activity).toMatchObject({ provider_message_id: 'resend_123', direction: 'out' });
+  });
+
+  it('sends with an idempotency key, so a retried step never sends the same email twice', async () => {
+    await sendSalesEmail({ lead: leadRow(), template: 'instant_reply', settings, ownerName: 'Asha' });
+
+    expect(mocks.send.mock.calls[0]?.[1]).toEqual({ idempotencyKey: 'sales:lead_1:instant_reply' });
   });
 });

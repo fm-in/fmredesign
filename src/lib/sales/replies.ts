@@ -149,7 +149,8 @@ async function handleDeliveryFailure(type: 'email.bounced' | 'email.complained',
       subject: readString(data, 'subject') ?? null,
       metadata: { event: type },
     });
-    await stopSequence(lead.id, 'bounced');
+    // A complaint is the recipient saying stop, so it ends the sequence as an unsubscribe.
+    await stopSequence(lead.id, reason === 'bounced' ? 'bounced' : 'unsubscribed');
 
     // A complaint means "stop"; only a bounce is worth a human follow-up.
     // Guarded against redelivery: a retried webhook must not open a second task.

@@ -42,7 +42,14 @@ alter table public.leads
   add column if not exists sequence_stop_reason text;
 
 -- 3. leads: replace the source CHECK (its generated name is not recorded).
---    NOT VALID leaves existing rows alone; new writes are checked.
+--    NOT VALID skips existing rows only when the constraint is added. Every row an
+--    UPDATE touches is checked again, and the backfill in step 4 updates nearly every
+--    lead, so one legacy `source` value outside this list aborts the whole transaction.
+--    Run this verify query first; it must return no rows (fix any it returns):
+--      select source, count(*) from public.leads
+--      where source not in ('website_form', 'referral', 'social_media', 'google_ads', 'cold_outreach', 'event',
+--        'partner', 'other', 'meta_lead_ads', 'google_lead_form', 'connector', 'cal_booking', 'scorecard')
+--      group by source;
 do $$
 declare c record;
 begin
@@ -98,6 +105,8 @@ create index if not exists leads_phone_e164_idx on public.leads (phone_e164) whe
 create unique index if not exists leads_source_external_uidx
   on public.leads (source, external_source_id) where external_source_id is not null;
 create index if not exists leads_owner_idx on public.leads (owner_id);
+-- Intake finds a returning person by their normalised email with an equality match.
+create index if not exists leads_email_idx on public.leads (email);
 
 -- 6. webhook_logs: idempotency key for sales webhooks
 alter table public.webhook_logs add column if not exists external_id text;

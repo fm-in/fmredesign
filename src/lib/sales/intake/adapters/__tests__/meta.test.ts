@@ -72,8 +72,28 @@ describe('leadgen changes', () => {
   it('queues one Inngest event per lead', async () => {
     await metaAdapter.handle(payload);
     expect(mocks.send).toHaveBeenCalledWith({
+      id: 'meta-leadgen-444',
       name: 'sales/meta.leadgen',
       data: { leadgenId: '444', pageId: '1234567890', formId: '555', adId: '666' },
     });
+  });
+
+  it('gives every lead its own event id, so a redelivered webhook is deduplicated', async () => {
+    await metaAdapter.handle({
+      object: 'page',
+      entry: [
+        {
+          id: '1234567890',
+          changes: [
+            { field: 'leadgen', value: { leadgen_id: '444', page_id: '1234567890' } },
+            { field: 'leadgen', value: { leadgen_id: '445', page_id: '1234567890' } },
+          ],
+        },
+      ],
+    });
+
+    expect(mocks.send).toHaveBeenCalledTimes(2);
+    expect(mocks.send).toHaveBeenNthCalledWith(1, expect.objectContaining({ id: 'meta-leadgen-444' }));
+    expect(mocks.send).toHaveBeenNthCalledWith(2, expect.objectContaining({ id: 'meta-leadgen-445' }));
   });
 });

@@ -7,6 +7,8 @@
 
 import { NonRetriableError } from 'inngest';
 import { inngest } from '../client';
+import { notifyAdmins } from '@/lib/notifications';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { recordActivity } from '@/lib/sales/activity';
 import { assignOwner } from '@/lib/sales/assignment';
 import { generateLeadBrief } from '@/lib/sales/brief';
@@ -28,6 +30,8 @@ import {
 import { createTask, hasOpenTask } from '@/lib/sales/tasks';
 
 const FIRST_TOUCH_TITLE = 'First touch within the hour';
+const TEST_LEAD_TAG = 'test';
+const UNIQUE_VIOLATION = '23505';
 
 export const salesLeadCreatedFn = inngest.createFunction(
   { id: 'sales-lead-created', retries: 3 },
@@ -67,7 +71,9 @@ export const salesLeadCreatedFn = inngest.createFunction(
       const lead = await loadLead(leadId);
       if (!lead) return false;
       // Bookings already have a confirmation from Cal.com; they get no sequence.
-      return Boolean(lead.email) && lead.source !== 'cal_booking';
+      // A lead tagged `test` (end-to-end setup checks) is never emailed.
+      const isTestLead = (lead.tags ?? []).includes(TEST_LEAD_TAG);
+      return Boolean(lead.email) && lead.source !== 'cal_booking' && !isTestLead;
     });
 
     if (startSequence) {
@@ -103,7 +109,7 @@ export const salesSequenceInboundFn = inngest.createFunction(
       const decision = await step.run(`check-${index}`, () => evaluateContinue(leadId));
       if (!decision.ok) return { stopped: decision.reason, atStep: index };
 
-      const result = await step.run(`step-${index}`, () => runSequenceStep(leadId, sequenceStep, index));
+      const result = await step.run(`step-${index}`, () => runSequenceStep(leadId, sequenceStep));
       if (!result.done) return { stopped: result.stopped, atStep: index };
 
       await step.run(`progress-${index}`, () => recordStepProgress(leadId, sequenceStep, index));
@@ -114,8 +120,46 @@ export const salesSequenceInboundFn = inngest.createFunction(
   }
 );
 
+/**
+ * A Meta lead that could not be fetched exists only in Meta, so its failure must
+ * be seen: an admin notification, and a `webhook_logs` row that Settings → Sales
+ * shows as the Meta source's last error. Carries ids and the error, never lead data.
+ */
+export async function reportMetaLeadgenFailure(failure: { leadgenId: string; pageId: string; message: string }): Promise<void> {
+  await notifyAdmins({
+    type: 'general',
+    title: 'A Meta lead could not be fetched',
+    message: failure.message,
+    priority: 'high',
+    actionUrl: '/admin/settings',
+  });
+
+  const { error } = await getSupabaseAdmin()
+    .from('webhook_logs')
+    .insert({
+      provider: 'sales:meta',
+      event_type: 'leadgen_fetch_failed',
+      payload: { leadgenId: failure.leadgenId, pageId: failure.pageId },
+      headers: {},
+      signature_valid: true,
+      processed: false,
+      error: failure.message,
+      external_id: `leadgen-fetch-failed:${failure.leadgenId}`,
+    });
+  // The same lead failing again is already on record.
+  if (error && error.code !== UNIQUE_VIOLATION) throw error;
+}
+
 export const salesMetaLeadgenFn = inngest.createFunction(
-  { id: 'sales-meta-leadgen', retries: 5 },
+  {
+    id: 'sales-meta-leadgen',
+    retries: 5,
+    // Runs once every retry is spent, or at once for a NonRetriableError.
+    onFailure: async ({ event, error }) => {
+      const { leadgenId, pageId } = event.data.event.data;
+      await reportMetaLeadgenFailure({ leadgenId, pageId, message: error.message });
+    },
+  },
   { event: 'sales/meta.leadgen' },
   async ({ event, step }) => {
     const { leadgenId, pageId } = event.data;

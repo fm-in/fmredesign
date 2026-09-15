@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
-import { captureMeta } from '@/lib/capture-meta';
+import { captureMeta, isMissingColumnError, type CaptureMeta } from '@/lib/capture-meta';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
@@ -17,7 +17,9 @@ import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { escapeSearchTerm } from '@/lib/postgrest';
 import { changeStage } from '@/lib/sales/activity';
 import { isLeadStatus } from '@/lib/sales/types';
-import { ingestLead } from '@/lib/sales/intake/ingest';
+import { ingestLead, type IngestResult } from '@/lib/sales/intake/ingest';
+import { scoreLead } from '@/lib/sales/scoring';
+import { generateSalesId } from '@/lib/sales/types';
 import { IntakeError } from '@/lib/sales/errors';
 import { ApiResponse } from '@/lib/api-response';
 import { canAccessLead } from '@/lib/sales/access';
@@ -238,38 +240,103 @@ export async function POST(request: NextRequest) {
     const fromPublicForm = Boolean(body.consentText);
     const formName = typeof body.customFields?.formName === 'string' ? body.customFields.formName : undefined;
 
-    const { leadId, created } = await ingestLead({
-      name: body.name,
-      email: body.email,
-      phone: body.phone,
-      company: body.company,
-      website: body.website,
-      jobTitle: body.jobTitle,
-      message: body.projectDescription,
-      // A public request cannot choose its source. No admin screen posts one either
-      // (the Add Lead modal sends none), so every submission here is a website form.
-      source: 'website_form',
-      sourceDetail: formName,
-      attribution: body.attribution,
-      consent: fromPublicForm
-        ? {
-            basis: 'inbound_request',
-            evidence: { consentText: body.consentText, formName: formName ?? null, ip: meta.ip_address, page: request.headers.get('referer') },
-            capturedAt: nowIso,
-          }
-        : { basis: 'none', evidence: { enteredBy: 'admin' }, capturedAt: nowIso },
-      customFields: body.customFields,
-      projectType: body.projectType,
-      budgetRange: body.budgetRange,
-      timeline: body.timeline,
-      companySize: body.companySize,
-      industry: body.industry,
-      primaryChallenge: body.primaryChallenge,
-      additionalChallenges: body.additionalChallenges,
-      specificRequirements: body.specificRequirements,
-      ipAddress: meta.ip_address,
-      userAgent: meta.user_agent,
-    });
+    let ingested: IngestResult;
+    try {
+      ingested = await ingestLead({
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        company: body.company,
+        website: body.website,
+        jobTitle: body.jobTitle,
+        message: body.projectDescription,
+        // A public request cannot choose its source. No admin screen posts one either
+        // (the Add Lead modal sends none), so every submission here is a website form.
+        source: 'website_form',
+        sourceDetail: formName,
+        attribution: body.attribution,
+        consent: fromPublicForm
+          ? {
+              basis: 'inbound_request',
+              evidence: { consentText: body.consentText, formName: formName ?? null, ip: meta.ip_address, page: request.headers.get('referer') },
+              capturedAt: nowIso,
+            }
+          : { basis: 'none', evidence: { enteredBy: 'admin' }, capturedAt: nowIso },
+        customFields: body.customFields,
+        projectType: body.projectType,
+        budgetRange: body.budgetRange,
+        timeline: body.timeline,
+        companySize: body.companySize,
+        industry: body.industry,
+        primaryChallenge: body.primaryChallenge,
+        additionalChallenges: body.additionalChallenges,
+        specificRequirements: body.specificRequirements,
+        ipAddress: meta.ip_address,
+        userAgent: meta.user_agent,
+      });
+    } catch (error) {
+      if (!isSchemaBehindCode(error)) throw error;
+      console.warn('[leads] sales columns missing — apply migrations/2026-09-15-sales-foundation.sql');
+
+      const { leadScore, priority } = scoreLead({
+        source: 'website_form',
+        budgetRange: body.budgetRange,
+        timeline: body.timeline,
+        companySize: body.companySize,
+        industry: body.industry,
+        primaryChallenge: body.primaryChallenge,
+        customFields: body.customFields,
+      });
+      const record = {
+        id: generateSalesId('lead'),
+        name: stripTags(body.name),
+        email: body.email.trim().toLowerCase(),
+        phone: body.phone?.trim() || null,
+        company: stripTags(body.company),
+        website: body.website?.trim() || null,
+        job_title: body.jobTitle ? stripTags(body.jobTitle) : null,
+        company_size: body.companySize,
+        industry: body.industry || null,
+        project_type: body.projectType,
+        project_description: stripTags(body.projectDescription),
+        budget_range: body.budgetRange,
+        timeline: body.timeline,
+        primary_challenge: stripTags(body.primaryChallenge),
+        additional_challenges: (body.additionalChallenges ?? []).map(stripTags).filter(Boolean),
+        specific_requirements: body.specificRequirements ? stripTags(body.specificRequirements) : null,
+        status: 'new',
+        priority,
+        source: 'website_form',
+        lead_score: leadScore,
+        tags: [],
+        notes: '',
+        custom_fields: body.customFields ?? {},
+      };
+      await saveBeforeMigration(record, meta);
+
+      notifyAdmins({
+        type: 'general',
+        title: 'New lead received',
+        message: `${record.name} — ${record.company || 'No company'}`,
+        priority: 'high',
+        actionUrl: '/admin/leads',
+      });
+      const emailData = newLeadEmail({
+        name: record.name,
+        email: record.email,
+        company: record.company,
+        projectType: record.project_type,
+        budgetRange: record.budget_range,
+        timeline: record.timeline,
+        primaryChallenge: record.primary_challenge,
+        leadScore,
+        priority,
+      });
+      notifyTeam(emailData.subject, emailData.html);
+
+      return ApiResponse.success({ id: null });
+    }
+    const { leadId, created } = ingested;
 
     if (created) {
       await announceNewLead(leadId);
@@ -285,6 +352,38 @@ export async function POST(request: NextRequest) {
     console.error('Error creating lead:', error);
     return NextResponse.json({ success: false, error: 'Failed to create lead' }, { status: 500 });
   }
+}
+
+const UNDEFINED_COLUMN = '42703';
+
+function stripTags(value: string): string {
+  return value.replace(/<[^>]*>/g, '').trim();
+}
+
+/**
+ * True when the database lacks a column this code expects: PGRST204 on write, or
+ * Postgres 42703 when intake filters on a column (e.g. phone_e164) that is not there yet.
+ */
+function isSchemaBehindCode(error: unknown): boolean {
+  if (isMissingColumnError(error)) return true;
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === UNDEFINED_COLUMN;
+}
+
+/**
+ * The only insert into `leads` outside ingestLead(). The sales migration is applied by
+ * hand in the Supabase SQL editor, so this code can deploy before it. Until then
+ * ingestLead() fails on the new columns, and a lost enquiry cannot be recovered, so the
+ * submission is written in the pre-sales-automation row shape instead. Remove once
+ * migrations/2026-09-15-sales-foundation.sql is applied everywhere.
+ */
+async function saveBeforeMigration(record: Record<string, unknown>, meta: CaptureMeta): Promise<void> {
+  const supabase = getSupabaseAdmin();
+  let { error } = await supabase.from('leads').insert({ ...record, ...meta });
+  // The capture-metadata migration may be missing too; never lose a submission over telemetry.
+  if (error && isMissingColumnError(error)) {
+    ({ error } = await supabase.from('leads').insert(record));
+  }
+  if (error) throw error;
 }
 
 /** Tell the team about a new lead. Never fails the submission. */

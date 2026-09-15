@@ -73,7 +73,7 @@ export async function evaluateContinue(leadId: string): Promise<ContinueDecision
  * that happens afterwards in `recordStepProgress`, in its own Inngest step,
  * so a retried side effect never repeats a real send.
  */
-export async function runSequenceStep(leadId: string, step: SequenceStep, index: number): Promise<StepResult> {
+export async function runSequenceStep(leadId: string, step: SequenceStep): Promise<StepResult> {
   const lead = await loadLead(leadId);
   if (!lead) return { done: false, stopped: 'lead_missing' };
 

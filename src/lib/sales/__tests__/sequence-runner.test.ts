@@ -60,7 +60,7 @@ describe('evaluateContinue', () => {
 describe('runSequenceStep', () => {
   it('sends the first email but leaves all sequence bookkeeping untouched', async () => {
     respondWithLead({ status: 'new', sequence_status: 'active' });
-    const result = await runSequenceStep('lead_1', { kind: 'email', template: 'instant_reply', waitBefore: '0s' }, 0);
+    const result = await runSequenceStep('lead_1', { kind: 'email', template: 'instant_reply', waitBefore: '0s' });
     expect(result).toEqual({ done: true });
     expect(mocks.sendSalesEmail).toHaveBeenCalledWith(expect.objectContaining({ template: 'instant_reply', ownerName: 'Asha' }));
 
@@ -73,13 +73,13 @@ describe('runSequenceStep', () => {
   it('stops the sequence when the address is suppressed', async () => {
     respondWithLead({ sequence_status: 'active' });
     mocks.sendSalesEmail.mockResolvedValueOnce({ sent: false, reason: 'suppressed' });
-    const result = await runSequenceStep('lead_1', { kind: 'email', template: 'follow_up_proof', waitBefore: '2d' }, 1);
+    const result = await runSequenceStep('lead_1', { kind: 'email', template: 'follow_up_proof', waitBefore: '2d' });
     expect(result).toEqual({ done: false, stopped: 'unsubscribed' });
   });
 
   it('creates a task for task steps', async () => {
     respondWithLead({ sequence_status: 'active', status: 'contacted' });
-    await runSequenceStep('lead_1', { kind: 'task', taskType: 'call', title: 'Call or WhatsApp follow-up', dueInHours: 4, waitBefore: '2d' }, 2);
+    await runSequenceStep('lead_1', { kind: 'task', taskType: 'call', title: 'Call or WhatsApp follow-up', dueInHours: 4, waitBefore: '2d' });
     expect(payloadOf(fake.callsTo('sales_tasks', 'insert')[0])).toMatchObject({ type: 'call', title: 'Call or WhatsApp follow-up' });
     expect(mocks.sendSalesEmail).not.toHaveBeenCalled();
   });
