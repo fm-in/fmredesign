@@ -21,6 +21,11 @@ import {
   Gift
 } from 'lucide-react';
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { CalButton } from "@/components/ui/CalButton";
+import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
+import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
+import { DEFAULT_BOOKING_LINK } from '@/lib/sales/links';
+import { readFirstTouchSafely } from '@/lib/attribution';
 import type { LeadInput, ProjectType, BudgetRange, Timeline, CompanySize, Industry } from '@/lib/admin/lead-types';
 import { INDUSTRIES } from '@/lib/admin/lead-types';
 
@@ -117,6 +122,8 @@ export default function GetStartedPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<LeadInput>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState('');
+  const [leadId, setLeadId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -216,13 +223,19 @@ export default function GetStartedPage() {
         },
         body: JSON.stringify({
           ...formData,
-          source: 'website_form'
+          source: 'website_form',
+          [HONEYPOT_FIELD]: honeypot,
+          attribution: readFirstTouchSafely(),
+          consentText: INBOUND_CONSENT_TEXT,
+          customFields: { ...(formData.customFields ?? {}), formName: 'Get started' },
         }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to submit form');
       }
+
+      setLeadId(leadIdFrom(await response.json().catch(() => null)));
 
       localStorage.removeItem('fm_lead_progress');
       setSubmitted(true);
@@ -244,7 +257,7 @@ export default function GetStartedPage() {
   };
 
   if (submitted) {
-    return <ThankYouStep formData={formData} />;
+    return <ThankYouStep formData={formData} leadId={leadId} />;
   }
 
   return (
@@ -679,6 +692,22 @@ export default function GetStartedPage() {
                   )}
                 </div>
 
+                {currentStep === 4 && (
+                  <p className="text-xs text-fm-neutral-500 leading-relaxed" style={{ marginTop: '32px' }}>
+                    {INBOUND_CONSENT_TEXT}
+                  </p>
+                )}
+                <input
+                  type="text"
+                  name={HONEYPOT_FIELD}
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}
+                />
+
                 {/* Navigation Buttons */}
                 <div className="flex justify-between items-center border-t border-fm-neutral-200" style={{ marginTop: '48px', paddingTop: '32px' }}>
                   <button
@@ -751,8 +780,16 @@ export default function GetStartedPage() {
   );
 }
 
+/** The new lead's id from the POST /api/leads response, if present. */
+function leadIdFrom(json: unknown): string | null {
+  if (typeof json !== 'object' || json === null || !('data' in json)) return null;
+  const data = json.data;
+  if (typeof data !== 'object' || data === null || !('id' in data)) return null;
+  return typeof data.id === 'string' ? data.id : null;
+}
+
 // Thank You Step Component
-function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
+function ThankYouStep({ formData, leadId }: { formData: Partial<LeadInput>; leadId: string | null }) {
   return (
     <V2PageWrapper>
       <section className="relative z-10 min-h-screen flex items-center justify-center v2-section">
@@ -798,12 +835,16 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
 
             {/* CTA Buttons */}
             <div className="space-y-6">
-              <Link
-                href="/"
+              <CalButton
+                calLink={DEFAULT_BOOKING_LINK}
+                prefill={{ leadId: leadId ?? undefined, name: formData.name, email: formData.email }}
                 className="v2-btn v2-btn-magenta"
               >
-                Return to Homepage
+                Book your discovery call now
                 <ArrowRight className="w-5 h-5" />
+              </CalButton>
+              <Link href="/" className="v2-btn v2-btn-outline">
+                Return to Homepage
               </Link>
 
               <p className="text-sm text-fm-neutral-500">
