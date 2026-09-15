@@ -3,6 +3,7 @@
 import { NextRequest } from 'next/server';
 import { ApiResponse } from '@/lib/api-response';
 import { requirePermission } from '@/lib/admin-auth-middleware';
+import { getClientIP, logAuditEvent } from '@/lib/admin/audit-log';
 import { createNotification } from '@/lib/notifications';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { toCamelCaseKeys } from '@/lib/supabase-utils';
@@ -72,8 +73,16 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       const owner = body.ownerId ? await loadOwner(body.ownerId) : null;
       if (body.ownerId && !owner) return ApiResponse.validationError('That team member does not exist');
 
-      const { error } = await supabase.from('leads').update({ owner_id: body.ownerId, assigned_to: owner?.name ?? null }).eq('id', id);
+      // Compare-and-swap: only apply the update if the owner is still what we read it as,
+      // so two people racing to claim the same lead cannot silently overwrite each other.
+      const ownerUpdateQuery = supabase.from('leads').update({ owner_id: body.ownerId, assigned_to: owner?.name ?? null }).eq('id', id);
+      const { data: ownerUpdateRows, error } = await (
+        lead.owner_id === null ? ownerUpdateQuery.is('owner_id', null) : ownerUpdateQuery.eq('owner_id', lead.owner_id)
+      ).select('id');
       if (error) throw error;
+      if (!ownerUpdateRows || ownerUpdateRows.length === 0) {
+        return ApiResponse.error('This lead was just reassigned. Reload and try again.', 409);
+      }
 
       await recordActivity({
         leadId: id,
@@ -92,6 +101,15 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
           actionUrl: `/admin/leads/${id}`,
         });
       }
+      await logAuditEvent({
+        user_id: auth.user.id,
+        user_name: auth.user.name,
+        action: 'update',
+        resource_type: 'lead',
+        resource_id: id,
+        details: { field: 'owner', from: lead.owner_id, to: body.ownerId },
+        ip_address: getClientIP(request),
+      });
     }
 
     if (body.dealValue !== undefined || body.currency !== undefined) {

@@ -55,7 +55,7 @@ async function buildPayload() {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, 'settings.read');
+  const auth = await requirePermission(request, 'sales.read');
   if ('error' in auth) return auth.error;
   try {
     return ApiResponse.success(await buildPayload());
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = await requirePermission(request, 'settings.write');
+  const auth = await requirePermission(request, 'sales.write');
   if ('error' in auth) return auth.error;
 
   const parsed = salesSettingsSchema.safeParse(await request.json().catch(() => null));
@@ -74,10 +74,20 @@ export async function PUT(request: NextRequest) {
   const { rotation, ...patch } = parsed.data;
 
   try {
+    const supabase = getSupabaseAdmin();
+
+    if (rotation && rotation.length > 0) {
+      const distinctIds = Array.from(new Set(rotation));
+      const { data: existingUsers, error: lookupError } = await supabase.from('authorized_users').select('id').in('id', distinctIds);
+      if (lookupError) throw lookupError;
+      if (!existingUsers || existingUsers.length < distinctIds.length) {
+        return ApiResponse.validationError('One or more team members in the rotation do not exist');
+      }
+    }
+
     if (Object.keys(patch).length > 0) await updateSalesSettings(patch);
 
     if (rotation) {
-      const supabase = getSupabaseAdmin();
       const { error: clearError } = await supabase.from('authorized_users').update({ in_sales_rotation: false }).eq('in_sales_rotation', true);
       if (clearError) throw clearError;
       if (rotation.length > 0) {
