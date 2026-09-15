@@ -11,7 +11,7 @@
 import { NextRequest } from 'next/server';
 import { ApiResponse } from '@/lib/api-response';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import type { DimensionResult } from '@/lib/scorecard/types';
 import { determineLeadPriority } from '@/lib/supabase-utils';
 import type {
@@ -43,8 +43,8 @@ interface SubmissionRow {
 }
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'sales.read');
+  if ('error' in auth) return auth.error;
 
   const supabase = getSupabaseAdmin();
   const { searchParams } = new URL(request.url);
@@ -78,8 +78,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'sales.write');
+  if ('error' in auth) return auth.error;
 
   let body: { action?: string; id?: string };
   try {

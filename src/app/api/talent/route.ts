@@ -13,6 +13,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
+import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { notifyAdmins } from '@/lib/notifications';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { submitTalentApplicationSchema, validateBody } from '@/lib/validations/schemas';
@@ -105,6 +106,16 @@ export async function POST(request: NextRequest) {
     }
     const body = rawBody;
     const { application } = body;
+
+    const spam = checkSpam({
+      honeypot: rawBody?.[HONEYPOT_FIELD],
+      email: application?.personalInfo?.email,
+      name: application?.personalInfo?.fullName,
+    });
+    if (spam.isSpam) {
+      console.warn('[talent] rejected submission:', spam.reason);
+      return NextResponse.json({ success: false, error: 'A valid email is required' }, { status: 400 });
+    }
 
     // ------------------------------------------------------------------
     // Insert into talent_applications

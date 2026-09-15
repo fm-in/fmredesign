@@ -9,16 +9,18 @@ import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/li
 import type { LeadInput } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
-import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { notifyAdmins } from '@/lib/notifications';
 import { emitEvent } from '@/lib/events/emitter';
+import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
+import { escapeSearchTerm } from '@/lib/postgrest';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.read');
+  const auth = await requirePermission(request, 'sales.read');
   if ('error' in auth) return auth.error;
 
   try {
@@ -43,10 +45,12 @@ export async function GET(request: NextRequest) {
     const projectTypeFilter = searchParams.get('projectType');
     const budgetRangeFilter = searchParams.get('budgetRange');
     const companySizeFilter = searchParams.get('companySize');
-    const assignedToFilter = myLeadsOnly ? auth.user.name : searchParams.get('assignedTo');
+    const assignedToFilter = myLeadsOnly ? null : searchParams.get('assignedTo');
+    const scopedOwnerId = myLeadsOnly ? auth.user.id : null;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const searchQuery = searchParams.get('search');
+    const searchTerm = searchQuery ? escapeSearchTerm(searchQuery) : '';
 
     // Sorting
     const sortBy = searchParams.get('sortBy');
@@ -74,9 +78,11 @@ export async function GET(request: NextRequest) {
       if (assignedToFilter) q = q.in('assigned_to', assignedToFilter.split(','));
       if (startDate) q = q.gte('created_at', startDate);
       if (endDate) q = q.lte('created_at', endDate);
-      if (searchQuery) {
+      // Managers see the leads they own plus unassigned ones.
+      if (scopedOwnerId) q = q.or(`owner_id.eq.${scopedOwnerId},owner_id.is.null`);
+      if (searchTerm) {
         q = q.or(
-          `name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,project_description.ilike.%${searchQuery}%`
+          `name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,project_description.ilike.%${searchTerm}%`
         );
       }
       return q;
@@ -201,6 +207,16 @@ export async function POST(request: NextRequest) {
     }
 
     const rawBody = await request.json();
+    const spam = checkSpam({
+      honeypot: rawBody?.[HONEYPOT_FIELD],
+      email: typeof rawBody?.email === 'string' ? rawBody.email : undefined,
+      name: typeof rawBody?.name === 'string' ? rawBody.name : undefined,
+    });
+    if (spam.isSpam) {
+      console.warn('[leads] rejected submission:', spam.reason);
+      return NextResponse.json({ success: false, error: 'A valid email is required' }, { status: 400 });
+    }
+
     const validation = validateBody(createLeadSchema, rawBody);
     if (!validation.success) {
       return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
@@ -334,8 +350,11 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/leads - Delete lead
 export async function DELETE(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.delete');
+  const auth = await requirePermission(request, 'sales.write');
   if ('error' in auth) return auth.error;
+  if (auth.user.role !== 'super_admin' && auth.user.role !== 'admin') {
+    return NextResponse.json({ success: false, error: 'Only admins can delete leads' }, { status: 403 });
+  }
 
   try {
     const { searchParams } = new URL(request.url);
@@ -373,7 +392,7 @@ export async function DELETE(request: NextRequest) {
 
 // PUT /api/leads - Update lead
 export async function PUT(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.write');
+  const auth = await requirePermission(request, 'sales.write');
   if ('error' in auth) return auth.error;
 
   try {

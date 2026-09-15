@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { ProjectUtils } from '@/lib/admin/project-types';
+import { emitEvent } from '@/lib/events/emitter';
 
 // Lead → Project default duration. 60 days is a reasonable rough estimate
 // for an initial engagement; the user adjusts in the project edit screen.
@@ -40,7 +41,7 @@ async function uniqueSlug(base: string): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.write');
+  const auth = await requirePermission(request, 'sales.write');
   if ('error' in auth) return auth.error;
 
   try {
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
       const endDate = new Date(now);
       endDate.setDate(endDate.getDate() + DEFAULT_PROJECT_DURATION_DAYS);
       const projectType = (lead.project_type as string) || 'consultation';
-      const projectBudget = Number(lead.estimated_value ?? lead.budget ?? 0) || 0;
+      const projectBudget = Number(lead.deal_value ?? 0) || 0;
       const projectName = `${clientName} — ${projectType.replace(/[-_]/g, ' ')} engagement`;
 
       const newProject = {
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest) {
         client_id: clientId,
         discovery_id: null,
         name: projectName,
-        description: lead.notes || lead.message || '',
+        description: lead.project_description || lead.notes || '',
         type: projectType,
         status: 'planning',
         priority: lead.priority || 'medium',
@@ -169,6 +170,13 @@ export async function POST(request: NextRequest) {
         projectId = projectRow.id as string;
       }
     }
+
+    emitEvent('lead.converted', {
+      entityId: leadId,
+      actor: { id: auth.user.id, name: auth.user.name },
+      timestamp: new Date().toISOString(),
+      data: { clientId, projectId },
+    });
 
     // Audit log
     await logAuditEvent({

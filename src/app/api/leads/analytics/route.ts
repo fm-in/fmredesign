@@ -7,12 +7,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { BUDGET_VALUES } from '@/lib/admin/lead-types';
 import type { LeadSource, LeadStatus, LeadPriority, BudgetRange } from '@/lib/admin/lead-types';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 
 // GET /api/leads/analytics
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'sales.read');
+  if ('error' in auth) return auth.error;
 
   try {
     const searchParams = request.nextUrl.searchParams;
