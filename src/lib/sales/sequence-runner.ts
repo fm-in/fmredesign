@@ -67,13 +67,18 @@ export async function evaluateContinue(leadId: string): Promise<ContinueDecision
   return decision;
 }
 
+/**
+ * Perform one step's side effect only: create the task, or send the email.
+ * No bookkeeping (no `first_response_at`/`status`/`sequence_step` writes) —
+ * that happens afterwards in `recordStepProgress`, in its own Inngest step,
+ * so a retried side effect never repeats a real send.
+ */
 export async function runSequenceStep(leadId: string, step: SequenceStep, index: number): Promise<StepResult> {
   const lead = await loadLead(leadId);
   if (!lead) return { done: false, stopped: 'lead_missing' };
 
   const owner = await loadOwner(lead.owner_id);
   const ownerName = owner?.name ?? TEAM_SIGNATURE;
-  const supabase = getSupabaseAdmin();
 
   if (step.kind === 'task') {
     await createTask({
@@ -91,14 +96,41 @@ export async function runSequenceStep(leadId: string, step: SequenceStep, index:
       await stopSequence(leadId, reason);
       return { done: false, stopped: reason };
     }
-    if (index === 0) {
-      await supabase.from('leads').update({ first_response_at: new Date().toISOString() }).eq('id', leadId).is('first_response_at', null);
-      if (lead.status === 'new') {
-        await changeStage(leadId, 'contacted', SYSTEM_ACTOR, { reason: 'Instant reply sent' });
-      }
+  }
+
+  return { done: true };
+}
+
+/**
+ * Record the bookkeeping for a step that already ran successfully. Runs in
+ * its own Inngest step (after `runSequenceStep`'s), so a retry here never
+ * re-sends anything — every write is idempotent and safe to repeat.
+ */
+export async function recordStepProgress(leadId: string, step: SequenceStep, index: number): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  if (step.kind === 'email' && index === 0) {
+    const { error: stampError } = await supabase
+      .from('leads')
+      .update({ first_response_at: new Date().toISOString() })
+      .eq('id', leadId)
+      .is('first_response_at', null);
+    if (stampError) throw stampError;
+
+    // Re-read fresh — never reuse a lead loaded by an earlier step.
+    const { data: current, error: statusError } = await supabase
+      .from('leads')
+      .select('status')
+      .eq('id', leadId)
+      .maybeSingle();
+    if (statusError) throw statusError;
+    if (!current) return;
+
+    if (current.status === 'new') {
+      await changeStage(leadId, 'contacted', SYSTEM_ACTOR, { reason: 'Instant reply sent' });
     }
   }
 
-  await supabase.from('leads').update({ sequence_step: index + 1 }).eq('id', leadId);
-  return { done: true };
+  const { error: stepError } = await supabase.from('leads').update({ sequence_step: index + 1 }).eq('id', leadId);
+  if (stepError) throw stepError;
 }

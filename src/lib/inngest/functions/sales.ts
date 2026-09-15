@@ -13,7 +13,13 @@ import { TEAM_SIGNATURE } from '@/lib/sales/emails';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
 import { nextSendTime } from '@/lib/sales/send-window';
 import { INBOUND_V1, INBOUND_V1_KEY } from '@/lib/sales/sequence';
-import { evaluateContinue, markSequenceActive, markSequenceCompleted, runSequenceStep } from '@/lib/sales/sequence-runner';
+import {
+  evaluateContinue,
+  markSequenceActive,
+  markSequenceCompleted,
+  recordStepProgress,
+  runSequenceStep,
+} from '@/lib/sales/sequence-runner';
 import { createTask, hasOpenTask } from '@/lib/sales/tasks';
 
 const FIRST_TOUCH_TITLE = 'First touch within the hour';
@@ -91,6 +97,8 @@ export const salesSequenceInboundFn = inngest.createFunction(
 
       const result = await step.run(`step-${index}`, () => runSequenceStep(leadId, sequenceStep, index));
       if (!result.done) return { stopped: result.stopped, atStep: index };
+
+      await step.run(`progress-${index}`, () => recordStepProgress(leadId, sequenceStep, index));
     }
 
     await step.run('complete', () => markSequenceCompleted(leadId));

@@ -16,7 +16,7 @@ vi.mock('@/lib/inngest/client', () => ({ inngest: { send: mocks.send } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 vi.mock('../send-email', () => ({ sendSalesEmail: mocks.sendSalesEmail }));
 
-import { evaluateContinue, markSequenceActive, runSequenceStep } from '../sequence-runner';
+import { evaluateContinue, markSequenceActive, recordStepProgress, runSequenceStep } from '../sequence-runner';
 
 beforeEach(() => {
   fake.reset();
@@ -58,14 +58,16 @@ describe('evaluateContinue', () => {
 });
 
 describe('runSequenceStep', () => {
-  it('sends the first email, stamps first_response_at and marks the lead contacted', async () => {
+  it('sends the first email but leaves all sequence bookkeeping untouched', async () => {
     respondWithLead({ status: 'new', sequence_status: 'active' });
     const result = await runSequenceStep('lead_1', { kind: 'email', template: 'instant_reply', waitBefore: '0s' }, 0);
     expect(result).toEqual({ done: true });
     expect(mocks.sendSalesEmail).toHaveBeenCalledWith(expect.objectContaining({ template: 'instant_reply', ownerName: 'Asha' }));
+
     const updates = fake.callsTo('leads', 'update').map(payloadOf);
-    expect(updates.some((p) => typeof p.first_response_at === 'string')).toBe(true);
-    expect(updates.some((p) => p.status === 'contacted')).toBe(true);
+    expect(updates.some((p) => 'first_response_at' in p)).toBe(false);
+    expect(updates.some((p) => 'sequence_step' in p)).toBe(false);
+    expect(updates.some((p) => p.status === 'contacted')).toBe(false);
   });
 
   it('stops the sequence when the address is suppressed', async () => {
@@ -80,5 +82,56 @@ describe('runSequenceStep', () => {
     await runSequenceStep('lead_1', { kind: 'task', taskType: 'call', title: 'Call or WhatsApp follow-up', dueInHours: 4, waitBefore: '2d' }, 2);
     expect(payloadOf(fake.callsTo('sales_tasks', 'insert')[0])).toMatchObject({ type: 'call', title: 'Call or WhatsApp follow-up' });
     expect(mocks.sendSalesEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('recordStepProgress', () => {
+  it('stamps first_response_at guarded by is-null and moves a new lead to contacted', async () => {
+    respondWithLead({ status: 'new' });
+    await recordStepProgress('lead_1', { kind: 'email', template: 'instant_reply', waitBefore: '0s' }, 0);
+
+    const updateCalls = fake.callsTo('leads', 'update');
+    const stamp = updateCalls.find((c) => 'first_response_at' in payloadOf(c));
+    expect(stamp).toBeDefined();
+    expect(stamp?.filters).toContainEqual({ method: 'is', args: ['first_response_at', null] });
+
+    const updates = updateCalls.map(payloadOf);
+    expect(updates.some((p) => p.status === 'contacted')).toBe(true);
+    expect(updates.some((p) => p.sequence_step === 1)).toBe(true);
+  });
+
+  it('does not call changeStage when the fresh status is already past new', async () => {
+    respondWithLead({ status: 'contacted' });
+    await recordStepProgress('lead_1', { kind: 'email', template: 'instant_reply', waitBefore: '0s' }, 0);
+
+    const updates = fake.callsTo('leads', 'update').map(payloadOf);
+    expect(updates.some((p) => 'first_response_at' in p)).toBe(true);
+    expect(updates.some((p) => p.status === 'contacted')).toBe(false);
+    expect(updates.some((p) => p.sequence_step === 1)).toBe(true);
+  });
+
+  it('only advances sequence_step for a task step', async () => {
+    respondWithLead({ status: 'contacted' });
+    await recordStepProgress(
+      'lead_1',
+      { kind: 'task', taskType: 'call', title: 'Call or WhatsApp follow-up', dueInHours: 4, waitBefore: '2d' },
+      2
+    );
+
+    const updates = fake.callsTo('leads', 'update').map(payloadOf);
+    expect(updates).toEqual([{ sequence_step: 3 }]);
+  });
+
+  it('throws when the sequence_step update returns an error', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'update' && 'sequence_step' in payloadOf(call)) {
+        return { data: null, error: { message: 'boom' } };
+      }
+      return { data: [{ id: 'lead_1' }], error: null };
+    });
+
+    await expect(
+      recordStepProgress('lead_1', { kind: 'task', taskType: 'call', title: 'Call', dueInHours: 4, waitBefore: '2d' }, 2)
+    ).rejects.toMatchObject({ message: 'boom' });
   });
 });
