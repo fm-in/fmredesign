@@ -109,6 +109,7 @@ export interface LeadProfile {
   status: LeadStatus;
   priority: LeadPriority;
   source: LeadSource;
+  utmCampaign?: string | null;
   leadScore: number; // 0-100
   
   // Assignment and Tracking

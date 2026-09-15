@@ -54,6 +54,11 @@ const STATUS_OPTIONS: { value: LeadStatus; label: string }[] = [
   { value: 'archived', label: 'Archived' },
 ];
 
+/** Same wording as the lead page header: the stored source with spaces for underscores. */
+function sourceLabel(source: string | null | undefined): string {
+  return source ? source.replace(/_/g, ' ') : 'Unknown';
+}
+
 /** Statuses eligible for conversion to client */
 const CONVERTIBLE_STATUSES: LeadStatus[] = [
   'qualified',
@@ -153,6 +158,12 @@ export function LeadTable({
                   <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">
                     Company
                   </th>
+                  <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">
+                    Owner
+                  </th>
+                  <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">
+                    Source
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-fm-neutral-500 uppercase tracking-wider">
                     Project
                   </th>
@@ -234,6 +245,13 @@ export function LeadTable({
                         </div>
                       )}
                       <div className="text-xs text-fm-neutral-500">{lead.companySize}</div>
+                    </td>
+                    <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-fm-neutral-900">
+                      {lead.assignedTo || <span className="text-fm-neutral-500">Unassigned</span>}
+                    </td>
+                    <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-fm-neutral-900">
+                      <span className="capitalize">{sourceLabel(lead.source)}</span>
+                      {lead.utmCampaign && <span className="text-fm-neutral-500"> · {lead.utmCampaign}</span>}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-fm-neutral-900 capitalize">

@@ -10,12 +10,21 @@ import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { canAccessLead, canAssignOwner, isSalesAdmin } from '@/lib/sales/access';
 import { changeStage, recordActivity } from '@/lib/sales/activity';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
+import type { LeadRow } from '@/lib/sales/types';
 import { firstIssue, leadPatchSchema } from '@/lib/sales/schemas';
 import { isSuppressed } from '@/lib/sales/suppression';
 
 export const dynamic = 'force-dynamic';
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+/**
+ * camelCase for the API, except form answers and activity metadata: their keys are
+ * labels a person wrote (or a form sent), and a deep camelCase would rename them.
+ */
+function leadPayload(lead: LeadRow) {
+  return { ...toCamelCaseKeys(lead), customFields: lead.custom_fields };
+}
 
 export async function GET(request: NextRequest, { params }: RouteContext) {
   const auth = await requirePermission(request, 'sales.read');
@@ -36,8 +45,8 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     ]);
 
     return ApiResponse.success({
-      lead: toCamelCaseKeys(lead),
-      activities: (activities.data ?? []).map((row: Record<string, unknown>) => toCamelCaseKeys(row)),
+      lead: leadPayload(lead),
+      activities: (activities.data ?? []).map((row: Record<string, unknown>) => ({ ...toCamelCaseKeys(row), metadata: row.metadata ?? {} })),
       tasks: (tasks.data ?? []).map((row: Record<string, unknown>) => toCamelCaseKeys(row)),
       meetings: (meetings.data ?? []).map((row: Record<string, unknown>) => toCamelCaseKeys(row)),
       owners: (owners.data ?? []).map((row: { id: string; name: string }) => ({ id: row.id, name: row.name })),
@@ -125,7 +134,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     }
 
     const updated = await loadLead(id);
-    return ApiResponse.success({ lead: updated ? toCamelCaseKeys(updated) : null });
+    return ApiResponse.success({ lead: updated ? leadPayload(updated) : null });
   } catch (error) {
     console.error('[sales] lead update failed:', error);
     return ApiResponse.error('Could not update the lead');

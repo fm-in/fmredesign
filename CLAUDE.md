@@ -248,9 +248,12 @@ Async APIs (`social/publish`, `content/generate`) return `{ status: 'queued' }` 
 
 Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`. Setup: `docs/SALES-SETUP.md`.
 
+- Apply `migrations/2026-09-15-sales-foundation.sql` before deploying
 - **Leads enter only through `ingestLead()`** (`src/lib/sales/intake/ingest.ts`). It normalises,
   merges returning people, scores, records the submission and emits `sales/lead.created`.
-  Never `insert` into `leads` anywhere else.
+  Never `insert` into `leads` anywhere else. The one exception is the pre-migration fallback
+  insert in `POST /api/leads` (`saveBeforeMigration`), used only when the database lacks the
+  sales columns.
 - **Stage changes go only through `changeStage()`** (`src/lib/sales/activity.ts`) so history,
   sequence stopping and `lead.status_changed` cannot be skipped.
 - **Sales email goes only through `sendSalesEmail()`**: it checks consent, the do-not-contact
@@ -342,6 +345,7 @@ RESEND_API_KEY, NOTIFICATION_EMAIL          # Email (Resend)
 META_TOKEN_SECRET                            # Social publishing (min 32 chars)
 INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY       # Background jobs (prod only)
 GOOGLE_SHEETS_PRIVATE_KEY, GOOGLE_SHEETS_CLIENT_EMAIL, GOOGLE_SHEETS_SPREADSHEET_ID  # Legacy
+# Sales automation (optional): see docs/SALES-SETUP.md — SALES_LINK_SECRET, SALES_REPLY_TO, SALES_FROM_EMAIL, RESEND_WEBHOOK_SECRET, META_APP_SECRET, META_LEADS_VERIFY_TOKEN, GOOGLE_ADS_LEAD_KEY, CALCOM_WEBHOOK_SECRET, LEAD_CONNECTOR_SECRET
 ```
 
 ## Workflow Rules

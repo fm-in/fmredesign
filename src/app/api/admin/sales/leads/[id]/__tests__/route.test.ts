@@ -76,6 +76,38 @@ describe('/api/admin/sales/leads/[id]', () => {
     expect(json.data.permissions).toEqual({ canAssign: false, userId: 'u-mgr' });
   });
 
+  it('returns form answers and activity metadata with the keys they were saved with', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') {
+        return { data: leadRow({ owner_id: null, custom_fields: { budget_range: '50k', 'What do you sell?': 'Tiles' } }), error: null };
+      }
+      if (call.table === 'lead_activities') {
+        return {
+          data: [
+            {
+              id: 'act_1',
+              lead_id: 'lead_1',
+              type: 'form_submitted',
+              metadata: { customFields: { team_size: '10' }, source_detail: 'Get started' },
+              occurred_at: '2026-09-15T04:00:00.000Z',
+            },
+          ],
+          error: null,
+        };
+      }
+      if (call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context);
+    const json = await res.json();
+
+    expect(json.data.lead.customFields).toEqual({ budget_range: '50k', 'What do you sell?': 'Tiles' });
+    expect(json.data.lead.phoneE164).toBe('+919833257659');
+    expect(json.data.activities[0]).toMatchObject({ leadId: 'lead_1', occurredAt: '2026-09-15T04:00:00.000Z' });
+    expect(json.data.activities[0].metadata).toEqual({ customFields: { team_size: '10' }, source_detail: 'Get started' });
+  });
+
   it('refuses to mark a lead lost without a reason', async () => {
     respondWithLead('u-mgr');
     const res = await PATCH(
@@ -93,6 +125,7 @@ describe('/api/admin/sales/leads/[id]', () => {
     );
     expect(res.status).toBe(200);
     expect(fake.callsTo('leads', 'update').map(payloadOf)).toContainEqual({ owner_id: 'u-mgr', assigned_to: 'Maya' });
+    expect((await res.json()).data.lead.customFields).toEqual({});
     expect(mocks.logAuditEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         resource_type: 'lead',

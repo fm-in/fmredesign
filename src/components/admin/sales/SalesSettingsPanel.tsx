@@ -174,7 +174,14 @@ export function SalesSettingsPanel() {
                   <code className="min-w-0 truncate rounded bg-fm-neutral-50 px-2 py-1 text-xs text-fm-neutral-700">{hook.url}</code>
                   <button
                     type="button"
-                    onClick={() => navigator.clipboard.writeText(hook.url).then(() => adminToast.success('URL copied'))}
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(hook.url);
+                        adminToast.success('URL copied');
+                      } catch {
+                        adminToast.error('Could not copy the URL');
+                      }
+                    }}
                     className="text-fm-neutral-500 hover:text-fm-magenta-700"
                     aria-label={`Copy the ${SOURCE_NAMES[hook.source] ?? hook.source} URL`}
                   >

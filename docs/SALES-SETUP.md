@@ -1,5 +1,8 @@
 # Sales Automation — Setup
 
+> **Apply the migration before deploying this code.** Run §1 first. Until the migration is
+> applied, the website form saves enquiries the old way and no other lead source works.
+
 Everything ships switched off. Work through these in order; each step can be checked in
 **Admin → Settings → Sales**.
 
@@ -12,7 +15,7 @@ verify queries at the bottom of the file.
 
 | Variable | What it is | Where to get it |
 |---|---|---|
-| `SALES_LINK_SECRET` | Signs unsubscribe links | `openssl rand -hex 32` |
+| `SALES_LINK_SECRET` | Encrypts unsubscribe links | `openssl rand -hex 32` |
 | `SALES_REPLY_TO` | Address replies go to | `replies@reply.freakingminds.in` (step 3) |
 | `SALES_FROM_EMAIL` | Optional sender, default `FreakingMinds <hello@freakingminds.in>` | Must be on a Resend-verified domain |
 | `RESEND_WEBHOOK_SECRET` | Verifies Resend webhooks | Step 3 |
@@ -68,11 +71,21 @@ cancelled with a "Rebook the discovery call" task.
 1. In the Meta app, add the **Webhooks** product → **Page** → subscribe to `leadgen` with
    callback `https://www.freakingminds.in/api/webhooks/sales/meta` and your
    `META_LEADS_VERIFY_TOKEN`.
-2. Reconnect the FreakingMinds Facebook Page in **Settings → Social** granting
-   `leads_retrieval`, `pages_manage_metadata`, `pages_show_list` and `pages_read_engagement`.
+2. **Settings → Social** stores the Page access token you paste; it does not refresh it. Generate a
+   **long-lived** Page token with `leads_retrieval` (plus `pages_manage_metadata`,
+   `pages_show_list` and `pages_read_engagement`), either a Meta Business system-user token or
+   a Graph API Explorer token exchanged for a long-lived one, and paste it for the
+   FreakingMinds Page. A short-lived token expires within hours, and every lead after that
+   would fail to fetch.
 3. Subscribe the app to the Page (`POST /{page-id}/subscribed_apps?subscribed_fields=leadgen`).
 4. Test with the [Lead Ads Testing Tool](https://developers.facebook.com/tools/lead-ads-testing).
    A lead appears in Admin → Leads within a minute.
+5. Before running ads, verify one real lead end to end: submit the live form yourself (for
+   example from the ad preview) and confirm the lead appears with an owner, a brief and a
+   "First touch within the hour" task.
+
+If a lead cannot be fetched (for example, the token has expired), it shows as the Meta
+source's last error in **Settings → Sales** and arrives as an admin notification.
 
 ## 6. Google Ads (Search, Performance Max, YouTube)
 
@@ -110,18 +123,21 @@ Snapchat, JustDial and IndiaMART.
 ## 8. Team
 
 1. Each salesperson needs a mobile login under **Users** with role `manager` (or `admin`).
-2. Users created before the migration were granted `sales.read,sales.write` by it. For anyone
-   added later, add both permissions to their user record.
-3. An admin opens **Settings → Sales → Sales rotation** and ticks who receives new leads.
+   Either role grants sales access automatically.
+2. An admin opens **Settings → Sales → Sales rotation** and ticks who receives new leads.
+   Only people with sales access can be in the rotation.
 
 ## 9. First run
 
 1. Keep automation **off**. Submit the contact form with your own email.
 2. Open the lead: it has an owner, an AI brief and a "First touch within the hour" task.
-3. Turn automation **on**. Submit again with a different email address you control.
-4. You receive the instant reply. Reply to it: the reply appears on the timeline, follow-ups
+3. Before turning automation on, confirm the Inngest dashboard lists all four sales functions:
+   `sales-lead-created`, `sales-sequence-inbound-v1`, `sales-meta-leadgen` and
+   `sales-meeting-prep`. If one is missing, resync the app in Inngest first.
+4. Turn automation **on**. Submit again with a different email address you control.
+5. You receive the instant reply. Reply to it: the reply appears on the timeline, follow-ups
    stop, and the reply is forwarded to the owner.
-5. Book through the link in the email: the lead moves to "Discovery scheduled" and a
+6. Book through the link in the email: the lead moves to "Discovery scheduled" and a
    pre-call brief arrives two hours before the call.
 
 ## 10. Check the admin screens

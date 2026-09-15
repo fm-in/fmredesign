@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { CardContent, CardHeader, CardTitle, DashboardButton, DashboardCard } from '@/design-system';
@@ -14,6 +15,8 @@ import { useLeadDetail } from '@/hooks/admin/useLeadDetail';
 export default function LeadDetailPage() {
   const params = useParams<{ id: string }>();
   const detail = useLeadDetail(params.id);
+  // Converting creates a client record, so it takes a second, deliberate click.
+  const [confirmingConvert, setConfirmingConvert] = useState(false);
 
   if (detail.loading) {
     return (
@@ -115,8 +118,24 @@ export default function LeadDetailPage() {
                 <Link href={`/admin/clients/${lead.clientId}`} className="text-sm font-medium text-fm-magenta-700 hover:underline">
                   Open client record
                 </Link>
+              ) : confirmingConvert ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <DashboardButton
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      setConfirmingConvert(false);
+                      detail.convertToClient();
+                    }}
+                  >
+                    Confirm: convert to client
+                  </DashboardButton>
+                  <DashboardButton variant="ghost" size="sm" onClick={() => setConfirmingConvert(false)}>
+                    Cancel
+                  </DashboardButton>
+                </div>
               ) : (
-                <DashboardButton variant="primary" size="sm" onClick={detail.convertToClient}>
+                <DashboardButton variant="primary" size="sm" onClick={() => setConfirmingConvert(true)}>
                   Convert to client
                 </DashboardButton>
               )}

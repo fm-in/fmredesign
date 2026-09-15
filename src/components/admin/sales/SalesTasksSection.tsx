@@ -29,15 +29,19 @@ export function SalesTasksSection() {
   }, [load]);
 
   async function complete(taskId: string, status: 'done' | 'skipped') {
-    const res = await fetch(`/api/admin/sales/tasks/${encodeURIComponent(taskId)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (res.ok) {
-      adminToast.success(status === 'done' ? 'Task done' : 'Task skipped');
-      load();
-    } else {
+    try {
+      const res = await fetch(`/api/admin/sales/tasks/${encodeURIComponent(taskId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        adminToast.success(status === 'done' ? 'Task done' : 'Task skipped');
+        load();
+      } else {
+        adminToast.error('Could not update the task. Try again.');
+      }
+    } catch {
       adminToast.error('Could not update the task. Try again.');
     }
   }
