@@ -5,7 +5,12 @@ import { leadRow } from '@/test-utils/lead-row';
 const mocks = vi.hoisted(() => ({
   send: vi.fn(async (_event: unknown) => undefined),
   get: vi.fn(async (_id: string) => ({ data: { text: 'Yes, Tuesday works for a call.', html: null }, error: null })),
-  forward: vi.fn(async (_options: unknown) => ({ data: { id: 'fwd_1' }, error: null })),
+  forward: vi.fn(
+    async (_options: unknown): Promise<{ data: { id: string } | null; error: { message: string } | null }> => ({
+      data: { id: 'fwd_1' },
+      error: null,
+    })
+  ),
 }));
 
 vi.mock('@/lib/supabase', async () => {
@@ -94,6 +99,20 @@ describe('email.received', () => {
     expect(mocks.forward).toHaveBeenCalledWith(expect.objectContaining({ to: 'team@fm.in' }));
     expect(fake.callsTo('lead_activities', 'insert')).toHaveLength(0);
   });
+
+  it('still records the reply and resolves when forwarding to the owner fails', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    respond({ leadFound: true });
+    mocks.forward.mockResolvedValueOnce({ data: null, error: { message: 'boom' } });
+
+    await expect(handleResendEvent(received('Re: Got your message, Priya'))).resolves.toBeUndefined();
+
+    const activity = fake.callsTo('lead_activities', 'insert').map(payloadOf).find((p) => p.type === 'email_received');
+    expect(activity).toMatchObject({ direction: 'in' });
+    expect(errorSpy).toHaveBeenCalledWith('[sales] resend forward failed:', 'boom');
+
+    errorSpy.mockRestore();
+  });
 });
 
 describe('email.bounced', () => {
@@ -108,5 +127,47 @@ describe('email.bounced', () => {
     expect(fake.callsTo('suppression_list', 'insert').map(payloadOf)[0]).toMatchObject({ reason: 'bounced' });
     expect(sentEvents('sales/sequence.stop')[0]?.data).toEqual({ leadId: 'lead_1', reason: 'bounced' });
     expect(fake.callsTo('sales_tasks', 'insert').map(payloadOf)[0]).toMatchObject({ title: 'Email bounced: confirm contact details' });
+  });
+
+  it('does not open a second task when the same bounce is redelivered', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select' && eqValue(call, 'email')) {
+        return { data: [leadRow({ sequence_status: 'active' })], error: null };
+      }
+      if (call.table === 'leads' && call.op === 'update' && eqValue(call, 'sequence_status') === 'active') {
+        return { data: [{ id: 'lead_1' }], error: null };
+      }
+      if (call.table === 'sales_tasks' && call.op === 'select') {
+        const alreadyOpen = fake.callsTo('sales_tasks', 'insert').length > 0;
+        return { data: alreadyOpen ? [{ id: 'task_1' }] : [], error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    const event = {
+      type: 'email.bounced',
+      created_at: '2026-09-15T06:00:00.000Z',
+      data: { email_id: 'em_2', to: ['priya@example.com'], subject: 'Got your message, Priya' },
+    };
+
+    await handleResendEvent(event);
+    await handleResendEvent(event);
+
+    expect(fake.callsTo('sales_tasks', 'insert')).toHaveLength(1);
+  });
+});
+
+describe('email.complained', () => {
+  it('suppresses with reason complaint, stops the sequence, and opens no task', async () => {
+    respond({ leadFound: true });
+    await handleResendEvent({
+      type: 'email.complained',
+      created_at: '2026-09-15T06:00:00.000Z',
+      data: { email_id: 'em_3', to: ['priya@example.com'], subject: 'Got your message, Priya' },
+    });
+
+    expect(fake.callsTo('suppression_list', 'insert').map(payloadOf)[0]).toMatchObject({ reason: 'complaint' });
+    expect(sentEvents('sales/sequence.stop')[0]?.data).toEqual({ leadId: 'lead_1', reason: 'bounced' });
+    expect(fake.callsTo('sales_tasks', 'insert')).toHaveLength(0);
   });
 });

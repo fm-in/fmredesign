@@ -13,12 +13,31 @@ import { normaliseEmail } from '@/lib/sales/intake/normalise';
 import { loadOwner } from '@/lib/sales/lead-store';
 import { SALES_FROM_DEFAULT } from '@/lib/sales/send-email';
 import { addSuppression } from '@/lib/sales/suppression';
-import { createTask } from '@/lib/sales/tasks';
+import { createTask, hasOpenTask } from '@/lib/sales/tasks';
 import { unsubscribeEmail } from '@/lib/sales/unsubscribe';
 import type { LeadRow } from '@/lib/sales/types';
 
 const UNSUBSCRIBE_SUBJECT = /\bunsubscribe\b/i;
 const MAX_REPLY_BODY = 10_000;
+const BOUNCE_TASK_TITLE = 'Email bounced: confirm contact details';
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+/** Forward a received email, logging (never the address or body) and swallowing any failure. */
+async function forwardToInbox(
+  resend: ReturnType<typeof getResend>,
+  options: { emailId: string; to: string; from: string }
+): Promise<void> {
+  if (!resend) return;
+  try {
+    const { error } = await resend.emails.receiving.forward(options);
+    if (error) console.error('[sales] resend forward failed:', error.message);
+  } catch (err) {
+    console.error('[sales] resend forward failed:', errorMessage(err));
+  }
+}
 
 export function extractAddress(value: string): string | undefined {
   const bracketed = value.match(/<([^>]+)>/);
@@ -59,15 +78,23 @@ async function handleReceived(data: Record<string, unknown>): Promise<void> {
   if (!lead) {
     await notifyAdmins({ type: 'general', title: 'Reply from an unknown sender', message: `${from}: ${subject}`, priority: 'normal' });
     const team = process.env.NOTIFICATION_EMAIL;
-    if (resend && team) await resend.emails.receiving.forward({ emailId, to: team, from: forwardingSender() });
+    if (team) await forwardToInbox(resend, { emailId, to: team, from: forwardingSender() });
     return;
   }
 
   let body: string | null = null;
   if (resend) {
-    const { data: full } = await resend.emails.receiving.get(emailId);
-    const text = full?.text ?? (full?.html ? full.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : null);
-    body = text ? text.slice(0, MAX_REPLY_BODY) : null;
+    try {
+      const { data: full, error } = await resend.emails.receiving.get(emailId);
+      if (error) {
+        console.error('[sales] resend get failed:', error.message);
+      } else {
+        const text = full?.text ?? (full?.html ? full.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : null);
+        body = text ? text.slice(0, MAX_REPLY_BODY) : null;
+      }
+    } catch (err) {
+      console.error('[sales] resend get failed:', errorMessage(err));
+    }
   }
 
   await recordActivity({
@@ -90,7 +117,7 @@ async function handleReceived(data: Record<string, unknown>): Promise<void> {
 
   const owner = await loadOwner(lead.owner_id);
   const forwardTo = owner?.email ?? process.env.NOTIFICATION_EMAIL;
-  if (resend && forwardTo) await resend.emails.receiving.forward({ emailId, to: forwardTo, from: forwardingSender() });
+  if (forwardTo) await forwardToInbox(resend, { emailId, to: forwardTo, from: forwardingSender() });
 
   const notification = {
     type: 'general' as const,
@@ -125,12 +152,13 @@ async function handleDeliveryFailure(type: 'email.bounced' | 'email.complained',
     await stopSequence(lead.id, 'bounced');
 
     // A complaint means "stop"; only a bounce is worth a human follow-up.
-    if (reason === 'bounced') {
+    // Guarded against redelivery: a retried webhook must not open a second task.
+    if (reason === 'bounced' && !(await hasOpenTask(lead.id, BOUNCE_TASK_TITLE))) {
       await createTask({
         leadId: lead.id,
         ownerId: lead.owner_id,
         type: 'call',
-        title: 'Email bounced: confirm contact details',
+        title: BOUNCE_TASK_TITLE,
         dueAt: new Date().toISOString(),
       });
     }
