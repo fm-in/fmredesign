@@ -5,11 +5,15 @@
  * so a retried step never works from a stale or serialised copy of a lead.
  */
 
+import { NonRetriableError } from 'inngest';
 import { inngest } from '../client';
 import { recordActivity } from '@/lib/sales/activity';
 import { assignOwner } from '@/lib/sales/assignment';
 import { generateLeadBrief } from '@/lib/sales/brief';
 import { TEAM_SIGNATURE } from '@/lib/sales/emails';
+import { WebhookRejection } from '@/lib/sales/errors';
+import { ingestLead } from '@/lib/sales/intake/ingest';
+import { fetchMetaLead, mapMetaLead } from '@/lib/sales/intake/meta-graph';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
 import { nextSendTime } from '@/lib/sales/send-window';
 import { INBOUND_V1, INBOUND_V1_KEY } from '@/lib/sales/sequence';
@@ -103,5 +107,23 @@ export const salesSequenceInboundFn = inngest.createFunction(
 
     await step.run('complete', () => markSequenceCompleted(leadId));
     return { completed: true };
+  }
+);
+
+export const salesMetaLeadgenFn = inngest.createFunction(
+  { id: 'sales-meta-leadgen', retries: 5 },
+  { event: 'sales/meta.leadgen' },
+  async ({ event, step }) => {
+    const { leadgenId, pageId } = event.data;
+    return step.run('fetch-and-ingest', async () => {
+      try {
+        const lead = await fetchMetaLead(leadgenId, pageId);
+        return await ingestLead(mapMetaLead(lead, pageId));
+      } catch (err) {
+        // A missing Page connection or an unusable lead will not fix itself on retry.
+        if (err instanceof WebhookRejection) throw new NonRetriableError(err.message);
+        throw err;
+      }
+    });
   }
 );
