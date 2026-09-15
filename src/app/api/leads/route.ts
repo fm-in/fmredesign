@@ -5,10 +5,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/lib/supabase-utils';
-import type { LeadInput } from '@/lib/admin/lead-types';
+import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
-import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
+import { captureMeta } from '@/lib/capture-meta';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
@@ -18,6 +17,9 @@ import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { escapeSearchTerm } from '@/lib/postgrest';
 import { changeStage } from '@/lib/sales/activity';
 import { isLeadStatus } from '@/lib/sales/types';
+import { ingestLead } from '@/lib/sales/intake/ingest';
+import { IntakeError } from '@/lib/sales/errors';
+import { isSalesSource } from '@/lib/sales/types';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -195,10 +197,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/leads - Create new lead
+// POST /api/leads - Create a lead from a public form (or the admin Add Lead modal)
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
     const clientIp = getClientIp(request);
     if (!rateLimit(clientIp, 5)) {
       return NextResponse.json(
@@ -208,6 +209,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rawBody = await request.json();
+
     const spam = checkSpam({
       honeypot: rawBody?.[HONEYPOT_FIELD],
       email: typeof rawBody?.email === 'string' ? rawBody.email : undefined,
@@ -222,130 +224,83 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
-    const body = rawBody;
+    const body = validation.data;
+    const meta = captureMeta(request);
+    const nowIso = new Date().toISOString();
 
-    const stripHtml = (str: string) => str.replace(/<[^>]*>/g, '');
+    // Public forms send the consent text they displayed. The admin modal does
+    // not, and a lead typed in by staff must never be emailed automatically.
+    const fromPublicForm = Boolean(body.consentText);
+    const formName = typeof body.customFields?.formName === 'string' ? body.customFields.formName : undefined;
 
-    const leadInput: LeadInput = {
-      name: stripHtml(body.name.trim()),
-      email: body.email.trim().toLowerCase(),
-      phone: body.phone?.trim(),
-      company: stripHtml(body.company.trim()),
-      website: body.website?.trim(),
-      jobTitle: body.jobTitle ? stripHtml(body.jobTitle.trim()) : undefined,
-      companySize: body.companySize,
-      industry: body.industry,
+    const { leadId, created } = await ingestLead({
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      company: body.company,
+      website: body.website,
+      jobTitle: body.jobTitle,
+      message: body.projectDescription,
+      source: isSalesSource(body.source) ? body.source : 'website_form',
+      sourceDetail: formName,
+      attribution: body.attribution,
+      consent: fromPublicForm
+        ? {
+            basis: 'inbound_request',
+            evidence: { consentText: body.consentText, formName: formName ?? null, ip: meta.ip_address, page: request.headers.get('referer') },
+            capturedAt: nowIso,
+          }
+        : { basis: 'none', evidence: { enteredBy: 'admin' }, capturedAt: nowIso },
+      customFields: body.customFields,
       projectType: body.projectType,
-      projectDescription: stripHtml(body.projectDescription.trim()),
       budgetRange: body.budgetRange,
       timeline: body.timeline,
-      primaryChallenge: stripHtml(body.primaryChallenge.trim()),
-      additionalChallenges: body.additionalChallenges
-        ?.filter((c: string) => c.trim())
-        .map((c: string) => stripHtml(c)),
-      specificRequirements: body.specificRequirements
-        ? stripHtml(body.specificRequirements.trim())
-        : undefined,
-      source: body.source || 'website_form',
-      customFields: body.customFields || {},
-    };
-
-    // Calculate lead score and priority
-    const leadScore = calculateLeadScore({
-      budgetRange: leadInput.budgetRange,
-      timeline: leadInput.timeline,
-      companySize: leadInput.companySize,
-      industry: leadInput.industry,
-      primaryChallenge: leadInput.primaryChallenge,
+      companySize: body.companySize,
+      industry: body.industry,
+      primaryChallenge: body.primaryChallenge,
+      additionalChallenges: body.additionalChallenges,
+      specificRequirements: body.specificRequirements,
+      ipAddress: meta.ip_address,
+      userAgent: meta.user_agent,
     });
-    const priority = determineLeadPriority(leadScore);
-
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substr(2, 5);
-    const leadId = `lead_${timestamp}_${random}`;
-
-    const record = {
-      id: leadId,
-      name: leadInput.name,
-      email: leadInput.email,
-      phone: leadInput.phone || null,
-      company: leadInput.company,
-      website: leadInput.website || null,
-      job_title: leadInput.jobTitle || null,
-      company_size: leadInput.companySize,
-      industry: leadInput.industry || null,
-      project_type: leadInput.projectType,
-      project_description: leadInput.projectDescription,
-      budget_range: leadInput.budgetRange,
-      timeline: leadInput.timeline,
-      primary_challenge: leadInput.primaryChallenge,
-      additional_challenges: leadInput.additionalChallenges || [],
-      specific_requirements: leadInput.specificRequirements || null,
-      status: 'new',
-      priority,
-      source: leadInput.source || 'website_form',
-      lead_score: leadScore,
-      tags: [],
-      notes: '',
-      custom_fields: leadInput.customFields || {},
-    };
 
     const supabase = getSupabaseAdmin();
-
-    // Record who sent this so genuine leads can later be told apart from bot
-    // traffic. If the capture-metadata migration has not been applied yet,
-    // retry without it — a lost lead is unrecoverable, a lost IP is a gap.
-    let { data, error } = await supabase
-      .from('leads')
-      .insert({ ...record, ...captureMeta(request) })
-      .select()
-      .single();
-
-    if (error && isMissingColumnError(error)) {
-      console.warn(
-        '[leads] capture-metadata columns absent — apply migrations/2026-08-10-capture-metadata.sql'
-      );
-      ({ data, error } = await supabase.from('leads').insert(record).select().single());
-    }
-
+    const { data: row, error } = await supabase.from('leads').select('*').eq('id', leadId).single();
     if (error) throw error;
 
-    // Fire-and-forget: notify admins about new lead
-    notifyAdmins({
-      type: 'general',
-      title: 'New lead received',
-      message: `${record.name} — ${record.company || 'No company'}`,
-      priority: 'high',
-      actionUrl: '/admin/leads',
-    });
+    if (created) {
+      notifyAdmins({
+        type: 'general',
+        title: 'New lead received',
+        message: `${row.name} — ${row.company || 'No company'}`,
+        priority: 'high',
+        actionUrl: `/admin/leads/${leadId}`,
+      });
 
-    // Fire-and-forget email notification
-    const emailData = newLeadEmail({
-      name: record.name,
-      email: record.email,
-      company: record.company,
-      projectType: record.project_type,
-      budgetRange: record.budget_range,
-      timeline: record.timeline,
-      primaryChallenge: record.primary_challenge,
-      leadScore,
-      priority,
-    });
-    notifyTeam(emailData.subject, emailData.html);
-
-    // Build camelCase response
-    const lead = toCamelCaseKeys(data);
+      const emailData = newLeadEmail({
+        name: row.name,
+        email: row.email ?? '',
+        company: row.company ?? 'Not given',
+        projectType: row.project_type ?? undefined,
+        budgetRange: row.budget_range ?? undefined,
+        timeline: row.timeline ?? undefined,
+        primaryChallenge: row.primary_challenge ?? undefined,
+        leadScore: row.lead_score ?? undefined,
+        priority: row.priority ?? undefined,
+      });
+      notifyTeam(emailData.subject, emailData.html);
+    }
 
     return NextResponse.json(
-      { success: true, data: lead, message: 'Lead created successfully' },
-      { status: 201 }
+      { success: true, data: toCamelCaseKeys(row), message: created ? 'Lead created successfully' : 'Lead updated' },
+      { status: created ? 201 : 200 }
     );
   } catch (error) {
+    if (error instanceof IntakeError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
     console.error('Error creating lead:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to create lead' },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: 'Failed to create lead' }, { status: 500 });
   }
 }
 

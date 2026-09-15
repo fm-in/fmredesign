@@ -224,6 +224,18 @@ export const updateProposalSchema = z.object({
 // Lead / Get Started form schemas
 // ---------------------------------------------------------------------------
 
+const attributionSchema = z.object({
+  utmSource: optionalString,
+  utmMedium: optionalString,
+  utmCampaign: optionalString,
+  utmContent: optionalString,
+  utmTerm: optionalString,
+  landingPage: optionalString,
+  referrer: optionalString,
+  gclid: optionalString,
+  fbclid: optionalString,
+});
+
 export const createLeadSchema = z.object({
   name: nonEmptyString,
   email: emailField,
@@ -242,6 +254,8 @@ export const createLeadSchema = z.object({
   specificRequirements: optionalString,
   source: optionalString,
   customFields: z.record(z.string(), z.unknown()).optional(),
+  attribution: attributionSchema.optional(),
+  consentText: optionalString,
 });
 
 // ---------------------------------------------------------------------------
