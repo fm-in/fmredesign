@@ -10,7 +10,7 @@ vi.mock('@/lib/supabase', async () => {
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: mocks.send } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 
-import { assignOwner } from '../assignment';
+import { assignOwner, loadRotation } from '../assignment';
 
 beforeEach(() => {
   fake.reset();
@@ -32,7 +32,13 @@ describe('assignOwner', () => {
         return { data: { id: 'lead_1', name: 'Priya', company: 'Acme', owner_id: null }, error: null };
       }
       if (call.table === 'authorized_users') {
-        return { data: [{ id: 'u1', name: 'Asha', email: 'asha@fm.in' }, { id: 'u2', name: 'Ben', email: null }], error: null };
+        return {
+          data: [
+            { id: 'u1', name: 'Asha', email: 'asha@fm.in', permissions: 'sales.read,sales.write' },
+            { id: 'u2', name: 'Ben', email: null, permissions: 'sales.read,sales.write' },
+          ],
+          error: null,
+        };
       }
       if (call.table === 'leads' && call.op === 'select' && eqValue(call, 'owner_id') === 'u1') {
         return { data: [{ created_at: '2026-09-14T10:00:00Z' }], error: null };
@@ -69,5 +75,28 @@ describe('assignOwner', () => {
     const [notification] = notificationSends();
     expect(notification?.data).toMatchObject({ recipientType: 'admin', title: 'New lead needs an owner' });
     expect(notification?.data.recipientId).toBeUndefined();
+  });
+});
+
+describe('loadRotation', () => {
+  it('skips rotation members without sales.read', async () => {
+    fake.respond((call) => {
+      if (call.table === 'authorized_users') {
+        return {
+          data: [
+            { id: 'u1', name: 'Asha', email: 'asha@fm.in', permissions: 'sales.read, sales.write' },
+            { id: 'u2', name: 'Ben', email: null, permissions: 'clients.read,clients.write' },
+            { id: 'u3', name: 'Chitra', email: null, permissions: null },
+            { id: 'u4', name: 'Dev', email: null, permissions: 'system.full_access' },
+          ],
+          error: null,
+        };
+      }
+      return { data: [], error: null };
+    });
+
+    const rotation = await loadRotation();
+
+    expect(rotation.map((candidate) => candidate.id)).toEqual(['u1', 'u4']);
   });
 });

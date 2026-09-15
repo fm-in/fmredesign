@@ -9,7 +9,9 @@ import { requirePermission } from '@/lib/admin-auth-middleware';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { ProjectUtils } from '@/lib/admin/project-types';
 import { emitEvent } from '@/lib/events/emitter';
+import { ApiResponse } from '@/lib/api-response';
 import { changeStage } from '@/lib/sales/activity';
+import { canAccessLead } from '@/lib/sales/access';
 
 // Lead → Project default duration. 60 days is a reasonable rough estimate
 // for an initial engagement; the user adjusts in the project edit screen.
@@ -67,11 +69,9 @@ export async function POST(request: NextRequest) {
       .eq('id', leadId)
       .single();
 
-    if (leadError || !lead) {
-      return NextResponse.json(
-        { success: false, error: 'Lead not found' },
-        { status: 404 }
-      );
+    // A manager may convert only the leads they can see: their own and unassigned ones.
+    if (leadError || !lead || !canAccessLead(auth.user, lead)) {
+      return ApiResponse.notFound('Lead not found');
     }
 
     if (lead.status === 'won' && lead.client_id) {
@@ -79,6 +79,10 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Lead has already been converted to a client' },
         { status: 400 }
       );
+    }
+
+    if (!lead.email) {
+      return ApiResponse.validationError('Add an email address to this lead before converting it to a client');
     }
 
     // Create client from lead data

@@ -1,6 +1,7 @@
 /** Who may see and change which lead. Admins see everything; managers see their own and unassigned leads. */
 
 import type { AuthenticatedUser } from '@/lib/admin-auth-middleware';
+import { parseStoredPermissions, PermissionService } from '@/lib/admin/permissions';
 
 type SalesUser = Pick<AuthenticatedUser, 'id' | 'role' | 'permissions'>;
 
@@ -16,4 +17,9 @@ export function canAccessLead(user: SalesUser, lead: { owner_id: string | null }
 export function canAssignOwner(user: SalesUser, currentOwnerId: string | null, nextOwnerId: string | null): boolean {
   if (isSalesAdmin(user)) return true;
   return (currentOwnerId === null && nextOwnerId === user.id) || (currentOwnerId === user.id && nextOwnerId === null);
+}
+
+/** Whether a stored `authorized_users.permissions` value grants sales.read, parsed as the auth middleware does. */
+export function hasSalesAccess(storedPermissions: unknown): boolean {
+  return PermissionService.hasPermission(parseStoredPermissions(storedPermissions), 'sales.read');
 }

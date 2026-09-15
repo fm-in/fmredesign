@@ -2,6 +2,7 @@
 
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { createNotification, notifyAdmins } from '@/lib/notifications';
+import { hasSalesAccess } from '@/lib/sales/access';
 import { recordActivity } from '@/lib/sales/activity';
 import { pickOwner, type RotationCandidate } from '@/lib/sales/routing';
 
@@ -9,13 +10,15 @@ export async function loadRotation(): Promise<RotationCandidate[]> {
   const supabase = getSupabaseAdmin();
   const { data: users, error } = await supabase
     .from('authorized_users')
-    .select('id, name, email')
+    .select('id, name, email, permissions')
     .eq('in_sales_rotation', true)
     .eq('status', 'active');
   if (error) throw error;
 
   const candidates: RotationCandidate[] = [];
   for (const user of users ?? []) {
+    // A member re-roled out of sales may still be flagged; never hand them a lead.
+    if (!hasSalesAccess(user.permissions)) continue;
     const { data: latest } = await supabase
       .from('leads')
       .select('created_at')

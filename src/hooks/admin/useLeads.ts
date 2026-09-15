@@ -52,7 +52,6 @@ export interface UseLeadsReturn {
   // Actions
   loadDashboardData: () => Promise<void>;
   updateLeadStatus: (leadId: string, status: LeadStatus) => Promise<void>;
-  updateAssignedTo: (leadId: string, assignedTo: string) => Promise<void>;
   convertToClient: (leadId: string) => Promise<void>;
   exportLeads: () => void;
 
@@ -154,32 +153,6 @@ export function useLeads(): UseLeadsReturn {
       }
     },
     [loadDashboardData]
-  );
-
-  const updateAssignedTo = useCallback(
-    async (leadId: string, assignedTo: string) => {
-      try {
-        const response = await fetch('/api/leads', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: leadId, assignedTo }),
-        });
-
-        if (response.ok) {
-          setLeads((prev) =>
-            prev.map((l) => (l.id === leadId ? { ...l, assignedTo } : l))
-          );
-          if (selectedLead?.id === leadId) {
-            setSelectedLead((prev) => prev ? { ...prev, assignedTo } : null);
-          }
-          adminToast.success('Assigned');
-        }
-      } catch (error) {
-        console.error('Error assigning lead:', error);
-        adminToast.error('Failed to assign');
-      }
-    },
-    [selectedLead]
   );
 
   const convertToClient = useCallback(
@@ -287,7 +260,6 @@ export function useLeads(): UseLeadsReturn {
     // Actions
     loadDashboardData,
     updateLeadStatus,
-    updateAssignedTo,
     convertToClient,
     exportLeads,
 

@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { fake } from '@/test-utils/fake-supabase';
+import { fake, payloadOf } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
 import type { IntakeLead } from '@/lib/sales/types';
 import type { IngestResult } from '@/lib/sales/intake/ingest';
 
 const mocks = vi.hoisted(() => ({
-  ingestLead: vi.fn(async (_lead: IntakeLead): Promise<IngestResult> => ({ leadId: 'lead_new', created: true })),
-  notifyAdmins: vi.fn(async (_opts: unknown) => undefined),
-  notifyTeam: vi.fn((_subject: string, _html: string) => undefined),
+  ingestLead: vi.fn<(lead: IntakeLead) => Promise<IngestResult>>(async () => ({ leadId: 'lead_new', created: true })),
+  notifyAdmins: vi.fn(async () => undefined),
+  notifyTeam: vi.fn(),
+  user: { id: 'user-1', name: 'Asha', role: 'manager', permissions: ['sales.read', 'sales.write'] },
 }));
 
 vi.mock('@/lib/supabase', async () => {
@@ -22,14 +23,14 @@ vi.mock('@/lib/email/send', () => ({
   newLeadEmail: () => ({ subject: 'New lead', html: '<p>New lead</p>' }),
 }));
 vi.mock('@/lib/admin-auth-middleware', () => ({
-  requirePermission: vi.fn(async () => ({ error: new Response(null, { status: 403 }) })),
+  requirePermission: vi.fn(async () => ({ user: mocks.user })),
   requireAdminAuth: vi.fn(async () => null),
 }));
 vi.mock('@/lib/admin/audit-log', () => ({ logAuditEvent: vi.fn(async () => undefined), getClientIP: () => '127.0.0.1' }));
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 
-import { POST } from '../route';
+import { POST, PUT } from '../route';
 
 let ipCounter = 0;
 
@@ -61,6 +62,7 @@ beforeEach(() => {
   mocks.ingestLead.mockClear();
   mocks.notifyAdmins.mockClear();
   mocks.notifyTeam.mockClear();
+  Object.assign(mocks.user, { id: 'user-1', role: 'manager' });
   // Every lead select answers with a full record, so a leak would show in the body.
   fake.respond((call) =>
     call.table === 'leads' && call.op === 'select'
@@ -97,5 +99,48 @@ describe('POST /api/leads', () => {
     await POST(postLead({ ...publicSubmission, source: 'cal_booking' }));
 
     expect(mocks.ingestLead.mock.calls[0]?.[0].source).toBe('website_form');
+  });
+});
+
+function putLead(body: Record<string, unknown>): NextRequest {
+  return new NextRequest('http://localhost/api/leads', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+describe('PUT /api/leads', () => {
+  beforeEach(() => {
+    fake.respond((call) =>
+      call.table === 'leads' && call.op === 'select'
+        ? { data: leadRow({ owner_id: 'user-2', assigned_to: 'Ben' }), error: null }
+        : { data: null, error: null }
+    );
+  });
+
+  it('answers not found when a manager edits a lead someone else owns', async () => {
+    const res = await PUT(putLead({ id: 'lead_1', notes: 'Called them' }));
+
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toBe('Lead not found');
+    expect(fake.callsTo('leads', 'update')).toHaveLength(0);
+  });
+
+  it('lets an admin edit any lead', async () => {
+    Object.assign(mocks.user, { role: 'admin' });
+
+    const res = await PUT(putLead({ id: 'lead_1', notes: 'Called them' }));
+
+    expect(res.status).toBe(200);
+    expect(fake.callsTo('leads', 'update').map(payloadOf)).toContainEqual({ notes: 'Called them' });
+  });
+
+  it('never changes ownership', async () => {
+    Object.assign(mocks.user, { role: 'admin' });
+
+    await PUT(putLead({ id: 'lead_1', assignedTo: 'Ben', notes: 'Called them' }));
+
+    expect(fake.callsTo('leads', 'update').map(payloadOf).some((p) => 'assigned_to' in p)).toBe(false);
   });
 });

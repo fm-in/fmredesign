@@ -66,4 +66,33 @@ describe('/api/admin/sales/settings', () => {
     expect(fake.callsTo('authorized_users', 'update')).toHaveLength(0);
     expect(fake.callsTo('admin_settings', 'upsert')).toHaveLength(0);
   });
+
+  it('rejects a rotation member without sales access, and writes nothing', async () => {
+    fake.respond((call) => {
+      if (call.table === 'authorized_users' && call.op === 'select') {
+        return {
+          data: [
+            { id: 'user-1', permissions: 'sales.read,sales.write' },
+            { id: 'user-2', permissions: 'clients.read, clients.write' },
+          ],
+          error: null,
+        };
+      }
+      return { data: [], error: null };
+    });
+
+    const res = await PUT(
+      new NextRequest('http://localhost/api/admin/sales/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ automationEnabled: true, rotation: ['user-1', 'user-2'] }),
+      })
+    );
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('Everyone in the rotation needs sales access');
+    expect(fake.callsTo('authorized_users', 'update')).toHaveLength(0);
+    expect(fake.callsTo('admin_settings', 'upsert')).toHaveLength(0);
+    expect(fake.callsTo('admin_settings', 'update')).toHaveLength(0);
+    expect(fake.callsTo('admin_settings', 'insert')).toHaveLength(0);
+  });
 });

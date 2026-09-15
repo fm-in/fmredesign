@@ -441,3 +441,15 @@ export class PermissionService {
     };
   }
 }
+
+/**
+ * `authorized_users.permissions` is stored as a comma-separated string. Every
+ * reader parses it here, so the auth middleware and sales checks agree.
+ */
+export function parseStoredPermissions(value: unknown): string[] {
+  if (typeof value !== 'string' || !value) return [];
+  return value
+    .split(',')
+    .map((permission) => permission.trim())
+    .filter((permission) => permission.length > 0);
+}

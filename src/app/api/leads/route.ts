@@ -20,6 +20,7 @@ import { isLeadStatus } from '@/lib/sales/types';
 import { ingestLead } from '@/lib/sales/intake/ingest';
 import { IntakeError } from '@/lib/sales/errors';
 import { ApiResponse } from '@/lib/api-response';
+import { canAccessLead } from '@/lib/sales/access';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -376,8 +377,8 @@ export async function PUT(request: NextRequest) {
     const { id, ...updateData } = body;
 
     // Map camelCase fields to snake_case for Supabase
+    // Ownership changes only through PATCH /api/admin/sales/leads/[id], which checks who may assign.
     const updates: Record<string, unknown> = {};
-    if (updateData.assignedTo !== undefined) updates.assigned_to = updateData.assignedTo;
     if (updateData.nextAction !== undefined) updates.next_action = updateData.nextAction;
     if (updateData.followUpDate !== undefined) updates.follow_up_date = updateData.followUpDate;
     if (updateData.notes !== undefined) updates.notes = updateData.notes;
@@ -390,10 +391,11 @@ export async function PUT(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
-    const { data: existing, error: existingError } = await supabase.from('leads').select('id').eq('id', id).maybeSingle();
+    const { data: existing, error: existingError } = await supabase.from('leads').select('id, owner_id').eq('id', id).maybeSingle();
     if (existingError) throw existingError;
-    if (!existing) {
-      return NextResponse.json({ success: false, error: 'Lead not found' }, { status: 404 });
+    // A manager may change only the leads they can see: their own and unassigned ones.
+    if (!existing || !canAccessLead(auth.user, existing)) {
+      return ApiResponse.notFound('Lead not found');
     }
 
     if (updateData.status !== undefined) {

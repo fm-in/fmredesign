@@ -5,6 +5,7 @@ import { ApiResponse } from '@/lib/api-response';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { getClientIP, logAuditEvent } from '@/lib/admin/audit-log';
 import { SITE_URL } from '@/lib/site-url';
+import { hasSalesAccess } from '@/lib/sales/access';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { isAdapterConfigured, SALES_WEBHOOK_ADAPTERS } from '@/lib/sales/intake/adapters/registry';
 import { firstIssue, salesSettingsSchema } from '@/lib/sales/schemas';
@@ -78,10 +79,16 @@ export async function PUT(request: NextRequest) {
 
     if (rotation && rotation.length > 0) {
       const distinctIds = Array.from(new Set(rotation));
-      const { data: existingUsers, error: lookupError } = await supabase.from('authorized_users').select('id').in('id', distinctIds);
+      const { data: existingUsers, error: lookupError } = await supabase
+        .from('authorized_users')
+        .select('id, permissions')
+        .in('id', distinctIds);
       if (lookupError) throw lookupError;
       if (!existingUsers || existingUsers.length < distinctIds.length) {
         return ApiResponse.validationError('One or more team members in the rotation do not exist');
+      }
+      if (!existingUsers.every((user: { permissions: unknown }) => hasSalesAccess(user.permissions))) {
+        return ApiResponse.validationError('Everyone in the rotation needs sales access');
       }
     }
 
