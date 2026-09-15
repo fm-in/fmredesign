@@ -68,16 +68,21 @@ function Entry({ activity }: { activity: SalesActivity }) {
   );
 }
 
-export function LeadTimeline({ activities, onAddNote }: { activities: SalesActivity[]; onAddNote: (body: string) => Promise<void> }) {
+export function LeadTimeline({ activities, onAddNote }: { activities: SalesActivity[]; onAddNote: (body: string) => Promise<boolean> }) {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function submit() {
     if (!note.trim()) return;
     setSaving(true);
-    await onAddNote(note.trim());
-    setNote('');
-    setSaving(false);
+    try {
+      const saved = await onAddNote(note.trim());
+      // Only clear what the person typed once the note actually saved — a failed
+      // save (network error, validation, etc.) must leave their draft in place.
+      if (saved) setNote('');
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

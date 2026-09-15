@@ -15,9 +15,9 @@ interface LeadDetailHeaderProps {
   canAssign: boolean;
   userId: string;
   suppressed: boolean;
-  onStageChange: (status: LeadStatus, lostReason?: string) => void;
-  onOwnerChange: (ownerId: string | null) => void;
-  onStopSequence: () => void;
+  onStageChange: (status: LeadStatus, lostReason?: string) => Promise<boolean>;
+  onOwnerChange: (ownerId: string | null) => Promise<boolean>;
+  onStopSequence: () => Promise<boolean>;
 }
 
 const SEQUENCE_TEXT: Record<string, string> = {
@@ -38,6 +38,7 @@ export function LeadDetailHeader({
 }: LeadDetailHeaderProps) {
   const [losing, setLosing] = useState(false);
   const [lostReason, setLostReason] = useState('');
+  const [submittingLost, setSubmittingLost] = useState(false);
 
   const source = [lead.source?.replace(/_/g, ' '), lead.sourceDetail].filter(Boolean).join(' · ');
   const campaign = [lead.utmSource, lead.utmMedium, lead.utmCampaign].filter(Boolean).join(' / ');
@@ -111,16 +112,25 @@ export function LeadDetailHeader({
                   <DashboardButton
                     variant="danger"
                     size="sm"
-                    disabled={lostReason.trim().length < 3}
-                    onClick={() => {
-                      onStageChange('lost', lostReason.trim());
-                      setLosing(false);
-                      setLostReason('');
+                    disabled={lostReason.trim().length < 3 || submittingLost}
+                    onClick={async () => {
+                      setSubmittingLost(true);
+                      try {
+                        // Keep the reason form open with its text until the save actually
+                        // succeeds — a failed request must not lose what was typed.
+                        const saved = await onStageChange('lost', lostReason.trim());
+                        if (saved) {
+                          setLosing(false);
+                          setLostReason('');
+                        }
+                      } finally {
+                        setSubmittingLost(false);
+                      }
                     }}
                   >
-                    Mark lost
+                    {submittingLost ? 'Marking…' : 'Mark lost'}
                   </DashboardButton>
-                  <DashboardButton variant="ghost" size="sm" onClick={() => setLosing(false)}>
+                  <DashboardButton variant="ghost" size="sm" onClick={() => setLosing(false)} disabled={submittingLost}>
                     Cancel
                   </DashboardButton>
                 </div>

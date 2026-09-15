@@ -42,11 +42,12 @@ export function useLeadDetail(leadId: string) {
   }, [reload]);
 
   const run = useCallback(
-    async (action: () => Promise<void>, success: string) => {
+    async (action: () => Promise<void>, success: string): Promise<boolean> => {
       try {
         await action();
         adminToast.success(success);
         await reload();
+        return true;
       } catch (err) {
         adminToast.error(err instanceof Error ? err.message : 'Something went wrong. Try again.');
         // A failed change (e.g. a 409 from a race on owner assignment) can still have
@@ -58,6 +59,7 @@ export function useLeadDetail(leadId: string) {
         } catch {
           // Swallow: the error toast already told the user something went wrong.
         }
+        return false;
       }
     },
     [reload]

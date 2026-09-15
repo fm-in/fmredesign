@@ -16,7 +16,7 @@ export function LeadMeetings({
   onUpdate,
 }: {
   meetings: SalesMeeting[];
-  onUpdate: (meetingId: string, status: 'completed' | 'no_show') => void;
+  onUpdate: (meetingId: string, status: 'completed' | 'no_show') => Promise<boolean>;
 }) {
   if (meetings.length === 0) {
     return <p className="text-sm text-fm-neutral-500">No calls booked. The booking link is in every follow-up email.</p>;

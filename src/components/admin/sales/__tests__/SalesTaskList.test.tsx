@@ -39,4 +39,11 @@ describe('SalesTaskList', () => {
     render(<SalesTaskList tasks={[{ ...task, status: 'done' }]} onComplete={() => undefined} emptyText="No open tasks." />);
     expect(screen.getByText('No open tasks.')).toBeInTheDocument();
   });
+
+  it('shows Copy message but not Open WhatsApp for a LinkedIn task', () => {
+    const linkedinTask: SalesTaskItem = { ...task, id: 'task_2', type: 'linkedin' };
+    render(<SalesTaskList tasks={[linkedinTask]} onComplete={() => undefined} />);
+    expect(screen.queryByRole('link', { name: /open whatsapp/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy message/i })).toBeInTheDocument();
+  });
 });

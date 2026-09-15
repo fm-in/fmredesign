@@ -6,6 +6,11 @@ import { Check, Copy, MessageCircle, Phone, SkipForward } from 'lucide-react';
 import { DashboardButton } from '@/design-system';
 import { formatIst, type SalesTaskItem } from '@/lib/sales/api-types';
 import { whatsappUrl } from '@/lib/sales/links';
+import type { TaskType } from '@/lib/sales/types';
+
+/** Task types whose draft is a WhatsApp message. Everything else (LinkedIn, Instagram,
+ * email, custom) is worked from a copied draft in that channel's own app instead. */
+const WHATSAPP_TASK_TYPES: readonly TaskType[] = ['whatsapp', 'call', 'follow_up'];
 
 interface SalesTaskListProps {
   tasks: SalesTaskItem[];
@@ -41,7 +46,7 @@ export function SalesTaskList({ tasks, phoneE164, showLead = false, onComplete, 
       {open.map((task) => {
         const overdue = new Date(task.dueAt).getTime() < Date.now();
         const phone = task.lead?.phoneE164 ?? phoneE164 ?? null;
-        const chatUrl = task.draftBody ? whatsappUrl(phone, task.draftBody) : null;
+        const chatUrl = task.draftBody && WHATSAPP_TASK_TYPES.includes(task.type) ? whatsappUrl(phone, task.draftBody) : null;
 
         return (
           <li key={task.id} className="rounded-lg border border-fm-neutral-200 bg-white p-4">
