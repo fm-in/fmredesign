@@ -15,7 +15,7 @@ vi.mock('@/lib/inngest/client', () => ({ inngest: { send: mocks.send } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 vi.mock('@/lib/sales/intake/ingest', () => ({ ingestLead: mocks.ingestLead }));
 
-import { handleCalcomEvent, parseCalcomBooking } from '../meetings';
+import { completeMeeting, handleCalcomEvent, markNoShow, parseCalcomBooking } from '../meetings';
 
 const booking = (trigger: string, overrides: Record<string, unknown> = {}) => ({
   triggerEvent: trigger,
@@ -135,5 +135,86 @@ describe('handleCalcomEvent', () => {
 
     expect(fake.callsTo('meetings', 'update').map(payloadOf)[0]).toMatchObject({ status: 'completed' });
     expect(fake.callsTo('sales_tasks', 'insert').map(payloadOf)[0]).toMatchObject({ title: 'Log discovery notes' });
+  });
+
+  it('MEETING_ENDED does not overwrite a meeting a person already marked no-show', async () => {
+    fake.respond((call) => {
+      if (call.table === 'meetings' && call.op === 'select') {
+        return { data: { id: 'meet_1', lead_id: 'lead_1', owner_id: 'user-1', status: 'no_show' }, error: null };
+      }
+      return { data: null, error: null };
+    });
+
+    await handleCalcomEvent(booking('MEETING_ENDED'));
+
+    expect(fake.callsTo('meetings', 'update')).toHaveLength(0);
+    expect(fake.callsTo('lead_activities', 'insert').map(payloadOf).some((p) => p.type === 'meeting_completed')).toBe(false);
+  });
+
+  it('BOOKING_CANCELLED does not create a second open rebook task', async () => {
+    fake.respond((call) => {
+      if (call.table === 'meetings' && call.op === 'select') {
+        return { data: { id: 'meet_1', lead_id: 'lead_1', owner_id: 'user-1', status: 'booked' }, error: null };
+      }
+      if (call.table === 'sales_tasks' && call.op === 'select') return { data: [{ id: 'task_1' }], error: null };
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow(), error: null };
+      return { data: null, error: null };
+    });
+
+    await handleCalcomEvent(booking('BOOKING_CANCELLED'));
+
+    expect(fake.callsTo('sales_tasks', 'insert')).toHaveLength(0);
+  });
+
+  it('BOOKING_CREATED re-engages a lost or archived lead into discovery_scheduled', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select' && call.single && eqValue(call, 'id') === 'lead_1') {
+        return { data: leadRow({ status: 'archived' }), error: null };
+      }
+      if (call.table === 'leads' && call.op === 'select') return { data: { status: 'archived' }, error: null };
+      return { data: null, error: null };
+    });
+
+    await handleCalcomEvent(booking('BOOKING_CREATED'));
+
+    expect(
+      fake
+        .callsTo('leads', 'update')
+        .map(payloadOf)
+        .some((p) => p.status === 'discovery_scheduled')
+    ).toBe(true);
+  });
+});
+
+describe('completeMeeting', () => {
+  it('lets a person correct a no-show back to completed', async () => {
+    fake.respond((call) => {
+      if (call.table === 'meetings' && call.op === 'select') {
+        return { data: { id: 'meet_1', lead_id: 'lead_1', owner_id: 'user-1', status: 'no_show' }, error: null };
+      }
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ status: 'discovery_scheduled' }), error: null };
+      if (call.table === 'sales_tasks' && call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+
+    await completeMeeting('meet_1', { id: 'user-1', name: 'Asha' });
+
+    expect(fake.callsTo('meetings', 'update').map(payloadOf)[0]).toMatchObject({ status: 'completed' });
+  });
+});
+
+describe('markNoShow', () => {
+  it('does not create a second open rebook task', async () => {
+    fake.respond((call) => {
+      if (call.table === 'meetings' && call.op === 'select') {
+        return { data: { id: 'meet_1', lead_id: 'lead_1', owner_id: 'user-1', status: 'booked' }, error: null };
+      }
+      if (call.table === 'sales_tasks' && call.op === 'select') return { data: [{ id: 'task_1' }], error: null };
+      return { data: null, error: null };
+    });
+
+    await markNoShow('meet_1', { id: 'user-1', name: 'Asha' });
+
+    expect(fake.callsTo('sales_tasks', 'insert')).toHaveLength(0);
   });
 });

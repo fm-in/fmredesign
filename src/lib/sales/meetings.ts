@@ -24,8 +24,8 @@ import type { Actor, LeadRow, MeetingRow } from '@/lib/sales/types';
 export const REBOOK_TITLE = 'Rebook the discovery call';
 export const LOG_NOTES_TITLE = 'Log discovery notes';
 
-/** A booking may move a lead forward to discovery_scheduled, never backwards. */
-const STAGES_BEFORE_DISCOVERY = new Set(['new', 'contacted', 'qualified']);
+/** A booking moves a lead into discovery, including one that had gone cold or stale. */
+const STAGES_A_BOOKING_ADVANCES = new Set(['new', 'contacted', 'qualified', 'lost', 'archived']);
 
 export interface ParsedBooking {
   trigger: string;
@@ -145,7 +145,7 @@ async function onBooked(booking: ParsedBooking): Promise<void> {
   if (error) throw error;
 
   await stopSequence(lead.id, 'booked');
-  if (STAGES_BEFORE_DISCOVERY.has(lead.status)) {
+  if (STAGES_A_BOOKING_ADVANCES.has(lead.status)) {
     await changeStage(lead.id, 'discovery_scheduled', SYSTEM_ACTOR, { reason: 'Booked via Cal.com' });
   }
   await recordActivity({
@@ -201,6 +201,7 @@ async function onCancelled(booking: ParsedBooking): Promise<void> {
   await recordActivity({ leadId: meeting.lead_id, type: 'meeting_cancelled', channel: 'calcom', subject: booking.title, metadata: { meetingId: meeting.id } });
   await sendSalesEvent({ name: 'sales/meeting.cancelled', data: { meetingId: meeting.id, leadId: meeting.lead_id } });
 
+  if (await hasOpenTask(meeting.lead_id, REBOOK_TITLE)) return;
   const lead = await loadLead(meeting.lead_id);
   await createTask({
     leadId: meeting.lead_id,
@@ -227,6 +228,8 @@ async function ensureNotesTask(leadId: string, fallbackOwnerId: string | null): 
 export async function completeMeeting(meetingId: string, actor: Actor = SYSTEM_ACTOR): Promise<void> {
   const meeting = await loadMeeting(meetingId);
   if (!meeting || meeting.status === 'cancelled') return;
+  // A webhook replay must not overwrite a no-show a person recorded; a person may still correct one.
+  if (meeting.status === 'no_show' && actor.id === SYSTEM_ACTOR.id) return;
 
   if (meeting.status !== 'completed') {
     const { error } = await getSupabaseAdmin()
@@ -253,6 +256,7 @@ export async function markNoShow(meetingId: string, actor: Actor): Promise<void>
     .eq('id', meetingId);
   if (error) throw error;
   await recordActivity({ leadId: meeting.lead_id, type: 'meeting_completed', actor, metadata: { meetingId, noShow: true } });
+  if (await hasOpenTask(meeting.lead_id, REBOOK_TITLE)) return;
   await createTask({ leadId: meeting.lead_id, ownerId: meeting.owner_id, type: 'call', title: REBOOK_TITLE, dueAt: new Date().toISOString(), createdBy: actor });
 }
 
