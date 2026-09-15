@@ -233,3 +233,20 @@ export type MeetingRow = {
 export function generateSalesId(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
 }
+
+export const LEAD_STATUSES: readonly LeadStatus[] = [
+  'new',
+  'contacted',
+  'qualified',
+  'discovery_scheduled',
+  'discovery_completed',
+  'proposal_sent',
+  'negotiating',
+  'won',
+  'lost',
+  'archived',
+];
+
+export function isLeadStatus(value: unknown): value is LeadStatus {
+  return typeof value === 'string' && (LEAD_STATUSES as readonly string[]).includes(value);
+}

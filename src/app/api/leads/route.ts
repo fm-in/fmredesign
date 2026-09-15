@@ -14,9 +14,10 @@ import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { notifyAdmins } from '@/lib/notifications';
-import { emitEvent } from '@/lib/events/emitter';
 import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { escapeSearchTerm } from '@/lib/postgrest';
+import { changeStage } from '@/lib/sales/activity';
+import { isLeadStatus } from '@/lib/sales/types';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -409,7 +410,6 @@ export async function PUT(request: NextRequest) {
 
     // Map camelCase fields to snake_case for Supabase
     const updates: Record<string, unknown> = {};
-    if (updateData.status !== undefined) updates.status = updateData.status;
     if (updateData.assignedTo !== undefined) updates.assigned_to = updateData.assignedTo;
     if (updateData.nextAction !== undefined) updates.next_action = updateData.nextAction;
     if (updateData.followUpDate !== undefined) updates.follow_up_date = updateData.followUpDate;
@@ -423,32 +423,26 @@ export async function PUT(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
-    // Fetch previous status before update (for status change detection)
-    let previousStatus: string | null = null;
+    const { data: existing, error: existingError } = await supabase.from('leads').select('id').eq('id', id).maybeSingle();
+    if (existingError) throw existingError;
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Lead not found' }, { status: 404 });
+    }
+
     if (updateData.status !== undefined) {
-      const { data: existing } = await supabase
-        .from('leads')
-        .select('status')
-        .eq('id', id)
-        .single();
-      previousStatus = existing?.status ?? null;
+      if (!isLeadStatus(updateData.status)) {
+        return NextResponse.json({ success: false, error: 'Invalid status' }, { status: 400 });
+      }
+      await changeStage(id, updateData.status, { id: auth.user.id, name: auth.user.name });
     }
 
-    const { data, error } = await supabase
-      .from('leads')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+    if (Object.keys(updates).length > 0) {
+      const { error: updateError } = await supabase.from('leads').update(updates).eq('id', id);
+      if (updateError) throw updateError;
+    }
 
+    const { data, error } = await supabase.from('leads').select('*').eq('id', id).single();
     if (error) throw error;
-
-    if (!data) {
-      return NextResponse.json(
-        { success: false, error: 'Lead not found' },
-        { status: 404 }
-      );
-    }
 
     // Transform response
     const updatedLead = toCamelCaseKeys(data);
@@ -463,24 +457,6 @@ export async function PUT(request: NextRequest) {
       details: { updatedFields: Object.keys(updates), newStatus: updateData.status },
       ip_address: getClientIP(request),
     });
-
-    // Emit event when lead status changes (triggers outgoing webhooks → AgentWorks)
-    if (
-      updateData.status !== undefined &&
-      previousStatus !== null &&
-      updateData.status !== previousStatus
-    ) {
-      emitEvent('lead.status_changed', {
-        entityId: id,
-        actor: { id: auth.user.id, name: auth.user.name },
-        timestamp: new Date().toISOString(),
-        data: {
-          previousStatus,
-          newStatus: updateData.status,
-          lead: updatedLead,
-        },
-      });
-    }
 
     return NextResponse.json({
       success: true,

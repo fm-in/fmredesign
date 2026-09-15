@@ -9,6 +9,7 @@ import { requirePermission } from '@/lib/admin-auth-middleware';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { ProjectUtils } from '@/lib/admin/project-types';
 import { emitEvent } from '@/lib/events/emitter';
+import { changeStage } from '@/lib/sales/activity';
 
 // Lead → Project default duration. 60 days is a reasonable rough estimate
 // for an initial engagement; the user adjusts in the project edit screen.
@@ -107,17 +108,15 @@ export async function POST(request: NextRequest) {
 
     if (clientError) throw clientError;
 
-    // Update lead status to 'won' and link to client
+    // Link the lead to its client, then move it to won through the one stage path.
     const { error: updateError } = await supabase
       .from('leads')
-      .update({
-        status: 'won',
-        converted_to_client_at: new Date().toISOString(),
-        client_id: clientId,
-      })
+      .update({ converted_to_client_at: new Date().toISOString(), client_id: clientId })
       .eq('id', leadId);
 
     if (updateError) throw updateError;
+
+    await changeStage(leadId, 'won', { id: auth.user.id, name: auth.user.name }, { reason: 'Converted to client' });
 
     // Optionally seed a first project. Non-fatal: a project-insert failure
     // does not roll back the client; we still return success with a warning.
