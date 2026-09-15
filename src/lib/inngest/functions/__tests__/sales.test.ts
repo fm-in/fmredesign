@@ -108,6 +108,17 @@ describe('sales-lead-created', () => {
     expect(results.get('write-brief')).toEqual({ written: true });
     expect(JSON.stringify([...results.values()])).not.toMatch(/Priya|Acme/);
   });
+
+  it('records no ai_brief activity when creating the first-touch task fails, so a retry cannot double it up', async () => {
+    mocks.createTask.mockRejectedValueOnce(new Error('task insert failed'));
+    const { step } = fakeStep();
+
+    await expect(
+      registered('sales-lead-created').handler({ event: { data: { leadId: 'lead_1' } }, step })
+    ).rejects.toThrow('task insert failed');
+
+    expect(mocks.recordActivity).not.toHaveBeenCalled();
+  });
 });
 
 describe('sales-meta-leadgen failure', () => {
@@ -152,5 +163,21 @@ describe('sales-meta-leadgen failure', () => {
     await expect(
       reportMetaLeadgenFailure({ leadgenId: '444', pageId: '123', message: 'Graph API error 190: token expired' })
     ).resolves.toBeUndefined();
+  });
+
+  it('resolves without throwing on a non-unique insert error, notifying admins exactly once', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    fake.respond((call) =>
+      call.table === 'webhook_logs' ? { data: null, error: { code: '55000', message: 'no space left on device' } } : { data: null, error: null }
+    );
+
+    // This runs inside Inngest's onFailure handler: throwing here would retry the
+    // handler itself and repeat the admin notification above.
+    await expect(
+      reportMetaLeadgenFailure({ leadgenId: '444', pageId: '123', message: 'Graph API error 190: token expired' })
+    ).resolves.toBeUndefined();
+
+    expect(mocks.notifyAdmins).toHaveBeenCalledTimes(1);
+    consoleError.mockRestore();
   });
 });

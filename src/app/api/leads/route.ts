@@ -334,7 +334,7 @@ export async function POST(request: NextRequest) {
       });
       notifyTeam(emailData.subject, emailData.html);
 
-      return ApiResponse.success({ id: null });
+      return ApiResponse.success({ received: true }, undefined, 201);
     }
     const { leadId, created } = ingested;
 
@@ -342,9 +342,10 @@ export async function POST(request: NextRequest) {
       await announceNewLead(leadId);
     }
 
-    // Only the id of a lead this request created. A merge answers { id: null }:
-    // a public form must never reveal a record someone else submitted.
-    return created ? ApiResponse.success({ id: leadId }, undefined, 201) : ApiResponse.success({ id: null });
+    // Every outcome (created, merged into an existing lead, or saved via the
+    // pre-migration fallback above) answers the same generic body: a public form
+    // must never reveal whether an email or phone already exists in the database.
+    return ApiResponse.success({ received: true }, undefined, 201);
   } catch (error) {
     if (error instanceof IntakeError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });

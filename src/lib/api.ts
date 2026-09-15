@@ -487,8 +487,10 @@ export const api = {
         pageSize: params?.pageSize,
       })}`),
 
+    // POST /api/leads answers the same generic body for every submission
+    // (created, merged, or saved via the pre-migration fallback) — never a Lead.
     create: (data: Partial<Lead>) =>
-      mutate(() => post<ApiResponse<Lead>>('/api/leads', data), {
+      mutate(() => post<ApiResponse<{ received: boolean }>>('/api/leads', data), {
         success: 'Lead added successfully',
       }),
 

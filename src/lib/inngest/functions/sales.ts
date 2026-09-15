@@ -52,7 +52,6 @@ export const salesLeadCreatedFn = inngest.createFunction(
       if (!lead) return { written: false };
       const owner = await loadOwner(lead.owner_id);
       const generated = await generateLeadBrief(lead, owner?.name ?? TEAM_SIGNATURE);
-      await recordActivity({ leadId, type: 'ai_brief', body: generated.brief, metadata: { aiGenerated: generated.aiGenerated } });
       if (!(await hasOpenTask(leadId, FIRST_TOUCH_TITLE))) {
         await createTask({
           leadId,
@@ -63,6 +62,7 @@ export const salesLeadCreatedFn = inngest.createFunction(
           dueAt: new Date(Date.now() + 60 * 60_000).toISOString(),
         });
       }
+      await recordActivity({ leadId, type: 'ai_brief', body: generated.brief, metadata: { aiGenerated: generated.aiGenerated } });
       return { written: true };
     });
     if (!brief.written) return { skipped: 'lead_missing' };
@@ -146,8 +146,12 @@ export async function reportMetaLeadgenFailure(failure: { leadgenId: string; pag
       error: failure.message,
       external_id: `leadgen-fetch-failed:${failure.leadgenId}`,
     });
-  // The same lead failing again is already on record.
-  if (error && error.code !== UNIQUE_VIOLATION) throw error;
+  // The same lead failing again is already on record. Any other insert error must not
+  // throw: this runs inside Inngest's onFailure handler, and a throw there retries the
+  // handler itself — repeating the admin notification above.
+  if (error && error.code !== UNIQUE_VIOLATION) {
+    console.error('[sales] meta failure log insert failed:', error.message);
+  }
 }
 
 export const salesMetaLeadgenFn = inngest.createFunction(

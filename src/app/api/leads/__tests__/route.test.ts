@@ -72,23 +72,23 @@ beforeEach(() => {
 });
 
 describe('POST /api/leads', () => {
-  it('returns only the id of a newly created lead', async () => {
+  it('answers a newly created lead with the generic received response', async () => {
     const res = await POST(postLead(publicSubmission));
     const json = await res.json();
 
     expect(res.status).toBe(201);
-    expect(json.data).toEqual({ id: 'lead_new' });
+    expect(json.data).toEqual({ received: true });
     expect(mocks.notifyAdmins).toHaveBeenCalledTimes(1);
   });
 
-  it('returns no lead data when the submission merged into an existing lead', async () => {
+  it('answers a submission merged into an existing lead with the same generic response', async () => {
     mocks.ingestLead.mockResolvedValueOnce({ leadId: 'lead_1', created: false });
 
     const res = await POST(postLead(publicSubmission));
     const json = await res.json();
 
-    expect(res.status).toBe(200);
-    expect(json.data).toEqual({ id: null });
+    expect(res.status).toBe(201);
+    expect(json.data).toEqual({ received: true });
     const body = JSON.stringify(json);
     expect(body).not.toContain('priya@example.com');
     expect(body).not.toContain('9833257659');
@@ -110,8 +110,8 @@ describe('POST /api/leads', () => {
     const res = await POST(postLead(publicSubmission));
     const json = await res.json();
 
-    expect(res.status).toBe(200);
-    expect(json.data).toEqual({ id: null });
+    expect(res.status).toBe(201);
+    expect(json.data).toEqual({ received: true });
     const inserts = fake.callsTo('leads', 'insert').map(payloadOf);
     expect(inserts).toHaveLength(1);
     expect(inserts[0]).toMatchObject({ email: 'priya@example.com', source: 'website_form', status: 'new', ip_address: expect.any(String) });
@@ -134,7 +134,7 @@ describe('POST /api/leads', () => {
 
     const res = await POST(postLead(publicSubmission));
 
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     const inserts = fake.callsTo('leads', 'insert').map(payloadOf);
     expect(inserts).toHaveLength(2);
     expect(inserts[1]).toMatchObject({ email: 'priya@example.com' });

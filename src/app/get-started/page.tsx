@@ -123,7 +123,6 @@ export default function GetStartedPage() {
   const [formData, setFormData] = useState<Partial<LeadInput>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [honeypot, setHoneypot] = useState('');
-  const [leadId, setLeadId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -235,8 +234,6 @@ export default function GetStartedPage() {
         throw new Error('Failed to submit form');
       }
 
-      setLeadId(leadIdFrom(await response.json().catch(() => null)));
-
       localStorage.removeItem('fm_lead_progress');
       setSubmitted(true);
       setCurrentStep(5);
@@ -257,7 +254,7 @@ export default function GetStartedPage() {
   };
 
   if (submitted) {
-    return <ThankYouStep formData={formData} leadId={leadId} />;
+    return <ThankYouStep formData={formData} />;
   }
 
   return (
@@ -780,16 +777,8 @@ export default function GetStartedPage() {
   );
 }
 
-/** The new lead's id from the POST /api/leads response, if present. */
-function leadIdFrom(json: unknown): string | null {
-  if (typeof json !== 'object' || json === null || !('data' in json)) return null;
-  const data = json.data;
-  if (typeof data !== 'object' || data === null || !('id' in data)) return null;
-  return typeof data.id === 'string' ? data.id : null;
-}
-
 // Thank You Step Component
-function ThankYouStep({ formData, leadId }: { formData: Partial<LeadInput>; leadId: string | null }) {
+function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
   return (
     <V2PageWrapper>
       <section className="relative z-10 min-h-screen flex items-center justify-center v2-section">
@@ -837,7 +826,7 @@ function ThankYouStep({ formData, leadId }: { formData: Partial<LeadInput>; lead
             <div className="space-y-6">
               <CalButton
                 calLink={DEFAULT_BOOKING_LINK}
-                prefill={{ leadId: leadId ?? undefined, name: formData.name, email: formData.email }}
+                prefill={{ name: formData.name, email: formData.email }}
                 className="v2-btn v2-btn-magenta"
               >
                 Book your discovery call now
