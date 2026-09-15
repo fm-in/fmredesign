@@ -49,11 +49,13 @@ export async function GET(request: NextRequest) {
     const budgetRangeFilter = searchParams.get('budgetRange');
     const companySizeFilter = searchParams.get('companySize');
     const assignedToFilter = myLeadsOnly ? null : searchParams.get('assignedTo');
-    const scopedOwnerId = myLeadsOnly ? auth.user.id : null;
+    const currentUserId = auth.user.id;
+    const scopedOwnerId = myLeadsOnly ? currentUserId : null;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const searchQuery = searchParams.get('search');
     const searchTerm = searchQuery ? escapeSearchTerm(searchQuery) : '';
+    const ownerFilter = searchParams.get('owner');
 
     // Sorting
     const sortBy = searchParams.get('sortBy');
@@ -83,6 +85,8 @@ export async function GET(request: NextRequest) {
       if (endDate) q = q.lte('created_at', endDate);
       // Managers see the leads they own plus unassigned ones.
       if (scopedOwnerId) q = q.or(`owner_id.eq.${scopedOwnerId},owner_id.is.null`);
+      if (ownerFilter === 'mine') q = q.eq('owner_id', currentUserId);
+      if (ownerFilter === 'unassigned') q = q.is('owner_id', null);
       if (searchTerm) {
         q = q.or(
           `name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,project_description.ilike.%${searchTerm}%`
