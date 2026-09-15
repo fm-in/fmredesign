@@ -244,6 +244,27 @@ Event type constants: import from `src/lib/events/types.ts` (client-safe), NOT `
 
 Async APIs (`social/publish`, `content/generate`) return `{ status: 'queued' }` immediately.
 
+## Sales Automation
+
+Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`. Setup: `docs/SALES-SETUP.md`.
+
+- **Leads enter only through `ingestLead()`** (`src/lib/sales/intake/ingest.ts`). It normalises,
+  merges returning people, scores, records the submission and emits `sales/lead.created`.
+  Never `insert` into `leads` anywhere else.
+- **Stage changes go only through `changeStage()`** (`src/lib/sales/activity.ts`) so history,
+  sequence stopping and `lead.status_changed` cannot be skipped.
+- **Sales email goes only through `sendSalesEmail()`**: it checks consent, the do-not-contact
+  list and configuration at send time. Resend is never used for cold email.
+- **Webhooks** live at `/api/webhooks/sales/[source]` with one adapter per source in
+  `src/lib/sales/intake/adapters/`. Verify first, log with the delivery id, then handle.
+  Throw `WebhookRejection` for payloads that will never succeed (400, no retry).
+- Nothing is sent to a lead unless `admin_settings.sales.automationEnabled` is true.
+- Admin sales routes use `sales.read` / `sales.write`; managers see their own and unassigned
+  leads (`canAccessLead`).
+- Tables: `lead_activities`, `sales_tasks`, `meetings`, `suppression_list` (+ sales columns on
+  `leads`) from `migrations/2026-09-15-sales-foundation.sql`.
+- Tests use `src/test-utils/fake-supabase.ts` and `src/test-utils/lead-row.ts`.
+
 ## Invoice & Proposal System
 
 ### Invoices

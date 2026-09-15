@@ -33,6 +33,17 @@ const envSchema = z.object({
   INNGEST_EVENT_KEY: z.string().optional(),
   INNGEST_SIGNING_KEY: z.string().optional(),
 
+  // Sales automation (optional — each integration stays off until configured)
+  SALES_LINK_SECRET: z.string().min(16).optional(),
+  SALES_REPLY_TO: z.string().email().optional(),
+  SALES_FROM_EMAIL: z.string().optional(),
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
+  META_APP_SECRET: z.string().optional(),
+  META_LEADS_VERIFY_TOKEN: z.string().optional(),
+  GOOGLE_ADS_LEAD_KEY: z.string().optional(),
+  CALCOM_WEBHOOK_SECRET: z.string().optional(),
+  LEAD_CONNECTOR_SECRET: z.string().optional(),
+
   // n8n webhook URLs (AI content generation — optional)
   N8N_WEBHOOK_MONTHLY_CONTENT: z.string().url().optional(),
   N8N_WEBHOOK_HOLIDAY_CONTENT: z.string().url().optional(),
