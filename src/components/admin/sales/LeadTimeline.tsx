@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { DashboardButton } from '@/design-system';
-import { formatIst, STAGE_LABELS, type SalesActivity } from '@/lib/sales/api-types';
+import { formatIst, SEQUENCE_LABELS, STAGE_LABELS, type SalesActivity } from '@/lib/sales/api-types';
 import { isLeadStatus, type ActivityType } from '@/lib/sales/types';
 
 const TITLES: Record<ActivityType, string> = {
@@ -34,7 +34,9 @@ function describe(activity: SalesActivity): string | null {
     return `${STAGE_LABELS[meta.from]} → ${STAGE_LABELS[meta.to]}${typeof meta.lostReason === 'string' ? ` · ${meta.lostReason}` : ''}`;
   }
   if (activity.type === 'owner_changed') return typeof meta.toName === 'string' ? `Now owned by ${meta.toName}` : 'Unassigned';
-  if (activity.type === 'sequence_started' && typeof meta.sequenceKey === 'string') return `Set: ${meta.sequenceKey}`;
+  if (activity.type === 'sequence_started' && typeof meta.sequenceKey === 'string') {
+    return `Set: ${SEQUENCE_LABELS[meta.sequenceKey] ?? meta.sequenceKey}`;
+  }
   if (activity.type === 'sequence_stopped' && typeof meta.reason === 'string') return `Reason: ${meta.reason.replace(/_/g, ' ')}`;
   return activity.subject;
 }

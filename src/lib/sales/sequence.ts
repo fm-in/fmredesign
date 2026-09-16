@@ -93,6 +93,42 @@ export function recommendSequence(lead: LeadRow): string | null {
   }
 }
 
+export interface SequenceStartCheck {
+  suppressed: boolean;
+  automationEnabled: boolean;
+}
+
+/**
+ * Whether a lead can start a follow-up sequence, and the plain-English reason
+ * when it cannot. Shared by the start route (which refuses the POST) and the
+ * lead detail payload (which disables the panel's button) — one copy so the
+ * two can never drift and offer a button the endpoint then refuses.
+ *
+ * `suppressed` and `automationEnabled` are looked up by the caller (both need
+ * a database round trip) and passed in; this function itself is pure.
+ */
+export function sequenceStartState(
+  lead: LeadRow,
+  check: SequenceStartCheck
+): { canStart: true; blockedReason: null } | { canStart: false; blockedReason: string } {
+  if (!lead.email) {
+    return { canStart: false, blockedReason: "This lead has no email address, so follow-ups can't be sent." };
+  }
+  if (check.suppressed) {
+    return { canStart: false, blockedReason: "This email address is on the do-not-contact list, so follow-ups can't be sent." };
+  }
+  if (lead.consent_basis !== 'inbound_request' && lead.consent_basis !== 'consent') {
+    return { canStart: false, blockedReason: "This lead hasn't given consent to be emailed, so follow-ups can't be sent." };
+  }
+  if (lead.sequence_status !== null) {
+    return { canStart: false, blockedReason: 'This lead has already had a follow-up sequence — only one ever runs per lead.' };
+  }
+  if (!check.automationEnabled) {
+    return { canStart: false, blockedReason: "Automation is switched off in Settings, so follow-ups can't be sent." };
+  }
+  return { canStart: true, blockedReason: null };
+}
+
 export interface ContinueState {
   automationEnabled: boolean;
   suppressed: boolean;

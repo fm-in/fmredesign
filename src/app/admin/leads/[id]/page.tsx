@@ -44,7 +44,7 @@ export default function LeadDetailPage() {
     );
   }
 
-  const { lead, activities, tasks, meetings, owners, suppressed, permissions } = detail.data;
+  const { lead, activities, tasks, meetings, owners, suppressed, sequences, permissions } = detail.data;
   const latestBrief = activities.find((activity) => activity.type === 'ai_brief');
 
   return (
@@ -59,9 +59,11 @@ export default function LeadDetailPage() {
         canAssign={permissions.canAssign}
         userId={permissions.userId}
         suppressed={suppressed}
+        sequences={sequences}
         onStageChange={detail.changeStage}
         onOwnerChange={detail.changeOwner}
         onStopSequence={detail.stopSequence}
+        onStartSequence={detail.startSequence}
       />
 
       <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">

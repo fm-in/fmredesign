@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SEQUENCES, getSequence, recommendSequence, shouldContinue, type ContinueState } from '../sequence';
+import { SEQUENCES, getSequence, recommendSequence, sequenceStartState, shouldContinue, type ContinueState } from '../sequence';
 import { leadRow } from '@/test-utils/lead-row';
 import type { LeadRow } from '@/lib/sales/types';
 
@@ -119,6 +119,57 @@ describe('recommendSequence', () => {
   it('ignores formName on non website_form sources', () => {
     const lead = leadRow({ source: 'referral', custom_fields: { formName: 'Get started' } });
     expect(recommendSequence(lead)).toBe('enquiry-v1');
+  });
+});
+
+describe('sequenceStartState', () => {
+  const check = { suppressed: false, automationEnabled: true };
+
+  it('can start when the lead has an email, consent, no prior sequence, and automation is on', () => {
+    const lead = leadRow({ email: 'priya@example.com', consent_basis: 'inbound_request', sequence_status: null });
+    expect(sequenceStartState(lead, check)).toEqual({ canStart: true, blockedReason: null });
+  });
+
+  it('blocks a lead with no email address', () => {
+    const lead = leadRow({ email: null });
+    const result = sequenceStartState(lead, check);
+    expect(result.canStart).toBe(false);
+    expect(result.blockedReason).toMatch(/no email address/i);
+  });
+
+  it('blocks a suppressed address', () => {
+    const lead = leadRow({ email: 'priya@example.com' });
+    const result = sequenceStartState(lead, { ...check, suppressed: true });
+    expect(result.canStart).toBe(false);
+    expect(result.blockedReason).toMatch(/do-not-contact/i);
+  });
+
+  it('blocks a lead with no consent basis', () => {
+    const lead = leadRow({ email: 'priya@example.com', consent_basis: 'none' });
+    const result = sequenceStartState(lead, check);
+    expect(result.canStart).toBe(false);
+    expect(result.blockedReason).toMatch(/consent/i);
+  });
+
+  it('blocks a lead that already had a sequence, even a stopped one', () => {
+    const lead = leadRow({ email: 'priya@example.com', sequence_status: 'stopped' });
+    const result = sequenceStartState(lead, check);
+    expect(result.canStart).toBe(false);
+    expect(result.blockedReason).toMatch(/already had a follow-up sequence/i);
+  });
+
+  it('blocks when automation is switched off', () => {
+    const lead = leadRow({ email: 'priya@example.com' });
+    const result = sequenceStartState(lead, { ...check, automationEnabled: false });
+    expect(result.canStart).toBe(false);
+    expect(result.blockedReason).toMatch(/automation is switched off/i);
+  });
+
+  it('checks in order: email, suppression, consent, prior sequence, automation', () => {
+    // A lead failing every check should report the first one, not the last.
+    const lead = leadRow({ email: null, consent_basis: 'none', sequence_status: 'stopped' });
+    const result = sequenceStartState(lead, { suppressed: true, automationEnabled: false });
+    expect(result.blockedReason).toMatch(/no email address/i);
   });
 });
 

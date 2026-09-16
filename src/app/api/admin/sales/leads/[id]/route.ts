@@ -10,6 +10,8 @@ import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { canAccessLead, canAssignOwner, isSalesAdmin } from '@/lib/sales/access';
 import { changeStage, recordActivity } from '@/lib/sales/activity';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
+import { recommendSequence, sequenceStartState } from '@/lib/sales/sequence';
+import { getSalesSettings } from '@/lib/sales/settings';
 import type { LeadRow } from '@/lib/sales/types';
 import { firstIssue, leadPatchSchema } from '@/lib/sales/schemas';
 import { isSuppressed } from '@/lib/sales/suppression';
@@ -36,13 +38,21 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     if (!lead || !canAccessLead(auth.user, lead)) return ApiResponse.notFound('Lead not found');
 
     const supabase = getSupabaseAdmin();
-    const [activities, tasks, meetings, owners, suppressed] = await Promise.all([
+    const [activities, tasks, meetings, owners, suppressed, settings] = await Promise.all([
       supabase.from('lead_activities').select('*').eq('lead_id', id).order('occurred_at', { ascending: false }).limit(200),
       supabase.from('sales_tasks').select('*').eq('lead_id', id).order('due_at', { ascending: true }),
       supabase.from('meetings').select('*').eq('lead_id', id).order('starts_at', { ascending: false }),
       supabase.from('authorized_users').select('id, name').eq('status', 'active').order('name', { ascending: true }),
       isSuppressed({ email: lead.email, phoneE164: lead.phone_e164 }),
+      getSalesSettings(),
     ]);
+
+    // Reuses the same refusal logic the start route enforces, so the panel
+    // never offers a set the endpoint would then refuse.
+    const sequences = {
+      recommended: recommendSequence(lead),
+      ...sequenceStartState(lead, { suppressed, automationEnabled: settings.automationEnabled }),
+    };
 
     return ApiResponse.success({
       lead: leadPayload(lead),
@@ -51,6 +61,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       meetings: (meetings.data ?? []).map((row: Record<string, unknown>) => toCamelCaseKeys(row)),
       owners: (owners.data ?? []).map((row: { id: string; name: string }) => ({ id: row.id, name: row.name })),
       suppressed,
+      sequences,
       permissions: { canAssign: isSalesAdmin(auth.user), userId: auth.user.id },
     });
   } catch (error) {

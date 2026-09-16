@@ -108,6 +108,37 @@ describe('/api/admin/sales/leads/[id]', () => {
     expect(json.data.activities[0].metadata).toEqual({ customFields: { team_size: '10' }, source_detail: 'Get started' });
   });
 
+  it('includes the recommended sequence and start state when it can start', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') {
+        return { data: leadRow({ owner_id: null, source: 'website_form', custom_fields: { formName: 'Get started' } }), error: null };
+      }
+      if (call.table === 'admin_settings') return { data: { sales: { automationEnabled: true } }, error: null };
+      if (call.table === 'suppression_list') return { data: [], error: null };
+      if (call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context);
+    const json = await res.json();
+    expect(json.data.sequences).toEqual({ recommended: 'brief-v1', canStart: true, blockedReason: null });
+  });
+
+  it('reports the blocked reason in the sequences payload when automation is off', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ owner_id: null }), error: null };
+      if (call.table === 'admin_settings') return { data: { sales: { automationEnabled: false } }, error: null };
+      if (call.table === 'suppression_list') return { data: [], error: null };
+      if (call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context);
+    const json = await res.json();
+    expect(json.data.sequences.canStart).toBe(false);
+    expect(json.data.sequences.blockedReason).toMatch(/automation is switched off/i);
+  });
+
   it('refuses to mark a lead lost without a reason', async () => {
     respondWithLead('u-mgr');
     const res = await PATCH(

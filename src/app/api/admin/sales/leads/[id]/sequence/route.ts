@@ -5,6 +5,7 @@ import { canAccessLead } from '@/lib/sales/access';
 import { recordActivity, stopSequence } from '@/lib/sales/activity';
 import { sendSalesEvent } from '@/lib/sales/events';
 import { loadLead } from '@/lib/sales/lead-store';
+import { sequenceStartState } from '@/lib/sales/sequence';
 import { getSalesSettings } from '@/lib/sales/settings';
 import { isSuppressed } from '@/lib/sales/suppression';
 import { firstIssue, sequenceActionSchema } from '@/lib/sales/schemas';
@@ -32,22 +33,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { sequenceKey } = parsed.data;
 
   // Refusals are written for the salesperson reading the panel, not a developer
-  // reading a log — each names the specific reason nothing can be sent.
-  if (!lead.email) {
-    return ApiResponse.validationError("This lead has no email address, so follow-ups can't be sent.");
-  }
-  if (await isSuppressed({ email: lead.email, phoneE164: lead.phone_e164 })) {
-    return ApiResponse.validationError("This email address is on the do-not-contact list, so follow-ups can't be sent.");
-  }
-  if (lead.consent_basis !== 'inbound_request' && lead.consent_basis !== 'consent') {
-    return ApiResponse.validationError("This lead hasn't given consent to be emailed, so follow-ups can't be sent.");
-  }
-  if (lead.sequence_status !== null) {
-    return ApiResponse.validationError('This lead has already had a follow-up sequence — only one ever runs per lead.');
-  }
-  const settings = await getSalesSettings();
-  if (!settings.automationEnabled) {
-    return ApiResponse.validationError("Automation is switched off in Settings, so follow-ups can't be sent.");
+  // reading a log — each names the specific reason nothing can be sent. The
+  // checks themselves live in sequenceStartState, shared with the lead detail
+  // payload so the panel can never offer a button this route then refuses.
+  const [suppressed, settings] = await Promise.all([
+    isSuppressed({ email: lead.email, phoneE164: lead.phone_e164 }),
+    getSalesSettings(),
+  ]);
+  const state = sequenceStartState(lead, { suppressed, automationEnabled: settings.automationEnabled });
+  if (!state.canStart) {
+    return ApiResponse.validationError(state.blockedReason);
   }
 
   await recordActivity({ leadId: id, type: 'sequence_started', actor, metadata: { sequenceKey } });
