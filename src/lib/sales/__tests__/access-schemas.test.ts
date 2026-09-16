@@ -45,4 +45,14 @@ describe('salesSettingsSchema', () => {
     expect(salesSettingsSchema.safeParse({ bookingLink: 'fm-in/15min' }).success).toBe(true);
     expect(salesSettingsSchema.safeParse({ bookingLink: 'https://cal.com/fm-in/15min' }).success).toBe(false);
   });
+
+  it('validates bookingLinkLong with the same Cal.com path shape', () => {
+    expect(salesSettingsSchema.safeParse({ bookingLinkLong: 'fm-in/30min' }).success).toBe(true);
+    expect(salesSettingsSchema.safeParse({ bookingLinkLong: 'https://cal.com/fm-in/30min' }).success).toBe(false);
+    expect(salesSettingsSchema.safeParse({ bookingLinkLong: 'fm-in' }).success).toBe(false);
+  });
+
+  it('treats bookingLinkLong as optional', () => {
+    expect(salesSettingsSchema.safeParse({}).success).toBe(true);
+  });
 });

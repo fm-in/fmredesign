@@ -34,6 +34,11 @@ export const salesSettingsSchema = z.object({
     .trim()
     .regex(/^[\w-]+\/[\w-]+$/, 'Use the Cal.com team/event path, for example fm-in/15min')
     .optional(),
+  bookingLinkLong: z
+    .string()
+    .trim()
+    .regex(/^[\w-]+\/[\w-]+$/, 'Use the Cal.com team/event path, for example fm-in/30min')
+    .optional(),
   rotation: z.array(z.string().min(1)).max(50).optional(),
 });
 

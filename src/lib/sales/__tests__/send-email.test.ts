@@ -19,7 +19,7 @@ vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined)
 
 import { sendSalesEmail } from '../send-email';
 
-const settings = { automationEnabled: true, bookingLink: 'fm-in/15min' };
+const settings = { automationEnabled: true, bookingLink: 'fm-in/15min', bookingLinkLong: 'fm-in/30min' };
 
 beforeEach(() => {
   fake.reset();

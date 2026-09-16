@@ -9,7 +9,7 @@ import { adminToast } from '@/lib/admin/toast';
 import { formatIst } from '@/lib/sales/api-types';
 
 interface SalesSettingsPayload {
-  settings: { automationEnabled: boolean; bookingLink: string };
+  settings: { automationEnabled: boolean; bookingLink: string; bookingLinkLong: string };
   users: Array<{ id: string; name: string; email: string | null; role: string; inRotation: boolean }>;
   webhooks: Array<{ source: string; url: string; configured: boolean; missingEnv: string[]; lastReceivedAt: string | null; lastError: string | null }>;
   emailConfigured: boolean;
@@ -26,12 +26,14 @@ const SOURCE_NAMES: Record<string, string> = {
 export function SalesSettingsPanel() {
   const [data, setData] = useState<SalesSettingsPayload | null>(null);
   const [bookingLink, setBookingLink] = useState('');
+  const [bookingLinkLong, setBookingLinkLong] = useState('');
   const [rotation, setRotation] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   const apply = useCallback((payload: SalesSettingsPayload) => {
     setData(payload);
     setBookingLink(payload.settings.bookingLink);
+    setBookingLinkLong(payload.settings.bookingLinkLong);
     setRotation(payload.users.filter((user) => user.inRotation).map((user) => user.id));
   }, []);
 
@@ -102,8 +104,8 @@ export function SalesSettingsPanel() {
             <div className="w-full sm:w-72">
               <Input
                 id="booking-link"
-                label="Cal.com booking link"
-                hint="team/event, for example fm-in/15min"
+                label="Short call booking link (15 min)"
+                hint="Used by most sequences — team/event, for example fm-in/15min"
                 value={bookingLink}
                 onChange={(e) => setBookingLink(e.target.value)}
               />
@@ -113,6 +115,25 @@ export function SalesSettingsPanel() {
               size="sm"
               disabled={saving || bookingLink === data.settings.bookingLink}
               onClick={() => save({ bookingLink }, 'Booking link saved')}
+            >
+              Save link
+            </DashboardButton>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="w-full sm:w-72">
+              <Input
+                id="booking-link-long"
+                label="Scoping call booking link (30 min)"
+                hint="Used by the project brief sequence — team/event, for example fm-in/30min"
+                value={bookingLinkLong}
+                onChange={(e) => setBookingLinkLong(e.target.value)}
+              />
+            </div>
+            <DashboardButton
+              variant="secondary"
+              size="sm"
+              disabled={saving || bookingLinkLong === data.settings.bookingLinkLong}
+              onClick={() => save({ bookingLinkLong }, 'Booking link saved')}
             >
               Save link
             </DashboardButton>

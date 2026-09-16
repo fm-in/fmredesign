@@ -5,6 +5,7 @@
 
 export const COMPANY_WHATSAPP_NUMBER = '919833257659';
 export const DEFAULT_BOOKING_LINK = 'fm-in/15min';
+export const DEFAULT_BOOKING_LINK_LONG = 'fm-in/30min';
 
 export interface BookingPrefill {
   leadId?: string;

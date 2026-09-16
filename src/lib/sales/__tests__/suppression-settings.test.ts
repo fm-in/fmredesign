@@ -51,7 +51,11 @@ describe('addSuppression', () => {
 
 describe('sales settings', () => {
   it('defaults safely', () => {
-    expect(parseSalesSettings(null)).toEqual({ automationEnabled: false, bookingLink: 'fm-in/15min' });
+    expect(parseSalesSettings(null)).toEqual({
+      automationEnabled: false,
+      bookingLink: 'fm-in/15min',
+      bookingLinkLong: 'fm-in/30min',
+    });
   });
 
   it('enables automation only on an explicit true', () => {
@@ -59,6 +63,7 @@ describe('sales settings', () => {
     expect(parseSalesSettings({ automationEnabled: true, bookingLink: ' fm-in/30min ' })).toEqual({
       automationEnabled: true,
       bookingLink: 'fm-in/30min',
+      bookingLinkLong: 'fm-in/30min',
     });
   });
 
@@ -66,6 +71,19 @@ describe('sales settings', () => {
     fake.respond((call) =>
       call.table === 'admin_settings' ? { data: { sales: { automationEnabled: true } }, error: null } : { data: null, error: null }
     );
-    await expect(getSalesSettings()).resolves.toEqual({ automationEnabled: true, bookingLink: 'fm-in/15min' });
+    await expect(getSalesSettings()).resolves.toEqual({
+      automationEnabled: true,
+      bookingLink: 'fm-in/15min',
+      bookingLinkLong: 'fm-in/30min',
+    });
+  });
+
+  it('uses a stored bookingLinkLong value', () => {
+    expect(parseSalesSettings({ bookingLinkLong: 'fm-in/45min' }).bookingLinkLong).toBe('fm-in/45min');
+  });
+
+  it('falls back to the default bookingLinkLong when stored as empty or whitespace', () => {
+    expect(parseSalesSettings({ bookingLinkLong: '' }).bookingLinkLong).toBe('fm-in/30min');
+    expect(parseSalesSettings({ bookingLinkLong: '   ' }).bookingLinkLong).toBe('fm-in/30min');
   });
 });

@@ -131,6 +131,8 @@ export interface SalesSettings {
   automationEnabled: boolean;
   /** Cal.com event path, e.g. "fm-in/15min". */
   bookingLink: string;
+  /** Cal.com event path for the longer scoping call, e.g. "fm-in/30min". */
+  bookingLinkLong: string;
 }
 
 export interface Actor {
