@@ -20,6 +20,7 @@ const TITLES: Record<ActivityType, string> = {
   meeting_completed: 'Call held',
   stage_changed: 'Stage changed',
   owner_changed: 'Owner changed',
+  sequence_started: 'Follow-ups started',
   sequence_stopped: 'Follow-ups stopped',
   ai_brief: 'AI brief',
   unsubscribed: 'Unsubscribed',
@@ -33,6 +34,7 @@ function describe(activity: SalesActivity): string | null {
     return `${STAGE_LABELS[meta.from]} → ${STAGE_LABELS[meta.to]}${typeof meta.lostReason === 'string' ? ` · ${meta.lostReason}` : ''}`;
   }
   if (activity.type === 'owner_changed') return typeof meta.toName === 'string' ? `Now owned by ${meta.toName}` : 'Unassigned';
+  if (activity.type === 'sequence_started' && typeof meta.sequenceKey === 'string') return `Set: ${meta.sequenceKey}`;
   if (activity.type === 'sequence_stopped' && typeof meta.reason === 'string') return `Reason: ${meta.reason.replace(/_/g, ' ')}`;
   return activity.subject;
 }

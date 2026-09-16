@@ -106,6 +106,7 @@ export type ActivityType =
   | 'meeting_completed'
   | 'stage_changed'
   | 'owner_changed'
+  | 'sequence_started'
   | 'sequence_stopped'
   | 'ai_brief'
   | 'unsubscribed';

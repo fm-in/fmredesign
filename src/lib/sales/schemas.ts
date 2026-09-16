@@ -3,6 +3,7 @@
 import { z } from 'zod';
 import type { LeadStatus } from '@/lib/admin/lead-types';
 import { isLeadStatus } from '@/lib/sales/types';
+import { SEQUENCES } from '@/lib/sales/sequence';
 
 export const leadPatchSchema = z
   .object({
@@ -21,7 +22,16 @@ export const noteSchema = z.object({
   body: z.string().trim().min(1, 'Write a note first').max(5000, 'Keep notes under 5,000 characters'),
 });
 
-export const sequenceActionSchema = z.object({ action: z.literal('stop') });
+// Built from the registry, not hardcoded, so a fifth sequence needs no schema edit.
+const sequenceKeys = Object.keys(SEQUENCES);
+
+export const sequenceActionSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('stop') }),
+  z.object({
+    action: z.literal('start'),
+    sequenceKey: z.string().refine((key) => sequenceKeys.includes(key), 'Choose a valid follow-up set'),
+  }),
+]);
 
 export const taskPatchSchema = z.object({ status: z.enum(['done', 'skipped']) });
 
