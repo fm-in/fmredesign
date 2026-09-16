@@ -4,7 +4,10 @@
  * reply, not a newsletter.
  */
 
+import { escapeHtml, renderShell } from '@/lib/sales/email-shell';
 import type { SalesEmailTemplate } from '@/lib/sales/sequence';
+
+export { escapeHtml };
 
 export interface SalesEmailContext {
   firstName: string;
@@ -24,34 +27,20 @@ export interface RenderedEmail {
 
 interface Copy {
   subject: string;
+  preheader: string;
   paragraphs: string[];
   cta: { label: string; url: string };
 }
 
-const URL_RE = /(https?:\/\/[^\s<]+)/g;
-
 /** Signature used when a lead has no owner yet. */
 export const TEAM_SIGNATURE = 'The FreakingMinds team';
-
-export function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function paragraphHtml(text: string): string {
-  const linked = escapeHtml(text).replace(URL_RE, (url) => `<a href="${url}" style="color:#a82548">${url}</a>`);
-  return `<p style="margin:0 0 16px">${linked}</p>`;
-}
 
 function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
   switch (template) {
     case 'instant_reply':
       return {
         subject: `Got your message, ${ctx.firstName}`,
+        preheader: "Thanks for reaching out — here's the quickest way to talk.",
         paragraphs: [
           `Hi ${ctx.firstName},`,
           ctx.ownerName === TEAM_SIGNATURE
@@ -65,6 +54,7 @@ function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
     case 'follow_up_proof':
       return {
         subject: `What this could look like for you, ${ctx.firstName}`,
+        preheader: 'A bit of proof, in case it helps you decide.',
         paragraphs: [
           `Hi ${ctx.firstName},`,
           `While you think it over, here is some of the work we have done for brands like yours: ${ctx.workUrl}`,
@@ -76,6 +66,7 @@ function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
     case 'close_the_loop':
       return {
         subject: 'Should I close your enquiry?',
+        preheader: 'Following up once more before I close this out.',
         paragraphs: [
           `Hi ${ctx.firstName},`,
           "I haven't heard back, so I'll assume the timing isn't right and stop following up.",
@@ -89,17 +80,13 @@ function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
 export function renderSalesEmail(template: SalesEmailTemplate, ctx: SalesEmailContext): RenderedEmail {
   const copy = copyFor(template, ctx);
 
-  const html = [
-    '<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#ffffff;',
-    "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:15px;line-height:1.6;color:#2d2d2d\">",
-    '<div style="max-width:560px">',
-    copy.paragraphs.map(paragraphHtml).join(''),
-    `<p style="margin:24px 0"><a href="${escapeHtml(copy.cta.url)}" style="display:inline-block;background:#a82548;color:#ffffff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600">${escapeHtml(copy.cta.label)}</a></p>`,
-    `<p style="margin:0 0 4px">${escapeHtml(ctx.ownerName)}</p>`,
-    '<p style="margin:0 0 24px;color:#666666">FreakingMinds</p>',
-    `<p style="margin:0;font-size:12px;color:#888888">You are receiving this because you contacted FreakingMinds. <a href="${escapeHtml(ctx.unsubscribeUrl)}" style="color:#888888">Unsubscribe</a></p>`,
-    '</div></body></html>',
-  ].join('');
+  const html = renderShell({
+    preheader: copy.preheader,
+    paragraphs: copy.paragraphs,
+    cta: copy.cta,
+    ownerName: ctx.ownerName,
+    unsubscribeUrl: ctx.unsubscribeUrl,
+  });
 
   const text = [
     ...copy.paragraphs,
