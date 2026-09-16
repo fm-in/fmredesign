@@ -93,13 +93,6 @@ export function recommendSequence(lead: LeadRow): string | null {
   }
 }
 
-// Deprecated aliases kept only so src/lib/inngest/functions/sales.ts keeps compiling
-// between commits; Task 4 removes both and switches that runner to getSequence().
-/** @deprecated Use `'enquiry-v1'` (via `SEQUENCES`/`getSequence`) instead. */
-export const INBOUND_V1_KEY = 'enquiry-v1';
-/** @deprecated Use `SEQUENCES['enquiry-v1']` (via `getSequence('enquiry-v1')`) instead. */
-export const INBOUND_V1: readonly SequenceStep[] = SEQUENCES['enquiry-v1'];
-
 export interface ContinueState {
   automationEnabled: boolean;
   suppressed: boolean;

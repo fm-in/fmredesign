@@ -19,6 +19,8 @@ export interface SalesEmailContext {
   scorecardUrl: string;
   /** A longer booking link (30-minute slot) used by the brief-v1 sequence. Falls back to `bookingUrl`. */
   bookingUrlLong?: string;
+  /** The lead's stated timeline. Only its presence is used: it gates a clause in `brief_intro`, never its literal text. */
+  timeline?: string;
   /** What the get-started brief describes the project as, e.g. "a website rebuild". */
   projectType?: string;
   /** The ad campaign name the lead came from. */
@@ -93,18 +95,22 @@ function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
 
     // --- brief-v1: the get-started form ---
 
-    case 'brief_intro':
+    case 'brief_intro': {
+      // Fallback rule (approved-copy.md): when the timeline is unknown, drop the
+      // clause after the comma entirely — never claim a timeline that was never given.
+      const timelineClause = ctx.timeline ? ', and the timeline you mentioned is workable' : '';
       return {
         subject: `Your project brief, ${ctx.firstName}`,
         preheader: "I've read it — here's what happens next.",
         paragraphs: [
           `Hi ${ctx.firstName},`,
-          `Thanks for sending the details through — I've read your brief on ${ctx.projectType ?? 'your project'}, and the timeline you mentioned is workable.`,
+          `Thanks for sending the details through — I've read your brief on ${ctx.projectType ?? 'your project'}${timelineClause}.`,
           "Here's what happens next. I'll put together an approach based on what you've described. The fastest way to make that useful is a 30-minute call where you tell me what success looks like, and I tell you honestly whether we're the right people for it.",
           `Prefer WhatsApp? Message us here: ${ctx.whatsappUrl}`,
         ],
         cta: { label: 'Book a 30-minute call', url: ctx.bookingUrlLong ?? ctx.bookingUrl },
       };
+    }
     case 'brief_questions': {
       const projectPhrase = ctx.projectType ? `${ctx.projectType} ` : '';
       return {

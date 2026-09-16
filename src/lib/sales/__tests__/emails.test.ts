@@ -15,6 +15,7 @@ const ctx: SalesEmailContext = {
 // Full context for the eight new templates — every new optional field populated.
 const richCtx: SalesEmailContext = {
   ...ctx,
+  timeline: 'in the next 3 months',
   projectType: 'a website rebuild',
   campaign: 'Diwali Sale',
   platform: 'Instagram',
@@ -165,6 +166,21 @@ describe('brief-v1 templates', () => {
     const missing = without('bookingUrlLong');
     const email = renderSalesEmail('brief_intro', missing);
     expect(email.text).toContain(`Book a 30-minute call: ${ctx.bookingUrl}`);
+  });
+
+  it('brief_intro drops the timeline clause entirely when timeline is missing', () => {
+    const missing = without('timeline');
+    const email = renderSalesEmail('brief_intro', missing);
+    expect(email.text).toContain("Thanks for sending the details through — I've read your brief on a website rebuild.");
+    expect(email.text).not.toContain('the timeline you mentioned is workable');
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('brief_intro includes the timeline clause when a timeline is present', () => {
+    const email = renderSalesEmail('brief_intro', richCtx);
+    expect(email.text).toContain(
+      "Thanks for sending the details through — I've read your brief on a website rebuild, and the timeline you mentioned is workable."
+    );
   });
 
   it('brief_questions renders subject, preheader and the distinctive body line', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { INBOUND_V1, SEQUENCES, getSequence, recommendSequence, shouldContinue, type ContinueState } from '../sequence';
+import { SEQUENCES, getSequence, recommendSequence, shouldContinue, type ContinueState } from '../sequence';
 import { leadRow } from '@/test-utils/lead-row';
 import type { LeadRow } from '@/lib/sales/types';
 
@@ -12,12 +12,6 @@ function schedule(steps: readonly { waitBefore: string; kind: string; template?:
     return `${day}:${step.kind === 'email' ? step.template : step.taskType}`;
   });
 }
-
-describe('INBOUND_V1', () => {
-  it('emails on day 0, 2 and 6 with a call task on day 4', () => {
-    expect(schedule(INBOUND_V1)).toEqual(['0:instant_reply', '2:follow_up_proof', '4:call', '6:close_the_loop']);
-  });
-});
 
 describe('SEQUENCES', () => {
   it('brief-v1: intro, call, questions, close', () => {

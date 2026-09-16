@@ -114,6 +114,7 @@ export interface SalesLeadEventData {
 
 export interface SalesSequenceStartData {
   leadId: string;
+  sequenceKey: string;
 }
 
 export interface SalesSequenceStopData {
