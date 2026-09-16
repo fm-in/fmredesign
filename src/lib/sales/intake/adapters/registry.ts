@@ -4,6 +4,7 @@ import { googleAdapter } from './google';
 import { metaAdapter } from './meta';
 import { resendAdapter } from './resend';
 import type { SalesWebhookAdapter } from './types';
+import { whatsappAdapter } from './whatsapp';
 
 export const SALES_WEBHOOK_ADAPTERS: Readonly<Record<string, SalesWebhookAdapter>> = {
   google: googleAdapter,
@@ -11,6 +12,7 @@ export const SALES_WEBHOOK_ADAPTERS: Readonly<Record<string, SalesWebhookAdapter
   meta: metaAdapter,
   resend: resendAdapter,
   calcom: calcomAdapter,
+  whatsapp: whatsappAdapter,
 };
 
 export function getAdapter(source: string): SalesWebhookAdapter | null {
