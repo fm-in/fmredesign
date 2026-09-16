@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { firstNameOf, renderSalesEmail, TEAM_SIGNATURE, type SalesEmailContext } from '../emails';
+import type { SalesEmailTemplate } from '../sequence';
 
 const ctx: SalesEmailContext = {
   firstName: 'Priya',
@@ -10,6 +11,43 @@ const ctx: SalesEmailContext = {
   workUrl: 'https://www.freakingminds.in/work',
   scorecardUrl: 'https://www.freakingminds.in/scorecard',
 };
+
+// Full context for the eight new templates — every new optional field populated.
+const richCtx: SalesEmailContext = {
+  ...ctx,
+  projectType: 'a website rebuild',
+  campaign: 'Diwali Sale',
+  platform: 'Instagram',
+  band: 'developing',
+  weakestArea: 'landing pages',
+  score: 62,
+  weakestScore: 40,
+  bookingUrlLong: 'https://cal.com/fm-in/30min?metadata%5BleadId%5D=lead_1',
+};
+
+const ALL_TEMPLATES: SalesEmailTemplate[] = [
+  'instant_reply',
+  'follow_up_proof',
+  'close_the_loop',
+  'brief_intro',
+  'brief_questions',
+  'brief_close',
+  'ad_intro',
+  'ad_proof',
+  'ad_close',
+  'scorecard_intro',
+  'scorecard_fix',
+  'scorecard_close',
+];
+
+const BRIEF_TEMPLATES: SalesEmailTemplate[] = ['brief_intro', 'brief_questions', 'brief_close'];
+
+/** `richCtx` with the given optional field(s) removed — for exercising fallback paths. */
+function without<K extends keyof SalesEmailContext>(...keys: K[]): SalesEmailContext {
+  const clone: SalesEmailContext = { ...richCtx };
+  for (const key of keys) delete clone[key];
+  return clone;
+}
 
 // Captured from the pre-shell implementation. The branded HTML shell must
 // never change this — only the html output changes.
@@ -100,5 +138,194 @@ describe('firstNameOf', () => {
     ['', 'there'],
   ])('%s → %s', (input, expected) => {
     expect(firstNameOf(input)).toBe(expected);
+  });
+});
+
+describe('brief-v1 templates', () => {
+  it('brief_intro renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('brief_intro', richCtx);
+    expect(email.subject).toBe('Your project brief, Priya');
+    expect(email.html).toContain("I&#39;ve read it — here&#39;s what happens next.");
+    expect(email.text).toContain(
+      "Thanks for sending the details through — I've read your brief on a website rebuild, and the timeline you mentioned is workable."
+    );
+    expect(email.text).toContain(`Book a 30-minute call: ${richCtx.bookingUrlLong}`);
+  });
+
+  it('brief_intro falls back to "your project" when projectType is missing', () => {
+    const missing = without('projectType');
+    const email = renderSalesEmail('brief_intro', missing);
+    expect(email.text).toContain(
+      "I've read your brief on your project, and the timeline you mentioned is workable."
+    );
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('brief_intro falls back to bookingUrl when bookingUrlLong is missing', () => {
+    const missing = without('bookingUrlLong');
+    const email = renderSalesEmail('brief_intro', missing);
+    expect(email.text).toContain(`Book a 30-minute call: ${ctx.bookingUrl}`);
+  });
+
+  it('brief_questions renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('brief_questions', richCtx);
+    expect(email.subject).toBe('Two things that shape the proposal');
+    expect(email.html).toContain('Both change the answer quite a lot.');
+    expect(email.text).toContain(
+      "Before I put numbers against your a website rebuild project, two questions that change the answer quite a lot:"
+    );
+    expect(email.text).toContain("1. What's driving the timeline — a launch, a campaign, a funding round, or something else?");
+    expect(email.text).toContain('2. Besides you, who needs to be happy with this decision?');
+    expect(email.text).toContain(`Book a call: ${richCtx.bookingUrlLong}`);
+  });
+
+  it('brief_questions drops the project type word when missing', () => {
+    const missing = without('projectType');
+    const email = renderSalesEmail('brief_questions', missing);
+    expect(email.text).toContain('Before I put numbers against your project, two questions that change the answer quite a lot:');
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('brief_close renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('brief_close', richCtx);
+    expect(email.subject).toBe('Should I close this off?');
+    expect(email.html).toContain("No reply, so I&#39;ll stop here.");
+    expect(email.text).toContain('Your brief stays on file, so we won\'t start from scratch.');
+    expect(email.text).toContain(`Book a call: ${richCtx.bookingUrlLong}`);
+  });
+});
+
+describe('ad-lead-v1 templates', () => {
+  it('ad_intro renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('ad_intro', richCtx);
+    expect(email.subject).toBe('About your enquiry from Diwali Sale');
+    expect(email.html).toContain("One question, then I&#39;ll get out of your way.");
+    expect(email.text).toContain('You filled in our form on Instagram about Diwali Sale — thanks for that.');
+    expect(email.text).toContain(`Book a 15-minute call: ${ctx.bookingUrl}`);
+  });
+
+  it('ad_intro falls back when campaign is missing', () => {
+    const missing = without('campaign');
+    const email = renderSalesEmail('ad_intro', missing);
+    expect(email.subject).toBe('About your enquiry');
+    expect(email.text).toContain('You filled in one of our forms on Instagram — thanks for that.');
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('ad_intro falls back when platform is missing', () => {
+    const missing = without('platform');
+    const email = renderSalesEmail('ad_intro', missing);
+    expect(email.text).toContain('You filled in our form on one of our ads about Diwali Sale — thanks for that.');
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('ad_intro falls back when both campaign and platform are missing', () => {
+    const missing = without('campaign', 'platform');
+    const email = renderSalesEmail('ad_intro', missing);
+    expect(email.subject).toBe('About your enquiry');
+    expect(email.text).toContain('You filled in one of our forms on one of our ads — thanks for that.');
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('ad_proof renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('ad_proof', richCtx);
+    expect(email.subject).toBe("Work we've done for brands like yours");
+    expect(email.html).toContain('A few examples, in case it helps.');
+    expect(email.text).toContain(`In case it's useful, here's a sample of our work: ${ctx.workUrl}`);
+    expect(email.text).toContain(`Book a 15-minute call: ${ctx.bookingUrl}`);
+  });
+
+  it('ad_close renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('ad_close', richCtx);
+    expect(email.subject).toBe('Closing the loop');
+    expect(email.html).toContain('Last one from me.');
+    expect(email.text).toContain("No reply, so I'll leave it here and stop emailing.");
+    expect(email.text).toContain(`Book a call: ${ctx.bookingUrl}`);
+  });
+});
+
+describe('scorecard-v1 templates', () => {
+  it('scorecard_intro renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('scorecard_intro', richCtx);
+    expect(email.subject).toBe('Your scorecard: 62/100');
+    expect(email.html).toContain("And the one area I&#39;d fix first.");
+    expect(email.text).toContain("Here's where your marketing landed: 62/100, which puts you in the developing range.");
+    expect(email.text).toContain("The weakest area is landing pages at 40/100. That's where I'd start, because it's usually what holds the rest back.");
+    expect(email.text).toContain(`Book the walkthrough: ${ctx.bookingUrl}`);
+  });
+
+  it('scorecard_intro drops the score paragraph and changes subject when score is missing', () => {
+    const missing = without('score');
+    const email = renderSalesEmail('scorecard_intro', missing);
+    expect(email.subject).toBe('Your marketing scorecard');
+    expect(email.text).not.toContain("Here's where your marketing landed");
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('scorecard_intro drops the range clause when band is missing', () => {
+    const missing = without('band');
+    const email = renderSalesEmail('scorecard_intro', missing);
+    expect(email.text).toContain("Here's where your marketing landed: 62/100.");
+    expect(email.text).not.toContain('which puts you in the');
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('scorecard_intro drops the weakest-area paragraph when weakestArea is missing', () => {
+    const missing = without('weakestArea');
+    const email = renderSalesEmail('scorecard_intro', missing);
+    expect(email.text).not.toContain('The weakest area is');
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('scorecard_fix renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('scorecard_fix', richCtx);
+    expect(email.subject).toBe("The one fix I'd start with");
+    expect(email.html).toContain('Usually the simplest one, not more budget.');
+    expect(email.text).toContain(
+      "On landing pages, the fix that usually moves the needle first is the simplest one — and it's rarely more budget."
+    );
+    expect(email.text).toContain(`Book a call: ${ctx.bookingUrl}`);
+  });
+
+  it('scorecard_fix falls back when weakestArea is missing', () => {
+    const missing = without('weakestArea');
+    const email = renderSalesEmail('scorecard_fix', missing);
+    expect(email.text).toContain(
+      "On the weakest area in your scorecard, the fix that usually moves the needle first is the simplest one — and it's rarely more budget."
+    );
+    expect(email.text).not.toContain('undefined');
+  });
+
+  it('scorecard_close renders subject, preheader and the distinctive body line', () => {
+    const email = renderSalesEmail('scorecard_close', richCtx);
+    expect(email.subject).toBe('Should I close your scorecard?');
+    expect(email.html).toContain('Your results stay on file either way.');
+    expect(email.text).toContain("I'll stop following up on your scorecard now.");
+    expect(email.text).toContain(`Book a call: ${ctx.bookingUrl}`);
+  });
+});
+
+describe('new templates never render "undefined" with a bare context', () => {
+  const bareCtx: SalesEmailContext = { ...ctx };
+
+  it.each(ALL_TEMPLATES)('%s', (template) => {
+    const email = renderSalesEmail(template, bareCtx);
+    expect(email.html).not.toContain('undefined');
+    expect(email.text).not.toContain('undefined');
+    expect(email.subject).not.toContain('undefined');
+  });
+});
+
+describe('CTA URL routing', () => {
+  it.each(BRIEF_TEMPLATES)('%s uses bookingUrlLong for its CTA', (template) => {
+    const email = renderSalesEmail(template, richCtx);
+    expect(email.text).toContain(richCtx.bookingUrlLong as string);
+    expect(email.text).not.toContain(ctx.bookingUrl);
+  });
+
+  it.each(ALL_TEMPLATES.filter((t) => !BRIEF_TEMPLATES.includes(t)))('%s uses bookingUrl for its CTA', (template) => {
+    const email = renderSalesEmail(template, richCtx);
+    expect(email.text).toContain(ctx.bookingUrl);
+    expect(email.text).not.toContain(richCtx.bookingUrlLong as string);
   });
 });

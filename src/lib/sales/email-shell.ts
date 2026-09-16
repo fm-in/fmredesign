@@ -53,6 +53,7 @@ export function renderShell(input: ShellInput): string {
   return [
     '<!DOCTYPE html>',
     '<html>',
+    '<head><meta charset="utf-8"></head>',
     `<body style="margin:0;padding:0;background-color:${OUTER_BG};" bgcolor="${OUTER_BG}">`,
     `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(input.preheader)}</div>`,
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${OUTER_BG}" style="width:100%;background-color:${OUTER_BG};">`,

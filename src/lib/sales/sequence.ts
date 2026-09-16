@@ -5,7 +5,19 @@
 
 import type { SequenceStopReason, TaskType } from '@/lib/sales/types';
 
-export type SalesEmailTemplate = 'instant_reply' | 'follow_up_proof' | 'close_the_loop';
+export type SalesEmailTemplate =
+  | 'instant_reply'
+  | 'follow_up_proof'
+  | 'close_the_loop'
+  | 'brief_intro'
+  | 'brief_questions'
+  | 'brief_close'
+  | 'ad_intro'
+  | 'ad_proof'
+  | 'ad_close'
+  | 'scorecard_intro'
+  | 'scorecard_fix'
+  | 'scorecard_close';
 
 export type SequenceStep =
   | { kind: 'email'; template: SalesEmailTemplate; waitBefore: string }

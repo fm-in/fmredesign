@@ -108,6 +108,16 @@ describe('renderShell', () => {
     expect(fullTag).toMatch(/overflow:\s*hidden/);
   });
 
+  it('declares utf-8 so em dashes survive clients that sniff the document instead of the transport header', () => {
+    const html = renderShell(baseInput);
+    expect(html).toContain('<meta charset="utf-8">');
+    const headIndex = html.indexOf('<head');
+    const metaIndex = html.indexOf('<meta charset="utf-8">');
+    const bodyIndex = html.indexOf('<body');
+    expect(metaIndex).toBeGreaterThan(headIndex);
+    expect(metaIndex).toBeLessThan(bodyIndex);
+  });
+
   it('sets explicit bgcolor and background colours on every structural element so dark mode cannot invert it', () => {
     const html = renderShell(baseInput);
     const bgcolorCount = (html.match(/bgcolor="/g) ?? []).length;
