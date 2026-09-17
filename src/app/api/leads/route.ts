@@ -8,6 +8,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/lib/supabase-utils';
 import type { LeadInput } from '@/lib/admin/lead-types';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
@@ -273,7 +274,22 @@ export async function POST(request: NextRequest) {
     };
 
     const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase.from('leads').insert(record).select().single();
+
+    // Record who sent this so genuine leads can later be told apart from bot
+    // traffic. If the capture-metadata migration has not been applied yet,
+    // retry without it — a lost lead is unrecoverable, a lost IP is a gap.
+    let { data, error } = await supabase
+      .from('leads')
+      .insert({ ...record, ...captureMeta(request) })
+      .select()
+      .single();
+
+    if (error && isMissingColumnError(error)) {
+      console.warn(
+        '[leads] capture-metadata columns absent — apply migrations/2026-08-10-capture-metadata.sql'
+      );
+      ({ data, error } = await supabase.from('leads').insert(record).select().single());
+    }
 
     if (error) throw error;
 

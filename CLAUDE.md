@@ -45,6 +45,39 @@ p { margin: 0; }
 
 **`text-center` exception**: Still needs inline `style={{ textAlign: 'center' }}` due to separate unlayered conflicts.
 
+## Critical: `loading.tsx` Silently Breaks `notFound()`
+
+**IMPORTANT**: A `loading.tsx` anywhere in a route's ancestry wraps the segment in a
+Suspense boundary. That boundary flushes a **200 shell** before a downstream
+`notFound()` is reached — so unknown slugs return **HTTP 200** with the not-found UI
+instead of a real 404, and search engines index unlimited soft-404s.
+
+Measured on this repo: with either `blog/loading.tsx` or `blog/[slug]/loading.tsx`
+present, `/blog/<bad-slug>` returned 200. With both absent it returns 404.
+A *nested* `loading.tsx` does not escape an ancestor's boundary — both must go.
+
+**Rule**: any segment whose page calls `notFound()` must have **no `loading.tsx` in
+its ancestry**. To keep a skeleton on a sibling listing page, put the listing in a
+route group so the dynamic segment does not inherit it:
+
+```
+src/app/blog/
+  (index)/            <- listing keeps its skeleton, URL stays /blog
+    loading.tsx
+    page.tsx
+  [slug]/             <- no loading.tsx anywhere above it -> real 404s
+    page.tsx
+```
+
+Before adding a `loading.tsx`, check for `notFound()` under it:
+```bash
+for f in $(find src/app -name loading.tsx); do grep -rl "notFound()" $(dirname "$f"); done
+```
+
+**Related**: a parent `layout.tsx` that sets `alternates.canonical` leaks that
+canonical to every child. `blog/layout.tsx` declares `/blog`, so `[slug]` must
+override it — otherwise every post tells Google it is a duplicate of the listing.
+
 ## V2 Design System
 
 ### Color Variables
@@ -115,6 +148,27 @@ if (spam.isSpam) return ApiResponse.validationError('A valid email is required')
 - The form renders a visually-hidden input named `HONEYPOT_FIELD` (see `ReserveSeatForm.tsx`).
 - Rejections return a generic validation message so a bot learns nothing.
 - Current limits: `/api/leads` 5/min, `/api/talent` 3/min, `/api/academy/enroll` 3/min.
+
+**Always record capture metadata.** Attribution cannot be reconstructed after the
+row is written, and this site already has confirmed bot traffic:
+
+```ts
+import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
+
+let { data, error } = await supabase
+  .from('leads')
+  .insert({ ...record, ...captureMeta(request) })
+  .select().single();
+
+// The migration is applied by hand in the Supabase SQL editor, so a deploy can
+// run ahead of it. Never lose a submission over telemetry.
+if (error && isMissingColumnError(error)) {
+  ({ data, error } = await supabase.from('leads').insert(record).select().single());
+}
+```
+
+Store `user_agent` raw (length-capped only) — malformed user-agents are the signal.
+Columns come from `migrations/2026-08-10-capture-metadata.sql`.
 
 Any new public form must also call `notifyAdmins()` so submissions surface in the dashboard —
 email alone has silently failed before.
@@ -302,6 +356,8 @@ GOOGLE_SHEETS_PRIVATE_KEY, GOOGLE_SHEETS_CLIENT_EMAIL, GOOGLE_SHEETS_SPREADSHEET
 - Use `text-center` class (use inline style)
 - Add `!important` to fix CSS (find root cause)
 - Add element CSS outside `@layer base`
+- Add a `loading.tsx` above any page that calls `notFound()` (returns 200, not 404)
+- Write a public-form row without `captureMeta(request)`
 - Store secrets in client code (`NEXT_PUBLIC_` only for public values)
 - Mix V1 and V2 design patterns
 - Import from `emitter.ts` in client components (use `events/types.ts`)

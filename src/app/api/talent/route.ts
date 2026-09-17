@@ -12,6 +12,7 @@ import bcrypt from 'bcryptjs';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
 import { notifyAdmins } from '@/lib/notifications';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { submitTalentApplicationSchema, validateBody } from '@/lib/validations/schemas';
@@ -123,7 +124,18 @@ export async function POST(request: NextRequest) {
     };
 
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase.from('talent_applications').insert(record);
+
+    // See leads route: attribution is best-effort, the application is not.
+    let { error } = await supabase
+      .from('talent_applications')
+      .insert({ ...record, ...captureMeta(request) });
+
+    if (error && isMissingColumnError(error)) {
+      console.warn(
+        '[talent] capture-metadata columns absent — apply migrations/2026-08-10-capture-metadata.sql'
+      );
+      ({ error } = await supabase.from('talent_applications').insert(record));
+    }
 
     if (error) throw error;
 

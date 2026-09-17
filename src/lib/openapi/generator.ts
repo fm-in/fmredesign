@@ -4,6 +4,7 @@
  */
 
 import { getRoutes } from './registry';
+import { SITE_URL } from '@/lib/site-url';
 
 export function generateOpenAPISpec(): Record<string, unknown> {
   const routes = getRoutes();
@@ -46,7 +47,7 @@ export function generateOpenAPISpec(): Record<string, unknown> {
       version: '1.0.0',
       contact: {
         name: 'FreakingMinds',
-        url: 'https://freakingminds.in',
+        url: SITE_URL,
       },
     },
     servers: [

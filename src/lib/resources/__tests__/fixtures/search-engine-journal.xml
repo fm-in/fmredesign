@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>Search Engine Journal</title>
+	<atom:link href="https://www.searchenginejournal.com/feed/" rel="self" type="application/rss+xml" />
+	<link>https://www.searchenginejournal.com/</link>
+	<description>SEO, Search Marketing News and Tutorials</description>
+	<lastBuildDate>Fri, 14 Aug 2026 06:56:23 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	
+	<item>
+		<title>Google Is Removing Language Targeting From Search Campaigns via @sejournal, @brookeosmundson</title>
+		<link>https://www.searchenginejournal.com/google-is-removing-language-targeting-from-search-campaigns/585592/</link>
+		
+		<dc:creator><![CDATA[Brooke Osmundson]]></dc:creator>
+		<pubDate>Thu, 13 Aug 2026 21:30:33 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[PPC]]></category>
+		<guid isPermaLink="false">https://www.searchenginejournal.com/google-is-removing-language-targeting-from-search-campaigns/585592/</guid>
+
+					<description><![CDATA[<p>Google Ads is changing language targeting for Search and Performance Max in September 2026. Learn what’s changing and what advertisers need to know.</p>
+<p>The post <a href="https://www.searchenginejournal.com/google-is-removing-language-targeting-from-search-campaigns/585592/">Google Is Removing Language Targeting From Search Campaigns</a> appeared first on <a href="https://www.searchenginejournal.com">Search Engine Journal</a>.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>The GEO Trust Gap: SEOs Want The Data, But Not The Platforms Selling It via @sejournal, @DuaneForrester</title>
+		<link>https://www.searchenginejournal.com/the-geo-trust-gap-seos-want-the-data-but-not-the-platforms-selling-it/585161/</link>
+		
+		<dc:creator><![CDATA[Duane Forrester]]></dc:creator>
+		<pubDate>Thu, 13 Aug 2026 19:00:43 +0000</pubDate>
+				<category><![CDATA[AI Search]]></category>
+		<category><![CDATA[Analytics & Data]]></category>
+		<category><![CDATA[SEO]]></category>
+		<guid isPermaLink="false">https://www.searchenginejournal.com/the-geo-trust-gap-seos-want-the-data-but-not-the-platforms-selling-it/585161/</guid>
+
+					<description><![CDATA[<p>Practitioners value AI visibility data highly and won't fund the platforms selling it. New survey data on what's actually blocking the category.</p>
+<p>The post <a href="https://www.searchenginejournal.com/the-geo-trust-gap-seos-want-the-data-but-not-the-platforms-selling-it/585161/">The GEO Trust Gap: SEOs Want The Data, But Not The Platforms Selling It</a> appeared first on <a href="https://www.searchenginejournal.com">Search Engine Journal</a>.</p>
+]]></description>
+		
+		
+		
+			</item>
+		<item>
+		<title>The PPC Clean-Up: How to Audit and Fix &#8216;Value Inflation&#8217; in Google Ads</title>
+		<link>https://www.searchenginejournal.com/the-ppc-clean-up-how-to-audit-and-fix-value-inflation-in-google-ads/583009/</link>
+		
+		<dc:creator><![CDATA[Sarah Stemen]]></dc:creator>
+		<pubDate>Thu, 13 Aug 2026 17:30:31 +0000</pubDate>
+				<category><![CDATA[Paid Media]]></category>
+		<category><![CDATA[PPC]]></category>
+		<guid isPermaLink="false">https://www.searchenginejournal.com/the-ppc-clean-up-how-to-audit-and-fix-value-inflation-in-google-ads/583009/</guid>
+
+					<description><![CDATA[<p>PPC managers inheriting an account: verify the conversion value before touching the bid strategy. Five checks that separate real revenue from phantom value.</p>
+<p>The post <a href="https://www.searchenginejournal.com/the-ppc-clean-up-how-to-audit-and-fix-value-inflation-in-google-ads/583009/">The PPC Clean-Up: How to Audit and Fix &#8216;Value Inflation&#8217; in Google Ads</a> appeared first on <a href="https://www.searchenginejournal.com">Search Engine Journal</a>.</p>
+]]></description>
+		
+		
+		
+			</item>
+		</channel></rss>

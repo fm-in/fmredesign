@@ -133,7 +133,19 @@ export function V2PageWrapper({
   }, []);
 
   return (
-    <div ref={wrapperRef} className="relative min-h-screen overflow-x-hidden">
+    <div
+      ref={wrapperRef}
+      className="relative min-h-screen overflow-x-hidden"
+      // `overflow-x: hidden` makes this element a scroll container, which
+      // silently disables `position: sticky` for EVERY descendant — a sticky
+      // child anchors to this box rather than the viewport and never sticks.
+      // `clip` gives the same visual result without establishing one.
+      //
+      // Set inline rather than replacing the class: a browser that does not
+      // understand `clip` ignores the declaration and keeps the class's
+      // `hidden`, so the horizontal-scroll guard never regresses.
+      style={{ overflowX: 'clip' }}
+    >
       {/* Layer 0: Base Gradient — fixed, deepest */}
       <div
         className="fixed inset-0 pointer-events-none"

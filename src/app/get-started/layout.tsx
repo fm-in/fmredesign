@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { OG_DEFAULTS } from '@/lib/seo';
 
 export const metadata: Metadata = {
   title: 'Get Started — Tell Us About Your Project',
@@ -6,9 +7,10 @@ export const metadata: Metadata = {
     "Start your project with Freaking Minds. Tell us about your business goals, budget, and timeline — we'll craft a custom marketing strategy for you.",
   alternates: { canonical: '/get-started' },
   openGraph: {
+    ...OG_DEFAULTS,
     title: 'Start Your Project — Freaking Minds',
     description: 'Tell us about your goals and get a custom marketing strategy tailored to your business.',
-    url: 'https://freakingminds.in/get-started',
+    url: '/get-started',
   },
 };
 

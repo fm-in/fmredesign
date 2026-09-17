@@ -8,6 +8,7 @@ import { WebVitals } from "@/components/WebVitals";
 import { CookieConsent } from "@/components/CookieConsent";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
 import Script from "next/script";
+import { SITE_URL } from '@/lib/site-url';
 
 // Display font - elegant serif for headlines (authority & sophistication)
 const playfair = Playfair_Display({
@@ -42,15 +43,19 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://freakingminds.in'),
+  metadataBase: new URL(SITE_URL),
   alternates: {
+    // '/' is correct for the home page ONLY because this object is also the
+    // default for every page that does not set its own. A page that forgets
+    // to override it silently tells Google it IS the home page — /academy did
+    // exactly that. Any new route must declare its own alternates.canonical.
     canonical: '/',
   },
   title: {
-    default: "Freaking Minds - Creative Marketing Agency | Strategy. Design. Growth.",
+    default: "Creative Marketing Agency in Bhopal | Freaking Minds",
     template: "%s | Freaking Minds",
   },
-  description: "Full-service creative marketing agency. Strategy, design, and performance marketing that transforms ambitious brands into market leaders.",
+  description: "Full-service creative marketing agency in Bhopal. Strategy, design and performance marketing that turns ambitious brands into market leaders.",
   keywords: [
     "creative marketing agency",
     "full-service marketing agency",
@@ -72,7 +77,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://freakingminds.in",
+    url: SITE_URL,
     title: "Freaking Minds - Creative Marketing Agency",
     description: "Full-service creative marketing agency. Strategy, design, and performance under one roof.",
     siteName: "Freaking Minds",
@@ -126,12 +131,12 @@ export default function RootLayout({
     '@graph': [
       {
         '@type': 'Organization',
-        '@id': 'https://freakingminds.in/#organization',
+        '@id': `${SITE_URL}/#organization`,
         name: 'Freaking Minds',
-        url: 'https://freakingminds.in',
+        url: SITE_URL,
         logo: {
           '@type': 'ImageObject',
-          url: 'https://freakingminds.in/logo.png',
+          url: `${SITE_URL}/logo.png`,
         },
         sameAs: [
           'https://www.instagram.com/freakingminds/',
@@ -148,10 +153,10 @@ export default function RootLayout({
       },
       {
         '@type': 'LocalBusiness',
-        '@id': 'https://freakingminds.in/#localbusiness',
+        '@id': `${SITE_URL}/#localbusiness`,
         name: 'Freaking Minds',
         description: 'Full-service creative marketing agency. Strategy, design, and performance marketing that transforms ambitious brands into market leaders.',
-        url: 'https://freakingminds.in',
+        url: SITE_URL,
         telephone: '+91-9833257659',
         email: 'freakingmindsdigital@gmail.com',
         address: {
@@ -170,26 +175,26 @@ export default function RootLayout({
       },
       {
         '@type': 'WebSite',
-        '@id': 'https://freakingminds.in/#website',
-        url: 'https://freakingminds.in',
+        '@id': `${SITE_URL}/#website`,
+        url: SITE_URL,
         name: 'Freaking Minds',
-        publisher: { '@id': 'https://freakingminds.in/#organization' },
+        publisher: { '@id': `${SITE_URL}/#organization` },
         potentialAction: {
           '@type': 'SearchAction',
-          target: 'https://freakingminds.in/blog?q={search_term_string}',
+          target: `${SITE_URL}/blog?q={search_term_string}`,
           'query-input': 'required name=search_term_string',
         },
       },
       {
         '@type': 'BreadcrumbList',
-        '@id': 'https://freakingminds.in/#breadcrumb',
+        '@id': `${SITE_URL}/#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://freakingminds.in' },
-          { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://freakingminds.in/services' },
-          { '@type': 'ListItem', position: 2, name: 'Work', item: 'https://freakingminds.in/work' },
-          { '@type': 'ListItem', position: 2, name: 'About', item: 'https://freakingminds.in/about' },
-          { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://freakingminds.in/blog' },
-          { '@type': 'ListItem', position: 2, name: 'Contact', item: 'https://freakingminds.in/contact' },
+          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+          { '@type': 'ListItem', position: 2, name: 'Services', item: `${SITE_URL}/services` },
+          { '@type': 'ListItem', position: 2, name: 'Work', item: `${SITE_URL}/work` },
+          { '@type': 'ListItem', position: 2, name: 'About', item: `${SITE_URL}/about` },
+          { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
+          { '@type': 'ListItem', position: 2, name: 'Contact', item: `${SITE_URL}/contact` },
         ],
       },
     ],

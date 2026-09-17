@@ -36,6 +36,7 @@ import {
 } from '@/lib/admin/academy-types';
 import { createOrder } from '@/lib/razorpay';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
+import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
 import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { notifyAdmins } from '@/lib/notifications';
 
@@ -169,11 +170,23 @@ export async function POST(request: NextRequest) {
     status: 'reserved' as const,
   };
 
-  const { data: inserted, error: insertErr } = await supabase
+  // See leads route: attribution is best-effort, the reservation is not.
+  let { data: inserted, error: insertErr } = await supabase
     .from('enrollments')
-    .insert(record)
+    .insert({ ...record, ...captureMeta(request) })
     .select()
     .single();
+
+  if (insertErr && isMissingColumnError(insertErr)) {
+    console.warn(
+      '[enroll] capture-metadata columns absent — apply migrations/2026-08-10-capture-metadata.sql'
+    );
+    ({ data: inserted, error: insertErr } = await supabase
+      .from('enrollments')
+      .insert(record)
+      .select()
+      .single());
+  }
 
   if (insertErr || !inserted) {
     console.error('Enrollment insert error:', insertErr);

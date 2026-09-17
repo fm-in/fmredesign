@@ -56,7 +56,7 @@ import {
   Database,
   ClipboardList,
   GraduationCap,
-} from 'lucide-react';
+  ClipboardCheck,} from 'lucide-react';
 import React from 'react';
 
 /* ── Permission requirements per nav href ── */
@@ -149,6 +149,7 @@ const adminNavigation: NavigationGroup[] = [
   {
     title: 'Growth',
     items: [
+      { label: 'Scorecard', href: '/admin/scorecard', icon: <ClipboardCheck className="w-5 h-5" /> },
       { label: 'Scraped Contacts', href: '/admin/scraped-contacts', icon: <Database className="w-5 h-5" /> },
       { label: 'Scrape Jobs', href: '/admin/scraped-contacts/scrape-jobs', icon: <Database className="w-5 h-5" /> },
       { label: 'FM Academy', href: '/admin/academy', icon: <GraduationCap className="w-5 h-5" /> },

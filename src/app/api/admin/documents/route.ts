@@ -28,6 +28,7 @@ import {
   transformDocumentRow,
 } from '@/lib/document-types';
 import type { DocumentCategory } from '@/lib/document-types';
+import { SITE_URL } from '@/lib/site-url';
 
 // ── GET ──────────────────────────────────────────────────
 export async function GET(request: NextRequest) {
@@ -261,7 +262,7 @@ export async function POST(request: NextRequest) {
         const emailData = documentSharedEmail({
           clientName: clientForEmail.name || 'Client',
           fileName: file.name,
-          portalUrl: `https://freakingminds.in/client/${clientId}/documents`,
+          portalUrl: `${SITE_URL}/client/${clientId}/documents`,
         });
         notifyRecipient(clientForEmail.email, emailData.subject, emailData.html);
       }
