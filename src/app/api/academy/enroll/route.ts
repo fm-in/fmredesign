@@ -1,5 +1,8 @@
 /**
- * Public FM Academy — Reserve seat + create Razorpay order.
+ * Public FM Academy — direct payment only. Creates (or reuses) an enrollment
+ * row and a Razorpay order in one call; there is no manual/payment-link path.
+ * A seat counts only once the webhook flips the row to `paid` — until then it
+ * shows as "Payment pending" (stored status stays `reserved`).
  *
  *   POST /api/academy/enroll
  *   body: { programId, buyerName, buyerEmail, buyerPhone?, buyerCompany?,
@@ -10,7 +13,9 @@
  *       success: true,
  *       data: <enrollment>,
  *       meta: {
- *         razorpay: { orderId, amount, currency, keyId }   // Phase 2
+ *         razorpay: { orderId, amount, currency, keyId }   // absent when
+ *                                                           // checkout could
+ *                                                           // not be opened
  *       }
  *     }
  *
@@ -18,7 +23,7 @@
  *   - Inserts an enrollment row with status='reserved'.
  *   - Creates a Razorpay order and writes the order_id back to the row so the
  *     webhook can look up the enrollment on `payment.captured`.
- *   - Notifies admins so the new reservation surfaces in the dashboard.
+ *   - Notifies admins so the new checkout surfaces in the dashboard.
  *
  * No auth — this is the public conversion endpoint. Three layers of abuse
  * control: a per-IP rate limit (3/min), a honeypot + email-pattern spam
@@ -40,6 +45,14 @@ import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
 import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { notifyAdmins } from '@/lib/notifications';
 import { safeErrorLog, safeErrorMessage } from '@/lib/safe-log';
+import { likeLiteral } from '@/lib/postgrest';
+
+interface RazorpayMeta {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+}
 
 function isLikelyEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -107,16 +120,22 @@ export async function POST(request: NextRequest) {
     return ApiResponse.error('Sold out — no seats remaining', 410);
   }
 
-  // Idempotent retry: if the same buyer already has a paid or reserved
-  // enrollment for this program, return that row. Paid → no new order; the
-  // form will show the "already enrolled" state. Reserved → reuse the
-  // existing order so refresh-then-resubmit doesn't make duplicate orders.
+  // Idempotent retry: if this buyer already has a row for this program,
+  // reuse it instead of creating another.
+  //   paid                             → unchanged: "You are already enrolled."
+  //   reserved / failed, with an order → return that order (retry payment).
+  //   reserved / failed, no order yet  → an earlier order creation failed;
+  //     create one now for this same row (never insert a new row).
+  // `buyerEmail` was already trimmed and lowercased above; matching here with
+  // an escaped `ilike` (rather than `eq`) also catches a stored row whose
+  // email carries different case — the same defensive pattern
+  // src/lib/sales/suppression.ts uses for the do-not-contact list.
   const { data: existing } = await supabase
     .from('enrollments')
     .select('*')
     .eq('program_id', programId)
-    .eq('buyer_email', buyerEmail)
-    .in('status', ['reserved', 'paid'])
+    .ilike('buyer_email', likeLiteral(buyerEmail))
+    .in('status', ['reserved', 'failed', 'paid'])
     .order('created_at', { ascending: false })
     .limit(1);
 
@@ -127,7 +146,7 @@ export async function POST(request: NextRequest) {
         message: 'You are already enrolled.',
       });
     }
-    // Reserved but with an existing order — reuse it.
+    // Reserved or failed but with an existing order — reuse it.
     if (row.razorpay_order_id) {
       return ApiResponse.success(transformEnrollmentRow(row), {
         razorpay: {
@@ -138,18 +157,33 @@ export async function POST(request: NextRequest) {
         },
       });
     }
+
+    // No order yet — an earlier order creation attempt failed. Create one now
+    // for this same row, at today's server-derived price.
+    const amountInr = deriveAmountInr(program);
+    if (!amountInr || amountInr <= 0) {
+      return ApiResponse.error('This program has no price configured — please contact the team', 409);
+    }
+    const razorpayMeta = await attemptCreateOrder({
+      enrollmentId: row.id as string,
+      programId,
+      programTitle: (program.title as string) || '',
+      buyerEmail,
+      amountInr,
+    });
+    return ApiResponse.success(
+      transformEnrollmentRow({
+        ...row,
+        razorpay_order_id: razorpayMeta?.orderId,
+        amount_inr: razorpayMeta ? amountInr : row.amount_inr,
+      }),
+      razorpayMeta ? { razorpay: razorpayMeta } : undefined
+    );
   }
 
   // Server-derived amount — the buyer's posted amount is ignored. The DB is
   // the source of truth for what the seat costs right now.
-  const earlyBirdActive =
-    !!program.early_bird_price_inr &&
-    !!program.early_bird_until &&
-    new Date(program.early_bird_until as string).getTime() > Date.now();
-  const amountInr = earlyBirdActive
-    ? Number(program.early_bird_price_inr)
-    : Number(program.price_inr);
-
+  const amountInr = deriveAmountInr(program);
   if (!amountInr || amountInr <= 0) {
     return ApiResponse.error('This program has no price configured — please contact the team', 409);
   }
@@ -192,39 +226,98 @@ export async function POST(request: NextRequest) {
     return ApiResponse.error('Could not create reservation');
   }
 
-  // Surface the reservation in the admin dashboard. The header used to claim
+  // Surface the checkout in the admin dashboard. The header used to claim
   // this happened via Inngest, but no notification was ever sent — every
   // enrolment since launch landed silently in the table.
   notifyAdmins({
     type: 'general',
-    title: 'New academy reservation',
-    message: `${buyerName} — ${(program.title as string) || programId}`,
-    priority: 'high',
+    title: 'Academy checkout started',
+    message: `${buyerName} started checkout for ${(program.title as string) || programId}.`,
+    priority: 'normal',
     actionUrl: '/admin/academy/enrollments',
   });
 
   // Create the Razorpay order. If this fails the reservation row is left in
-  // place (admin can still process manually via Phase 1 fallback). We return
-  // the error to the client so they don't see a stuck modal.
-  let razorpayMeta: { orderId: string; amount: number; currency: string; keyId: string } | null = null;
+  // place — the client falls back to the "checkout unavailable" state and the
+  // buyer can retry, which reuses this same row (see the retry block above).
+  const razorpayMeta = await attemptCreateOrder({
+    enrollmentId: id,
+    programId,
+    programTitle: (program.title as string) || '',
+    buyerEmail,
+    amountInr,
+  });
+
+  // Admin notification — non-fatal.
+  inngest
+    .send({
+      name: 'notification/send',
+      data: {
+        recipientType: 'admin' as const,
+        type: 'general' as const,
+        title: 'Academy checkout started',
+        message: `${buyerName} started checkout for ${program.title}.`,
+        priority: 'normal' as const,
+        actionUrl: '/admin/academy/enrollments',
+      },
+    })
+    .catch((err) => console.error('Inngest notification failed:', safeErrorMessage(err)));
+
+  return ApiResponse.success(
+    transformEnrollmentRow({ ...inserted, razorpay_order_id: razorpayMeta?.orderId }),
+    razorpayMeta ? { razorpay: razorpayMeta } : undefined
+  );
+}
+
+/** Server-derived price for a program row: early-bird when active, else list price. */
+function deriveAmountInr(program: {
+  price_inr: unknown;
+  early_bird_price_inr: unknown;
+  early_bird_until: unknown;
+}): number {
+  const earlyBirdActive =
+    !!program.early_bird_price_inr &&
+    !!program.early_bird_until &&
+    new Date(program.early_bird_until as string).getTime() > Date.now();
+  return earlyBirdActive ? Number(program.early_bird_price_inr) : Number(program.price_inr);
+}
+
+/**
+ * Create a Razorpay order for an existing enrollment row and write the order
+ * id (and today's price) back onto it. Returns null — never throws — on
+ * failure, so the caller can fall back to "checkout unavailable" without
+ * losing the reservation row.
+ */
+async function attemptCreateOrder(opts: {
+  enrollmentId: string;
+  programId: string;
+  programTitle: string;
+  buyerEmail: string;
+  amountInr: number;
+}): Promise<RazorpayMeta | null> {
+  const supabase = getSupabaseAdmin();
   try {
     const order = await createOrder({
-      amountInr,
-      receipt: id,
+      amountInr: opts.amountInr,
+      receipt: opts.enrollmentId,
       notes: {
-        program_id: programId,
-        program_title: (program.title as string) || '',
-        buyer_email: buyerEmail,
-        enrollment_id: id,
+        program_id: opts.programId,
+        program_title: opts.programTitle,
+        buyer_email: opts.buyerEmail,
+        enrollment_id: opts.enrollmentId,
       },
     });
 
     await supabase
       .from('enrollments')
-      .update({ razorpay_order_id: order.id, updated_at: new Date().toISOString() })
-      .eq('id', id);
+      .update({
+        razorpay_order_id: order.id,
+        amount_inr: opts.amountInr,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', opts.enrollmentId);
 
-    razorpayMeta = {
+    return {
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
@@ -241,27 +334,6 @@ export async function POST(request: NextRequest) {
       code: err?.error?.code,
       reason: err?.error?.reason,
     });
-    // Don't fail the request — admin can still mark this reservation as paid
-    // manually if the buyer pays via Payment Link instead.
+    return null;
   }
-
-  // Admin notification — non-fatal.
-  inngest
-    .send({
-      name: 'notification/send',
-      data: {
-        recipientType: 'admin' as const,
-        type: 'general' as const,
-        title: 'New academy reservation',
-        message: `${buyerName} (${buyerEmail}) reserved a seat in ${program.title}.`,
-        priority: 'normal' as const,
-        actionUrl: '/admin/academy/enrollments',
-      },
-    })
-    .catch((err) => console.error('Inngest notification failed:', safeErrorMessage(err)));
-
-  return ApiResponse.success(
-    transformEnrollmentRow({ ...inserted, razorpay_order_id: razorpayMeta?.orderId }),
-    razorpayMeta ? { razorpay: razorpayMeta } : undefined
-  );
 }

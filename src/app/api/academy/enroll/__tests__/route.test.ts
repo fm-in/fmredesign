@@ -7,7 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { fake, payloadOf, selectedColumns } from '@/test-utils/fake-supabase';
+import { fake, payloadOf, selectedColumns, eqValue, ilikeValue, likeMatches } from '@/test-utils/fake-supabase';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { reserveSeatBody } from '@/test-utils/public-form-bodies';
 
@@ -92,6 +92,84 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+});
+
+/** A prior enrollment row for this buyer + program, as the retry lookup would find it. */
+const EXISTING_ROW_BASE: Record<string, unknown> = {
+  id: 'enr-existing-1',
+  program_id: 'prog-digital-marketing-2026-06',
+  buyer_name: 'Aarav Gupta',
+  buyer_email: 'aarav.gupta@example.com',
+  buyer_phone: '+919876543210',
+  amount_inr: 24999,
+  currency: 'INR',
+  status: 'reserved',
+  razorpay_order_id: null,
+  created_at: '2026-09-16T10:00:00.000Z',
+  updated_at: '2026-09-16T10:00:00.000Z',
+};
+
+/** Routes the `enrollments` retry lookup to `row` (matched the way `.ilike()` would), and
+ *  records any update the route makes back onto it. */
+function respondWithExisting(row: Record<string, unknown>) {
+  fake.respond((call) => {
+    if (call.table === 'programs') return { data: selectedColumns(call, SEEDED_PROGRAM), error: null };
+    if (call.table === 'enrollments' && call.op === 'select') {
+      const emailFilter = ilikeValue(call, 'buyer_email') as string | undefined;
+      const matches = emailFilter ? likeMatches(emailFilter, row.buyer_email as string) : false;
+      return { data: matches ? [row] : [], error: null };
+    }
+    if (call.table === 'enrollments' && call.op === 'update') {
+      Object.assign(row, payloadOf(call));
+      return { data: row, error: null };
+    }
+    if (call.table === 'enrollments' && call.op === 'insert') {
+      return { data: { ...payloadOf(call), created_at: '2026-09-17T06:00:00.000Z' }, error: null };
+    }
+    return { data: [], error: null };
+  });
+}
+
+describe('POST /api/academy/enroll retry — reuses the existing row', () => {
+  it('reuses the order on a failed row and inserts nothing new', async () => {
+    const row = { ...EXISTING_ROW_BASE, status: 'failed', razorpay_order_id: 'order_existing123' };
+    respondWithExisting(row);
+
+    const res = await POST(enrol(aaravReserves()));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.razorpay.orderId).toBe('order_existing123');
+    expect(mocks.createOrder).not.toHaveBeenCalled();
+    expect(fake.callsTo('enrollments', 'insert')).toHaveLength(0);
+  });
+
+  it('creates a Razorpay order for an order-less reserved row instead of inserting a new one', async () => {
+    const row: Record<string, unknown> = { ...EXISTING_ROW_BASE, status: 'reserved', razorpay_order_id: null };
+    respondWithExisting(row);
+
+    const res = await POST(enrol(aaravReserves()));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(mocks.createOrder).toHaveBeenCalledTimes(1);
+    expect(json.razorpay.orderId).toBe('order_Q1w2e3r4t5');
+    expect(fake.callsTo('enrollments', 'insert')).toHaveLength(0);
+    const updateCall = fake.callsTo('enrollments', 'update')[0];
+    expect(eqValue(updateCall, 'id')).toBe(row.id);
+    expect(payloadOf(updateCall)).toMatchObject({ razorpay_order_id: 'order_Q1w2e3r4t5' });
+  });
+
+  it('finds the existing row even when the stored email differs only in case', async () => {
+    const row = { ...EXISTING_ROW_BASE, buyer_email: 'Aarav.Gupta@Example.com', status: 'paid', razorpay_order_id: 'order_paid1' };
+    respondWithExisting(row);
+
+    const res = await POST(enrol(aaravReserves()));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.message).toBe('You are already enrolled.');
+  });
 });
 
 describe('POST /api/academy/enroll logs', () => {
