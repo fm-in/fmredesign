@@ -5,10 +5,11 @@
  *   PUT  /api/admin/academy/enrollments              — update (status, notes,
  *                                                      payment fields, invite_sent_at)
  *
- * Phase 1 has no automatic Razorpay webhook — admin manually flips
- * enrollment status to 'paid' once Razorpay shows payment received.
- * Once flipped to 'paid', the SQL trigger increments seats_taken on the
- * linked program.
+ * The Razorpay webhook flips a row to 'paid' itself once payment succeeds —
+ * that's what counts the seat (the SQL trigger increments seats_taken on the
+ * linked program only then). This PUT exists to let an admin correct a row
+ * by hand when something needed a manual fix; there is no payment-link
+ * workflow to record here.
  *
  * RBAC:
  *   GET  — content.read
@@ -120,9 +121,6 @@ export async function PUT(request: NextRequest) {
   if (body.razorpayPaymentId !== undefined) updates.razorpay_payment_id = (body.razorpayPaymentId as string) || null;
   if (body.razorpayOrderId !== undefined) updates.razorpay_order_id = (body.razorpayOrderId as string) || null;
   if (body.amountInr !== undefined) updates.amount_inr = Number(body.amountInr) || 0;
-  if (body.paymentLinkSharedAt !== undefined) {
-    updates.payment_link_shared_at = (body.paymentLinkSharedAt as string) || null;
-  }
   if (body.inviteSentAt !== undefined) {
     updates.invite_sent_at = (body.inviteSentAt as string) || null;
   }

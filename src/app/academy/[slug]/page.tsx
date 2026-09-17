@@ -8,7 +8,7 @@
  *   1. Hero band — eyebrow, title, lede, batch start callout, hero image
  *      (or gradient brand panel if no cover image).
  *   2. Two-column body: long-form content left, sticky pricing right.
- *   3. Mobile sticky bottom CTA bar so the price + "Reserve" is always
+ *   3. Mobile sticky bottom CTA bar so the price + "Book now" is always
  *      one tap away on small screens.
  */
 
@@ -415,7 +415,6 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   <ReserveSeatForm
                     programId={p.id}
                     programTitle={p.title}
-                    paymentLinkUrl={p.paymentLinkUrl}
                     amountInr={buyerAmount}
                   />
 
@@ -481,7 +480,6 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   <ReserveSeatForm
                     programId={p.id}
                     programTitle={p.title}
-                    paymentLinkUrl={p.paymentLinkUrl}
                     amountInr={buyerAmount}
                   />
                 ) : (
@@ -551,9 +549,9 @@ function MobileStickyBar({
         <a
           href="#reserve"
           className="ml-auto v2-btn v2-btn-magenta inline-flex items-center gap-2 flex-shrink-0"
-          aria-label={`Reserve seat for ${program.title} at ${price}`}
+          aria-label={`Book a seat on ${program.title} for ${price}`}
         >
-          Reserve
+          Book now
           <ChevronRight className="w-4 h-4" />
         </a>
       </div>
