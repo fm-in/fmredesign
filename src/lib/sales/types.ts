@@ -109,7 +109,8 @@ export type ActivityType =
   | 'sequence_started'
   | 'sequence_stopped'
   | 'ai_brief'
-  | 'unsubscribed';
+  | 'unsubscribed'
+  | 'confirmation_sent';
 
 export type TaskType = 'call' | 'whatsapp' | 'linkedin' | 'instagram' | 'email' | 'follow_up' | 'custom';
 export type TaskStatus = 'open' | 'done' | 'skipped';

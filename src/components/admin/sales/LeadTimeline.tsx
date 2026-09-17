@@ -24,6 +24,7 @@ const TITLES: Record<ActivityType, string> = {
   sequence_stopped: 'Follow-ups stopped',
   ai_brief: 'AI brief',
   unsubscribed: 'Unsubscribed',
+  confirmation_sent: 'Confirmation email sent',
 };
 
 const PREVIEW_LENGTH = 600;

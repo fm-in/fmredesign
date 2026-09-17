@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, it, expect, afterEach } from 'vitest';
 import { renderShell } from '../email-shell';
 
@@ -62,6 +63,46 @@ describe('renderShell', () => {
     const html = renderShell(baseInput);
     expect(html).toContain(baseInput.unsubscribeUrl);
     expect(html).toMatch(/Unsubscribe/);
+  });
+
+  it('renders a sales email byte-for-byte as it did before transactional mail was supported', () => {
+    // sha256 of renderShell(baseInput) captured from the implementation at 1103d12.
+    delete process.env.COMPANY_ADDRESS;
+    expect(sha256(renderShell(baseInput))).toBe('89a1a841240bbccc5d9b411da8749ebdb3ca855fb4a709d51c9a41b256a20c2d');
+    process.env.COMPANY_ADDRESS = '123 Example Street, Bhopal';
+    expect(sha256(renderShell(baseInput))).toBe('42c33474ca6f9740b333abc9f4a50af55c2829b5de28a54b0d20abbf69173fe8');
+  });
+
+  describe('without an unsubscribe link (transactional mail)', () => {
+    const transactional = {
+      preheader: baseInput.preheader,
+      paragraphs: baseInput.paragraphs,
+      cta: baseInput.cta,
+      ownerName: baseInput.ownerName,
+    };
+
+    function footerOf(html: string): string {
+      return html.slice(html.indexOf('<tr><td bgcolor="#f4f1f2"'));
+    }
+
+    it.each([
+      ['with an address', '123 Example Street, Bhopal', '123 Example Street, Bhopal'],
+      ['without an address', undefined, 'FreakingMinds'],
+    ])('omits the unsubscribe line cleanly %s, ending the footer on its last real line', (_label, address, lastLine) => {
+      if (address) process.env.COMPANY_ADDRESS = address;
+      else delete process.env.COMPANY_ADDRESS;
+
+      const html = renderShell(transactional);
+      const footer = footerOf(html);
+
+      expect(html).not.toMatch(/unsubscribe/i);
+      expect(html).not.toContain('You are receiving this');
+      expect(html).not.toContain('undefined');
+      expect(footer).not.toMatch(/<p[^>]*>\s*<\/p>/);
+      expect(footer).toContain('<p style="margin:0 0 4px;padding:0;color:#2d2d2d;">Asha Rao</p>');
+      // The last paragraph carries no bottom margin, so no gap is left where the line was.
+      expect(footer).toMatch(new RegExp(`<p style="margin:0;padding:0;color:#666666;">${lastLine}</p></td></tr>`));
+    });
   });
 
   it('escapes a paragraph containing markup or ampersands', () => {
@@ -144,3 +185,7 @@ describe('renderShell', () => {
     expect(backgroundStyleCount).toBeGreaterThanOrEqual(4);
   });
 });
+
+function sha256(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}

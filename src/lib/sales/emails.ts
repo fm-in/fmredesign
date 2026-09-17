@@ -43,7 +43,8 @@ export interface RenderedEmail {
   text: string;
 }
 
-interface Copy {
+/** One email's words, before the branded shell and plain-text alternative are built around them. */
+export interface EmailCopy {
   subject: string;
   preheader: string;
   paragraphs: string[];
@@ -54,14 +55,14 @@ interface Copy {
 export const TEAM_SIGNATURE = 'The FreakingMinds team';
 
 /** What `firstNameOf` returns when the lead's name is not a usable name. Reads well after "Hi", not in a subject. */
-const NO_FIRST_NAME = 'there';
+export const NO_FIRST_NAME = 'there';
 
 /** "Your project brief, Priya" — or just "Your project brief" when there is no real first name. */
 function subjectWithName(subject: string, firstName: string): string {
   return firstName === NO_FIRST_NAME ? subject : `${subject}, ${firstName}`;
 }
 
-function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
+function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): EmailCopy {
   switch (template) {
     case 'instant_reply':
       return {
@@ -237,14 +238,21 @@ function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
 }
 
 export function renderSalesEmail(template: SalesEmailTemplate, ctx: SalesEmailContext): RenderedEmail {
-  const copy = copyFor(template, ctx);
+  return renderEmailCopy(copyFor(template, ctx), { ownerName: ctx.ownerName, unsubscribeUrl: ctx.unsubscribeUrl });
+}
 
+/**
+ * Builds the branded HTML and the plain-text alternative around one email's
+ * copy. Sales email always passes `unsubscribeUrl`; transactional mail
+ * (receipts) leaves it out and gets no unsubscribe line in either part.
+ */
+export function renderEmailCopy(copy: EmailCopy, footer: { ownerName: string; unsubscribeUrl?: string }): RenderedEmail {
   const html = renderShell({
     preheader: copy.preheader,
     paragraphs: copy.paragraphs,
     cta: copy.cta,
-    ownerName: ctx.ownerName,
-    unsubscribeUrl: ctx.unsubscribeUrl,
+    ownerName: footer.ownerName,
+    unsubscribeUrl: footer.unsubscribeUrl,
   });
 
   const text = [
@@ -252,10 +260,9 @@ export function renderSalesEmail(template: SalesEmailTemplate, ctx: SalesEmailCo
     '',
     `${copy.cta.label}: ${copy.cta.url}`,
     '',
-    ctx.ownerName,
+    footer.ownerName,
     'FreakingMinds',
-    '',
-    `Unsubscribe: ${ctx.unsubscribeUrl}`,
+    ...(footer.unsubscribeUrl ? ['', `Unsubscribe: ${footer.unsubscribeUrl}`] : []),
   ].join('\n');
 
   return { subject: copy.subject, html, text };
@@ -264,11 +271,12 @@ export function renderSalesEmail(template: SalesEmailTemplate, ctx: SalesEmailCo
 /**
  * "priya shah" → "Priya". Falls back to "there" when the name is not a name —
  * including an email local part that intake used because no name was given
- * ("asha.mehta", "rahul123", "sam_k"): digits, dots and underscores never
- * appear in a first name we should greet someone by.
+ * ("asha.mehta", "rahul123", "sam_k") or a whole address typed into a name
+ * field: digits, dots, underscores and "@" never appear in a first name we
+ * should greet someone by.
  */
 export function firstNameOf(fullName: string): string {
   const first = fullName.trim().split(/\s+/)[0] ?? '';
-  if (!first || first === 'Unknown' || !/^\p{L}/u.test(first) || /[\d._]/.test(first)) return NO_FIRST_NAME;
+  if (!first || first === 'Unknown' || !/^\p{L}/u.test(first) || /[\d._@]/.test(first)) return NO_FIRST_NAME;
   return first.charAt(0).toUpperCase() + first.slice(1);
 }

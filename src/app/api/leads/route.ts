@@ -23,6 +23,8 @@ import { generateSalesId } from '@/lib/sales/types';
 import { IntakeError } from '@/lib/sales/errors';
 import { ApiResponse } from '@/lib/api-response';
 import { canAccessLead } from '@/lib/sales/access';
+import { sendEnquiryReceipt } from '@/lib/sales/receipts';
+import { afterResponse } from '@/lib/sales/transactional-email';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -334,6 +336,9 @@ export async function POST(request: NextRequest) {
       });
       notifyTeam(emailData.subject, emailData.html);
 
+      // No lead_activities table before the migration, so no lead to note the receipt on.
+      if (fromPublicForm) afterResponse('enquiry receipt', () => sendEnquiryReceipt(body, null));
+
       return ApiResponse.success({ received: true }, undefined, 201);
     }
     const { leadId, created } = ingested;
@@ -341,6 +346,11 @@ export async function POST(request: NextRequest) {
     if (created) {
       await announceNewLead(leadId);
     }
+
+    // The person's own confirmation, on every accepted path. Transactional, so
+    // automationEnabled does not apply; sent after the response so it can never
+    // delay or change it. A lead typed in by staff (no consent text) gets none.
+    if (fromPublicForm) afterResponse('enquiry receipt', () => sendEnquiryReceipt(body, leadId));
 
     // Every outcome (created, merged into an existing lead, or saved via the
     // pre-migration fallback above) answers the same generic body: a public form

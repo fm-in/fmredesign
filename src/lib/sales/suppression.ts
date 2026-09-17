@@ -26,6 +26,35 @@ export async function isSuppressed(contact: { email?: string | null; phoneE164?:
   return false;
 }
 
+/** Reasons mail must not be sent at all: it cannot be delivered, or the recipient reported it. */
+const UNDELIVERABLE_REASONS: ReadonlySet<string> = new Set<SuppressionReason>(['bounced', 'complaint']);
+
+/**
+ * True when the address bounced or complained. Used for transactional mail
+ * (confirmation receipts). Unlike `isSuppressed`, an unsubscribe does not
+ * count: it opts out of sales email, not out of a receipt for a form the
+ * person has just submitted again. A failed lookup answers false — before the
+ * sales migration the table does not exist, and a receipt is never lost to that.
+ */
+export async function isUndeliverable(email: string): Promise<boolean> {
+  const normalised = email.trim().toLowerCase();
+  if (!normalised) return false;
+
+  const { data, error } = await getSupabaseAdmin()
+    .from('suppression_list')
+    .select('reason')
+    .eq('email', normalised)
+    .limit(5);
+  if (error) {
+    console.error('[sales] suppression lookup failed:', error.message);
+    return false;
+  }
+  return (
+    Array.isArray(data) &&
+    data.some((row: { reason?: unknown }) => typeof row.reason === 'string' && UNDELIVERABLE_REASONS.has(row.reason))
+  );
+}
+
 /** One row per contact method, so an existing phone entry cannot block the email entry. */
 export async function addSuppression(entry: {
   email?: string | null;

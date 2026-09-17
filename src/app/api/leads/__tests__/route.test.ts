@@ -4,12 +4,21 @@ import { fake, payloadOf } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
 import type { IntakeLead } from '@/lib/sales/types';
 import type { IngestResult } from '@/lib/sales/intake/ingest';
+import { contactPageBody, getStartedBody } from '@/test-utils/public-form-bodies';
+
+type SendResult = { data: { id: string } | null; error: { message: string } | null };
 
 const mocks = vi.hoisted(() => ({
   ingestLead: vi.fn<(lead: IntakeLead) => Promise<IngestResult>>(async () => ({ leadId: 'lead_new', created: true })),
   notifyAdmins: vi.fn(async () => undefined),
   notifyTeam: vi.fn(),
   user: { id: 'user-1', name: 'Asha', role: 'manager', permissions: ['sales.read', 'sales.write'] },
+  resendSend: vi.fn<(payload: Record<string, unknown>, options?: unknown) => Promise<SendResult>>(async () => ({
+    data: { id: 'resend_rcpt_1' },
+    error: null,
+  })),
+  /** Work handed to next/server `after()` — it runs only once the test flushes it, i.e. after the response. */
+  afterTasks: [] as Array<() => Promise<void>>,
 }));
 
 vi.mock('@/lib/supabase', async () => {
@@ -29,6 +38,13 @@ vi.mock('@/lib/admin-auth-middleware', () => ({
 vi.mock('@/lib/admin/audit-log', () => ({ logAuditEvent: vi.fn(async () => undefined), getClientIP: () => '127.0.0.1' }));
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
+vi.mock('@/lib/email/resend', () => ({ getResend: () => ({ emails: { send: mocks.resendSend } }) }));
+vi.mock('next/server', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('next/server')>()),
+  after: (task: () => Promise<void>) => {
+    mocks.afterTasks.push(task);
+  },
+}));
 
 import { POST, PUT } from '../route';
 
@@ -57,8 +73,16 @@ const publicSubmission = {
   consentText: 'You may contact me about my enquiry.',
 };
 
+/** Runs everything scheduled to happen after the response was sent. */
+async function flushAfterResponse(): Promise<void> {
+  const tasks = mocks.afterTasks.splice(0);
+  for (const task of tasks) await task();
+}
+
 beforeEach(() => {
   fake.reset();
+  mocks.afterTasks.length = 0;
+  mocks.resendSend.mockClear();
   mocks.ingestLead.mockClear();
   mocks.notifyAdmins.mockClear();
   mocks.notifyTeam.mockClear();
@@ -139,6 +163,170 @@ describe('POST /api/leads', () => {
     expect(inserts).toHaveLength(2);
     expect(inserts[1]).toMatchObject({ email: 'priya@example.com' });
     expect(inserts[1]).not.toHaveProperty('ip_address');
+  });
+});
+
+describe('POST /api/leads confirmation receipt', () => {
+  const MIGRATION_MISSING = { code: 'PGRST204', message: "Could not find the 'consent_basis' column of 'leads' in the schema cache" };
+
+  function sentEmails(): Array<Record<string, unknown>> {
+    return mocks.resendSend.mock.calls.map((call) => call[0]);
+  }
+
+  function confirmationActivities(): Array<Record<string, unknown>> {
+    return fake.callsTo('lead_activities', 'insert').map(payloadOf).filter((p) => p.type === 'confirmation_sent');
+  }
+
+  function suppressedAs(reason: string) {
+    fake.respond((call) => {
+      if (call.table === 'suppression_list') return { data: [{ reason }], error: null };
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ id: 'lead_new' }), error: null };
+      return { data: null, error: null };
+    });
+  }
+
+  async function responseOf(res: Response): Promise<{ status: number; body: unknown }> {
+    return { status: res.status, body: await res.json() };
+  }
+
+  const GENERIC = { status: 201, body: { success: true, data: { received: true } } };
+
+  function without(body: Record<string, unknown>, key: string): Record<string, unknown> {
+    return Object.fromEntries(Object.entries(body).filter(([name]) => name !== key));
+  }
+
+  it('sends a contact-page enquirer the receipt after the response, naming the service, and notes it on the lead', async () => {
+    const res = await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'Priya.Shah@example.com', service: 'Social Media Marketing' })));
+
+    expect(await responseOf(res)).toEqual(GENERIC);
+    // Nothing is sent while the response is being built.
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+
+    await flushAfterResponse();
+
+    expect(sentEmails()).toHaveLength(1);
+    const sent = sentEmails()[0];
+    expect(sent).toMatchObject({ to: 'Priya.Shah@example.com', subject: "We've got your enquiry" });
+    expect(sent?.text).toContain("Thanks for getting in touch with FreakingMinds — we've received your enquiry about social media marketing.");
+    expect(JSON.stringify(sent)).not.toMatch(/unsubscribe/i);
+
+    expect(confirmationActivities()).toEqual([
+      expect.objectContaining({
+        lead_id: 'lead_new',
+        channel: 'email',
+        direction: 'out',
+        subject: "We've got your enquiry",
+        provider_message_id: 'resend_rcpt_1',
+      }),
+    ]);
+  });
+
+  it('names the project type for a get-started brief', async () => {
+    await POST(postLead(getStartedBody({ name: 'Meera Iyer', email: 'meera@example.com', projectType: 'website_design' })));
+    await flushAfterResponse();
+
+    expect(sentEmails()[0]?.text).toContain("we've received your enquiry about website design.");
+    expect(sentEmails()[0]?.text).toMatch(/^Hi Meera,\n/);
+  });
+
+  it('sends the receipt for a submission merged into an existing lead, noting it on that lead', async () => {
+    mocks.ingestLead.mockResolvedValueOnce({ leadId: 'lead_1', created: false });
+
+    const res = await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: '' })));
+    expect(await responseOf(res)).toEqual(GENERIC);
+    await flushAfterResponse();
+
+    expect(sentEmails()).toHaveLength(1);
+    expect(sentEmails()[0]?.text).toContain("we've received your enquiry.\n");
+    expect(confirmationActivities().map((a) => a.lead_id)).toEqual(['lead_1']);
+  });
+
+  it('sends the receipt from the pre-migration fallback, with no timeline entry (that table does not exist yet)', async () => {
+    mocks.ingestLead.mockRejectedValueOnce(MIGRATION_MISSING);
+
+    const res = await POST(postLead(getStartedBody({ name: 'Meera Iyer', email: 'meera@example.com', projectType: 'branding' })));
+    expect(await responseOf(res)).toEqual(GENERIC);
+    await flushAfterResponse();
+
+    expect(sentEmails()).toHaveLength(1);
+    expect(sentEmails()[0]?.to).toBe('meera@example.com');
+    expect(fake.callsTo('lead_activities', 'insert')).toHaveLength(0);
+  });
+
+  it('answers new, merged and fallback submissions identically, whether or not the receipt sends', async () => {
+    const outcomes: Array<{ status: number; body: unknown }> = [];
+
+    outcomes.push(await responseOf(await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: 'PPC Advertising' })))));
+
+    mocks.ingestLead.mockResolvedValueOnce({ leadId: 'lead_1', created: false });
+    outcomes.push(await responseOf(await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: '' })))));
+
+    mocks.ingestLead.mockRejectedValueOnce(MIGRATION_MISSING);
+    outcomes.push(await responseOf(await POST(postLead(getStartedBody({ name: 'Meera Iyer', email: 'meera@example.com', projectType: 'web_app' })))));
+
+    mocks.resendSend.mockRejectedValue(new Error('Resend is down'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    outcomes.push(await responseOf(await POST(postLead(getStartedBody({ name: 'Meera Iyer', email: 'meera@example.com', projectType: 'web_app' })))));
+    await expect(flushAfterResponse()).resolves.toBeUndefined();
+    mocks.resendSend.mockReset();
+    mocks.resendSend.mockResolvedValue({ data: { id: 'resend_rcpt_1' }, error: null });
+    error.mockRestore();
+
+    expect(outcomes).toEqual([GENERIC, GENERIC, GENERIC, GENERIC]);
+  });
+
+  it('a failed send still leaves the normal success response, logs no address or message, and notes nothing', async () => {
+    mocks.resendSend.mockResolvedValueOnce({ data: null, error: { message: 'The meera@example.com domain is not verified' } });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const res = await POST(postLead(getStartedBody({ name: 'Meera Iyer', email: 'meera@example.com', projectType: 'web_app' })));
+    expect(await responseOf(res)).toEqual(GENERIC);
+    await expect(flushAfterResponse()).resolves.toBeUndefined();
+
+    const logged = error.mock.calls.flat().map(String).join('\n');
+    error.mockRestore();
+    expect(logged).toContain('enquiry_receipt send failed');
+    expect(logged).not.toContain('meera@example.com');
+    expect(logged).not.toContain('We need a new site');
+    expect(confirmationActivities()).toHaveLength(0);
+  });
+
+  it('sends nothing for a submission with no email address (rejected as invalid)', async () => {
+    const res = await POST(postLead(without(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: '' }), 'email')));
+    expect(res.status).toBe(400);
+    await flushAfterResponse();
+
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing for a lead typed in through the admin Add Lead modal (no consent text)', async () => {
+    const adminBody = without(getStartedBody({ name: 'Meera Iyer', email: 'meera@example.com', projectType: 'web_app' }), 'consentText');
+
+    const res = await POST(postLead(adminBody));
+    expect(res.status).toBe(201);
+    await flushAfterResponse();
+
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+  });
+
+  it.each(['bounced', 'complaint'])('sends nothing to an address suppressed as %s', async (reason) => {
+    suppressedAs(reason);
+
+    const res = await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: '' })));
+    expect(await responseOf(res)).toEqual(GENERIC);
+    await flushAfterResponse();
+
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+    expect(confirmationActivities()).toHaveLength(0);
+  });
+
+  it('still sends to an address that unsubscribed from sales email: re-submitting is a fresh request', async () => {
+    suppressedAs('unsubscribed');
+
+    await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: '' })));
+    await flushAfterResponse();
+
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
   });
 });
 

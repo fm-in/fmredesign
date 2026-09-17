@@ -41,15 +41,44 @@ export interface ShellInput {
   paragraphs: string[];
   cta: { label: string; url: string };
   ownerName: string;
-  unsubscribeUrl: string;
+  /**
+   * Sales email always passes one. Transactional mail (confirmation receipts)
+   * leaves it out, and the footer then carries no unsubscribe line at all.
+   */
+  unsubscribeUrl?: string;
+}
+
+interface FooterLine {
+  html: string;
+  color: string;
+  /** Bottom margin in px. The last line always gets 0, so nothing trails it. */
+  gap: number;
+}
+
+function footerHtml(lines: FooterLine[]): string {
+  return lines
+    .map((line, index) => {
+      const margin = index === lines.length - 1 ? '0' : `0 0 ${line.gap}px`;
+      return `<p style="margin:${margin};padding:0;color:${line.color};">${line.html}</p>`;
+    })
+    .join('');
 }
 
 export function renderShell(input: ShellInput): string {
   const logoUrl = `${SITE_URL}/email/logo.png`;
   const address = process.env.COMPANY_ADDRESS;
-  const addressLine = address
-    ? `<p style="margin:0 0 12px;padding:0;color:${FOOTER_TEXT};">${escapeHtml(address)}</p>`
-    : '';
+  const footerLines: FooterLine[] = [
+    { html: escapeHtml(input.ownerName), color: BODY_TEXT, gap: 4 },
+    { html: 'FreakingMinds', color: FOOTER_TEXT, gap: 12 },
+  ];
+  if (address) footerLines.push({ html: escapeHtml(address), color: FOOTER_TEXT, gap: 12 });
+  if (input.unsubscribeUrl) {
+    footerLines.push({
+      html: `You are receiving this because you contacted FreakingMinds. <a href="${escapeHtml(input.unsubscribeUrl)}" style="color:${MUTED_TEXT};">Unsubscribe</a>`,
+      color: MUTED_TEXT,
+      gap: 0,
+    });
+  }
 
   return [
     '<!DOCTYPE html>',
@@ -79,10 +108,7 @@ export function renderShell(input: ShellInput): string {
     '</td></tr>',
     // Footer
     `<tr><td bgcolor="${FOOTER_BG}" style="background-color:${FOOTER_BG};padding:24px;font-family:${FONT_STACK};font-size:12px;line-height:1.5;color:${FOOTER_TEXT};">`,
-    `<p style="margin:0 0 4px;padding:0;color:${BODY_TEXT};">${escapeHtml(input.ownerName)}</p>`,
-    `<p style="margin:0 0 12px;padding:0;color:${FOOTER_TEXT};">FreakingMinds</p>`,
-    addressLine,
-    `<p style="margin:0;padding:0;color:${MUTED_TEXT};">You are receiving this because you contacted FreakingMinds. <a href="${escapeHtml(input.unsubscribeUrl)}" style="color:${MUTED_TEXT};">Unsubscribe</a></p>`,
+    footerHtml(footerLines),
     '</td></tr>',
     '</table>',
     '</td></tr>',

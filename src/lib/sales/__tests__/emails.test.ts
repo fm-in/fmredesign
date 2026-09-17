@@ -139,6 +139,7 @@ describe('firstNameOf', () => {
     ['asha.mehta', 'there'],
     ['rahul123', 'there'],
     ['sam_k', 'there'],
+    ['priya@examplemail', 'there'],
     ['Priya Shah', 'Priya'],
     ["D'Souza Anil", "D'Souza"],
     ['Anne-Marie Rao', 'Anne-Marie'],

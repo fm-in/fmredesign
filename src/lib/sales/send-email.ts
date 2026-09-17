@@ -99,7 +99,7 @@ export function parseWeakestChallenge(value: string | null | undefined): { area:
 }
 
 /** A known project type as a phrase; undefined for anything else. */
-function projectTypePhrase(value: string | null): string | undefined {
+export function projectTypePhrase(value: string | null | undefined): string | undefined {
   const key = nonEmptyString(value);
   return key && Object.hasOwn(PROJECT_TYPE_PHRASES, key) ? PROJECT_TYPE_PHRASES[key] : undefined;
 }

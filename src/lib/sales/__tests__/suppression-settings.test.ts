@@ -6,7 +6,7 @@ vi.mock('@/lib/supabase', async () => {
   return { getSupabaseAdmin: () => m.fake.client };
 });
 
-import { addSuppression, isSuppressed } from '../suppression';
+import { addSuppression, isSuppressed, isUndeliverable } from '../suppression';
 import { getSalesSettings, parseSalesSettings } from '../settings';
 
 beforeEach(() => fake.reset());
@@ -31,6 +31,36 @@ describe('isSuppressed', () => {
   it('is false without contact details and does not query', async () => {
     await expect(isSuppressed({})).resolves.toBe(false);
     expect(fake.calls).toHaveLength(0);
+  });
+});
+
+describe('isUndeliverable', () => {
+  function suppressedAs(reason: string) {
+    fake.respond((call) =>
+      call.table === 'suppression_list' && eqValue(call, 'email') === 'p@x.com'
+        ? { data: [{ reason }], error: null }
+        : { data: [], error: null }
+    );
+  }
+
+  it.each(['bounced', 'complaint'])('is true for an address suppressed as %s', async (reason) => {
+    suppressedAs(reason);
+    await expect(isUndeliverable(' P@X.com ')).resolves.toBe(true);
+  });
+
+  it.each(['unsubscribed', 'deletion_request', 'manual'])('is false for an address suppressed as %s', async (reason) => {
+    suppressedAs(reason);
+    await expect(isUndeliverable('p@x.com')).resolves.toBe(false);
+  });
+
+  it('is false for an address not on the list', async () => {
+    fake.respond(() => ({ data: [], error: null }));
+    await expect(isUndeliverable('p@x.com')).resolves.toBe(false);
+  });
+
+  it('is false when the lookup fails, e.g. before the sales migration', async () => {
+    fake.respond(() => ({ data: null, error: { code: 'PGRST205', message: "Could not find the table 'public.suppression_list'" } }));
+    await expect(isUndeliverable('p@x.com')).resolves.toBe(false);
   });
 });
 
