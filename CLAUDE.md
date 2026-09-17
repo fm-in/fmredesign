@@ -265,9 +265,11 @@ Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`, amended by
 - **`src/lib/sales/sequence.ts`** is the single source of truth for the four sets: `SEQUENCES`
   (keyed `brief-v1`, `enquiry-v1`, `ad-lead-v1`, `scorecard-v1`) and `getSequence(key)`.
   `recommendSequence(lead)` maps a lead's source (and, for `website_form`, its form name) to
-  the recommended key, or `null`. `sequenceStartState(lead, check)` is the one place the five
-  reasons Start can be refused live — the start route and the lead detail payload both call it,
-  so the panel can never offer a button the route then rejects.
+  the recommended key, or `null`. `sequenceStartState(lead, check)` is the one place the seven
+  reasons Start can be refused live, checked in order: no email address, an ad-platform test
+  lead (tagged `test`), a lead that booked a call directly (`cal_booking`), the do-not-contact
+  list, no consent, a sequence already run, automation off. The start route and the lead
+  detail payload both call it, so the panel can never offer a button the route then rejects.
 - **Sales email goes only through `sendSalesEmail()`**: it checks consent, the do-not-contact
   list and configuration at send time. Resend is never used for cold email. Every sales email
   renders through `renderShell()` in `src/lib/sales/email-shell.ts` (branded header/footer,

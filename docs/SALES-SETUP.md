@@ -31,27 +31,34 @@ preselected on the lead page, but the owner can pick a different one before star
 | **Ad lead** | Meta, Google and anything sent through Zapier/Make | Day 0: an intro email. Day 1: a task to call them. Day 3: a proof email. Day 7: a close-the-loop email. |
 | **Scorecard** | Marketing scorecard submissions | Day 0: their score and the weakest area. Day 3: the one fix worth trying first. Day 6: a close-the-loop email. |
 
-A booking sourced from Cal.com, anything tagged `test`, and any lead with no email address get
-no recommendation — Start follow-ups stays unavailable for those.
+A Cal.com booking, an ad-platform test lead (tagged `test`) and a lead with no email address
+get no recommendation, and Start follow-ups is refused for all three (see below). Any other
+lead without a recommendation shows **Choose a set**, and nothing can start until the owner
+picks one.
 
 ### Why "Start follow-ups" might not be available
 
-The button is replaced with a plain-English reason whenever a lead can't be started yet:
+The button is replaced with a plain-English reason whenever a lead can't be started. There are
+seven, checked in this order:
 
 1. **No email address** — the lead didn't leave one, so there's nothing to send to.
-2. **On the do-not-contact list** — this address has unsubscribed or bounced before.
-3. **No consent to email** — the lead didn't come in through a form or channel that counts as
+2. **A test lead from an ad platform** — Google's **Send test data** and similar test leads
+   arrive tagged `test`, and follow-ups are always switched off for them.
+3. **Booked a call directly** — the lead came in through a Cal.com booking, so there's no
+   follow-up sequence to run; the call itself is the next step.
+4. **On the do-not-contact list** — this address has unsubscribed or bounced before.
+5. **No consent to email** — the lead didn't come in through a form or channel that counts as
    asking to be contacted.
-4. **Already started once** — only one follow-up sequence ever runs per lead, so this stays
+6. **Already started once** — only one follow-up sequence ever runs per lead, so this stays
    blocked even after that sequence finishes or is stopped.
-5. **Automation is off** — turn it on in **Settings → Sales** first.
+7. **Automation is off** — turn it on in **Settings → Sales** first.
 
 ### Two booking links
 
 **Settings → Sales** holds two booking links:
 
-- **Booking link (short call)** — the existing 15-minute link, used by Enquiry, Ad lead and
-  Scorecard.
+- **Short call booking link (15 min)** — the existing 15-minute link, used by Enquiry, Ad lead
+  and Scorecard, default `fm-in/15min`.
 - **Scoping call booking link (30 min)** — used only by Project brief, default `fm-in/30min`.
 
 > **Warning:** the Cal.com event type behind the scoping link must actually exist before the
@@ -178,7 +185,9 @@ Snapchat, JustDial and IndiaMART.
 }
 ```
 
-`platform` is required; include `email` or `phone`.
+`platform` is required; include `email` or `phone`. Whatever the zap maps into `campaign`
+appears in the Ad lead email's subject ("About your enquiry from …"), so map a name a customer
+would recognise, or leave `campaign` out.
 
 ## 8. Team
 
@@ -197,13 +206,31 @@ Snapchat, JustDial and IndiaMART.
    `sales-lead-created`, `sales-sequence`, `sales-meta-leadgen` and `sales-meeting-prep`.
    If one is missing, resync the app in Inngest first.
 4. Turn automation **on**. Submit again with a different email address you control.
-5. Open that lead and click **Start follow-ups**. It preselects the recommended set — for a
+5. Emails go out only between 09:00 and 19:00 IST. A test started in the evening arrives the
+   next morning — that's expected, not a fault.
+6. Open that lead and click **Start follow-ups**. It preselects the recommended set — for a
    contact-form submission that's Enquiry — so just click Start. Still no email goes out
    until this click.
-6. You receive the instant reply. Reply to it: the reply appears on the timeline, follow-ups
+7. You receive the instant reply. Reply to it: the reply appears on the timeline, follow-ups
    stop, and the reply is forwarded to the owner.
-7. Book through the link in the email: the lead moves to "Discovery scheduled" and a
+8. Book through the link in the email: the lead moves to "Discovery scheduled" and a
    pre-call brief arrives two hours before the call.
+9. Start **each of the four sets** once on an internal test lead and read the first email each
+   one sends. Use a different email address and phone number for every lead (for example
+   `you+brief@…`, `you+ad@…`): a submission matching an existing lead's email or phone joins
+   that lead instead of creating a new one, and a lead only ever runs one set.
+   - **Project brief** — submit the get-started form at `/get-started`.
+   - **Enquiry** — submit the contact form (the lead from step 4 counts).
+   - **Ad lead** — send a test post from the Zapier or Make zap in §7 (its **Test** step), with
+     `platform`, `name` and `email` filled in. Don't use Google's **Send test data** for this:
+     those leads are tagged `test` and can't be started.
+   - **Scorecard** — complete `/scorecard`, then open **Admin → Scorecard** and click **To lead**
+     on your submission.
+
+   In every email, check: the header band and logo show, the button opens the booking page,
+   the footer carries the company address, the unsubscribe link works, and no internal ids or
+   codes appear anywhere in the text — no long numbers, no words joined by underscores (such as
+   `web_app` or `at_risk`), and no form or campaign names you didn't choose to show.
 
 ## 10. Check the admin screens
 
@@ -214,8 +241,10 @@ Once the migration is applied:
 2. The lead page shows the header, timeline and note composer; adding a note puts it at the
    top of the timeline.
 3. `/admin/my-work` shows "Sales tasks" for a sales user and nothing for an editor.
-4. **Settings → Sales** shows the automation switch, the rotation list and the five
-   lead-source URLs with their last delivery.
+4. **Settings → Sales** shows the automation switch, both booking links — **Short call booking
+   link (15 min)** and **Scoping call booking link (30 min)** — the rotation list and the five
+   lead-source URLs with their last delivery. Check the scoping link points at a Cal.com event
+   that exists.
 
 ## Later: WhatsApp
 
