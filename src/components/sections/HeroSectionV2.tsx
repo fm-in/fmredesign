@@ -4,13 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ChevronDown } from 'lucide-react';
-import { gsap } from 'gsap';
 import { GradientOrb } from '@/components/animations/ParallaxLayer';
-
-// Register GSAP plugins
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin();
-}
 
 // Rotating phrases for the hero headline
 const rotatingPhrases = [
@@ -49,73 +43,12 @@ export function HeroSectionV2() {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
-  // GSAP staggered entrance animation
-  useEffect(() => {
-    if (prefersReducedMotion) {
-      // Show everything immediately for reduced motion
-      [headlineStaticRef, headlineRotatingRef, subheadRef, ctaRef, mascotRef, scrollRef].forEach(ref => {
-        if (ref.current) {
-          ref.current.style.opacity = '1';
-          ref.current.style.transform = 'none';
-        }
-      });
-      return;
-    }
+  // Entrance animation is CSS-driven (see .v2-hero-enter in globals.css).
+  // It previously ran through a GSAP timeline here, which meant the whole
+  // above-the-fold area sat at opacity:0 until hydration — ~7s on throttled
+  // mobile, and the dominant term in LCP. The CSS version keeps the identical
+  // stagger, durations and easing but paints without waiting for JS.
 
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-
-      // Headline static words
-      tl.fromTo(
-        headlineStaticRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        0.1
-      );
-
-      // Headline rotating phrase
-      tl.fromTo(
-        headlineRotatingRef.current,
-        { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.45 },
-        0.25
-      );
-
-      // Subhead
-      tl.fromTo(
-        subheadRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.4 },
-        0.4
-      );
-
-      // CTA buttons
-      tl.fromTo(
-        ctaRef.current,
-        { opacity: 0, y: 15 },
-        { opacity: 1, y: 0, duration: 0.35 },
-        0.55
-      );
-
-      // Mascot
-      tl.fromTo(
-        mascotRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        0.35
-      );
-
-      // Scroll indicator
-      tl.fromTo(
-        scrollRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.3 },
-        0.8
-      );
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, [prefersReducedMotion]);
 
   // Rotate phrases every 3 seconds
   useEffect(() => {
@@ -207,8 +140,7 @@ export function HeroSectionV2() {
               {/* Static part */}
               <span
                 ref={headlineStaticRef}
-                className="v2-text-primary block"
-                style={{ opacity: 0 }}
+                className="v2-text-primary block v2-hero-enter v2-hero-enter--headline"
               >
                 Ideas that
               </span>
@@ -216,8 +148,8 @@ export function HeroSectionV2() {
               {/* Rotating phrase */}
               <span
                 ref={headlineRotatingRef}
-                className="relative block overflow-hidden"
-                style={{ opacity: 0, height: '1.65em', lineHeight: 1.4 }}
+                className="relative block overflow-hidden v2-hero-enter v2-hero-enter--rotating"
+                style={{ height: '1.65em', lineHeight: 1.4 }}
               >
                 <span
                   className={`
@@ -241,8 +173,8 @@ export function HeroSectionV2() {
             {/* Subheadline */}
             <p
               ref={subheadRef}
-              className="v2-text-secondary text-base md:text-lg lg:text-xl leading-relaxed max-w-full lg:max-w-lg"
-              style={{ opacity: 0, marginBottom: '40px' }}
+              className="v2-text-secondary text-base md:text-lg lg:text-xl leading-relaxed max-w-full lg:max-w-lg v2-hero-enter v2-hero-enter--subhead"
+              style={{ marginBottom: '40px' }}
             >
               Full-service creative marketing for ambitious brands.
               100+ brands grown. 300% average traffic lift. Strategy, design, and performance under one roof.
@@ -251,8 +183,7 @@ export function HeroSectionV2() {
             {/* CTA Buttons */}
             <div
               ref={ctaRef}
-              className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 w-full sm:w-auto"
-              style={{ opacity: 0 }}
+              className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 w-full sm:w-auto v2-hero-enter v2-hero-enter--cta"
             >
               <Link
                 href="/get-started"
@@ -271,12 +202,15 @@ export function HeroSectionV2() {
           </div>
 
           {/* Right Column — Brain Mascot (5 cols on desktop) */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end relative">
+          {/* Entrance animation lives on this wrapper, not on the mascotRef node
+              below — that node receives an inline `transform` from the mouse
+              parallax effect, and a CSS animation with fill-mode:both would
+              override it and freeze the parallax. */}
+          <div className="lg:col-span-5 flex justify-center lg:justify-end relative v2-hero-enter v2-hero-enter--mascot">
             <div
               ref={mascotRef}
               className="relative"
               style={{
-                opacity: 0,
                 transition: 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
               }}
             >
@@ -295,6 +229,11 @@ export function HeroSectionV2() {
                 width={420}
                 height={420}
                 priority
+                // Rendered at min(420px, 80vw). Without `sizes` the browser
+                // assumes 100vw and downloads the 1080px variant on mobile —
+                // this was the LCP element and 80% of its time was transfer.
+                sizes="(max-width: 640px) 80vw, 420px"
+                quality={80}
                 className="max-w-full"
                 style={{
                   width: 'min(420px, 80vw)',
@@ -311,8 +250,7 @@ export function HeroSectionV2() {
       {/* Scroll Indicator */}
       <div
         ref={scrollRef}
-        className="absolute bottom-16 md:bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
-        style={{ opacity: 0 }}
+        className="absolute bottom-16 md:bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 v2-hero-enter v2-hero-enter--scroll"
       >
         <span className="v2-text-muted text-[11px] uppercase tracking-[0.2em] font-medium">
           Scroll

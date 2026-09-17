@@ -352,7 +352,10 @@ export function FeaturesSectionV2() {
                     borderColor: 'rgba(140, 29, 74, 0.2)',
                   }}
                 >
-                  {/* Brain mascot — uses plain <img> on mobile to avoid Next.js Image optimization issues in horizontal scroll */}
+                  {/* Brain mascot. Fixed width/height (no `fill`) so next/image
+                      renders a plain <img> with a srcset — safe inside the
+                      horizontal scroller, and no longer ships the full 1024px
+                      source for a 176px render. */}
                   <div className="relative flex justify-center pt-6 pb-2">
                     <div
                       className={`absolute w-36 h-36 rounded-full opacity-40 ${feature.gradientClass}`}
@@ -366,13 +369,13 @@ export function FeaturesSectionV2() {
                         animationDelay: `${index * 0.5}s`,
                       }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={feature.mascot}
                         alt={feature.mascotAlt}
                         loading="lazy"
                         width={200}
                         height={200}
+                        sizes="176px"
                         className="w-44"
                         style={{
                           filter: `drop-shadow(0 20px 40px ${shadowColor})`,
@@ -555,8 +558,11 @@ export function FeaturesSectionV2() {
                               animationDelay: clickedMascot === index ? '0s' : `${index * 0.5}s`,
                             }}
                             onLoad={() => handleImageLoad(index)}
-                            loading="eager"
-                            priority={index < 2}
+                            // Renders between w-48 (192px) and w-80 (320px).
+                            // Without `sizes` the browser assumes 100vw and
+                            // fetches a far larger variant than it can show.
+                            sizes="(max-width: 640px) 192px, (max-width: 1024px) 256px, 320px"
+                            loading="lazy"
                           />
                         </div>
                       </div>

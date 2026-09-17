@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -176,13 +177,20 @@ export function HeaderV2() {
               className="relative z-10 group"
               aria-label="Freaking Minds - Home"
             >
-              <img
+              {/* Source is 1502x935 (74 KB) but renders at ~200x56. A plain
+                  <img> shipped the full file on every page; next/image serves
+                  a matched variant. Rendered output is identical. */}
+              <Image
                 src="/logo.png"
                 alt="FreakingMinds logo"
                 width={200}
                 height={56}
+                // No `priority`: the PageLoader overlay covers the header for
+                // the first 1.7s, so preloading this competes with the images
+                // that are genuinely visible during that window.
+                sizes="200px"
                 className="w-auto group-hover:scale-105 transition-transform duration-300"
-                style={{ height: '3.5rem' }}
+                style={{ height: '3.5rem', width: 'auto' }}
               />
             </Link>
 
