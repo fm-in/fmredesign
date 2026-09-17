@@ -7,7 +7,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { fake, payloadOf, selectedColumns } from '@/test-utils/fake-supabase';
+import { eqValue, fake, payloadOf, selectedColumns, type FakeCall } from '@/test-utils/fake-supabase';
+import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { reserveSeatBody } from '@/test-utils/public-form-bodies';
 
 type SendResult = { data: { id: string } | null; error: { message: string } | null };
@@ -20,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   createOrder: vi.fn(async (input: { amountInr: number }) => ({ id: 'order_Q1w2e3r4t5', amount: input.amountInr * 100, currency: 'INR' })),
   afterTasks: [] as Array<() => Promise<void>>,
   existing: { current: [] as Array<Record<string, unknown>> },
+  inngestSend: vi.fn<(event: unknown) => Promise<unknown>>(async () => undefined),
 }));
 
 vi.mock('@/lib/supabase', async () => {
@@ -29,7 +31,7 @@ vi.mock('@/lib/supabase', async () => {
 vi.mock('@/lib/email/resend', () => ({ getResend: () => ({ emails: { send: mocks.resendSend } }) }));
 vi.mock('@/lib/razorpay', () => ({ createOrder: mocks.createOrder }));
 vi.mock('@/lib/notifications', () => ({ notifyAdmins: vi.fn(async () => undefined) }));
-vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn(async () => undefined) } }));
+vi.mock('@/lib/inngest/client', () => ({ inngest: { send: mocks.inngestSend } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 vi.mock('next/server', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/server')>()),
@@ -61,6 +63,13 @@ const SEEDED_PROGRAM: Record<string, unknown> = {
 };
 
 let program: Record<string, unknown> = SEEDED_PROGRAM;
+/** Enrolment rows written during a test, as the database would hold them (created_at is the insert time). */
+let enrollments: Array<Record<string, unknown>> = [];
+
+/** The first `.gte(column, value)` / `.neq(column, value)` on a call. */
+function filterValue(call: FakeCall, method: 'gte' | 'neq', column: string): unknown {
+  return call.filters.find((f) => f.method === method && f.args[0] === column)?.args[1];
+}
 let ipCounter = 0;
 
 function enrol(body: Record<string, unknown>): NextRequest {
@@ -105,13 +114,33 @@ beforeEach(() => {
   mocks.resendSend.mockClear();
   mocks.createOrder.mockClear();
   mocks.existing.current = [];
+  mocks.inngestSend.mockReset();
+  mocks.inngestSend.mockResolvedValue(undefined);
   program = SEEDED_PROGRAM;
+  enrollments = [];
   process.env.SALES_REPLY_TO = 'replies@reply.freakingminds.in';
   fake.respond((call) => {
-    if (call.table === 'programs') return { data: selectedColumns(call, program), error: null };
-    if (call.table === 'enrollments' && call.op === 'select') return { data: mocks.existing.current, error: null };
+    if (call.table === 'programs') {
+      const requested = eqValue(call, 'id');
+      const row = requested === program.id ? program : { ...program, id: requested, slug: `course-${String(requested)}` };
+      return { data: selectedColumns(call, row), error: null };
+    }
+    if (call.table === 'enrollments' && call.op === 'select') {
+      const since = filterValue(call, 'gte', 'created_at');
+      if (typeof since !== 'string') return { data: mocks.existing.current, error: null };
+      // The receipt cap: this buyer's other reservations since `since`.
+      const recent = enrollments.filter(
+        (row) =>
+          row.buyer_email === eqValue(call, 'buyer_email') &&
+          row.id !== filterValue(call, 'neq', 'id') &&
+          String(row.created_at) >= since
+      );
+      return { data: recent.map((row) => ({ id: row.id })), error: null };
+    }
     if (call.table === 'enrollments' && call.op === 'insert') {
-      return { data: { ...payloadOf(call), created_at: '2026-09-17T06:00:00.000Z' }, error: null };
+      const row = { ...payloadOf(call), created_at: new Date().toISOString() };
+      enrollments.push(row);
+      return { data: row, error: null };
     }
     if (call.table === 'suppression_list') return { data: [], error: null };
     return { data: null, error: null };
@@ -220,5 +249,142 @@ describe('POST /api/academy/enroll reservation receipt', () => {
     await flushAfterResponse();
 
     expect(mocks.resendSend).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/academy/enroll reservation receipt: one per buyer per 24 hours', () => {
+  const T0 = new Date('2026-09-17T06:00:00.000Z');
+  const HOUR = 60 * 60 * 1000;
+
+  async function reserveAt(at: Date, programId: string): Promise<Response> {
+    vi.setSystemTime(at);
+    const res = await POST(enrol({ ...aaravReserves(), programId }));
+    await flushAfterResponse();
+    return res;
+  }
+
+  it('sends nothing for a second reservation by the same buyer within 24 hours', async () => {
+    const first = await reserveAt(T0, 'prog-digital-marketing-2026-06');
+    expect(first.status).toBe(200);
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+
+    const second = await reserveAt(new Date(T0.getTime() + 23 * HOUR), 'prog-video-editing-2026-06');
+    expect(second.status).toBe(200);
+    expect((await second.json()).data).toMatchObject({ status: 'reserved', programId: 'prog-video-editing-2026-06' });
+    expect(enrollments).toHaveLength(2);
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends again once 24 hours have passed since the last reservation', async () => {
+    await reserveAt(T0, 'prog-digital-marketing-2026-06');
+    await reserveAt(new Date(T0.getTime() + 24 * HOUR + 60 * 1000), 'prog-video-editing-2026-06');
+
+    expect(mocks.resendSend).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not count someone else's reservation", async () => {
+    await reserveAt(T0, 'prog-digital-marketing-2026-06');
+    vi.setSystemTime(new Date(T0.getTime() + HOUR));
+    await POST(enrol(reserveSeatBody({ programId: 'prog-digital-marketing-2026-06', name: 'Meera Iyer', email: 'meera@example.com' })));
+    await flushAfterResponse();
+
+    expect(sentEmails().map((email) => email.to)).toEqual(['aarav.gupta@example.com', 'meera@example.com']);
+  });
+
+  it('sends nothing when the check itself fails', async () => {
+    fake.respond((call) => {
+      if (call.table === 'programs') return { data: selectedColumns(call, program), error: null };
+      if (call.table === 'enrollments' && call.op === 'select' && filterValue(call, 'gte', 'created_at')) {
+        return { data: null, error: { code: '57014', message: 'canceling statement due to statement timeout' } };
+      }
+      if (call.table === 'enrollments' && call.op === 'select') return { data: [], error: null };
+      if (call.table === 'enrollments' && call.op === 'insert') return { data: { ...payloadOf(call), created_at: T0.toISOString() }, error: null };
+      return { data: [], error: null };
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const res = await reserveAt(T0, 'prog-digital-marketing-2026-06');
+
+    expect(res.status).toBe(200);
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/academy/enroll logs', () => {
+  const PHONE_DIGITS = '9876543210';
+
+  /** Everything written to the console during the test, flattened. */
+  function consoleOutput(): { text: () => string } {
+    const spies = (['error', 'warn', 'log', 'info'] as const).map((method) =>
+      vi.spyOn(console, method).mockImplementation(() => undefined)
+    );
+    return { text: () => spies.flatMap((spy) => spy.mock.calls.flat()).map((arg) => (typeof arg === 'string' ? arg : JSON.stringify(arg))).join('\n') };
+  }
+
+  it.each([
+    ['a filled honeypot', () => ({ ...aaravReserves(), [HONEYPOT_FIELD]: 'http://spam.example' })],
+    ['a dot-obfuscated Gmail address', () => ({ ...aaravReserves(), buyerEmail: 'a.a.r.a.v@gmail.com' })],
+  ])('rejects %s without logging the address', async (_label, body) => {
+    const output = consoleOutput();
+
+    const res = await POST(enrol(body()));
+
+    expect(res.status).toBe(400);
+    const text = output.text();
+    expect(text).toMatch(/rejected submission/);
+    expect(text).not.toMatch(/aarav|gmail|@/i);
+  });
+
+  it('logs suspicions without the address', async () => {
+    const output = consoleOutput();
+
+    const res = await POST(enrol({ ...aaravReserves(), buyerName: 'Brx Tkl' }));
+    await flushAfterResponse();
+
+    expect(res.status).toBe(200);
+    const text = output.text();
+    expect(text).toContain('name_has_no_vowels');
+    expect(text).not.toMatch(/aarav\.gupta|@example/i);
+  });
+
+  it('logs a failed insert, a failed Razorpay order and a failed notification without the address or phone', async () => {
+    const insertError = {
+      code: '23502',
+      message: 'null value in column "amount_inr" of relation "enrollments" violates not-null constraint',
+      details: `Failing row contains (enr-1, prog-digital-marketing-2026-06, Aarav Gupta, aarav.gupta@example.com, ${PHONE_DIGITS}).`,
+    };
+    const output = consoleOutput();
+    fake.respond((call) => {
+      if (call.table === 'programs') return { data: selectedColumns(call, program), error: null };
+      if (call.table === 'enrollments' && call.op === 'insert') return { data: null, error: insertError };
+      return { data: [], error: null };
+    });
+
+    const failedInsert = await POST(enrol(aaravReserves()));
+    expect(failedInsert.status).toBe(500);
+
+    fake.respond((call) => {
+      if (call.table === 'programs') return { data: selectedColumns(call, program), error: null };
+      if (call.table === 'enrollments' && call.op === 'insert') return { data: payloadOf(call), error: null };
+      return { data: [], error: null };
+    });
+    mocks.createOrder.mockRejectedValueOnce(
+      Object.assign(new Error('Bad request'), {
+        statusCode: 400,
+        error: { code: 'BAD_REQUEST_ERROR', description: 'notes.buyer_email aarav.gupta@example.com is invalid', reason: 'input_validation_failed' },
+      })
+    );
+    mocks.inngestSend.mockRejectedValueOnce(new Error('Inngest rejected event for aarav.gupta@example.com'));
+
+    const failedOrder = await POST(enrol(aaravReserves()));
+    expect(failedOrder.status).toBe(200);
+    await Promise.resolve();
+
+    const text = output.text();
+    expect(text).toContain('23502');
+    expect(text).toContain('Razorpay order create failed');
+    expect(text).toContain('Inngest notification failed');
+    expect(text).not.toContain('aarav.gupta@example.com');
+    expect(text).not.toContain(PHONE_DIGITS);
   });
 });

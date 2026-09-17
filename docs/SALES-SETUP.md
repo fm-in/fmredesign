@@ -70,10 +70,23 @@ Start follow-ups, and isn't held to the 09:00–19:00 IST window.
   payment confirmation after Razorpay is a separate email and is unchanged.
 
 Replies to a confirmation go to `SALES_REPLY_TO`, or to the notification inbox
-(`NOTIFICATION_EMAIL`) until that is configured. A confirmation is not sent to an address that
-has bounced or marked FreakingMinds as spam, but it *is* sent to someone who unsubscribed from
-follow-ups — submitting a form again is a fresh request to be contacted. If sending fails, the
-submission still goes through exactly as before.
+(`NOTIFICATION_EMAIL`) until that is configured. If sending fails, the submission still goes
+through exactly as before.
+
+Who does **not** get one:
+
+- **Anyone on the do-not-contact list**, unless the only reason they're on it is that they
+  unsubscribed from follow-ups. An address that bounced, marked FreakingMinds as spam, asked
+  for its data to be deleted, or was added by hand is never sent a confirmation. Someone who
+  merely unsubscribed still gets one — submitting a form again is a fresh request to be
+  contacted.
+- **Anyone who already got one in the last 24 hours.** A public form will email any address
+  typed into it, so each address gets at most one confirmation a day: a repeat contact or
+  get-started submission within 24 hours of the last confirmation on that lead gets none, and
+  so does an Academy reservation made within 24 hours of the same buyer's previous one. The
+  submission itself is still saved and shows up as usual. (Until the sales migration is
+  applied there is no timeline to check, so this limit can't apply to contact and get-started
+  confirmations yet.)
 
 ### Two booking links
 
@@ -222,7 +235,9 @@ would recognise, or leave `campaign` out.
 ## 9. First run
 
 1. Keep automation **off**. Submit the contact form with your own email. Within a minute you
-   receive the confirmation, "We've got your enquiry", even with automation off. Reply to it
+   receive the confirmation, "We've got your enquiry", even with automation off. (Submitting
+   again with the same address within 24 hours sends no second confirmation — that's the
+   daily limit, not a fault.) Reply to it
    and check the reply reaches `SALES_REPLY_TO` (or the notification inbox if that isn't set
    yet).
 2. Open the lead: it has an owner, an AI brief, a "First touch within the hour" task and a

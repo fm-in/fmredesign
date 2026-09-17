@@ -16,6 +16,39 @@ import { companyWhatsappUrl } from '@/lib/sales/links';
 import { projectTypePhrase } from '@/lib/sales/send-email';
 import { sendTransactionalEmail } from '@/lib/sales/transactional-email';
 import { SITE_URL } from '@/lib/site-url';
+import { getSupabaseAdmin } from '@/lib/supabase';
+
+/**
+ * At most one receipt per address per day. A public form will send mail to any
+ * address typed into it, so without a cap a bot could have FreakingMinds mail a
+ * stranger over and over. A genuine enquirer needs only the first one.
+ */
+export const RECEIPT_CAP_MS = 24 * 60 * 60 * 1000;
+
+function capStart(): string {
+  return new Date(Date.now() - RECEIPT_CAP_MS).toISOString();
+}
+
+/**
+ * Whether this lead was sent a confirmation within the cap. Repeat submissions
+ * for one address merge into one lead, so this caps receipts per address. A
+ * failed check counts as sent: a missed receipt costs little, an uncapped one
+ * is the abuse this exists to stop.
+ */
+async function confirmedRecently(leadId: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('lead_activities')
+    .select('id')
+    .eq('lead_id', leadId)
+    .eq('type', 'confirmation_sent')
+    .gte('occurred_at', capStart())
+    .limit(1);
+  if (error) {
+    console.error('[receipts] could not check for a recent confirmation:', error.message);
+    return true;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
 
 /**
  * The contact page's service options (src/app/contact/page.tsx) as they read
@@ -80,9 +113,14 @@ export function renderEnquiryReceipt(submission: EnquirySubmission): RenderedEma
 
 /**
  * Sends the enquiry receipt to the address the person submitted and, when it
- * went and a lead row exists, notes it on the lead's timeline. Never throws.
+ * went and a lead row exists, notes it on the lead's timeline. Skipped silently
+ * when that lead already had one within `RECEIPT_CAP_MS`. `leadId` is null only
+ * on the pre-migration fallback, which has no timeline to check, so that path
+ * is uncapped. Never throws.
  */
 export async function sendEnquiryReceipt(submission: EnquirySubmission, leadId: string | null): Promise<void> {
+  if (leadId && (await confirmedRecently(leadId))) return;
+
   const email = renderEnquiryReceipt(submission);
   const outcome = await sendTransactionalEmail({ to: submission.email, template: 'enquiry_receipt', email });
   if (!outcome.sent || !leadId) return;
@@ -145,7 +183,37 @@ export function renderAcademyReserved({ buyerName, program }: AcademyReservation
   return renderEmailCopy(copy, { ownerName: TEAM_SIGNATURE });
 }
 
-/** Sends the reservation receipt to the buyer. Never throws. */
-export async function sendAcademyReservedReceipt(buyerEmail: string, reservation: AcademyReservation): Promise<void> {
+/**
+ * Whether the buyer made another reservation (any programme, any status)
+ * within the cap. `enrollments` records no sent receipts, so an earlier
+ * reservation stands in for one: every new reservation is offered a receipt.
+ * A failed check counts as recent, as for enquiries.
+ */
+async function reservedRecently(buyerEmail: string, enrollmentId: string): Promise<boolean> {
+  const { data, error } = await getSupabaseAdmin()
+    .from('enrollments')
+    .select('id')
+    .eq('buyer_email', buyerEmail.trim().toLowerCase())
+    .neq('id', enrollmentId)
+    .gte('created_at', capStart())
+    .limit(1);
+  if (error) {
+    console.error('[receipts] could not check for a recent reservation:', error.message);
+    return true;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
+
+/**
+ * Sends the reservation receipt to the buyer, unless they already reserved a
+ * seat within `RECEIPT_CAP_MS`. `enrollmentId` is the reservation just created,
+ * which the check leaves out. Never throws.
+ */
+export async function sendAcademyReservedReceipt(
+  buyerEmail: string,
+  enrollmentId: string,
+  reservation: AcademyReservation
+): Promise<void> {
+  if (await reservedRecently(buyerEmail, enrollmentId)) return;
   await sendTransactionalEmail({ to: buyerEmail, template: 'academy_reserved', email: renderAcademyReserved(reservation) });
 }

@@ -6,7 +6,7 @@ vi.mock('@/lib/supabase', async () => {
   return { getSupabaseAdmin: () => m.fake.client };
 });
 
-import { addSuppression, isSuppressed, isUndeliverable } from '../suppression';
+import { addSuppression, blocksReceipts, isSuppressed } from '../suppression';
 import { getSalesSettings, parseSalesSettings } from '../settings';
 
 beforeEach(() => fake.reset());
@@ -34,33 +34,51 @@ describe('isSuppressed', () => {
   });
 });
 
-describe('isUndeliverable', () => {
-  function suppressedAs(reason: string) {
+describe('blocksReceipts', () => {
+  function suppressedAs(...reasons: unknown[]) {
     fake.respond((call) =>
       call.table === 'suppression_list' && eqValue(call, 'email') === 'p@x.com'
-        ? { data: [{ reason }], error: null }
+        ? { data: reasons.map((reason) => ({ reason })), error: null }
         : { data: [], error: null }
     );
   }
 
-  it.each(['bounced', 'complaint'])('is true for an address suppressed as %s', async (reason) => {
+  it.each(['bounced', 'complaint', 'manual', 'deletion_request'])('blocks an address suppressed as %s', async (reason) => {
     suppressedAs(reason);
-    await expect(isUndeliverable(' P@X.com ')).resolves.toBe(true);
+    await expect(blocksReceipts(' P@X.com ')).resolves.toBe(true);
   });
 
-  it.each(['unsubscribed', 'deletion_request', 'manual'])('is false for an address suppressed as %s', async (reason) => {
-    suppressedAs(reason);
-    await expect(isUndeliverable('p@x.com')).resolves.toBe(false);
+  it('allows an address suppressed solely as unsubscribed', async () => {
+    suppressedAs('unsubscribed');
+    await expect(blocksReceipts('p@x.com')).resolves.toBe(false);
   });
 
-  it('is false for an address not on the list', async () => {
+  it('blocks when unsubscribed is not the only reason on file', async () => {
+    suppressedAs('unsubscribed', 'manual');
+    await expect(blocksReceipts('p@x.com')).resolves.toBe(true);
+  });
+
+  it('blocks a reason it does not recognise, rather than guess it is harmless', async () => {
+    suppressedAs(null);
+    await expect(blocksReceipts('p@x.com')).resolves.toBe(true);
+  });
+
+  it('allows an address not on the list', async () => {
     fake.respond(() => ({ data: [], error: null }));
-    await expect(isUndeliverable('p@x.com')).resolves.toBe(false);
+    await expect(blocksReceipts('p@x.com')).resolves.toBe(false);
   });
 
-  it('is false when the lookup fails, e.g. before the sales migration', async () => {
-    fake.respond(() => ({ data: null, error: { code: 'PGRST205', message: "Could not find the table 'public.suppression_list'" } }));
-    await expect(isUndeliverable('p@x.com')).resolves.toBe(false);
+  it.each([
+    ['PGRST205', "Could not find the table 'public.suppression_list' in the schema cache"],
+    ['42P01', 'relation "public.suppression_list" does not exist'],
+  ])('allows the address when the table does not exist yet (%s, before the sales migration)', async (code, message) => {
+    fake.respond(() => ({ data: null, error: { code, message } }));
+    await expect(blocksReceipts('p@x.com')).resolves.toBe(false);
+  });
+
+  it('blocks when the lookup fails for any other reason: the list cannot be ruled out', async () => {
+    fake.respond(() => ({ data: null, error: { code: '57014', message: 'canceling statement due to statement timeout' } }));
+    await expect(blocksReceipts('p@x.com')).resolves.toBe(true);
   });
 });
 
@@ -76,7 +94,26 @@ describe('addSuppression', () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({ email: 'p@x.com', phone_e164: null, reason: 'unsubscribed' });
     expect(rows[1]).toMatchObject({ email: null, phone_e164: '+919833257659' });
+    // An unsubscribe never overwrites the reason already on file.
+    expect(fake.callsTo('suppression_list', 'update')).toHaveLength(0);
   });
+
+  it.each(['bounced', 'complaint', 'manual', 'deletion_request'] as const)(
+    'raises an existing unsubscribe to %s, so the stronger reason is not lost to the one-row-per-address index',
+    async (reason) => {
+      fake.respond((call) =>
+        call.op === 'insert' ? { data: null, error: { code: '23505', message: 'duplicate' } } : { data: null, error: null }
+      );
+
+      await addSuppression({ email: 'P@X.com', reason, leadId: 'lead_1' });
+
+      const updates = fake.callsTo('suppression_list', 'update');
+      expect(updates).toHaveLength(1);
+      expect(payloadOf(updates[0]!)).toEqual({ reason });
+      expect(eqValue(updates[0]!, 'email')).toBe('p@x.com');
+      expect(eqValue(updates[0]!, 'reason')).toBe('unsubscribed');
+    }
+  );
 });
 
 describe('sales settings', () => {

@@ -26,17 +26,24 @@ export async function isSuppressed(contact: { email?: string | null; phoneE164?:
   return false;
 }
 
-/** Reasons mail must not be sent at all: it cannot be delivered, or the recipient reported it. */
-const UNDELIVERABLE_REASONS: ReadonlySet<string> = new Set<SuppressionReason>(['bounced', 'complaint']);
+/** The one reason that still lets a confirmation receipt through: it opts out of sales email only. */
+const RECEIPT_ALLOWED_REASON: SuppressionReason = 'unsubscribed';
+
+/** PostgREST (PGRST205) and Postgres (42P01) codes for a table that does not exist. */
+const MISSING_TABLE_CODES: ReadonlySet<string> = new Set(['PGRST205', '42P01']);
 
 /**
- * True when the address bounced or complained. Used for transactional mail
- * (confirmation receipts). Unlike `isSuppressed`, an unsubscribe does not
- * count: it opts out of sales email, not out of a receipt for a form the
- * person has just submitted again. A failed lookup answers false — before the
- * sales migration the table does not exist, and a receipt is never lost to that.
+ * True when a confirmation receipt must not go to this address. A receipt is
+ * sent only to an address that is not on the do-not-contact list, or is on it
+ * solely because it unsubscribed — that opts out of sales email, not out of a
+ * reply to a form the person has just submitted again. Bounced, complaint,
+ * manual (an owner's do-not-contact) and deletion_request all block it, as
+ * does any reason not recognised here.
+ *
+ * Before the sales migration the table does not exist, so there is no list and
+ * nothing blocks. Any other lookup failure blocks: the list cannot be ruled out.
  */
-export async function isUndeliverable(email: string): Promise<boolean> {
+export async function blocksReceipts(email: string): Promise<boolean> {
   const normalised = email.trim().toLowerCase();
   if (!normalised) return false;
 
@@ -46,13 +53,11 @@ export async function isUndeliverable(email: string): Promise<boolean> {
     .eq('email', normalised)
     .limit(5);
   if (error) {
+    if (error.code && MISSING_TABLE_CODES.has(error.code)) return false;
     console.error('[sales] suppression lookup failed:', error.message);
-    return false;
+    return true;
   }
-  return (
-    Array.isArray(data) &&
-    data.some((row: { reason?: unknown }) => typeof row.reason === 'string' && UNDELIVERABLE_REASONS.has(row.reason))
-  );
+  return Array.isArray(data) && data.some((row: { reason?: unknown }) => row.reason !== RECEIPT_ALLOWED_REASON);
 }
 
 /** One row per contact method, so an existing phone entry cannot block the email entry. */
@@ -80,6 +85,20 @@ export async function addSuppression(entry: {
       reason: entry.reason,
       lead_id: entry.leadId ?? null,
     });
-    if (error && error.code !== UNIQUE_VIOLATION) throw error;
+    if (!error) continue;
+    if (error.code !== UNIQUE_VIOLATION) throw error;
+
+    // Already listed. The index allows one row per address, so without this a
+    // bounce, complaint or deletion request arriving after an unsubscribe would
+    // be dropped — and an unsubscribe still lets confirmation receipts through.
+    if (entry.reason !== RECEIPT_ALLOWED_REASON) {
+      const [column, value] = row.email !== null ? (['email', row.email] as const) : (['phone_e164', row.phone_e164] as const);
+      const { error: updateError } = await supabase
+        .from('suppression_list')
+        .update({ reason: entry.reason })
+        .eq(column, value)
+        .eq('reason', RECEIPT_ALLOWED_REASON);
+      if (updateError) throw updateError;
+    }
   }
 }

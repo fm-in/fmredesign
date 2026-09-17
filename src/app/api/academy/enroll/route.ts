@@ -43,7 +43,7 @@ import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
 import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { notifyAdmins } from '@/lib/notifications';
 import { sendAcademyReservedReceipt } from '@/lib/sales/receipts';
-import { afterResponse } from '@/lib/sales/transactional-email';
+import { afterResponse, safeErrorMessage } from '@/lib/sales/transactional-email';
 
 function isLikelyEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -71,17 +71,14 @@ export async function POST(request: NextRequest) {
     email: body.buyerEmail as string,
     name: body.buyerName as string,
   });
+  // Logs carry the reason and IP, never the buyer's address or phone.
   if (spam.isSpam) {
-    console.warn(`[enroll] rejected submission — ${spam.reason}`, {
-      ip: clientIp,
-      email: body.buyerEmail,
-    });
+    console.warn(`[enroll] rejected submission — ${spam.reason}`, { ip: clientIp });
     return ApiResponse.validationError('A valid email is required');
   }
   if (spam.suspicions.length > 0) {
     console.warn('[enroll] accepted with suspicions', {
       ip: clientIp,
-      email: body.buyerEmail,
       suspicions: spam.suspicions,
     });
   }
@@ -194,7 +191,11 @@ export async function POST(request: NextRequest) {
   }
 
   if (insertErr || !inserted) {
-    console.error('Enrollment insert error:', insertErr);
+    // Code and message only: a Postgres error's `details` can quote the whole row.
+    console.error('Enrollment insert error:', {
+      code: insertErr?.code,
+      message: insertErr ? safeErrorMessage(insertErr) : 'no row returned',
+    });
     return ApiResponse.error('Could not create reservation');
   }
 
@@ -212,7 +213,7 @@ export async function POST(request: NextRequest) {
   // The buyer's own confirmation that the seat is held. Transactional: it goes
   // whatever the sales automation switch says, and never affects this response.
   afterResponse('academy reservation receipt', () =>
-    sendAcademyReservedReceipt(buyerEmail, {
+    sendAcademyReservedReceipt(buyerEmail, id, {
       buyerName,
       program: {
         title: typeof program.title === 'string' ? program.title : null,
@@ -254,9 +255,9 @@ export async function POST(request: NextRequest) {
     // without bouncing back to "Unknown error".
     const err = rzpErr as { message?: string; statusCode?: number; error?: { description?: string; code?: string; reason?: string } };
     console.error('Razorpay order create failed:', {
-      message: err?.message,
+      message: err?.message ? safeErrorMessage(err.message) : undefined,
       statusCode: err?.statusCode,
-      description: err?.error?.description,
+      description: err?.error?.description ? safeErrorMessage(err.error.description) : undefined,
       code: err?.error?.code,
       reason: err?.error?.reason,
     });
@@ -277,7 +278,7 @@ export async function POST(request: NextRequest) {
         actionUrl: '/admin/academy/enrollments',
       },
     })
-    .catch((err) => console.error('Inngest notification failed:', err));
+    .catch((err) => console.error('Inngest notification failed:', safeErrorMessage(err)));
 
   return ApiResponse.success(
     transformEnrollmentRow({ ...inserted, razorpay_order_id: razorpayMeta?.orderId }),

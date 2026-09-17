@@ -115,15 +115,25 @@ describe('sendTransactionalEmail', () => {
     });
   });
 
-  it.each(['bounced', 'complaint'])('silently skips an address suppressed as %s', async (reason) => {
+  it.each(['bounced', 'complaint', 'manual', 'deletion_request'])('silently skips an address suppressed as %s', async (reason) => {
     fake.respond((call) => (call.table === 'suppression_list' ? { data: [{ reason }], error: null } : { data: [], error: null }));
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
     const outcome = await sendTransactionalEmail({ to: ADDRESS, template: 'enquiry_receipt', email });
 
-    expect(outcome).toEqual({ sent: false, reason: 'undeliverable' });
+    expect(outcome).toEqual({ sent: false, reason: 'suppressed' });
     expect(mocks.send).not.toHaveBeenCalled();
     expect(error).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing when the do-not-contact list cannot be checked', async () => {
+    fake.respond(() => ({ data: null, error: { code: '57014', message: 'canceling statement due to statement timeout' } }));
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await expect(sendTransactionalEmail({ to: ADDRESS, template: 'enquiry_receipt', email })).resolves.toEqual({
+      sent: false,
+      reason: 'suppressed',
+    });
+    expect(mocks.send).not.toHaveBeenCalled();
   });
 
   it('still sends to an address that only unsubscribed from sales email', async () => {

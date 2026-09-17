@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { fake, payloadOf } from '@/test-utils/fake-supabase';
+import { eqValue, fake, payloadOf, type FakeCall } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
 import type { IntakeLead } from '@/lib/sales/types';
 import type { IngestResult } from '@/lib/sales/intake/ingest';
@@ -309,7 +309,7 @@ describe('POST /api/leads confirmation receipt', () => {
     expect(mocks.resendSend).not.toHaveBeenCalled();
   });
 
-  it.each(['bounced', 'complaint'])('sends nothing to an address suppressed as %s', async (reason) => {
+  it.each(['bounced', 'complaint', 'manual', 'deletion_request'])('sends nothing to an address suppressed as %s', async (reason) => {
     suppressedAs(reason);
 
     const res = await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: '' })));
@@ -327,6 +327,120 @@ describe('POST /api/leads confirmation receipt', () => {
     await flushAfterResponse();
 
     expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('POST /api/leads confirmation receipt: one per address per 24 hours', () => {
+  const T0 = new Date('2026-09-17T06:00:00.000Z');
+  const HOUR = 60 * 60 * 1000;
+
+  /** The first `.gte(column, value)` on a call. */
+  function gteValue(call: FakeCall, column: string): unknown {
+    return call.filters.find((f) => f.method === 'gte' && f.args[0] === column)?.args[1];
+  }
+
+  /**
+   * A lead_activities table that keeps what is written and answers the receipt
+   * check by applying the query's own lead, type and time filters.
+   */
+  function respondWithTimeline(): Array<Record<string, unknown>> {
+    const activities: Array<Record<string, unknown>> = [];
+    fake.respond((call) => {
+      if (call.table === 'lead_activities' && call.op === 'insert') {
+        activities.push(payloadOf(call));
+        return { data: null, error: null };
+      }
+      if (call.table === 'lead_activities' && call.op === 'select') {
+        const since = gteValue(call, 'occurred_at');
+        const matches = activities.filter(
+          (a) =>
+            a.lead_id === eqValue(call, 'lead_id') &&
+            a.type === eqValue(call, 'type') &&
+            typeof since === 'string' &&
+            String(a.occurred_at) >= since
+        );
+        return { data: matches.map((a) => ({ id: a.id })), error: null };
+      }
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ id: 'lead_1' }), error: null };
+      return { data: null, error: null };
+    });
+    return activities;
+  }
+
+  async function submitAt(at: Date): Promise<Response> {
+    vi.setSystemTime(at);
+    const res = await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: 'Content Marketing' })));
+    await flushAfterResponse();
+    return res;
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    // Every submission for this address lands on the same lead, as intake merges them.
+    mocks.ingestLead.mockResolvedValue({ leadId: 'lead_1', created: false });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    mocks.ingestLead.mockReset();
+    mocks.ingestLead.mockResolvedValue({ leadId: 'lead_new', created: true });
+  });
+
+  it('sends nothing for a second submission within 24 hours, and answers it exactly the same', async () => {
+    respondWithTimeline();
+
+    const first = await submitAt(T0);
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+
+    const second = await submitAt(new Date(T0.getTime() + 23 * HOUR + 59 * 60 * 1000));
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+
+    expect({ status: second.status, body: await second.json() }).toEqual({ status: first.status, body: await first.json() });
+  });
+
+  it('sends again once 24 hours have passed since the last confirmation', async () => {
+    const activities = respondWithTimeline();
+
+    await submitAt(T0);
+    await submitAt(new Date(T0.getTime() + 24 * HOUR + 60 * 1000));
+
+    expect(mocks.resendSend).toHaveBeenCalledTimes(2);
+    expect(activities.filter((a) => a.type === 'confirmation_sent')).toHaveLength(2);
+  });
+
+  it("checks the lead the submission merged into, not the address's first lead", async () => {
+    respondWithTimeline();
+    await submitAt(T0);
+
+    mocks.ingestLead.mockResolvedValueOnce({ leadId: 'lead_2', created: false });
+    await submitAt(new Date(T0.getTime() + HOUR));
+
+    expect(mocks.resendSend).toHaveBeenCalledTimes(2);
+  });
+
+  it('sends nothing when the check itself fails', async () => {
+    fake.respond((call) =>
+      call.table === 'lead_activities' && call.op === 'select'
+        ? { data: null, error: { code: '57014', message: 'canceling statement due to statement timeout' } }
+        : { data: null, error: null }
+    );
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const res = await submitAt(T0);
+    error.mockRestore();
+
+    expect(res.status).toBe(201);
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+  });
+
+  it('cannot cap the pre-migration fallback (no timeline table): it sends once per accepted submission', async () => {
+    mocks.ingestLead.mockRejectedValue({ code: 'PGRST204', message: "Could not find the 'consent_basis' column of 'leads' in the schema cache" });
+    respondWithTimeline();
+
+    await submitAt(T0);
+
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+    expect(fake.callsTo('lead_activities')).toHaveLength(0);
   });
 });
 
