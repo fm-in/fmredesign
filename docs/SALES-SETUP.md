@@ -84,9 +84,10 @@ Who does **not** get one:
   submission itself is still saved and shows up as usual. (Until the sales migration is applied
   there is no timeline to check, so this limit can't apply yet.)
 
-FM Academy reservations get no confirmation from here: **Reserve** opens Razorpay Checkout
+FM Academy checkouts get no confirmation from here: **Pay to book** opens Razorpay Checkout
 straight away, and a buyer who pays receives the payment confirmation sent after Razorpay
-confirms the payment.
+confirms the payment. There is no manual payment-link fallback; an unpaid checkout instead gets
+one reminder email an hour later (Inngest `academy-checkout-reminder`).
 
 ### Two booking links
 
@@ -243,9 +244,11 @@ would recognise, or leave `campaign` out.
 2. Open the lead: it has an owner, an AI brief, a "First touch within the hour" task and a
    **Confirmation email sent** entry on the timeline — and no follow-up email has been sent.
    No follow-up is emailed until you click Start follow-ups, whether or not automation is on.
-3. Before turning automation on, confirm the Inngest dashboard lists all four sales functions:
-   `sales-lead-created`, `sales-sequence`, `sales-meta-leadgen` and `sales-meeting-prep`.
-   If one is missing, resync the app in Inngest first.
+3. Before turning automation on, confirm the Inngest dashboard lists all four sales functions —
+   `sales-lead-created`, `sales-sequence`, `sales-meta-leadgen` and `sales-meeting-prep` — plus
+   `academy-checkout-reminder` (FM Academy's abandoned-checkout reminder; unrelated to sales
+   automation, but registered in the same Inngest app and synced the same way). If one is
+   missing, resync the app in Inngest first.
 4. Turn automation **on**. Submit again with a different email address you control.
 5. Follow-up emails go out only between 09:00 and 19:00 IST (confirmations are instant). A test started in the evening arrives the
    next morning — that's expected, not a fault.
