@@ -248,7 +248,7 @@ export const RECOMMENDATIONS: Record<string, Record<string, string>> = {
   },
   measurement: {
     at_risk:
-      'This is the most expensive gap on this page. Without it every other decision is a guess, and you will keep paying for whatever was loudest rather than whatever worked. Start crudely: a spreadsheet asking every new customer how they found you beats perfect analytics you never install.',
+      'This is the most expensive gap in your scorecard. Without it every other decision is a guess, and you will keep paying for whatever was loudest rather than whatever worked. Start crudely: a spreadsheet asking every new customer how they found you beats perfect analytics you never install.',
     patchy:
       'A rough guess feels like knowing and is not. Ask every enquiry how they found you and write the answer down for one month — the result usually surprises people.',
     solid:
@@ -264,6 +264,6 @@ export const RECOMMENDATIONS: Record<string, Record<string, string>> = {
     solid:
       'Same-day is a good standard. The gap now is the people who do not buy immediately: a simple follow-up a fortnight later recovers more than most expect.',
     strong:
-      'Fast and followed up. This is the part most businesses never get right — it compounds with everything else on this page.',
+      'Fast and followed up. This is the part most businesses never get right — it compounds with everything else in your scorecard.',
   },
 };

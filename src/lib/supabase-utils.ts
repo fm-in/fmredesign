@@ -169,9 +169,12 @@ export function normalizeMobileNumber(mobile: string): string {
 
 // ─── Role Permissions ───────────────────────────────────────
 
+// Stored on authorized_users when a user is created or re-roled. Sales access
+// follows the role, so nobody has to add sales.* to a user record by hand.
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: ['read', 'write', 'delete', 'admin', 'users', 'clients', 'projects', 'invoices', 'settings'],
-  manager: ['read', 'write', 'clients', 'projects', 'invoices'],
+  super_admin: ['read', 'write', 'delete', 'admin', 'users', 'clients', 'projects', 'invoices', 'settings', 'sales.read', 'sales.write'],
+  admin: ['read', 'write', 'delete', 'admin', 'users', 'clients', 'projects', 'invoices', 'settings', 'sales.read', 'sales.write'],
+  manager: ['read', 'write', 'clients', 'projects', 'invoices', 'sales.read', 'sales.write'],
   editor: ['read', 'write', 'clients', 'projects'],
   viewer: ['read'],
 };

@@ -6,6 +6,7 @@
 import type { NotificationType } from '@/lib/notifications';
 import type { AuditAction } from '@/lib/admin/audit-log';
 import type { EventType as PlatformEventType } from '@/lib/events/types';
+import type { SequenceStopReason } from '@/lib/sales/types';
 
 // ---------------------------------------------------------------------------
 // Event data types
@@ -106,6 +107,33 @@ export interface PlatformEventData {
   data?: Record<string, unknown>;
 }
 
+export interface SalesLeadEventData {
+  leadId: string;
+  source: string;
+}
+
+export interface SalesSequenceStartData {
+  leadId: string;
+  sequenceKey: string;
+}
+
+export interface SalesSequenceStopData {
+  leadId: string;
+  reason: SequenceStopReason;
+}
+
+export interface SalesMetaLeadgenData {
+  leadgenId: string;
+  pageId: string;
+  formId?: string;
+  adId?: string;
+}
+
+export interface SalesMeetingEventData {
+  meetingId: string;
+  leadId: string;
+}
+
 // ---------------------------------------------------------------------------
 // Inngest event map (used to type the client)
 // ---------------------------------------------------------------------------
@@ -121,4 +149,11 @@ export type InngestEvents = {
   'ai/generate-content': { data: AIGenerateContentData };
   'platform/event': { data: PlatformEventData };
   'invoice/auto-generate': { data: AutoInvoiceGenerateData };
+  'sales/lead.created': { data: SalesLeadEventData };
+  'sales/lead.resubmitted': { data: SalesLeadEventData };
+  'sales/sequence.start': { data: SalesSequenceStartData };
+  'sales/sequence.stop': { data: SalesSequenceStopData };
+  'sales/meta.leadgen': { data: SalesMetaLeadgenData };
+  'sales/meeting.booked': { data: SalesMeetingEventData };
+  'sales/meeting.cancelled': { data: SalesMeetingEventData };
 };

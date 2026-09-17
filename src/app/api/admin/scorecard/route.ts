@@ -11,17 +11,11 @@
 import { NextRequest } from 'next/server';
 import { ApiResponse } from '@/lib/api-response';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireAdminAuth } from '@/lib/admin-auth-middleware';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import type { DimensionResult } from '@/lib/scorecard/types';
-import { determineLeadPriority } from '@/lib/supabase-utils';
-import type {
-  BudgetRange,
-  CompanySize,
-  LeadSource,
-  LeadStatus,
-  ProjectType,
-  Timeline,
-} from '@/lib/admin/lead-types';
+import { ingestLead } from '@/lib/sales/intake/ingest';
+import { IntakeError } from '@/lib/sales/errors';
+import { safeErrorLog } from '@/lib/safe-log';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,8 +37,8 @@ interface SubmissionRow {
 }
 
 export async function GET(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'sales.read');
+  if ('error' in auth) return auth.error;
 
   const supabase = getSupabaseAdmin();
   const { searchParams } = new URL(request.url);
@@ -57,7 +51,7 @@ export async function GET(request: NextRequest) {
     .limit(limit);
 
   if (error) {
-    console.error('[admin/scorecard] list failed:', error);
+    console.error('[admin/scorecard] list failed:', safeErrorLog(error));
     return ApiResponse.error('Could not load submissions');
   }
 
@@ -78,8 +72,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  const auth = await requirePermission(request, 'sales.write');
+  if ('error' in auth) return auth.error;
 
   let body: { action?: string; id?: string };
   try {
@@ -107,64 +101,39 @@ export async function POST(request: NextRequest) {
     return ApiResponse.validationError('This submission has already been converted');
   }
 
-  // `leads` requires company, project_description and primary_challenge. The
-  // scorecard genuinely knows the challenge — it is the weakest dimension —
-  // so the converted lead carries real context rather than placeholder text.
   const weakest = row.dimension_scores?.[0];
-  const leadId = `lead_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+  // dimension_scores is stored worst-first and each entry carries the advice the
+  // person was shown for that dimension at its band (scoreScorecard). The
+  // scorecard_fix email quotes the weakest one.
+  const weakestFix = typeof weakest?.recommendation === 'string' ? weakest.recommendation.trim() : '';
+  const summary = (row.dimension_scores || []).map((d) => `${d.label}: ${d.score}/100`).join(' · ');
 
-  const summary = (row.dimension_scores || [])
-    .map((d) => `${d.label}: ${d.score}/100`)
-    .join(' · ');
-
-  // `leads` carries CHECK constraints on several of these columns that the
-  // schema snapshot does not record, so every value below is annotated with
-  // its union type — a wrong string is then a compile error rather than a
-  // runtime constraint violation discovered by a real user.
-  //
-  // The scorecard asks nothing about budget, timeline or company size, so
-  // those take the honest "not stated" member of each union rather than a
-  // flattering guess. `source` has no 'scorecard' member; the tag and
-  // custom_fields below keep these distinguishable from get-started leads.
-  const companySize: CompanySize = 'small_business';
-  const projectType: ProjectType = 'digital_marketing';
-  const budgetRange: BudgetRange = 'not_disclosed';
-  const timeline: Timeline = 'flexible';
-  const status: LeadStatus = 'new';
-  const source: LeadSource = 'other';
-
-  // A worse scorecard is a bigger opportunity, so the lead score inverts it.
-  // Priority comes from the shared helper so it can only ever be a valid
-  // member of LeadPriority.
-  const leadScore = 100 - row.overall_score;
-
-  const { error: insertErr } = await supabase.from('leads').insert({
-    id: leadId,
-    name: row.name,
-    email: row.email,
-    phone: row.phone,
-    company: row.company || 'Not given',
-    project_description: `Completed the marketing health scorecard, scoring ${row.overall_score}/100. ${summary}`,
-    primary_challenge: weakest ? `${weakest.label} (${weakest.score}/100)` : 'Not determined',
-    company_size: companySize,
-    project_type: projectType,
-    budget_range: budgetRange,
-    timeline: timeline,
-    status,
-    priority: determineLeadPriority(leadScore),
-    source,
-    lead_score: leadScore,
-    tags: ['scorecard'],
-    notes: '',
-    additional_challenges: [],
-    custom_fields: { scorecardId: row.id, scorecardBand: row.band },
-    // Carry attribution across rather than losing it at the boundary.
-    ip_address: row.ip_address,
-    user_agent: row.user_agent,
-  });
-
-  if (insertErr) {
-    console.error('[admin/scorecard] lead insert failed:', insertErr);
+  let leadId: string;
+  try {
+    ({ leadId } = await ingestLead({
+      name: row.name,
+      email: row.email,
+      phone: row.phone ?? undefined,
+      company: row.company ?? undefined,
+      message: `Completed the marketing health scorecard, scoring ${row.overall_score}/100. ${summary}`,
+      primaryChallenge: weakest ? `${weakest.label} (${weakest.score}/100)` : undefined,
+      source: 'scorecard',
+      sourceDetail: `Scorecard (${row.band})`,
+      consent: { basis: 'inbound_request', evidence: { scorecardId: row.id }, capturedAt: row.created_at },
+      customFields: {
+        scorecardId: row.id,
+        scorecardBand: row.band,
+        scorecardScore: row.overall_score,
+        ...(weakestFix ? { scorecardFix: weakestFix } : {}),
+      },
+      tags: ['scorecard'],
+      ipAddress: row.ip_address,
+      userAgent: row.user_agent,
+    }));
+  } catch (err) {
+    if (err instanceof IntakeError) return ApiResponse.validationError(err.message);
+    // Never the raw error: a Postgres error's details quote the row (email, phone).
+    console.error('[admin/scorecard] lead intake failed:', safeErrorLog(err));
     return ApiResponse.error('Could not create the lead');
   }
 
@@ -176,7 +145,7 @@ export async function POST(request: NextRequest) {
   if (linkErr) {
     // The lead exists; only the backlink failed. Surface it rather than
     // pretending the whole thing worked, or the two can silently diverge.
-    console.error('[admin/scorecard] backlink failed:', linkErr);
+    console.error('[admin/scorecard] backlink failed:', safeErrorLog(linkErr));
     return ApiResponse.error('Lead created, but linking it back to the submission failed');
   }
 

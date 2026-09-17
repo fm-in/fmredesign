@@ -18,6 +18,8 @@ interface LeadFiltersProps {
   onSortChange: (field: string, direction: 'asc' | 'desc') => void;
   viewMode: 'table' | 'cards';
   onViewModeChange: (mode: 'table' | 'cards') => void;
+  owner: 'mine' | 'unassigned' | undefined;
+  onOwnerChange: (owner: 'mine' | 'unassigned' | undefined) => void;
 }
 
 export function LeadFilters({
@@ -28,6 +30,8 @@ export function LeadFilters({
   onSortChange,
   viewMode,
   onViewModeChange,
+  owner,
+  onOwnerChange,
 }: LeadFiltersProps) {
   return (
     <DashboardCard variant="admin" className="p-4">
@@ -45,6 +49,19 @@ export function LeadFilters({
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
+          <Select
+            aria-label="Owner"
+            value={owner ?? ''}
+            onChange={(e) => {
+              const value = e.target.value;
+              onOwnerChange(value === 'mine' || value === 'unassigned' ? value : undefined);
+            }}
+          >
+            <option value="">All owners</option>
+            <option value="mine">My leads</option>
+            <option value="unassigned">Unassigned</option>
+          </Select>
+
           <Select
             value={`${sortBy}-${sortDirection}`}
             onChange={(e) => {

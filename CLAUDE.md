@@ -244,6 +244,50 @@ Event type constants: import from `src/lib/events/types.ts` (client-safe), NOT `
 
 Async APIs (`social/publish`, `content/generate`) return `{ status: 'queued' }` immediately.
 
+## Sales Automation
+
+Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`, amended by
+`docs/superpowers/specs/2026-09-16-manual-start-and-sequences-design.md`. Setup:
+`docs/SALES-SETUP.md`.
+
+- Apply `migrations/2026-09-15-sales-foundation.sql` before deploying
+- **Leads enter only through `ingestLead()`** (`src/lib/sales/intake/ingest.ts`). It normalises,
+  merges returning people, scores, records the submission and emits `sales/lead.created`.
+  Never `insert` into `leads` anywhere else. The one exception is the pre-migration fallback
+  insert in `POST /api/leads` (`saveBeforeMigration`), used only when the database lacks the
+  sales columns.
+- **Stage changes go only through `changeStage()`** (`src/lib/sales/activity.ts`) so history,
+  sequence stopping and `lead.status_changed` cannot be skipped.
+- **No automatic enrolment.** `salesLeadCreatedFn` only assigns an owner, writes the AI brief
+  and creates the first-touch task — it never starts a sequence. A person starts one via
+  `POST /api/admin/sales/leads/[id]/sequence` with `{ action: 'start', sequenceKey }`, which
+  is what sends `sales/sequence.start`.
+- **`src/lib/sales/sequence.ts`** is the single source of truth for the four sets: `SEQUENCES`
+  (keyed `brief-v1`, `enquiry-v1`, `ad-lead-v1`, `scorecard-v1`) and `getSequence(key)`.
+  `recommendSequence(lead)` maps a lead's source (and, for `website_form`, its form name) to
+  the recommended key, or `null`. `sequenceStartState(lead, check)` is the one place the seven
+  reasons Start can be refused live, checked in order: no email address, an ad-platform test
+  lead (tagged `test`), a lead that booked a call directly (`cal_booking`), the do-not-contact
+  list, no consent, a sequence already run, automation off. The start route and the lead
+  detail payload both call it, so the panel can never offer a button the route then rejects.
+- **Sales email goes only through `sendSalesEmail()`**: it checks consent, the do-not-contact
+  list and configuration at send time. Resend is never used for cold email. Every sales email
+  renders through `renderShell()` in `src/lib/sales/email-shell.ts` (branded header/footer,
+  plain-text alternative kept).
+- **Webhooks** live at `/api/webhooks/sales/[source]` with one adapter per source in
+  `src/lib/sales/intake/adapters/`. Verify first, log with the delivery id, then handle.
+  Throw `WebhookRejection` for payloads that will never succeed (400, no retry).
+- No sales email is sent to a lead unless `admin_settings.sales.automationEnabled` is true.
+- **Confirmation receipts** (contact and get-started forms) go only through
+  `sendTransactionalEmail()` (`src/lib/sales/transactional-email.ts`, copy in `receipts.ts`),
+  scheduled with `afterResponse()` so they never delay or fail the form. They are not
+  sequences, bypass `automationEnabled`, and carry no unsubscribe link.
+- Admin sales routes use `sales.read` / `sales.write`; managers see their own and unassigned
+  leads (`canAccessLead`).
+- Tables: `lead_activities`, `sales_tasks`, `meetings`, `suppression_list` (+ sales columns on
+  `leads`) from `migrations/2026-09-15-sales-foundation.sql`.
+- Tests use `src/test-utils/fake-supabase.ts` and `src/test-utils/lead-row.ts`.
+
 ## Invoice & Proposal System
 
 ### Invoices
@@ -321,6 +365,7 @@ RESEND_API_KEY, NOTIFICATION_EMAIL          # Email (Resend)
 META_TOKEN_SECRET                            # Social publishing (min 32 chars)
 INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY       # Background jobs (prod only)
 GOOGLE_SHEETS_PRIVATE_KEY, GOOGLE_SHEETS_CLIENT_EMAIL, GOOGLE_SHEETS_SPREADSHEET_ID  # Legacy
+# Sales automation (optional): see docs/SALES-SETUP.md — SALES_LINK_SECRET, SALES_REPLY_TO, SALES_FROM_EMAIL, RESEND_WEBHOOK_SECRET, META_APP_SECRET, META_LEADS_VERIFY_TOKEN, GOOGLE_ADS_LEAD_KEY, CALCOM_WEBHOOK_SECRET, LEAD_CONNECTOR_SECRET
 ```
 
 ## Workflow Rules

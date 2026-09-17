@@ -11,13 +11,14 @@ export class DiscoveryService {
 
   // ===== DISCOVERY SESSION MANAGEMENT =====
 
-  static async createDiscoverySession(clientId: string | null, template?: DiscoveryTemplate): Promise<DiscoverySession> {
+  static async createDiscoverySession(clientId: string | null, template?: DiscoveryTemplate, leadId?: string): Promise<DiscoverySession> {
     const sessionId = `discovery-${Date.now()}`;
     const templateConfig = template ? DISCOVERY_TEMPLATES[template] : DISCOVERY_TEMPLATES.custom;
-    
+
     const newSession: DiscoverySession = {
       id: sessionId,
       clientId: clientId || `anonymous-${Date.now()}`,
+      leadId,
       status: 'draft',
       currentSection: 1,
       completedSections: [],
