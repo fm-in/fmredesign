@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fake } from '@/test-utils/fake-supabase';
+import { eqValue, fake } from '@/test-utils/fake-supabase';
 
 type SendResult = { data: { id: string } | null; error: { message: string; name?: string } | null };
 
@@ -91,7 +91,7 @@ describe('sendTransactionalEmail', () => {
 
   it('replies to NOTIFICATION_EMAIL until SALES_REPLY_TO is configured', async () => {
     process.env.NOTIFICATION_EMAIL = 'team@freakingminds.in';
-    await sendTransactionalEmail({ to: ADDRESS, template: 'academy_reserved', email });
+    await sendTransactionalEmail({ to: ADDRESS, template: 'enquiry_receipt', email });
     expect(sentPayload().replyTo).toBe('team@freakingminds.in');
   });
 
@@ -136,6 +136,19 @@ describe('sendTransactionalEmail', () => {
     expect(mocks.send).not.toHaveBeenCalled();
   });
 
+  it('silently skips when the phone submitted with the address has a blocking entry', async () => {
+    fake.respond((call) =>
+      call.table === 'suppression_list' && eqValue(call, 'phone_e164') === '+919833257659'
+        ? { data: [{ reason: 'deletion_request' }], error: null }
+        : { data: [], error: null }
+    );
+
+    await expect(
+      sendTransactionalEmail({ to: ADDRESS, phoneE164: '+919833257659', template: 'enquiry_receipt', email })
+    ).resolves.toEqual({ sent: false, reason: 'suppressed' });
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
   it('still sends to an address that only unsubscribed from sales email', async () => {
     fake.respond((call) => (call.table === 'suppression_list' ? { data: [{ reason: 'unsubscribed' }], error: null } : { data: [], error: null }));
     await expect(sendTransactionalEmail({ to: ADDRESS, template: 'enquiry_receipt', email })).resolves.toMatchObject({ sent: true });
@@ -161,7 +174,7 @@ describe('sendTransactionalEmail', () => {
     mocks.send.mockRejectedValueOnce(new Error(`fetch failed for ${ADDRESS}`));
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    await expect(sendTransactionalEmail({ to: ADDRESS, template: 'academy_reserved', email })).resolves.toEqual({
+    await expect(sendTransactionalEmail({ to: ADDRESS, template: 'enquiry_receipt', email })).resolves.toEqual({
       sent: false,
       reason: 'failed',
     });

@@ -35,9 +35,24 @@ export function safeErrorMessage(error: unknown): string {
   return blankContactDetails(message);
 }
 
-/** The error's code (when it has one) and its blanked message. `details` and `hint` are never included. */
-export function safeErrorLog(error: unknown): { code?: string; message: string } {
-  const code =
-    typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string' ? error.code : undefined;
-  return code ? { code, message: safeErrorMessage(error) } : { message: safeErrorMessage(error) };
+function stringField(error: unknown, key: 'code' | 'name'): string | undefined {
+  if (typeof error !== 'object' || error === null || !(key in error)) return undefined;
+  const value: unknown = (error as Record<string, unknown>)[key];
+  return typeof value === 'string' && value ? blankContactDetails(value) : undefined;
+}
+
+/**
+ * The error's code (a PostgREST or Postgres code), its name (a Resend error
+ * name such as "validation_error", or an Error subclass — the generic "Error"
+ * is left out) and its blanked message. Only those three fields are read, so
+ * `details`, `hint`, `cause` and circular references never reach a log.
+ */
+export function safeErrorLog(error: unknown): { code?: string; name?: string; message: string } {
+  const code = stringField(error, 'code');
+  const name = stringField(error, 'name');
+  return {
+    ...(code ? { code } : {}),
+    ...(name && name !== 'Error' ? { name } : {}),
+    message: safeErrorMessage(error),
+  };
 }

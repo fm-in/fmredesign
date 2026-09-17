@@ -278,7 +278,7 @@ Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`, amended by
   `src/lib/sales/intake/adapters/`. Verify first, log with the delivery id, then handle.
   Throw `WebhookRejection` for payloads that will never succeed (400, no retry).
 - No sales email is sent to a lead unless `admin_settings.sales.automationEnabled` is true.
-- **Confirmation receipts** (contact, get-started, Academy reservation) go only through
+- **Confirmation receipts** (contact and get-started forms) go only through
   `sendTransactionalEmail()` (`src/lib/sales/transactional-email.ts`, copy in `receipts.ts`),
   scheduled with `afterResponse()` so they never delay or fail the form. They are not
   sequences, bypass `automationEnabled`, and carry no unsubscribe link.

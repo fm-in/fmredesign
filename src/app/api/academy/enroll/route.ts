@@ -19,9 +19,6 @@
  *   - Creates a Razorpay order and writes the order_id back to the row so the
  *     webhook can look up the enrollment on `payment.captured`.
  *   - Notifies admins so the new reservation surfaces in the dashboard.
- *   - Sends the buyer an instant reservation receipt, after the response, so
- *     a failed send can never delay or change it. The paid confirmation is
- *     separate and still comes from the Razorpay webhook.
  *
  * No auth — this is the public conversion endpoint. Three layers of abuse
  * control: a per-IP rate limit (3/min), a honeypot + email-pattern spam
@@ -42,8 +39,6 @@ import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
 import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { notifyAdmins } from '@/lib/notifications';
-import { sendAcademyReservedReceipt } from '@/lib/sales/receipts';
-import { afterResponse } from '@/lib/sales/transactional-email';
 import { safeErrorLog, safeErrorMessage } from '@/lib/safe-log';
 
 function isLikelyEmail(s: string): boolean {
@@ -97,7 +92,7 @@ export async function POST(request: NextRequest) {
 
   const { data: program, error: programErr } = await supabase
     .from('programs')
-    .select('id, slug, title, status, price_inr, early_bird_price_inr, early_bird_until, currency, seats_total, seats_taken, starts_at')
+    .select('id, title, status, price_inr, early_bird_price_inr, early_bird_until, currency, seats_total, seats_taken')
     .eq('id', programId)
     .single();
 
@@ -207,19 +202,6 @@ export async function POST(request: NextRequest) {
     priority: 'high',
     actionUrl: '/admin/academy/enrollments',
   });
-
-  // The buyer's own confirmation that the seat is held. Transactional: it goes
-  // whatever the sales automation switch says, and never affects this response.
-  afterResponse('academy reservation receipt', () =>
-    sendAcademyReservedReceipt({ buyerEmail, programId, enrollmentId: id }, {
-      buyerName,
-      program: {
-        title: typeof program.title === 'string' ? program.title : null,
-        slug: typeof program.slug === 'string' ? program.slug : null,
-        startsAt: typeof program.starts_at === 'string' ? program.starts_at : null,
-      },
-    })
-  );
 
   // Create the Razorpay order. If this fails the reservation row is left in
   // place (admin can still process manually via Phase 1 fallback). We return

@@ -104,14 +104,17 @@ export function parseWeakestChallenge(value: string | null | undefined): { area:
  * `custom_fields.scorecardFix`. Used only when it is one of the scorecard's
  * own recommendations for that very area: a public form merged into the lead
  * later can add `custom_fields` keys, and posted text must never be quoted in
- * an email sent in the owner's name. Anything else leaves the original copy.
+ * an email sent in the owner's name. Advice for the `strong` band is left out
+ * too: it praises rather than fixes, so "Here's where I'd start:" would not
+ * fit. Anything left out gets the original approved copy.
  */
 function scorecardFix(cf: Record<string, unknown>, weakestArea: string | undefined): string | undefined {
   const fix = readCustomString(cf, 'scorecardFix');
   if (!fix || !weakestArea) return undefined;
   const dimension = DIMENSIONS.find((candidate) => candidate.label === weakestArea);
-  const advice = dimension && Object.hasOwn(RECOMMENDATIONS, dimension.id) ? Object.values(RECOMMENDATIONS[dimension.id]) : [];
-  return advice.includes(fix) ? fix : undefined;
+  if (!dimension || !Object.hasOwn(RECOMMENDATIONS, dimension.id)) return undefined;
+  const band = Object.entries(RECOMMENDATIONS[dimension.id]).find(([, advice]) => advice === fix)?.[0];
+  return band && band !== 'strong' ? fix : undefined;
 }
 
 /** A known project type as a phrase; undefined for anything else. */

@@ -13,10 +13,9 @@ const mocks = vi.hoisted(() => ({
   notifyAdmins: vi.fn(async () => undefined),
   notifyTeam: vi.fn(),
   user: { id: 'user-1', name: 'Asha', role: 'manager', permissions: ['sales.read', 'sales.write'] },
-  resendSend: vi.fn<(payload: Record<string, unknown>, options?: unknown) => Promise<SendResult>>(async () => ({
-    data: { id: 'resend_rcpt_1' },
-    error: null,
-  })),
+  resendSend: vi.fn<(payload: Record<string, unknown>, options?: unknown) => Promise<SendResult>>(),
+  /** Payloads Resend accepted — a successful send, as opposed to a call that failed. */
+  delivered: [] as Array<Record<string, unknown>>,
   /** Work handed to next/server `after()` — it runs only once the test flushes it, i.e. after the response. */
   afterTasks: [] as Array<() => Promise<void>>,
 }));
@@ -83,7 +82,12 @@ async function flushAfterResponse(): Promise<void> {
 beforeEach(() => {
   fake.reset();
   mocks.afterTasks.length = 0;
-  mocks.resendSend.mockClear();
+  mocks.delivered.length = 0;
+  mocks.resendSend.mockReset();
+  mocks.resendSend.mockImplementation(async (payload) => {
+    mocks.delivered.push(payload);
+    return { data: { id: 'resend_rcpt_1' }, error: null };
+  });
   mocks.ingestLead.mockClear();
   mocks.notifyAdmins.mockClear();
   mocks.notifyTeam.mockClear();
@@ -265,12 +269,10 @@ describe('POST /api/leads confirmation receipt', () => {
     mocks.ingestLead.mockRejectedValueOnce(MIGRATION_MISSING);
     outcomes.push(await responseOf(await POST(postLead(getStartedBody({ name: 'Meera Iyer', email: 'meera@example.com', projectType: 'web_app' })))));
 
-    mocks.resendSend.mockRejectedValue(new Error('Resend is down'));
+    mocks.resendSend.mockRejectedValueOnce(new Error('Resend is down'));
     const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     outcomes.push(await responseOf(await POST(postLead(getStartedBody({ name: 'Meera Iyer', email: 'meera@example.com', projectType: 'web_app' })))));
     await expect(flushAfterResponse()).resolves.toBeUndefined();
-    mocks.resendSend.mockReset();
-    mocks.resendSend.mockResolvedValue({ data: { id: 'resend_rcpt_1' }, error: null });
     error.mockRestore();
 
     expect(outcomes).toEqual([GENERIC, GENERIC, GENERIC, GENERIC]);
@@ -321,13 +323,31 @@ describe('POST /api/leads confirmation receipt', () => {
     expect(confirmationActivities()).toHaveLength(0);
   });
 
+  it('sends nothing when the phone submitted with the form has a phone-only deletion request', async () => {
+    fake.respond((call) => {
+      if (call.table === 'suppression_list') {
+        return { data: eqValue(call, 'phone_e164') === '+919833257659' ? [{ reason: 'deletion_request' }] : [], error: null };
+      }
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ id: 'lead_new' }), error: null };
+      return { data: null, error: null };
+    });
+
+    const res = await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', phone: '98332 57659', service: '' })));
+    expect(await responseOf(res)).toEqual(GENERIC);
+    await flushAfterResponse();
+
+    expect(mocks.resendSend).not.toHaveBeenCalled();
+    const phoneLookup = fake.callsTo('suppression_list', 'select').find((call) => eqValue(call, 'phone_e164') !== undefined);
+    expect(phoneLookup && eqValue(phoneLookup, 'phone_e164')).toBe('+919833257659');
+  });
+
   it('still sends to an address that unsubscribed from sales email: re-submitting is a fresh request', async () => {
     suppressedAs('unsubscribed');
 
     await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: '' })));
     await flushAfterResponse();
 
-    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+    expect(mocks.delivered).toHaveLength(1);
   });
 });
 
@@ -391,10 +411,10 @@ describe('POST /api/leads confirmation receipt: one per address per 24 hours', (
     respondWithTimeline();
 
     const first = await submitAt(T0);
-    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+    expect(mocks.delivered).toHaveLength(1);
 
     const second = await submitAt(new Date(T0.getTime() + 23 * HOUR + 59 * 60 * 1000));
-    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+    expect(mocks.delivered).toHaveLength(1);
 
     expect({ status: second.status, body: await second.json() }).toEqual({ status: first.status, body: await first.json() });
   });
@@ -405,7 +425,7 @@ describe('POST /api/leads confirmation receipt: one per address per 24 hours', (
     await submitAt(T0);
     await submitAt(new Date(T0.getTime() + 24 * HOUR + 60 * 1000));
 
-    expect(mocks.resendSend).toHaveBeenCalledTimes(2);
+    expect(mocks.delivered).toHaveLength(2);
     expect(activities.filter((a) => a.type === 'confirmation_sent')).toHaveLength(2);
   });
 
@@ -416,7 +436,7 @@ describe('POST /api/leads confirmation receipt: one per address per 24 hours', (
     mocks.ingestLead.mockResolvedValueOnce({ leadId: 'lead_2', created: false });
     await submitAt(new Date(T0.getTime() + HOUR));
 
-    expect(mocks.resendSend).toHaveBeenCalledTimes(2);
+    expect(mocks.delivered).toHaveLength(2);
   });
 
   it('sends nothing when the check itself fails', async () => {
@@ -440,7 +460,7 @@ describe('POST /api/leads confirmation receipt: one per address per 24 hours', (
 
     await submitAt(T0);
 
-    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+    expect(mocks.delivered).toHaveLength(1);
     expect(fake.callsTo('lead_activities')).toHaveLength(0);
   });
 });

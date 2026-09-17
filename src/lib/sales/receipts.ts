@@ -1,22 +1,22 @@
 /**
  * Confirmation receipts: the instant "we've got it" email for a contact-page
- * enquiry, a get-started brief, or an Academy seat reservation. Copy is
- * owner-approved (approved-copy.md, addendum of 2026-09-17) — change it only
- * with the owner.
+ * enquiry or a get-started brief. Copy is owner-approved (approved-copy.md,
+ * addendum of 2026-09-17) — change it only with the owner. There is no Academy
+ * receipt: Reserve opens Razorpay Checkout at once, and the paid confirmation
+ * comes from the Razorpay webhook.
  *
  * Receipts are transactional, not sales email: they go through
  * `sendTransactionalEmail`, belong to no sequence, and are sent whatever
  * `automationEnabled` says.
  */
 
-import { batchSchedule } from '@/lib/academy/schedule';
 import { recordActivity } from '@/lib/sales/activity';
 import { firstNameOf, NO_FIRST_NAME, renderEmailCopy, TEAM_SIGNATURE, type EmailCopy, type RenderedEmail } from '@/lib/sales/emails';
 import { companyWhatsappUrl } from '@/lib/sales/links';
+import { toE164 } from '@/lib/sales/phone';
 import { projectTypePhrase } from '@/lib/sales/send-email';
 import { sendTransactionalEmail } from '@/lib/sales/transactional-email';
-import { safeErrorMessage } from '@/lib/safe-log';
-import { SITE_URL } from '@/lib/site-url';
+import { safeErrorLog } from '@/lib/safe-log';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 /**
@@ -45,7 +45,7 @@ async function confirmedRecently(leadId: string): Promise<boolean> {
     .gte('occurred_at', capStart())
     .limit(1);
   if (error) {
-    console.error('[receipts] could not check for a recent confirmation:', safeErrorMessage(error));
+    console.error('[receipts] could not check for a recent confirmation:', safeErrorLog(error));
     return true;
   }
   return Array.isArray(data) && data.length > 0;
@@ -71,6 +71,8 @@ export const CONTACT_SERVICE_PHRASES: Readonly<Record<string, string>> = {
 export interface EnquirySubmission {
   name: string;
   email: string;
+  /** As typed. Only its E.164 form is used, to check the do-not-contact list. */
+  phone?: string;
   projectType?: string;
   customFields?: Record<string, unknown>;
 }
@@ -93,9 +95,10 @@ function enquiryProject(submission: EnquirySubmission): string | undefined {
 
 export function renderEnquiryReceipt(submission: EnquirySubmission): RenderedEmail {
   const firstName = firstNameOf(submission.name);
-  const hasName = firstName !== NO_FIRST_NAME;
+  // Only the checked first name, never the rest of the submitted name: it is
+  // unbounded free text, and this link goes to whatever address was typed in.
   const whatsappUrl = companyWhatsappUrl(
-    hasName ? `Hi, this is ${submission.name.trim()}. I sent an enquiry on your website` : 'Hi, I sent an enquiry on your website'
+    firstName !== NO_FIRST_NAME ? `Hi, this is ${firstName}. I sent an enquiry on your website` : 'Hi, I sent an enquiry on your website'
   );
   const project = enquiryProject(submission);
 
@@ -123,7 +126,12 @@ export async function sendEnquiryReceipt(submission: EnquirySubmission, leadId: 
   if (leadId && (await confirmedRecently(leadId))) return;
 
   const email = renderEnquiryReceipt(submission);
-  const outcome = await sendTransactionalEmail({ to: submission.email, template: 'enquiry_receipt', email });
+  const outcome = await sendTransactionalEmail({
+    to: submission.email,
+    phoneE164: toE164(submission.phone),
+    template: 'enquiry_receipt',
+    email,
+  });
   if (!outcome.sent || !leadId) return;
 
   await recordActivity({
@@ -135,96 +143,5 @@ export async function sendEnquiryReceipt(submission: EnquirySubmission, leadId: 
     body: email.text,
     providerMessageId: outcome.messageId,
     metadata: { template: 'enquiry_receipt' },
-  });
-}
-
-/** A new Academy reservation, from what `POST /api/academy/enroll` already loads. */
-export interface AcademyReservation {
-  buyerName: string;
-  program: {
-    title: string | null;
-    slug: string | null;
-    /** `programs.starts_at` */
-    startsAt: string | null;
-  };
-}
-
-/**
- * The start date as India reads it ("12 October 2026"), only while it is still
- * ahead — the same rule the Academy pages follow, so a stale `starts_at` is
- * never claimed.
- */
-function upcomingStartDate(startsAt: string | null): string | undefined {
-  if (!startsAt || !batchSchedule(startsAt).isUpcoming) return undefined;
-  return new Date(startsAt).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'Asia/Kolkata',
-  });
-}
-
-export function renderAcademyReserved({ buyerName, program }: AcademyReservation): RenderedEmail {
-  const programName = program.title?.trim() || undefined;
-  const slug = program.slug?.trim();
-  const startDate = upcomingStartDate(program.startsAt);
-  const seat = programName ? `Your seat on ${programName}` : 'Your seat';
-
-  const copy: EmailCopy = {
-    subject: `${seat} is reserved`,
-    preheader: "We'll send your payment link shortly.",
-    paragraphs: [
-      `Hi ${firstNameOf(buyerName)},`,
-      `${seat} is reserved${startDate ? `, starting ${startDate}` : ''}.`,
-      "We'll send your payment link shortly — your seat is confirmed once payment is complete.",
-      'Questions? Just reply to this email.',
-    ],
-    cta: { label: 'View the programme', url: slug ? `${SITE_URL}/academy/${encodeURIComponent(slug)}` : `${SITE_URL}/academy` },
-  };
-  return renderEmailCopy(copy, { ownerName: TEAM_SIGNATURE });
-}
-
-/** The reservation just created, which the receipt confirms. */
-export interface NewReservation {
-  buyerEmail: string;
-  programId: string;
-  /** The new `enrollments.id`, which the cap check leaves out. */
-  enrollmentId: string;
-}
-
-/**
- * Whether the buyer made another reservation for the same programme (any
- * status) within the cap. `enrollments` records no sent receipts, so an earlier
- * reservation stands in for one. Keyed on buyer and programme, so reserving two
- * programmes on the same day confirms both; the route already reuses a live
- * reservation for the same pair, so in practice this is one receipt per
- * reservation. A failed check counts as recent, as for enquiries.
- */
-async function reservedRecently({ buyerEmail, programId, enrollmentId }: NewReservation): Promise<boolean> {
-  const { data, error } = await getSupabaseAdmin()
-    .from('enrollments')
-    .select('id')
-    .eq('buyer_email', buyerEmail.trim().toLowerCase())
-    .eq('program_id', programId)
-    .neq('id', enrollmentId)
-    .gte('created_at', capStart())
-    .limit(1);
-  if (error) {
-    console.error('[receipts] could not check for a recent reservation:', safeErrorMessage(error));
-    return true;
-  }
-  return Array.isArray(data) && data.length > 0;
-}
-
-/**
- * Sends the reservation receipt to the buyer, unless they already reserved
- * this programme within `RECEIPT_CAP_MS`. Never throws.
- */
-export async function sendAcademyReservedReceipt(reservationMade: NewReservation, reservation: AcademyReservation): Promise<void> {
-  if (await reservedRecently(reservationMade)) return;
-  await sendTransactionalEmail({
-    to: reservationMade.buyerEmail,
-    template: 'academy_reserved',
-    email: renderAcademyReserved(reservation),
   });
 }

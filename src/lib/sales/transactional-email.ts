@@ -1,6 +1,6 @@
 /**
  * Transactional email: a receipt for something the person has just done —
- * sent an enquiry, reserved an Academy seat. It is not sales email: it belongs
+ * today, sending an enquiry. It is not sales email: it belongs
  * to no sequence, is sent whatever `automationEnabled` says, and carries no
  * unsubscribe link or List-Unsubscribe header. It never reaches an address on
  * the do-not-contact list for any reason but an unsubscribe (`blocksReceipts`).
@@ -12,16 +12,18 @@
 
 import { after } from 'next/server';
 import { getResend } from '@/lib/email/resend';
-import { safeErrorMessage } from '@/lib/safe-log';
+import { safeErrorLog } from '@/lib/safe-log';
 import type { RenderedEmail } from '@/lib/sales/emails';
 import { SALES_FROM_DEFAULT } from '@/lib/sales/send-email';
 import { blocksReceipts } from '@/lib/sales/suppression';
 
-export type TransactionalTemplate = 'enquiry_receipt' | 'academy_reserved';
+export type TransactionalTemplate = 'enquiry_receipt';
 
 export interface TransactionalEmail {
   /** The address the person submitted. Nothing is sent without one. */
   to: string | null | undefined;
+  /** The phone the person submitted, in E.164. A blocking do-not-contact entry for it stops the send too. */
+  phoneE164?: string | null;
   template: TransactionalTemplate;
   email: RenderedEmail;
 }
@@ -30,7 +32,7 @@ export type TransactionalOutcome =
   | { sent: true; messageId: string }
   | { sent: false; reason: 'no_email' | 'not_configured' | 'suppressed' | 'failed' };
 
-export async function sendTransactionalEmail({ to, template, email }: TransactionalEmail): Promise<TransactionalOutcome> {
+export async function sendTransactionalEmail({ to, phoneE164, template, email }: TransactionalEmail): Promise<TransactionalOutcome> {
   try {
     const address = to?.trim();
     if (!address) return { sent: false, reason: 'no_email' };
@@ -38,9 +40,9 @@ export async function sendTransactionalEmail({ to, template, email }: Transactio
     const resend = getResend();
     if (!resend) return { sent: false, reason: 'not_configured' };
 
-    // Silently: only an address that is not on the do-not-contact list, or is on
-    // it solely for unsubscribing, gets a receipt.
-    if (await blocksReceipts(address)) return { sent: false, reason: 'suppressed' };
+    // Silently: only a person whose address and phone are not on the do-not-contact
+    // list, or are on it solely for unsubscribing, gets a receipt.
+    if (await blocksReceipts({ email: address, phoneE164 })) return { sent: false, reason: 'suppressed' };
 
     const { data, error } = await resend.emails.send({
       from: process.env.SALES_FROM_EMAIL || SALES_FROM_DEFAULT,
@@ -53,12 +55,12 @@ export async function sendTransactionalEmail({ to, template, email }: Transactio
     });
 
     if (error || !data) {
-      console.error(`[receipts] ${template} send failed:`, safeErrorMessage(error ?? 'no response from Resend'));
+      console.error(`[receipts] ${template} send failed:`, safeErrorLog(error ?? 'no response from Resend'));
       return { sent: false, reason: 'failed' };
     }
     return { sent: true, messageId: data.id };
   } catch (err) {
-    console.error(`[receipts] ${template} send failed:`, safeErrorMessage(err));
+    console.error(`[receipts] ${template} send failed:`, safeErrorLog(err));
     return { sent: false, reason: 'failed' };
   }
 }
@@ -74,7 +76,7 @@ export function afterResponse(label: string, task: () => Promise<unknown>): void
     try {
       await task();
     } catch (err) {
-      console.error(`[receipts] ${label} failed:`, safeErrorMessage(err));
+      console.error(`[receipts] ${label} failed:`, safeErrorLog(err));
     }
   };
 

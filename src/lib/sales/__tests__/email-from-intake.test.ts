@@ -463,6 +463,30 @@ describe('scorecard emails from a real converted scorecard submission', () => {
       expect(email.html).not.toMatch(/<p[^>]*>\s*<\/p>/);
     });
 
+    it('a scorecard whose weakest area is still strong gets the original approved copy, not the praise', async () => {
+      // Content answered 3 and 2 (83/100, strong); every other dimension 100.
+      const answers = Object.fromEntries(
+        QUESTIONS.map((question) => {
+          const contentQuestions = QUESTIONS.filter((q) => q.dimension === 'content');
+          const wanted = question.id === contentQuestions[1]?.id ? 2 : 3;
+          return [question.id, question.options.find((o) => o.score === wanted)?.value ?? ''];
+        })
+      );
+      const weakest = scoreScorecard(answers).dimensions[0];
+      expect(weakest).toMatchObject({ id: 'content', band: 'strong' });
+
+      const { lead } = await convert(answers);
+      expect(lead.custom_fields).toMatchObject({ scorecardFix: RECOMMENDATIONS.content?.strong });
+
+      const email = await emailFor(lead, 'scorecard_fix');
+      expect(email.html).toContain('Usually the simplest one, not more budget.</div>');
+      expect(email.text).toContain(
+        `On ${weakest?.label}, the fix that usually moves the needle first is the simplest one — and it's rarely more budget.`
+      );
+      expect(email.text).not.toContain(RECOMMENDATIONS.content?.strong);
+      expectNoInternalValues(email);
+    });
+
     it('a scorecard lead converted before the advice was stored gets the original approved copy', async () => {
       const { lead } = await convert(weakestIn('measurement', 0));
       const { scorecardFix: stored, ...before } = lead.custom_fields as Record<string, unknown>;

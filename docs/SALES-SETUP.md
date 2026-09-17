@@ -57,17 +57,14 @@ seven, checked in this order:
 
 ### Confirmation emails
 
-Anyone who submits the **contact form**, the **get-started form** or an **Academy "Reserve
-seat"** gets an instant confirmation email, whatever the automation switch is set to. It is a
-receipt for what they just did, not a follow-up: it isn't part of any set, doesn't wait for
-Start follow-ups, and isn't held to the 09:00–19:00 IST window.
+Anyone who submits the **contact form** or the **get-started form** gets an instant
+confirmation email, whatever the automation switch is set to. It is a receipt for what they
+just did, not a follow-up: it isn't part of any set, doesn't wait for Start follow-ups, and
+isn't held to the 09:00–19:00 IST window.
 
-- **Contact and get-started:** "We've got your enquiry" — thanks them, names what they asked
-  about when it's known, promises a reply within 24 hours and links to WhatsApp. When a lead
-  exists it appears on the lead's timeline as **Confirmation email sent**.
-- **Academy reservation:** "Your seat on {programme} is reserved" — the start date when one is
-  still ahead, a note that the payment link follows, and a link to the programme page. The
-  payment confirmation after Razorpay is a separate email and is unchanged.
+"We've got your enquiry" thanks them by first name, names what they asked about when it's
+known, promises a reply within 24 hours and links to WhatsApp. When a lead exists it appears
+on the lead's timeline as **Confirmation email sent**.
 
 Replies to a confirmation go to `SALES_REPLY_TO`, or to the notification inbox
 (`NOTIFICATION_EMAIL`) until that is configured. If sending fails, the submission still goes
@@ -77,17 +74,19 @@ Who does **not** get one:
 
 - **Anyone on the do-not-contact list**, unless the only reason they're on it is that they
   unsubscribed from follow-ups. An address that bounced, marked FreakingMinds as spam, asked
-  for its data to be deleted, or was added by hand is never sent a confirmation. Someone who
-  merely unsubscribed still gets one — submitting a form again is a fresh request to be
-  contacted.
+  for its data to be deleted, or was added by hand is never sent a confirmation — and neither
+  is a submission whose phone number is on the list for one of those reasons. Entries match
+  whatever capitals they were typed with. Someone who merely unsubscribed still gets one —
+  submitting a form again is a fresh request to be contacted.
 - **Anyone who already got one in the last 24 hours.** A public form will email any address
   typed into it, so each address gets at most one confirmation a day: a repeat contact or
-  get-started submission within 24 hours of the last confirmation on that lead gets none. For
-  the Academy the limit is per programme — reserving two different programmes on the same day
-  confirms both, but reserving the same programme again within 24 hours sends no second
-  confirmation. The submission itself is still saved and shows up as usual. (Until the sales migration is
-  applied there is no timeline to check, so this limit can't apply to contact and get-started
-  confirmations yet.)
+  get-started submission within 24 hours of the last confirmation on that lead gets none. The
+  submission itself is still saved and shows up as usual. (Until the sales migration is applied
+  there is no timeline to check, so this limit can't apply yet.)
+
+FM Academy reservations get no confirmation from here: **Reserve** opens Razorpay Checkout
+straight away, and a buyer who pays receives the payment confirmation sent after Razorpay
+confirms the payment.
 
 ### Two booking links
 
@@ -273,9 +272,7 @@ would recognise, or leave `campaign` out.
    arrives straight away: "We've got your enquiry", greeting you by first name, naming what you
    chose (the project type on get-started, the service on the contact form — or just "your
    enquiry" if you chose none or "Other"), a working WhatsApp button, and **no** unsubscribe
-   link. Also reserve a seat on an open programme at `/academy` with another address you
-   control and check "Your seat on … is reserved" arrives, with a start date only if the batch
-   is still ahead and a button that opens that programme's page.
+   link.
 
    In every email, check: the header band and logo show, the button opens the booking page,
    the footer carries the company address, the unsubscribe link works, and no internal ids or

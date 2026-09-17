@@ -15,6 +15,7 @@ import { requirePermission } from '@/lib/admin-auth-middleware';
 import type { DimensionResult } from '@/lib/scorecard/types';
 import { ingestLead } from '@/lib/sales/intake/ingest';
 import { IntakeError } from '@/lib/sales/errors';
+import { safeErrorLog } from '@/lib/safe-log';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     .limit(limit);
 
   if (error) {
-    console.error('[admin/scorecard] list failed:', error);
+    console.error('[admin/scorecard] list failed:', safeErrorLog(error));
     return ApiResponse.error('Could not load submissions');
   }
 
@@ -131,7 +132,8 @@ export async function POST(request: NextRequest) {
     }));
   } catch (err) {
     if (err instanceof IntakeError) return ApiResponse.validationError(err.message);
-    console.error('[admin/scorecard] lead intake failed:', err);
+    // Never the raw error: a Postgres error's details quote the row (email, phone).
+    console.error('[admin/scorecard] lead intake failed:', safeErrorLog(err));
     return ApiResponse.error('Could not create the lead');
   }
 
@@ -143,7 +145,7 @@ export async function POST(request: NextRequest) {
   if (linkErr) {
     // The lead exists; only the backlink failed. Surface it rather than
     // pretending the whole thing worked, or the two can silently diverge.
-    console.error('[admin/scorecard] backlink failed:', linkErr);
+    console.error('[admin/scorecard] backlink failed:', safeErrorLog(linkErr));
     return ApiResponse.error('Lead created, but linking it back to the submission failed');
   }
 

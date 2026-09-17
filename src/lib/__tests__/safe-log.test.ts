@@ -50,7 +50,35 @@ describe('safeErrorLog', () => {
     expect(JSON.stringify(logged)).not.toMatch(/priya|98332/);
   });
 
-  it('omits the code when there is none', () => {
+  it('omits the code when there is none, and the generic "Error" name', () => {
     expect(safeErrorLog(new Error('boom for priya@example.com'))).toEqual({ message: 'boom for [address]' });
+  });
+
+  it("keeps a Resend error's name and a specific Error subclass's name", () => {
+    expect(safeErrorLog({ name: 'validation_error', message: 'Invalid `to` field: priya@example.com' })).toEqual({
+      name: 'validation_error',
+      message: 'Invalid `to` field: [address]',
+    });
+    expect(safeErrorLog(new TypeError('fetch failed'))).toEqual({ name: 'TypeError', message: 'fetch failed' });
+  });
+
+  it('handles a circular error object without throwing, and its result serialises', () => {
+    const circular: Record<string, unknown> = { code: 'XX000', message: 'failed for priya@example.com', details: 'Failing row contains (98332 57659)' };
+    circular.self = circular;
+    circular.cause = { parent: circular };
+
+    const logged = safeErrorLog(circular);
+
+    expect(logged).toEqual({ code: 'XX000', message: 'failed for [address]' });
+    expect(() => JSON.stringify(logged)).not.toThrow();
+  });
+
+  it('handles objects and values without a message', () => {
+    expect(safeErrorLog({ code: 'PGRST000' })).toEqual({ code: 'PGRST000', message: 'unknown error' });
+    expect(safeErrorLog({ details: 'priya@example.com' })).toEqual({ message: 'unknown error' });
+    expect(safeErrorLog({ message: 42 })).toEqual({ message: 'unknown error' });
+    expect(safeErrorLog(null)).toEqual({ message: 'unknown error' });
+    expect(safeErrorLog(404)).toEqual({ message: 'unknown error' });
+    expect(safeErrorMessage(Object.create(null))).toBe('unknown error');
   });
 });

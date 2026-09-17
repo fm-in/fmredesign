@@ -1,17 +1,16 @@
 /**
  * Confirmation receipts rendered from what the public forms really post. The
- * submissions below are built the way src/app/contact/page.tsx,
- * src/app/get-started/page.tsx and ReserveSeatForm.tsx build theirs, and the
- * programme rows use the shape and values of scripts/seed-creator-program.ts.
+ * submissions below are built the way src/app/contact/page.tsx and
+ * src/app/get-started/page.tsx build theirs, then parsed by the route's schema.
  */
 
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { createLeadSchema } from '@/lib/validations/schemas';
 import { contactPageBody as contactPagePost, getStartedBody as getStartedPost } from '@/test-utils/public-form-bodies';
 import type { RenderedEmail } from '../emails';
-import { CONTACT_SERVICE_PHRASES, renderAcademyReserved, renderEnquiryReceipt, type AcademyReservation } from '../receipts';
+import { CONTACT_SERVICE_PHRASES, renderEnquiryReceipt } from '../receipts';
 
 vi.mock('@/lib/supabase', async () => {
   const m = await import('@/test-utils/fake-supabase');
@@ -54,7 +53,7 @@ function expectCleanReceipt(email: RenderedEmail): void {
   expect(words).not.toContain('undefined');
   expect(words).not.toContain('null');
   expect(words).not.toMatch(/\b[a-z0-9]+_[a-z0-9_]+\b/i);
-  expect(words).not.toMatch(/\b(?:lead|enr|prog)[-_][a-z0-9-]+/i);
+  expect(words).not.toMatch(/\b(?:lead|sup|act)[-_][a-z0-9-]+/i);
   expect(words).not.toMatch(/ \.|\.\.| ,|about \.|on \.|starting \./);
   expect(email.html).not.toMatch(/<p[^>]*>\s*<\/p>/);
   expect(email.text).not.toMatch(/\n\n\n/);
@@ -68,7 +67,7 @@ describe('enquiry_receipt', () => {
 
     expect(email.subject).toBe("We've got your enquiry");
     expect(email.html).toContain('Someone from the team will reply within 24 hours.</div>');
-    const whatsapp = `${WHATSAPP_PREFIX}${encodeURIComponent('Hi, this is Priya Shah. I sent an enquiry on your website')}`;
+    const whatsapp = `${WHATSAPP_PREFIX}${encodeURIComponent('Hi, this is Priya. I sent an enquiry on your website')}`;
     expect(email.text).toBe(
       [
         'Hi Priya,',
@@ -138,91 +137,30 @@ describe('enquiry_receipt', () => {
     }
   );
 
+  it.each([
+    'Priya Shah',
+    'Priya visit https://cheap-followers.example today',
+    'Priya <a href="https://phish.example">claim-prize-now</a>',
+    'Priya\tFREE\nMONEY',
+  ])('uses nothing after the first word of the name "%s", in the copy or the WhatsApp link', (name) => {
+    const email = renderEnquiryReceipt(contactPageBody({ name, email: 'priya@example.com', service: '' }));
+    const everything = [email.subject, email.html, email.text].join('\n');
+    // Decode twice over: once for HTML entities' raw text, once for the URL-encoded prefill.
+    const decoded = decodeURIComponent(everything.replace(/%(?![0-9A-F]{2})/gi, '%25'));
+
+    expect(email.text.startsWith('Hi Priya,\n')).toBe(true);
+    expect(decoded).toContain('Hi, this is Priya. I sent an enquiry on your website');
+    for (const word of name.split(/\s+/).slice(1)) {
+      if (word.length < 3) continue;
+      expect(everything).not.toContain(word);
+      expect(decoded).not.toContain(word);
+      expect(everything).not.toContain(encodeURIComponent(word));
+    }
+  });
+
   it('escapes markup in a submitted name', () => {
     const email = renderEnquiryReceipt(contactPageBody({ name: 'Priya <b>Shah</b>', email: 'priya@example.com', service: '' }));
     expect(email.text.startsWith('Hi Priya,\n')).toBe(true);
     expect(email.html).not.toContain('<b>');
-  });
-});
-
-describe('academy_reserved', () => {
-  const SEEDED_START = new Date('2026-06-05T15:30:00+05:30').toISOString();
-
-  /** A programme row as the enrol route loads it, with the seed script's values. */
-  function reservation(overrides: Partial<AcademyReservation['program']> = {}, buyerName = 'Aarav Gupta'): AcademyReservation {
-    return {
-      buyerName,
-      program: { title: 'Digital Marketing', slug: 'digital-marketing', startsAt: SEEDED_START, ...overrides },
-    };
-  }
-
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date('2026-09-17T06:00:00.000Z'));
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('renders the approved copy with an upcoming start date formatted for India', () => {
-    // 9 PM IST on 12 October is still 12 October in India, though it is 15:30 UTC.
-    const email = renderAcademyReserved(reservation({ startsAt: new Date('2026-10-12T21:00:00+05:30').toISOString() }));
-
-    expect(email.subject).toBe('Your seat on Digital Marketing is reserved');
-    expect(email.html).toContain('We&#39;ll send your payment link shortly.</div>');
-    expect(email.text).toBe(
-      [
-        'Hi Aarav,',
-        'Your seat on Digital Marketing is reserved, starting 12 October 2026.',
-        "We'll send your payment link shortly — your seat is confirmed once payment is complete.",
-        'Questions? Just reply to this email.',
-        '',
-        'View the programme: https://www.freakingminds.in/academy/digital-marketing',
-        '',
-        'The FreakingMinds team',
-        'FreakingMinds',
-      ].join('\n')
-    );
-    expectCleanReceipt(email);
-  });
-
-  it('formats the date in India time, not the server clock', () => {
-    // 1 AM IST on 1 November is still 31 October in UTC.
-    const email = renderAcademyReserved(reservation({ startsAt: '2026-10-31T19:30:00.000Z' }));
-    expect(email.text).toContain('is reserved, starting 1 November 2026.');
-  });
-
-  it('drops ", starting …" without a start date', () => {
-    const email = renderAcademyReserved(reservation({ startsAt: null }));
-    expect(email.text).toContain('Your seat on Digital Marketing is reserved.\n');
-    expect(email.text).not.toContain('starting');
-    expectCleanReceipt(email);
-  });
-
-  it("drops a start date that has already passed (the seeded 5 June batch), rather than claim it", () => {
-    const email = renderAcademyReserved(reservation());
-    expect(email.text).toContain('Your seat on Digital Marketing is reserved.\n');
-    expect(email.text).not.toContain('June');
-    expectCleanReceipt(email);
-  });
-
-  it('links the public programme page', () => {
-    const email = renderAcademyReserved(reservation({ slug: 'creator-program-full', title: 'Freaking Minds Creator Program — Full Bundle' }));
-    expect(email.subject).toBe('Your seat on Freaking Minds Creator Program — Full Bundle is reserved');
-    expect(email.html).toMatch(/<a href="https:\/\/www\.freakingminds\.in\/academy\/creator-program-full"[^>]*>View the programme<\/a>/);
-    expectCleanReceipt(email);
-  });
-
-  it('never claims a hold period or a deadline', () => {
-    const email = renderAcademyReserved(reservation({ startsAt: '2026-10-12T15:30:00.000Z' }));
-    expect(readableWords(email)).not.toMatch(/\bhold\b|held for|deadline|expires?|within \d|hours?\b|days?\b/i);
-  });
-
-  it('reads naturally with a nameless buyer and an untitled programme', () => {
-    const email = renderAcademyReserved(reservation({ title: '  ', startsAt: null }, 'aarav.gupta@example.com'));
-    expect(email.subject).toBe('Your seat is reserved');
-    expect(email.text.startsWith('Hi there,\nYour seat is reserved.\n')).toBe(true);
-    expectCleanReceipt(email);
   });
 });

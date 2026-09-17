@@ -68,11 +68,12 @@ const EXPECTED_TEAM_SIGNATURE_TEXT =
   "Hi Priya,\nWe'll be looking after your enquiry personally.\nThe quickest way forward is a 15-minute call: you tell us where growth is stuck, we tell you honestly whether we can help. Pick a time below.\nPrefer WhatsApp? Message us here: https://wa.me/919833257659?text=Hi\n\nBook a 15-minute call: https://cal.com/fm-in/15min?metadata%5BleadId%5D=lead_1\n\nThe FreakingMinds team\nFreakingMinds\n\nUnsubscribe: https://www.freakingminds.in/unsubscribe?t=abc";
 
 describe('renderSalesEmail', () => {
-  it.each(['instant_reply', 'follow_up_proof', 'close_the_loop'] as const)('%s carries the booking and unsubscribe links', (template) => {
+  it.each(ALL_TEMPLATES)('%s carries the booking and unsubscribe links', (template) => {
     const email = renderSalesEmail(template, ctx);
     expect(email.subject.length).toBeGreaterThan(5);
     expect(email.html).toContain('Unsubscribe');
-    expect(email.text).toContain(ctx.unsubscribeUrl);
+    expect(email.html).toContain(`<a href="${ctx.unsubscribeUrl}"`);
+    expect(email.text).toContain(`Unsubscribe: ${ctx.unsubscribeUrl}`);
     expect(email.text).toContain(ctx.bookingUrl);
   });
 

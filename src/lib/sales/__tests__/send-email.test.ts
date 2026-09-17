@@ -333,6 +333,12 @@ describe('deriveSalesEmailFields', () => {
       expect(deriveSalesEmailFields(scorecardLead(customFields)).weakestFix).toBeUndefined();
     });
 
+    it("is undefined when the weakest area is already strong: the original copy fits better than praise", () => {
+      const strongFix = RECOMMENDATIONS.discoverability?.strong ?? '';
+      expect(strongFix.length).toBeGreaterThan(20);
+      expect(deriveSalesEmailFields(scorecardLead({ scorecardFix: strongFix }, 'Getting Found (83/100)')).weakestFix).toBeUndefined();
+    });
+
     it('is undefined without a weakest area to attach it to', () => {
       expect(deriveSalesEmailFields(scorecardLead({ scorecardFix: fix }, null)).weakestFix).toBeUndefined();
     });
