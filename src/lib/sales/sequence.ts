@@ -137,6 +137,42 @@ export function sequenceStartState(
   return { canStart: true, blockedReason: null };
 }
 
+/**
+ * How long a recorded start is given to enrol the lead before it counts as
+ * failed. Enrolment normally takes seconds; ten minutes covers a slow queue
+ * without leaving a lead stuck when a run never happens (for example, Inngest
+ * functions not yet synced after a deploy).
+ */
+export const SEQUENCE_START_WINDOW_MS = 10 * 60 * 1000;
+
+export interface SequenceStartAttempt {
+  /** A start was recorded inside the window and the lead has not enrolled yet: refuse another. */
+  inFlight: boolean;
+  /** A start was recorded, the window has passed, and the lead never enrolled: offer a retry. */
+  lastStartFailed: boolean;
+}
+
+/**
+ * Whether the lead's most recent start is still in flight or has failed.
+ * Shared by the start route (which refuses a second start while one is in
+ * flight) and the lead detail payload (which shows "Starting follow-ups…" or
+ * the retry note), so the panel and the route always agree.
+ *
+ * `lastStartedAt` is the `occurred_at` of the newest `sequence_started`
+ * activity, or null when the lead was never started.
+ */
+export function sequenceStartAttempt(
+  lead: Pick<LeadRow, 'sequence_status'>,
+  lastStartedAt: string | null
+): SequenceStartAttempt {
+  if (lead.sequence_status !== null || !lastStartedAt) return { inFlight: false, lastStartFailed: false };
+  const startedMs = Date.parse(lastStartedAt);
+  // An unreadable timestamp must never block a retry.
+  if (!Number.isFinite(startedMs)) return { inFlight: false, lastStartFailed: true };
+  const inFlight = Date.now() - startedMs < SEQUENCE_START_WINDOW_MS;
+  return { inFlight, lastStartFailed: !inFlight };
+}
+
 export interface ContinueState {
   automationEnabled: boolean;
   suppressed: boolean;

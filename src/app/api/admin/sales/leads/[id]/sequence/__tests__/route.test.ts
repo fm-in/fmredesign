@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { fake, payloadOf } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
@@ -34,13 +34,18 @@ function postBody(body: unknown) {
  * `suppressed` controls every `suppression_list` lookup; `automationEnabled`
  * controls the `admin_settings` row.
  */
-function respond(options: { lead?: Partial<LeadRow>; suppressed?: boolean; automationEnabled?: boolean } = {}) {
-  const { lead: leadOverrides = {}, suppressed = false, automationEnabled = true } = options;
+function respond(
+  options: { lead?: Partial<LeadRow>; suppressed?: boolean; automationEnabled?: boolean; lastStartedAt?: string | null } = {}
+) {
+  const { lead: leadOverrides = {}, suppressed = false, automationEnabled = true, lastStartedAt = null } = options;
   fake.respond((call) => {
     if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ owner_id: null, ...leadOverrides }), error: null };
     if (call.table === 'leads' && call.op === 'update') return { data: [{ id: 'lead_1' }], error: null };
     if (call.table === 'suppression_list') return { data: suppressed ? [{ id: 'sup_1' }] : [], error: null };
     if (call.table === 'admin_settings') return { data: { sales: { automationEnabled } }, error: null };
+    if (call.table === 'lead_activities' && call.op === 'select') {
+      return { data: lastStartedAt ? [{ occurred_at: lastStartedAt }] : [], error: null };
+    }
     if (call.table === 'lead_activities') return { data: null, error: null };
     return { data: null, error: null };
   });
@@ -161,8 +166,8 @@ describe('POST /api/admin/sales/leads/[id]/sequence — start success', () => {
     const json = await res.json();
     expect(json.data).toMatchObject({ started: true, sequenceKey: 'brief-v1' });
 
+    // No fixed event id: a retry after a start that never enrolled must not be deduplicated away.
     expect(mocks.send).toHaveBeenCalledWith({
-      id: 'sales-sequence-start-lead_1',
       name: 'sales/sequence.start',
       data: { leadId: 'lead_1', sequenceKey: 'brief-v1' },
     });
@@ -176,16 +181,6 @@ describe('POST /api/admin/sales/leads/[id]/sequence — start success', () => {
       actor_name: 'Maya',
       metadata: { sequenceKey: 'brief-v1' },
     });
-  });
-
-  it('sends the start event with a deterministic id, so Inngest drops a double start', async () => {
-    respond({ lead: { sequence_status: null } });
-    await POST(postBody({ action: 'start', sequenceKey: 'enquiry-v1' }), context);
-    respond({ lead: { sequence_status: null } });
-    await POST(postBody({ action: 'start', sequenceKey: 'ad-lead-v1' }), context);
-
-    const ids = mocks.send.mock.calls.map(([event]) => (event as { id?: unknown }).id);
-    expect(ids).toEqual(['sales-sequence-start-lead_1', 'sales-sequence-start-lead_1']);
   });
 
   it('accepts every key in the registry', async () => {
@@ -224,5 +219,85 @@ describe('POST /api/admin/sales/leads/[id]/sequence — start failure', () => {
 
     expect(activitiesWhenSent).toBe(0);
     expect(fake.callsTo('lead_activities', 'insert')).toHaveLength(1);
+  });
+});
+
+describe('POST /api/admin/sales/leads/[id]/sequence — a start already in flight', () => {
+  const NOW = new Date('2026-09-17T06:00:00.000Z');
+  const minutesAgo = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('refuses with 409 and sends nothing while a start from the last ten minutes has not enrolled', async () => {
+    respond({ lead: { sequence_status: null }, lastStartedAt: minutesAgo(4) });
+
+    const res = await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context);
+
+    expect(res.status).toBe(409);
+    const json = await res.json();
+    expect(json.error).toBe('Follow-ups are already starting for this lead. Give it a minute, then refresh.');
+    expect(mocks.send).not.toHaveBeenCalled();
+    expect(fake.callsTo('lead_activities', 'insert')).toHaveLength(0);
+  });
+
+  it('looks up only sequence_started activities for this lead', async () => {
+    respond({ lead: { sequence_status: null }, lastStartedAt: minutesAgo(4) });
+    await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context);
+
+    const lookup = fake.callsTo('lead_activities', 'select')[0];
+    expect(lookup?.filters).toContainEqual({ method: 'eq', args: ['lead_id', 'lead_1'] });
+    expect(lookup?.filters).toContainEqual({ method: 'eq', args: ['type', 'sequence_started'] });
+  });
+
+  it('allows a retry once the window has passed, and sends a fresh event', async () => {
+    respond({ lead: { sequence_status: null }, lastStartedAt: minutesAgo(11) });
+
+    const res = await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context);
+
+    expect(res.status).toBe(200);
+    expect(mocks.send).toHaveBeenCalledTimes(1);
+    expect(mocks.send).toHaveBeenCalledWith({ name: 'sales/sequence.start', data: { leadId: 'lead_1', sequenceKey: 'brief-v1' } });
+    expect(fake.callsTo('lead_activities', 'insert')).toHaveLength(1);
+  });
+
+  it('allows the retry exactly when the clock reaches ten minutes', async () => {
+    respond({ lead: { sequence_status: null }, lastStartedAt: NOW.toISOString() });
+
+    vi.setSystemTime(new Date(NOW.getTime() + 9 * 60_000 + 59_000));
+    expect((await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context)).status).toBe(409);
+
+    vi.setSystemTime(new Date(NOW.getTime() + 10 * 60_000));
+    expect((await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context)).status).toBe(200);
+    expect(mocks.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the seven start refusals ahead of the in-flight check', async () => {
+    respond({ lead: { sequence_status: null }, automationEnabled: false, lastStartedAt: minutesAgo(2) });
+    const res = await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toMatch(/automation is switched off/i);
+  });
+
+  it('returns 503 and sends nothing when the in-flight lookup fails', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ owner_id: null }), error: null };
+      if (call.table === 'suppression_list') return { data: [], error: null };
+      if (call.table === 'admin_settings') return { data: { sales: { automationEnabled: true } }, error: null };
+      if (call.table === 'lead_activities' && call.op === 'select') return { data: null, error: { message: 'timeout' } };
+      return { data: null, error: null };
+    });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const res = await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context);
+
+    expect(res.status).toBe(503);
+    expect(mocks.send).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });

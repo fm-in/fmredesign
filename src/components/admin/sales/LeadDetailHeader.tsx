@@ -48,6 +48,10 @@ function StartSequencePanel({ sequences, onStart }: { sequences: SequenceStartIn
 
   return (
     <div className="space-y-2">
+      {/* Only when Start is on offer: a blocked lead shows its reason instead of an invitation to retry. */}
+      {sequences.lastStartFailed && sequences.canStart && (
+        <p className="text-xs text-amber-700">The last start didn&apos;t go through, so you can try again.</p>
+      )}
       <label htmlFor="sequence-key" className="block text-xs font-medium text-fm-neutral-700">
         Follow-up set
       </label>

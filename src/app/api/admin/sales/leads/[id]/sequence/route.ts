@@ -3,8 +3,8 @@ import { ApiResponse } from '@/lib/api-response';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { canAccessLead } from '@/lib/sales/access';
 import { recordActivity, stopSequence } from '@/lib/sales/activity';
-import { loadLead } from '@/lib/sales/lead-store';
-import { sequenceStartState } from '@/lib/sales/sequence';
+import { loadLatestSequenceStartAt, loadLead } from '@/lib/sales/lead-store';
+import { sequenceStartAttempt, sequenceStartState } from '@/lib/sales/sequence';
 import { getSalesSettings } from '@/lib/sales/settings';
 import { isSuppressed } from '@/lib/sales/suppression';
 import { firstIssue, sequenceActionSchema } from '@/lib/sales/schemas';
@@ -44,13 +44,28 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return ApiResponse.validationError(state.blockedReason);
   }
 
+  // A start recorded in the last few minutes that has not enrolled yet is still
+  // in flight: refuse a second one (a double click, two tabs). Once the window
+  // passes without enrolment the start counts as failed and may be retried.
+  // This is time-bounded on purpose — an event-id dedupe would silently drop
+  // every retry of a run that never happened. If a race does get two events
+  // through, markSequenceActive only enrols a lead whose sequence_status is null.
+  let lastStartedAt: string | null;
+  try {
+    lastStartedAt = await loadLatestSequenceStartAt(id);
+  } catch (err) {
+    console.error(`[sales] could not check for an in-flight start for ${id}:`, err);
+    return ApiResponse.error("Couldn't start follow-ups right now. Try again in a minute.", 503);
+  }
+  if (sequenceStartAttempt(lead, lastStartedAt).inFlight) {
+    return ApiResponse.error('Follow-ups are already starting for this lead. Give it a minute, then refresh.', 409);
+  }
+
   // Send directly, not through the shared sales event helper, which swallows
   // failures: the person clicking Start must be told when nothing was queued.
-  // The id is fixed per lead, so Inngest drops a second start (a double click,
-  // two tabs) — only one sequence ever runs per lead anyway.
   try {
     const { inngest } = await import('@/lib/inngest/client');
-    await inngest.send({ id: `sales-sequence-start-${id}`, name: 'sales/sequence.start', data: { leadId: id, sequenceKey } });
+    await inngest.send({ name: 'sales/sequence.start', data: { leadId: id, sequenceKey } });
   } catch (err) {
     console.error(`[sales] failed to queue sales/sequence.start for ${id}:`, err);
     return ApiResponse.error("Couldn't start follow-ups right now. Try again in a minute.", 503);

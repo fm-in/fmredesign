@@ -1,5 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { SEQUENCES, getSequence, recommendSequence, sequenceStartState, shouldContinue, type ContinueState } from '../sequence';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  SEQUENCES,
+  SEQUENCE_START_WINDOW_MS,
+  getSequence,
+  recommendSequence,
+  sequenceStartAttempt,
+  sequenceStartState,
+  shouldContinue,
+  type ContinueState,
+} from '../sequence';
 import { SEQUENCE_LABELS } from '../api-types';
 import { leadRow } from '@/test-utils/lead-row';
 import type { LeadRow } from '@/lib/sales/types';
@@ -235,6 +244,55 @@ describe('sequenceStartState', () => {
       if (fix.next) expect(result.blockedReason).toMatch(fix.next);
       else expect(result).toEqual({ canStart: true, blockedReason: null });
     }
+  });
+});
+
+describe('sequenceStartAttempt', () => {
+  const NOW = new Date('2026-09-17T06:00:00.000Z');
+  const minutesAgo = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('uses a ten-minute window', () => {
+    expect(SEQUENCE_START_WINDOW_MS).toBe(10 * 60_000);
+  });
+
+  it('is in flight when a start was recorded inside the window and nothing has enrolled', () => {
+    expect(sequenceStartAttempt(leadRow({ sequence_status: null }), minutesAgo(0))).toEqual({ inFlight: true, lastStartFailed: false });
+    expect(sequenceStartAttempt(leadRow({ sequence_status: null }), minutesAgo(9.9))).toEqual({ inFlight: true, lastStartFailed: false });
+  });
+
+  it('has failed once the window passes with nothing enrolled', () => {
+    expect(sequenceStartAttempt(leadRow({ sequence_status: null }), minutesAgo(10))).toEqual({ inFlight: false, lastStartFailed: true });
+    expect(sequenceStartAttempt(leadRow({ sequence_status: null }), minutesAgo(60 * 24 * 3))).toEqual({ inFlight: false, lastStartFailed: true });
+  });
+
+  it('follows the clock rather than a fixed moment', () => {
+    const startedAt = NOW.toISOString();
+    expect(sequenceStartAttempt(leadRow({ sequence_status: null }), startedAt).inFlight).toBe(true);
+    vi.setSystemTime(new Date(NOW.getTime() + SEQUENCE_START_WINDOW_MS));
+    expect(sequenceStartAttempt(leadRow({ sequence_status: null }), startedAt)).toEqual({ inFlight: false, lastStartFailed: true });
+  });
+
+  it('is neither once the lead has a sequence status, however recent the start', () => {
+    for (const status of ['active', 'completed', 'stopped'] as const) {
+      expect(sequenceStartAttempt(leadRow({ sequence_status: status }), minutesAgo(1))).toEqual({ inFlight: false, lastStartFailed: false });
+      expect(sequenceStartAttempt(leadRow({ sequence_status: status }), minutesAgo(60))).toEqual({ inFlight: false, lastStartFailed: false });
+    }
+  });
+
+  it('is neither when no start was ever recorded', () => {
+    expect(sequenceStartAttempt(leadRow({ sequence_status: null }), null)).toEqual({ inFlight: false, lastStartFailed: false });
+  });
+
+  it('never blocks a retry on an unreadable timestamp', () => {
+    expect(sequenceStartAttempt(leadRow({ sequence_status: null }), 'not a date')).toEqual({ inFlight: false, lastStartFailed: true });
   });
 });
 

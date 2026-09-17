@@ -10,7 +10,7 @@ import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { canAccessLead, canAssignOwner, isSalesAdmin } from '@/lib/sales/access';
 import { changeStage, recordActivity } from '@/lib/sales/activity';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
-import { recommendSequence, sequenceStartState } from '@/lib/sales/sequence';
+import { recommendSequence, sequenceStartAttempt, sequenceStartState } from '@/lib/sales/sequence';
 import { getSalesSettings } from '@/lib/sales/settings';
 import type { SequenceStartInfo } from '@/lib/sales/api-types';
 import type { LeadRow } from '@/lib/sales/types';
@@ -21,8 +21,13 @@ export const dynamic = 'force-dynamic';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-function isSequenceStartedActivity(row: unknown): boolean {
-  return typeof row === 'object' && row !== null && 'type' in row && row.type === 'sequence_started';
+/** `occurred_at` of the newest `sequence_started` in a newest-first activity list, or null. */
+function latestSequenceStartAt(activities: readonly unknown[]): string | null {
+  for (const row of activities) {
+    if (typeof row !== 'object' || row === null || !('type' in row) || row.type !== 'sequence_started') continue;
+    return 'occurred_at' in row && typeof row.occurred_at === 'string' ? row.occurred_at : null;
+  }
+  return null;
 }
 
 /**
@@ -52,14 +57,15 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       getSalesSettings(),
     ]);
 
-    // Reuses the same refusal logic the start route enforces, so the panel
-    // never offers a set the endpoint would then refuse. `starting` covers the
-    // gap between the start being queued and the sequence enrolling the lead.
-    const latestActivity: unknown = activities.data?.[0];
+    // Reuses the same refusal and in-flight logic the start route enforces, so
+    // the panel never offers a set the endpoint would then refuse. The activity
+    // list is newest first, so a start inside the in-flight window is always in it.
+    const attempt = sequenceStartAttempt(lead, latestSequenceStartAt(activities.data ?? []));
     const sequences: SequenceStartInfo = {
       recommended: recommendSequence(lead),
       ...sequenceStartState(lead, { suppressed, automationEnabled: settings.automationEnabled }),
-      starting: lead.sequence_status === null && isSequenceStartedActivity(latestActivity),
+      starting: attempt.inFlight,
+      lastStartFailed: attempt.lastStartFailed,
     };
 
     return ApiResponse.success({

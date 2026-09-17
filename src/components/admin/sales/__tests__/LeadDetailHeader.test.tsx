@@ -48,12 +48,19 @@ const baseProps = {
   onStopSequence: vi.fn().mockResolvedValue(true),
 };
 
-const canStart: SequenceStartInfo = { recommended: 'ad-lead-v1', canStart: true, blockedReason: null, starting: false };
+const canStart: SequenceStartInfo = {
+  recommended: 'ad-lead-v1',
+  canStart: true,
+  blockedReason: null,
+  starting: false,
+  lastStartFailed: false,
+};
 const blocked: SequenceStartInfo = {
   recommended: 'enquiry-v1',
   canStart: false,
   blockedReason: "Automation is switched off in Settings, so follow-ups can't be sent.",
   starting: false,
+  lastStartFailed: false,
 };
 
 describe('LeadDetailHeader — Start follow-ups panel', () => {
@@ -163,6 +170,42 @@ describe('LeadDetailHeader — Start follow-ups panel', () => {
     expect(screen.getByText('Starting follow-ups…')).toBeInTheDocument();
     expect(screen.queryByLabelText(/follow-up set/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /start follow-ups/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('LeadDetailHeader — a start that did not go through', () => {
+  const RETRY_NOTE = "The last start didn't go through, so you can try again.";
+
+  it('shows the retry note above a usable select and Start button', async () => {
+    const onStartSequence = vi.fn().mockResolvedValue(true);
+    render(
+      <LeadDetailHeader {...baseProps} sequences={{ ...canStart, lastStartFailed: true }} onStartSequence={onStartSequence} />
+    );
+
+    const note = screen.getByText(RETRY_NOTE);
+    const select = screen.getByLabelText(/follow-up set/i) as HTMLSelectElement;
+    const button = screen.getByRole('button', { name: /start follow-ups/i });
+    expect(note.compareDocumentPosition(select) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(select).not.toBeDisabled();
+    expect(select.value).toBe('ad-lead-v1');
+    expect(button).not.toBeDisabled();
+    expect(screen.queryByText('Starting follow-ups…')).not.toBeInTheDocument();
+
+    fireEvent.click(button);
+    await waitFor(() => expect(onStartSequence).toHaveBeenCalledWith('ad-lead-v1'));
+  });
+
+  it('does not show the retry note without a failed start', () => {
+    render(<LeadDetailHeader {...baseProps} sequences={canStart} onStartSequence={vi.fn().mockResolvedValue(true)} />);
+    expect(screen.queryByText(RETRY_NOTE)).not.toBeInTheDocument();
+  });
+
+  it('does not invite a retry that would be refused: the blocked reason shows instead', () => {
+    render(
+      <LeadDetailHeader {...baseProps} sequences={{ ...blocked, lastStartFailed: true }} onStartSequence={vi.fn().mockResolvedValue(true)} />
+    );
+    expect(screen.queryByText(RETRY_NOTE)).not.toBeInTheDocument();
+    expect(screen.getByText("Automation is switched off in Settings, so follow-ups can't be sent.")).toBeInTheDocument();
   });
 });
 

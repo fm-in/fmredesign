@@ -103,8 +103,10 @@ export interface SequenceStartInfo {
   recommended: string | null;
   canStart: boolean;
   blockedReason: string | null;
-  /** A start was queued (latest activity is `sequence_started`) but the sequence has not enrolled yet. */
+  /** A start was recorded in the last ten minutes and the lead has not enrolled yet. */
   starting: boolean;
+  /** A start was recorded, ten minutes have passed, and the lead never enrolled: Start may be retried. */
+  lastStartFailed: boolean;
 }
 
 export interface LeadDetailPayload {
