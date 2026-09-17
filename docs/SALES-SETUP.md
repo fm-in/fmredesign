@@ -4,9 +4,10 @@
 > applied, the website form saves enquiries the old way and no other lead source works.
 
 > **Follow-ups are started by a person.** A new lead is assigned an owner, gets an AI-written
-> brief and a first-touch task automatically — but the system never emails anyone on its own.
-> Nobody hears from FreakingMinds until a person opens the lead and clicks **Start
-> follow-ups**. This is the biggest change from earlier versions of this system, and it's why
+> brief and a first-touch task automatically — but the system never sends a follow-up on its
+> own. Apart from the instant confirmation of what they just submitted (see **Confirmation
+> emails** below), nobody hears from FreakingMinds until a person opens the lead and clicks
+> **Start follow-ups**. This is the biggest change from earlier versions of this system, and it's why
 > automation can be left switched on safely: nothing goes out until someone decides it should.
 
 Everything ships switched off. Work through these in order; each step can be checked in
@@ -15,8 +16,8 @@ Everything ships switched off. Work through these in order; each step can be che
 ## How follow-ups work
 
 When a lead comes in, FreakingMinds assigns it to someone, writes an AI brief and creates a
-"first touch" task — automatically, whether or not automation is on. That's all that happens
-on its own. The owner then opens the lead at **Admin → Leads → (the lead's name)** and, when
+"first touch" task — automatically, whether or not automation is on. Website submitters also
+get an instant confirmation email (below). That's all that happens on its own. The owner then opens the lead at **Admin → Leads → (the lead's name)** and, when
 ready, clicks **Start follow-ups**. Only that click sends the first email.
 
 ### The four follow-up sets
@@ -27,9 +28,9 @@ preselected on the lead page, but the owner can pick a different one before star
 | Set | Recommended for | Timing |
 |---|---|---|
 | **Project brief** | Get-started form submissions | Day 0: an email confirming the brief is read and inviting a 30-minute scoping call. Day 2: a task to call or WhatsApp them. Day 4: an email asking the two questions that shape the proposal. Day 8: a close-the-loop email if there's been no reply. |
-| **Enquiry** | Contact form, referrals, partners and events | Day 0: an instant reply. Day 2: a proof email with examples of past work. Day 4: a task to call or WhatsApp them. Day 6: a close-the-loop email. |
+| **Enquiry** | Contact form, referrals, partners and events | Day 0: a short note inviting them to a 15-minute call. Day 2: a proof email with examples of past work. Day 4: a task to call or WhatsApp them. Day 6: a close-the-loop email. |
 | **Ad lead** | Meta, Google and anything sent through Zapier/Make | Day 0: an intro email. Day 1: a task to call them. Day 3: a proof email. Day 7: a close-the-loop email. |
-| **Scorecard** | Marketing scorecard submissions | Day 0: their score and the weakest area. Day 3: the one fix worth trying first. Day 6: a close-the-loop email. |
+| **Scorecard** | Marketing scorecard submissions | Day 0: their score and the weakest area. Day 3: the scorecard's own advice for that weakest area. Day 6: a close-the-loop email. |
 
 A Cal.com booking, an ad-platform test lead (tagged `test`) and a lead with no email address
 get no recommendation, and Start follow-ups is refused for all three (see below). Any other
@@ -54,6 +55,26 @@ seven, checked in this order:
    blocked even after that sequence finishes or is stopped.
 7. **Automation is off** — turn it on in **Settings → Sales** first.
 
+### Confirmation emails
+
+Anyone who submits the **contact form**, the **get-started form** or an **Academy "Reserve
+seat"** gets an instant confirmation email, whatever the automation switch is set to. It is a
+receipt for what they just did, not a follow-up: it isn't part of any set, doesn't wait for
+Start follow-ups, and isn't held to the 09:00–19:00 IST window.
+
+- **Contact and get-started:** "We've got your enquiry" — thanks them, names what they asked
+  about when it's known, promises a reply within 24 hours and links to WhatsApp. When a lead
+  exists it appears on the lead's timeline as **Confirmation email sent**.
+- **Academy reservation:** "Your seat on {programme} is reserved" — the start date when one is
+  still ahead, a note that the payment link follows, and a link to the programme page. The
+  payment confirmation after Razorpay is a separate email and is unchanged.
+
+Replies to a confirmation go to `SALES_REPLY_TO`, or to the notification inbox
+(`NOTIFICATION_EMAIL`) until that is configured. A confirmation is not sent to an address that
+has bounced or marked FreakingMinds as spam, but it *is* sent to someone who unsubscribed from
+follow-ups — submitting a form again is a fresh request to be contacted. If sending fails, the
+submission still goes through exactly as before.
+
 ### Two booking links
 
 **Settings → Sales** holds two booking links:
@@ -72,7 +93,8 @@ seven, checked in this order:
 Every sales email now carries the FreakingMinds header band, brand colours, a single button
 and a footer with the sender's name, "FreakingMinds", the registered company address, and an
 unsubscribe link. It still sends alongside a plain-text version, and reads correctly even when
-the recipient's email client blocks images.
+the recipient's email client blocks images. Confirmation emails use the same design, signed
+"The FreakingMinds team", with no unsubscribe link — they're receipts, not marketing.
 
 ## 1. Database
 
@@ -84,7 +106,7 @@ verify queries at the bottom of the file.
 | Variable | What it is | Where to get it |
 |---|---|---|
 | `SALES_LINK_SECRET` | Encrypts unsubscribe links | `openssl rand -hex 32` |
-| `SALES_REPLY_TO` | Address replies go to | `replies@reply.freakingminds.in` (step 3) |
+| `SALES_REPLY_TO` | Address replies go to (follow-ups and confirmations; until it's set, confirmation replies go to `NOTIFICATION_EMAIL`) | `replies@reply.freakingminds.in` (step 3) |
 | `SALES_FROM_EMAIL` | Optional sender, default `FreakingMinds <hello@freakingminds.in>` | Must be on a Resend-verified domain |
 | `RESEND_WEBHOOK_SECRET` | Verifies Resend webhooks | Step 3 |
 | `META_APP_SECRET` | Verifies Meta webhooks | Meta app → App settings → Basic |
@@ -199,15 +221,18 @@ would recognise, or leave `campaign` out.
 
 ## 9. First run
 
-1. Keep automation **off**. Submit the contact form with your own email.
-2. Open the lead: it has an owner, an AI brief and a "First touch within the hour" task —
-   and no email has been sent. Nothing is emailed until you click Start follow-ups, whether
-   or not automation is on.
+1. Keep automation **off**. Submit the contact form with your own email. Within a minute you
+   receive the confirmation, "We've got your enquiry", even with automation off. Reply to it
+   and check the reply reaches `SALES_REPLY_TO` (or the notification inbox if that isn't set
+   yet).
+2. Open the lead: it has an owner, an AI brief, a "First touch within the hour" task and a
+   **Confirmation email sent** entry on the timeline — and no follow-up email has been sent.
+   No follow-up is emailed until you click Start follow-ups, whether or not automation is on.
 3. Before turning automation on, confirm the Inngest dashboard lists all four sales functions:
    `sales-lead-created`, `sales-sequence`, `sales-meta-leadgen` and `sales-meeting-prep`.
    If one is missing, resync the app in Inngest first.
 4. Turn automation **on**. Submit again with a different email address you control.
-5. Emails go out only between 09:00 and 19:00 IST. A test started in the evening arrives the
+5. Follow-up emails go out only between 09:00 and 19:00 IST (confirmations are instant). A test started in the evening arrives the
    next morning — that's expected, not a fault.
 6. Open that lead and click **Start follow-ups**. It preselects the recommended set — for a
    contact-form submission that's Enquiry — so just click Start. Still no email goes out
@@ -227,6 +252,14 @@ would recognise, or leave `campaign` out.
      those leads are tagged `test` and can't be started.
    - **Scorecard** — complete `/scorecard`, then open **Admin → Scorecard** and click **To lead**
      on your submission.
+
+   For the **Project brief** and **Enquiry** submissions, first check the confirmation that
+   arrives straight away: "We've got your enquiry", greeting you by first name, naming what you
+   chose (the project type on get-started, the service on the contact form — or just "your
+   enquiry" if you chose none or "Other"), a working WhatsApp button, and **no** unsubscribe
+   link. Also reserve a seat on an open programme at `/academy` with another address you
+   control and check "Your seat on … is reserved" arrives, with a start date only if the batch
+   is still ahead and a button that opens that programme's page.
 
    In every email, check: the header band and logo show, the button opens the booking page,
    the footer carries the company address, the unsubscribe link works, and no internal ids or
