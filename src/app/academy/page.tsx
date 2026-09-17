@@ -332,7 +332,7 @@ function CourseCard({ p }: { p: Program }) {
         </div>
 
         <div className="flex items-center gap-1 text-sm text-fm-magenta-700 font-medium pt-1">
-          Reserve your seat
+          Book your seat
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </div>
       </div>

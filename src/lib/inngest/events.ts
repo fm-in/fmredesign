@@ -134,6 +134,10 @@ export interface SalesMeetingEventData {
   leadId: string;
 }
 
+export interface AcademyCheckoutStartedData {
+  enrollmentId: string;
+}
+
 // ---------------------------------------------------------------------------
 // Inngest event map (used to type the client)
 // ---------------------------------------------------------------------------
@@ -156,4 +160,5 @@ export type InngestEvents = {
   'sales/meta.leadgen': { data: SalesMetaLeadgenData };
   'sales/meeting.booked': { data: SalesMeetingEventData };
   'sales/meeting.cancelled': { data: SalesMeetingEventData };
+  'academy/checkout.started': { data: AcademyCheckoutStartedData };
 };

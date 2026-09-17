@@ -10,7 +10,10 @@ FreakingMinds is a digital marketing agency platform built with Next.js 15 and T
 - **Blog** — Supabase-backed CMS. Admin editor (TipTap) at `/admin/blog`, public pages read
   `blog_posts_public` via `src/lib/blog-data-public.ts`. The old hardcoded `blog-data.ts` is gone.
 - **FM Academy** — Public course listing + detail (`/academy`), paid enrollment via Razorpay.
-  Tables: `programs`, `enrollments`, `payment_events`; public view `programs_public`.
+  Tables: `programs`, `enrollments`, `payment_events`; public view `programs_public`. Direct payment
+  only — no manual payment links anywhere. A seat counts only once payment succeeds; an unpaid
+  checkout stays `reserved` (shown as "Payment pending") and never auto-cancels, and gets one
+  reminder email an hour after checkout started (Inngest `academy-checkout-reminder`).
 
 ## Tech Stack
 

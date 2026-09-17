@@ -12,12 +12,21 @@
  * `payment_events` first; a duplicate event id will fail the insert and we
  * short-circuit with 200.
  *
- * Side effects on `payment.captured`:
- *   - flip the matched enrollment to `status='paid'` (the SQL trigger then
- *     increments `programs.seats_taken`)
+ * Side effects on `payment.captured` / `order.paid`:
+ *   - flip the matched enrollment to `status='paid'` — matching a row that
+ *     is currently `reserved` OR `failed`, since Razorpay Checkout lets the
+ *     buyer retry with another card on the same order after a decline (the
+ *     SQL trigger then increments `programs.seats_taken`)
  *   - stamp razorpay_payment_id + paid_at
- *   - send confirmation email to buyer (with delivery URLs)
- *   - notify admin
+ *   - send confirmation email to buyer (with delivery URLs) and notify admin,
+ *     but only when *this* call is the one that actually flipped the row —
+ *     Razorpay sends both `payment.captured` and `order.paid` for one
+ *     payment (different event ids), so without that check two concurrent
+ *     handlers could both send the confirmation.
+ *
+ * A database error while looking up or updating the enrollment removes this
+ * event's `payment_events` row before responding 500, so Razorpay retries
+ * the delivery instead of it being swallowed as a duplicate next time.
  *
  * NOTE: Webhook MUST return 2xx within 5 seconds or Razorpay retries. We
  * keep the work synchronous (DB writes are fast) but fire email + admin
@@ -29,6 +38,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 import { inngest } from '@/lib/inngest/client';
 import { verifyWebhookSignature } from '@/lib/razorpay';
 import { buildEnrollmentConfirmationEmail } from '@/lib/email/academy-confirmation';
+import { safeErrorLog, safeErrorMessage } from '@/lib/safe-log';
 
 // Razorpay needs the *raw* body for signature verification. App Router gives
 // us request.text() to read it before any JSON parsing.
@@ -107,7 +117,7 @@ export async function POST(request: NextRequest) {
     if ((dupeErr as { code?: string }).code === '23505') {
       return NextResponse.json({ ok: true, duplicate: true });
     }
-    console.error('payment_events insert failed:', dupeErr);
+    console.error('payment_events insert failed:', safeErrorLog(dupeErr));
     return NextResponse.json({ ok: false, error: 'Storage error' }, { status: 500 });
   }
 
@@ -117,7 +127,29 @@ export async function POST(request: NextRequest) {
     if (!orderId) {
       return NextResponse.json({ ok: true, skipped: 'no order_id on payload' });
     }
-    await handlePaymentCaptured({ orderId, paymentId: paymentId || '', event });
+    const result = await handlePaymentCaptured({ orderId, paymentId: paymentId || '' });
+    if (!result.ok) {
+      // A real DB error (not "no match") — remove this event's row so
+      // Razorpay's retry is processed fresh instead of short-circuiting as
+      // a duplicate next time.
+      //
+      // Two edge cases here, neither of which double-credits a seat:
+      //  (a) the paid-flip update actually committed but supabase-js reported
+      //      an error anyway (a lost response) — the retried delivery's update
+      //      then matches zero rows (status is already 'paid'), so it just
+      //      returns `ok: true` without sending a second confirmation.
+      //  (b) a Razorpay retry that overlaps this slow attempt inserts its
+      //      payment_events row first and gets 23505 → 200 *before* this
+      //      cleanup runs, deleting the row the overlapping retry just wrote —
+      //      so that specific delivery is never retried again. `order.paid`
+      //      normally still arrives as a separate event and covers it, and
+      //      even if it doesn't, this call's own retry (Razorpay retries a
+      //      500 regardless of what the delivery that raced it did) reaches
+      //      `handlePaymentCaptured` again and flips the row itself.
+      const { error: cleanupErr } = await supabase.from('payment_events').delete().eq('id', eventId);
+      if (cleanupErr) console.error('payment_events cleanup failed:', safeErrorLog(cleanupErr));
+      return NextResponse.json({ ok: false, error: 'Storage error' }, { status: 500 });
+    }
   } else if (eventType === 'payment.failed') {
     if (orderId) await markFailed(orderId);
   } else if (eventType.startsWith('refund.')) {
@@ -130,8 +162,7 @@ export async function POST(request: NextRequest) {
 async function handlePaymentCaptured(opts: {
   orderId: string;
   paymentId: string;
-  event: RazorpayEvent;
-}): Promise<void> {
+}): Promise<{ ok: boolean }> {
   const supabase = getSupabaseAdmin();
 
   const { data: enrollment, error } = await supabase
@@ -141,19 +172,20 @@ async function handlePaymentCaptured(opts: {
     .maybeSingle();
 
   if (error) {
-    console.error('Enrollment lookup error:', error);
-    return;
+    console.error('Enrollment lookup error:', safeErrorLog(error));
+    return { ok: false };
   }
   if (!enrollment) {
     console.warn('Webhook received for unknown order_id', opts.orderId);
-    return;
-  }
-  if (enrollment.status === 'paid') {
-    // Defensive: trigger already ran on a prior identical webhook attempt.
-    return;
+    return { ok: true };
   }
 
-  const { error: updateErr } = await supabase
+  // Match reserved OR failed: a buyer who declines on the first card and
+  // succeeds on a retry (same order) must still be recorded as paid. `.select`
+  // tells us whether this call is the one that actually flipped the row —
+  // zero rows means a concurrent event (payment.captured + order.paid share a
+  // payment) or a retried delivery already paid it.
+  const { data: updatedRows, error: updateErr } = await supabase
     .from('enrollments')
     .update({
       status: 'paid',
@@ -162,11 +194,16 @@ async function handlePaymentCaptured(opts: {
       updated_at: new Date().toISOString(),
     })
     .eq('id', enrollment.id)
-    .eq('status', 'reserved');   // optimistic concurrency — don't double-credit
+    .in('status', ['reserved', 'failed'])
+    .select('id');
 
   if (updateErr) {
-    console.error('Enrollment status update failed:', updateErr);
-    return;
+    console.error('Enrollment status update failed:', safeErrorLog(updateErr));
+    return { ok: false };
+  }
+
+  if (!updatedRows || updatedRows.length === 0) {
+    return { ok: true };
   }
 
   const program = enrollment.programs as {
@@ -200,16 +237,14 @@ async function handlePaymentCaptured(opts: {
           html: email.html,
         },
       })
-      .catch((err) => console.error('Confirmation email send failed:', err));
+      .catch((err) => console.error('Confirmation email send failed:', safeErrorMessage(err)));
 
     // Stamp invite_sent_at so admin sees it went out.
-    supabase
+    const { error: stampErr } = await supabase
       .from('enrollments')
       .update({ invite_sent_at: new Date().toISOString() })
-      .eq('id', enrollment.id)
-      .then(({ error: stampErr }) => {
-        if (stampErr) console.error('invite_sent_at stamp failed:', stampErr);
-      });
+      .eq('id', enrollment.id);
+    if (stampErr) console.error('invite_sent_at stamp failed:', safeErrorLog(stampErr));
 
     inngest
       .send({
@@ -223,8 +258,10 @@ async function handlePaymentCaptured(opts: {
           actionUrl: '/admin/academy/enrollments',
         },
       })
-      .catch((err) => console.error('Admin notification failed:', err));
+      .catch((err) => console.error('Admin notification failed:', safeErrorMessage(err)));
   }
+
+  return { ok: true };
 }
 
 async function markFailed(orderId: string): Promise<void> {
@@ -234,7 +271,7 @@ async function markFailed(orderId: string): Promise<void> {
     .update({ status: 'failed', updated_at: new Date().toISOString() })
     .eq('razorpay_order_id', orderId)
     .eq('status', 'reserved');
-  if (error) console.error('Mark-failed error:', error);
+  if (error) console.error('Mark-failed error:', safeErrorLog(error));
 }
 
 async function markRefunded(paymentId: string): Promise<void> {
@@ -243,5 +280,5 @@ async function markRefunded(paymentId: string): Promise<void> {
     .from('enrollments')
     .update({ status: 'refunded', updated_at: new Date().toISOString() })
     .eq('razorpay_payment_id', paymentId);
-  if (error) console.error('Mark-refunded error:', error);
+  if (error) console.error('Mark-refunded error:', safeErrorLog(error));
 }
