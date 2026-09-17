@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { DIMENSIONS, RECOMMENDATIONS } from '@/lib/scorecard/questions';
-import { firstNameOf, renderSalesEmail, TEAM_SIGNATURE, type SalesEmailContext } from '../emails';
+import { firstNameOf, renderSalesEmail, TEAM_SIGNATURE, whatsappPrefillText, type SalesEmailContext } from '../emails';
 import type { SalesEmailTemplate } from '../sequence';
 
 const ctx: SalesEmailContext = {
@@ -144,6 +144,18 @@ describe('renderSalesEmail html (branded shell)', () => {
 
     const withoutAddress = renderSalesEmail('instant_reply', ctx).html;
     expect(withoutAddress).not.toContain('undefined');
+  });
+});
+
+describe('whatsappPrefillText', () => {
+  it.each([
+    ['Priya Shah', 'Hi, this is Priya. I got in touch'],
+    ['priya visit https://spam.example', 'Hi, this is Priya. I got in touch'],
+    ['asha.mehta', 'Hi, I got in touch'],
+    ['Unknown', 'Hi, I got in touch'],
+    ['', 'Hi, I got in touch'],
+  ])('%j → %j', (name, expected) => {
+    expect(whatsappPrefillText(name, 'I got in touch')).toBe(expected);
   });
 });
 

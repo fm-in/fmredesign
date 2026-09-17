@@ -8,7 +8,7 @@
 
 import { getResend } from '@/lib/email/resend';
 import { recordActivity } from '@/lib/sales/activity';
-import { firstNameOf, renderSalesEmail, type SalesEmailContext } from '@/lib/sales/emails';
+import { firstNameOf, renderSalesEmail, whatsappPrefillText, type SalesEmailContext } from '@/lib/sales/emails';
 import { bookingUrl, companyWhatsappUrl } from '@/lib/sales/links';
 import { isSuppressed } from '@/lib/sales/suppression';
 import { isUnsubscribeConfigured, oneClickUnsubscribeUrl, unsubscribeUrl } from '@/lib/sales/unsubscribe-token';
@@ -260,7 +260,7 @@ export async function sendSalesEmail({ lead, template, settings, ownerName }: Se
     ownerName,
     bookingUrl: bookingUrl(settings.bookingLink, prefill),
     bookingUrlLong: bookingUrl(settings.bookingLinkLong, prefill),
-    whatsappUrl: companyWhatsappUrl(`Hi, this is ${lead.name}. ${whatsappIntroLine(lead.source)}`),
+    whatsappUrl: companyWhatsappUrl(whatsappPrefillText(lead.name, whatsappIntroLine(lead.source))),
     unsubscribeUrl: unsubscribeUrl(lead.email),
     workUrl: `${SITE_URL}/work`,
     scorecardUrl: `${SITE_URL}/scorecard`,

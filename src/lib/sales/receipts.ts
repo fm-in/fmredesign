@@ -11,7 +11,7 @@
  */
 
 import { recordActivity } from '@/lib/sales/activity';
-import { firstNameOf, NO_FIRST_NAME, renderEmailCopy, TEAM_SIGNATURE, type EmailCopy, type RenderedEmail } from '@/lib/sales/emails';
+import { firstNameOf, renderEmailCopy, TEAM_SIGNATURE, whatsappPrefillText, type EmailCopy, type RenderedEmail } from '@/lib/sales/emails';
 import { companyWhatsappUrl } from '@/lib/sales/links';
 import { toE164 } from '@/lib/sales/phone';
 import { projectTypePhrase } from '@/lib/sales/send-email';
@@ -97,9 +97,7 @@ export function renderEnquiryReceipt(submission: EnquirySubmission): RenderedEma
   const firstName = firstNameOf(submission.name);
   // Only the checked first name, never the rest of the submitted name: it is
   // unbounded free text, and this link goes to whatever address was typed in.
-  const whatsappUrl = companyWhatsappUrl(
-    firstName !== NO_FIRST_NAME ? `Hi, this is ${firstName}. I sent an enquiry on your website` : 'Hi, I sent an enquiry on your website'
-  );
+  const whatsappUrl = companyWhatsappUrl(whatsappPrefillText(submission.name, 'I sent an enquiry on your website'));
   const project = enquiryProject(submission);
 
   const copy: EmailCopy = {

@@ -288,6 +288,17 @@ export function renderEmailCopy(copy: EmailCopy, footer: { ownerName: string; un
 }
 
 /**
+ * The text a WhatsApp link opens with: "Hi, this is Priya. {line}". Only the
+ * checked first name is used — the rest of a stored or submitted name is free
+ * text and never goes into an email — or "Hi, {line}" when there is no real
+ * first name. Shared by sales emails and confirmation receipts.
+ */
+export function whatsappPrefillText(fullName: string, line: string): string {
+  const firstName = firstNameOf(fullName);
+  return firstName === NO_FIRST_NAME ? `Hi, ${line}` : `Hi, this is ${firstName}. ${line}`;
+}
+
+/**
  * "priya shah" → "Priya". Falls back to "there" when the name is not a name —
  * including an email local part that intake used because no name was given
  * ("asha.mehta", "rahul123", "sam_k") or a whole address typed into a name

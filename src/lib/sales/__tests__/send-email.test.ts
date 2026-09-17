@@ -18,6 +18,7 @@ vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn(async () => unde
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 
 import { sendSalesEmail, deriveSalesEmailFields, parseWeakestChallenge } from '../send-email';
+import { SEQUENCES } from '../sequence';
 import { RECOMMENDATIONS } from '@/lib/scorecard/questions';
 
 const settings = { automationEnabled: true, bookingLink: 'fm-in/15min', bookingLinkLong: 'fm-in/30min' };
@@ -112,7 +113,76 @@ describe('sendSalesEmail', () => {
     await sendSalesEmail({ lead: leadRow({ source }), template: 'instant_reply', settings, ownerName: 'Asha' });
 
     const payload = mocks.send.mock.calls[0]?.[0] as { text: string };
-    expect(whatsappPrefill(payload.text)).toBe(`Hi, this is Priya Shah. ${line}`);
+    expect(whatsappPrefill(payload.text)).toBe(`Hi, this is Priya. ${line}`);
+  });
+
+  it.each(['asha.mehta', '+919833257659', 'Unknown'])('leaves the name out of the WhatsApp message for a lead named "%s"', async (name) => {
+    await sendSalesEmail({ lead: leadRow({ name }), template: 'instant_reply', settings, ownerName: 'Asha' });
+
+    const payload = mocks.send.mock.calls[0]?.[0] as { text: string };
+    expect(whatsappPrefill(payload.text)).toBe('Hi, I sent an enquiry on your website');
+  });
+
+  describe('nothing after the first word of the lead name reaches any sales email', () => {
+    const TEMPLATES = [
+      ...new Set(
+        Object.values(SEQUENCES)
+          .flat()
+          .flatMap((step) => (step.kind === 'email' ? [step.template] : []))
+      ),
+    ];
+
+    /**
+     * Subject, html and text, with the Cal.com booking link's `name` parameter
+     * set aside: that one deliberately prefills the booking form with the name
+     * on the lead, and is asserted separately.
+     */
+    function withoutBookingName(email: { subject: string; html: string; text: string }): string {
+      return [email.subject, email.html, email.text].join('\n').replace(/(https:\/\/cal\.com\/[^\s"<]*?[?&;]name=)[^&\s"<]*/g, '$1NAME');
+    }
+
+    it('covers every template in the sequence registry', () => {
+      expect(TEMPLATES).toHaveLength(12);
+    });
+
+    it.each([
+      'Priya Shah',
+      'Priya visit https://cheap-followers.example today',
+      'Priya <a href="https://phish.example">claim-prize-now</a>',
+      'Priya\tFREE\nMONEY',
+    ])('lead named "%s"', async (name) => {
+      const lead = leadRow({
+        name,
+        source: 'scorecard',
+        primary_challenge: 'Getting Found (50/100)',
+        custom_fields: { scorecardScore: 48, scorecardBand: 'patchy' },
+      });
+      const extraWords = name.split(/\s+/).slice(1).filter((word) => word.length >= 3);
+      expect(extraWords.length).toBeGreaterThan(0);
+
+      const withWhatsapp: string[] = [];
+      for (const template of TEMPLATES) {
+        mocks.send.mockClear();
+        await sendSalesEmail({ lead, template, settings, ownerName: 'Asha' });
+        const payload = mocks.send.mock.calls[0]?.[0] as { subject: string; html: string; text: string };
+
+        const everything = withoutBookingName(payload);
+        const decoded = decodeURIComponent(everything.replace(/%(?![0-9A-F]{2})/gi, '%25'));
+        for (const word of extraWords) {
+          expect(everything, `${template}: raw`).not.toContain(word);
+          expect(everything, `${template}: encoded`).not.toContain(encodeURIComponent(word));
+          expect(decoded, `${template}: decoded`).not.toContain(word);
+        }
+        const prefill = whatsappPrefill(payload.text);
+        if (prefill !== undefined) {
+          withWhatsapp.push(template);
+          // ad_intro's link is followed by the sentence's full stop, which the helper's \S+ picks up.
+          expect(prefill.replace(/\.$/, ''), template).toBe('Hi, this is Priya. I took your marketing scorecard');
+        }
+      }
+      // The templates that carry a WhatsApp link really were checked.
+      expect(withWhatsapp).toEqual(['brief_intro', 'instant_reply', 'ad_intro']);
+    });
   });
 });
 
