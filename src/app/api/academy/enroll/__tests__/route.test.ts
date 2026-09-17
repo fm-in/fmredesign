@@ -172,6 +172,74 @@ describe('POST /api/academy/enroll retry — reuses the existing row', () => {
   });
 });
 
+describe('POST /api/academy/enroll — checkout-reminder event dispatch', () => {
+  function dispatchedEvents(): Array<{ id?: string; name?: string; data?: { enrollmentId?: string } }> {
+    return mocks.inngestSend.mock.calls
+      .map((c) => c[0] as { id?: string; name?: string; data?: { enrollmentId?: string } })
+      .filter((e) => e?.name === 'academy/checkout.started');
+  }
+
+  it('sends academy/checkout.started with the deterministic id, only for a newly inserted row', async () => {
+    const res = await POST(enrol(aaravReserves()));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    const events = dispatchedEvents();
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      id: `academy-checkout-reminder-${json.data.id}`,
+      name: 'academy/checkout.started',
+      data: { enrollmentId: json.data.id },
+    });
+  });
+
+  it('does not dispatch the event on reuse — a paid row', async () => {
+    const row = { ...EXISTING_ROW_BASE, status: 'paid', razorpay_order_id: 'order_paid1' };
+    respondWithExisting(row);
+
+    await POST(enrol(aaravReserves()));
+
+    expect(dispatchedEvents()).toHaveLength(0);
+  });
+
+  it('does not dispatch the event on reuse — a reserved row with an existing order', async () => {
+    const row = { ...EXISTING_ROW_BASE, status: 'reserved', razorpay_order_id: 'order_existing123' };
+    respondWithExisting(row);
+
+    await POST(enrol(aaravReserves()));
+
+    expect(dispatchedEvents()).toHaveLength(0);
+  });
+
+  it('does not dispatch the event on reuse — an order-less row getting a fresh order', async () => {
+    const row = { ...EXISTING_ROW_BASE, status: 'reserved', razorpay_order_id: null };
+    respondWithExisting(row);
+
+    await POST(enrol(aaravReserves()));
+
+    expect(dispatchedEvents()).toHaveLength(0);
+  });
+
+  it('a failing checkout-reminder event send is logged and leaves the response unchanged', async () => {
+    mocks.inngestSend.mockImplementation(async (event) => {
+      if ((event as { name?: string })?.name === 'academy/checkout.started') {
+        throw new Error('event bus unavailable for aarav.gupta@example.com');
+      }
+      return undefined;
+    });
+    const output = consoleOutput();
+
+    const res = await POST(enrol(aaravReserves()));
+    const json = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(json.data.status).toBe('reserved');
+    await vi.waitFor(() => expect(output.text()).toContain('checkout-reminder event send failed'));
+    expect(output.text()).not.toContain('aarav.gupta@example.com');
+  });
+});
+
 describe('POST /api/academy/enroll logs', () => {
   it.each([
     ['a filled honeypot', () => ({ ...aaravReserves(), [HONEYPOT_FIELD]: 'http://spam.example' })],
@@ -225,6 +293,11 @@ describe('POST /api/academy/enroll logs', () => {
         error: { code: 'BAD_REQUEST_ERROR', description: 'notes.buyer_email aarav.gupta@example.com is invalid', reason: 'input_validation_failed' },
       })
     );
+    // Two inngest.send calls happen for a successful insert: the
+    // checkout-reminder event dispatch (fire-and-forget, since after() has
+    // no request scope in this test harness) first, then the admin
+    // "notification/send" — reject only the second.
+    mocks.inngestSend.mockResolvedValueOnce(undefined);
     mocks.inngestSend.mockRejectedValueOnce(new Error('Inngest rejected event for aarav.gupta@example.com'));
 
     const failedOrder = await POST(enrol(aaravReserves()));

@@ -31,7 +31,7 @@
  * reservation per buyer per program) so legitimate retries are not blocked.
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, after } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ApiResponse } from '@/lib/api-response';
 import { inngest } from '@/lib/inngest/client';
@@ -39,6 +39,7 @@ import {
   generateEnrollmentId,
   transformEnrollmentRow,
 } from '@/lib/admin/academy-types';
+import { checkoutReminderEventId } from '@/lib/academy/checkout-reminder';
 import { createOrder } from '@/lib/razorpay';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
@@ -56,6 +57,31 @@ interface RazorpayMeta {
 
 function isLikelyEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
+/**
+ * Fires `academy/checkout.started` for a brand-new enrollment row so
+ * `academyCheckoutReminderFn` can send one reminder an hour later if the
+ * buyer still hasn't paid. Deferred via `after()` (as POST /api/leads does
+ * for its confirmation receipt) so a slow or failed event send never delays
+ * or changes the response; a failure is logged by message only.
+ */
+function dispatchCheckoutReminder(enrollmentId: string): void {
+  const send = () =>
+    inngest
+      .send({
+        id: checkoutReminderEventId(enrollmentId),
+        name: 'academy/checkout.started',
+        data: { enrollmentId },
+      })
+      .catch((err) => console.error('[enroll] checkout-reminder event send failed:', safeErrorMessage(err)));
+
+  try {
+    after(send);
+  } catch {
+    // after() unavailable outside a request scope — fire and forget instead.
+    void send();
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -225,6 +251,10 @@ export async function POST(request: NextRequest) {
     console.error('Enrollment insert error:', insertErr ? safeErrorLog(insertErr) : 'no row returned');
     return ApiResponse.error('Could not create reservation');
   }
+
+  // A brand-new row only: the retry paths above return before reaching here,
+  // so this never double-schedules a reminder for a row that already exists.
+  dispatchCheckoutReminder(id);
 
   // Surface the checkout in the admin dashboard. The header used to claim
   // this happened via Inngest, but no notification was ever sent — every
