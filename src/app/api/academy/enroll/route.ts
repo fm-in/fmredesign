@@ -43,7 +43,8 @@ import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
 import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { notifyAdmins } from '@/lib/notifications';
 import { sendAcademyReservedReceipt } from '@/lib/sales/receipts';
-import { afterResponse, safeErrorMessage } from '@/lib/sales/transactional-email';
+import { afterResponse } from '@/lib/sales/transactional-email';
+import { safeErrorLog, safeErrorMessage } from '@/lib/safe-log';
 
 function isLikelyEmail(s: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
@@ -192,10 +193,7 @@ export async function POST(request: NextRequest) {
 
   if (insertErr || !inserted) {
     // Code and message only: a Postgres error's `details` can quote the whole row.
-    console.error('Enrollment insert error:', {
-      code: insertErr?.code,
-      message: insertErr ? safeErrorMessage(insertErr) : 'no row returned',
-    });
+    console.error('Enrollment insert error:', insertErr ? safeErrorLog(insertErr) : 'no row returned');
     return ApiResponse.error('Could not create reservation');
   }
 
@@ -213,7 +211,7 @@ export async function POST(request: NextRequest) {
   // The buyer's own confirmation that the seat is held. Transactional: it goes
   // whatever the sales automation switch says, and never affects this response.
   afterResponse('academy reservation receipt', () =>
-    sendAcademyReservedReceipt(buyerEmail, id, {
+    sendAcademyReservedReceipt({ buyerEmail, programId, enrollmentId: id }, {
       buyerName,
       program: {
         title: typeof program.title === 'string' ? program.title : null,

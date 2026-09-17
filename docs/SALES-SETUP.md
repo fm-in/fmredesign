@@ -82,9 +82,10 @@ Who does **not** get one:
   contacted.
 - **Anyone who already got one in the last 24 hours.** A public form will email any address
   typed into it, so each address gets at most one confirmation a day: a repeat contact or
-  get-started submission within 24 hours of the last confirmation on that lead gets none, and
-  so does an Academy reservation made within 24 hours of the same buyer's previous one. The
-  submission itself is still saved and shows up as usual. (Until the sales migration is
+  get-started submission within 24 hours of the last confirmation on that lead gets none. For
+  the Academy the limit is per programme — reserving two different programmes on the same day
+  confirms both, but reserving the same programme again within 24 hours sends no second
+  confirmation. The submission itself is still saved and shows up as usual. (Until the sales migration is
   applied there is no timeline to check, so this limit can't apply to contact and get-started
   confirmations yet.)
 

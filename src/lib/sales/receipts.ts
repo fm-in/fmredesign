@@ -15,6 +15,7 @@ import { firstNameOf, NO_FIRST_NAME, renderEmailCopy, TEAM_SIGNATURE, type Email
 import { companyWhatsappUrl } from '@/lib/sales/links';
 import { projectTypePhrase } from '@/lib/sales/send-email';
 import { sendTransactionalEmail } from '@/lib/sales/transactional-email';
+import { safeErrorMessage } from '@/lib/safe-log';
 import { SITE_URL } from '@/lib/site-url';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
@@ -44,7 +45,7 @@ async function confirmedRecently(leadId: string): Promise<boolean> {
     .gte('occurred_at', capStart())
     .limit(1);
   if (error) {
-    console.error('[receipts] could not check for a recent confirmation:', error.message);
+    console.error('[receipts] could not check for a recent confirmation:', safeErrorMessage(error));
     return true;
   }
   return Array.isArray(data) && data.length > 0;
@@ -183,37 +184,47 @@ export function renderAcademyReserved({ buyerName, program }: AcademyReservation
   return renderEmailCopy(copy, { ownerName: TEAM_SIGNATURE });
 }
 
+/** The reservation just created, which the receipt confirms. */
+export interface NewReservation {
+  buyerEmail: string;
+  programId: string;
+  /** The new `enrollments.id`, which the cap check leaves out. */
+  enrollmentId: string;
+}
+
 /**
- * Whether the buyer made another reservation (any programme, any status)
- * within the cap. `enrollments` records no sent receipts, so an earlier
- * reservation stands in for one: every new reservation is offered a receipt.
- * A failed check counts as recent, as for enquiries.
+ * Whether the buyer made another reservation for the same programme (any
+ * status) within the cap. `enrollments` records no sent receipts, so an earlier
+ * reservation stands in for one. Keyed on buyer and programme, so reserving two
+ * programmes on the same day confirms both; the route already reuses a live
+ * reservation for the same pair, so in practice this is one receipt per
+ * reservation. A failed check counts as recent, as for enquiries.
  */
-async function reservedRecently(buyerEmail: string, enrollmentId: string): Promise<boolean> {
+async function reservedRecently({ buyerEmail, programId, enrollmentId }: NewReservation): Promise<boolean> {
   const { data, error } = await getSupabaseAdmin()
     .from('enrollments')
     .select('id')
     .eq('buyer_email', buyerEmail.trim().toLowerCase())
+    .eq('program_id', programId)
     .neq('id', enrollmentId)
     .gte('created_at', capStart())
     .limit(1);
   if (error) {
-    console.error('[receipts] could not check for a recent reservation:', error.message);
+    console.error('[receipts] could not check for a recent reservation:', safeErrorMessage(error));
     return true;
   }
   return Array.isArray(data) && data.length > 0;
 }
 
 /**
- * Sends the reservation receipt to the buyer, unless they already reserved a
- * seat within `RECEIPT_CAP_MS`. `enrollmentId` is the reservation just created,
- * which the check leaves out. Never throws.
+ * Sends the reservation receipt to the buyer, unless they already reserved
+ * this programme within `RECEIPT_CAP_MS`. Never throws.
  */
-export async function sendAcademyReservedReceipt(
-  buyerEmail: string,
-  enrollmentId: string,
-  reservation: AcademyReservation
-): Promise<void> {
-  if (await reservedRecently(buyerEmail, enrollmentId)) return;
-  await sendTransactionalEmail({ to: buyerEmail, template: 'academy_reserved', email: renderAcademyReserved(reservation) });
+export async function sendAcademyReservedReceipt(reservationMade: NewReservation, reservation: AcademyReservation): Promise<void> {
+  if (await reservedRecently(reservationMade)) return;
+  await sendTransactionalEmail({
+    to: reservationMade.buyerEmail,
+    template: 'academy_reserved',
+    email: renderAcademyReserved(reservation),
+  });
 }

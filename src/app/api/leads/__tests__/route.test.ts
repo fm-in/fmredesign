@@ -46,7 +46,8 @@ vi.mock('next/server', async (importOriginal) => ({
   },
 }));
 
-import { POST, PUT } from '../route';
+import { logAuditEvent } from '@/lib/admin/audit-log';
+import { DELETE, GET, POST, PUT } from '../route';
 
 let ipCounter = 0;
 
@@ -484,5 +485,133 @@ describe('PUT /api/leads', () => {
     await PUT(putLead({ id: 'lead_1', assignedTo: 'Ben', notes: 'Called them' }));
 
     expect(fake.callsTo('leads', 'update').map(payloadOf).some((p) => 'assigned_to' in p)).toBe(false);
+  });
+});
+
+describe('/api/leads logs carry no contact details', () => {
+  const EMAIL = 'priya.shah@example.com';
+  const PHONE = '+91 98332 57659';
+  const PHONE_DIGITS = '9833257659';
+
+  /** A database error that repeats the person's data, the way Postgres `details` quotes the failing row. */
+  function rowQuotingError(code: string): { code: string; message: string } {
+    return Object.assign(
+      { code, message: `could not write the lead for ${EMAIL} (${PHONE})` },
+      { details: `Failing row contains (lead_mfk2a9_x1y2z, Priya Shah, ${EMAIL}, ${PHONE}, new).`, hint: `Check ${EMAIL}` }
+    );
+  }
+
+  let spies: Array<{ mock: { calls: unknown[][] }; mockRestore: () => void }> = [];
+
+  beforeEach(() => {
+    spies = (['error', 'warn', 'log', 'info'] as const).map((method) => vi.spyOn(console, method).mockImplementation(() => undefined));
+  });
+
+  afterEach(() => {
+    spies.forEach((spy) => spy.mockRestore());
+    Object.assign(mocks.user, { role: 'manager' });
+  });
+
+  function logged(): string {
+    return spies
+      .flatMap((spy) => spy.mock.calls.flat())
+      .map((arg) => (typeof arg === 'string' ? arg : arg instanceof Error ? `${arg.message} ${arg.stack}` : JSON.stringify(arg)))
+      .join('\n');
+  }
+
+  function expectNoContactDetails(): void {
+    const text = logged();
+    expect(text.length).toBeGreaterThan(0);
+    expect(text).not.toContain(EMAIL);
+    expect(text).not.toMatch(/@example\.com/);
+    expect(text.replace(/\D/g, '')).not.toContain(PHONE_DIGITS);
+  }
+
+  const submission = () => contactPageBody({ name: 'Priya Shah', email: EMAIL, phone: PHONE, service: 'PPC Advertising' });
+
+  it('POST: an intake failure quoting the row logs its code, not the address or phone', async () => {
+    mocks.ingestLead.mockRejectedValueOnce(rowQuotingError('XX000'));
+
+    const res = await POST(postLead(submission()));
+
+    expect(res.status).toBe(500);
+    expect(logged()).toContain('XX000');
+    expectNoContactDetails();
+  });
+
+  it('POST: a merge failure (an Error naming the matched address) logs neither', async () => {
+    mocks.ingestLead.mockRejectedValueOnce(new Error(`update of the lead matched on ${EMAIL} / ${PHONE} failed`));
+
+    const res = await POST(postLead(submission()));
+
+    expect(res.status).toBe(500);
+    expect(logged()).toContain('Error creating lead');
+    expectNoContactDetails();
+  });
+
+  it('POST: a failed pre-migration fallback insert logs neither', async () => {
+    mocks.ingestLead.mockRejectedValueOnce({ code: 'PGRST204', message: "Could not find the 'consent_basis' column of 'leads' in the schema cache" });
+    fake.respond((call) => (call.table === 'leads' && call.op === 'insert' ? { data: null, error: rowQuotingError('23502') } : { data: null, error: null }));
+
+    const res = await POST(postLead(submission()));
+
+    expect(res.status).toBe(500);
+    expect(logged()).toContain('23502');
+    expectNoContactDetails();
+  });
+
+  it('POST: failing to load the new lead for the team notification logs neither', async () => {
+    fake.respond((call) => (call.table === 'leads' && call.op === 'select' ? { data: null, error: rowQuotingError('PGRST116') } : { data: null, error: null }));
+
+    const res = await POST(postLead(submission()));
+
+    expect(res.status).toBe(201);
+    expect(logged()).toContain('could not load the new lead');
+    expectNoContactDetails();
+  });
+
+  it('GET: a query error echoing an admin search for an address logs neither', async () => {
+    fake.respond((call) =>
+      call.table === 'leads'
+        ? { data: null, error: { code: 'PGRST100', message: `failed to parse logic tree ((name.ilike.%${EMAIL}%,phone.ilike.%${PHONE}%))` } }
+        : { data: null, error: null }
+    );
+
+    const res = await GET(new NextRequest(`http://localhost/api/leads?search=${encodeURIComponent(EMAIL)}`));
+
+    expect(res.status).toBe(500);
+    expect(logged()).toContain('PGRST100');
+    expectNoContactDetails();
+  });
+
+  it('PUT: an update error quoting the row logs neither', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ owner_id: 'user-1' }), error: null };
+      if (call.table === 'leads' && call.op === 'update') return { data: null, error: rowQuotingError('23514') };
+      return { data: null, error: null };
+    });
+
+    const res = await PUT(
+      new NextRequest('http://localhost/api/leads', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: 'lead_1', notes: `Call ${PHONE}` }),
+      })
+    );
+
+    expect(res.status).toBe(500);
+    expect(logged()).toContain('23514');
+    expectNoContactDetails();
+  });
+
+  it('DELETE: a failure after deleting logs neither', async () => {
+    Object.assign(mocks.user, { role: 'admin' });
+    vi.mocked(logAuditEvent).mockRejectedValueOnce(new Error(`audit write failed for ${EMAIL}, ${PHONE}`));
+
+    const res = await DELETE(new NextRequest('http://localhost/api/leads?id=lead_1', { method: 'DELETE' }));
+
+    expect(res.status).toBe(500);
+    expect(logged()).toContain('Error deleting lead');
+    expectNoContactDetails();
   });
 });

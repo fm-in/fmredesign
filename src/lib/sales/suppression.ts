@@ -3,6 +3,7 @@
  * scheduling time, so an unsubscribe takes effect for messages already queued.
  */
 
+import { safeErrorMessage } from '@/lib/safe-log';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { generateSalesId } from '@/lib/sales/types';
 import type { SuppressionReason } from '@/lib/sales/types';
@@ -54,7 +55,7 @@ export async function blocksReceipts(email: string): Promise<boolean> {
     .limit(5);
   if (error) {
     if (error.code && MISSING_TABLE_CODES.has(error.code)) return false;
-    console.error('[sales] suppression lookup failed:', error.message);
+    console.error('[sales] suppression lookup failed:', safeErrorMessage(error));
     return true;
   }
   return Array.isArray(data) && data.some((row: { reason?: unknown }) => row.reason !== RECEIPT_ALLOWED_REASON);

@@ -7,11 +7,12 @@
  *
  * Nothing here throws. A receipt that fails must never fail, change or delay
  * the submission it confirms, so failures are logged — by message only, never
- * an address or a body — and the caller carries on.
+ * an address, a phone number or a body — and the caller carries on.
  */
 
 import { after } from 'next/server';
 import { getResend } from '@/lib/email/resend';
+import { safeErrorMessage } from '@/lib/safe-log';
 import type { RenderedEmail } from '@/lib/sales/emails';
 import { SALES_FROM_DEFAULT } from '@/lib/sales/send-email';
 import { blocksReceipts } from '@/lib/sales/suppression';
@@ -28,19 +29,6 @@ export interface TransactionalEmail {
 export type TransactionalOutcome =
   | { sent: true; messageId: string }
   | { sent: false; reason: 'no_email' | 'not_configured' | 'suppressed' | 'failed' };
-
-const ADDRESS_PATTERN = /[^\s@<>"'`(),;:]+@[^\s@<>"'`(),;:]+/g;
-
-/** An error's message with any email address blanked, safe to log. */
-export function safeErrorMessage(error: unknown): string {
-  let message = 'unknown error';
-  if (typeof error === 'string') message = error;
-  else if (error instanceof Error) message = error.message;
-  else if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
-    message = error.message;
-  }
-  return message.replace(ADDRESS_PATTERN, '[address]');
-}
 
 export async function sendTransactionalEmail({ to, template, email }: TransactionalEmail): Promise<TransactionalOutcome> {
   try {

@@ -127,11 +127,24 @@ beforeEach(() => {
     }
     if (call.table === 'enrollments' && call.op === 'select') {
       const since = filterValue(call, 'gte', 'created_at');
-      if (typeof since !== 'string') return { data: mocks.existing.current, error: null };
-      // The receipt cap: this buyer's other reservations since `since`.
+      if (typeof since !== 'string') {
+        // The route's retry check: this buyer's reserved or paid rows for the programme, newest first.
+        const statuses = call.filters.find((f) => f.method === 'in' && f.args[0] === 'status')?.args[1];
+        const stored = enrollments
+          .filter(
+            (row) =>
+              row.program_id === eqValue(call, 'program_id') &&
+              row.buyer_email === eqValue(call, 'buyer_email') &&
+              Array.isArray(statuses) &&
+              statuses.includes(row.status)
+          )
+          .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+        return { data: [...mocks.existing.current, ...stored], error: null };
+      }
+      // The receipt cap: rows matching every eq filter the query gives, other than the new one, since `since`.
       const recent = enrollments.filter(
         (row) =>
-          row.buyer_email === eqValue(call, 'buyer_email') &&
+          call.filters.filter((f) => f.method === 'eq').every((f) => row[String(f.args[0])] === f.args[1]) &&
           row.id !== filterValue(call, 'neq', 'id') &&
           String(row.created_at) >= since
       );
@@ -141,6 +154,11 @@ beforeEach(() => {
       const row = { ...payloadOf(call), created_at: new Date().toISOString() };
       enrollments.push(row);
       return { data: row, error: null };
+    }
+    if (call.table === 'enrollments' && call.op === 'update') {
+      const row = enrollments.find((candidate) => candidate.id === eqValue(call, 'id'));
+      if (row) Object.assign(row, payloadOf(call));
+      return { data: null, error: null };
     }
     if (call.table === 'suppression_list') return { data: [], error: null };
     return { data: null, error: null };
@@ -252,7 +270,7 @@ describe('POST /api/academy/enroll reservation receipt', () => {
   });
 });
 
-describe('POST /api/academy/enroll reservation receipt: one per buyer per 24 hours', () => {
+describe('POST /api/academy/enroll reservation receipt: one per buyer per programme per 24 hours', () => {
   const T0 = new Date('2026-09-17T06:00:00.000Z');
   const HOUR = 60 * 60 * 1000;
 
@@ -263,23 +281,58 @@ describe('POST /api/academy/enroll reservation receipt: one per buyer per 24 hou
     return res;
   }
 
-  it('sends nothing for a second reservation by the same buyer within 24 hours', async () => {
+  /**
+   * The only way the same buyer creates a second row for the same programme:
+   * the first reservation's Razorpay order failed, so the retry check finds no
+   * order to reuse and the route inserts a new reservation.
+   */
+  async function reserveWithOrderFailureAt(at: Date, programId: string): Promise<Response> {
+    mocks.createOrder.mockRejectedValueOnce(Object.assign(new Error('Razorpay is down'), { statusCode: 503 }));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const res = await reserveAt(at, programId);
+    error.mockRestore();
+    return res;
+  }
+
+  it('sends a receipt for a second programme reserved within 24 hours', async () => {
     const first = await reserveAt(T0, 'prog-digital-marketing-2026-06');
     expect(first.status).toBe(200);
-    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
 
-    const second = await reserveAt(new Date(T0.getTime() + 23 * HOUR), 'prog-video-editing-2026-06');
+    const second = await reserveAt(new Date(T0.getTime() + HOUR), 'prog-video-editing-2026-06');
     expect(second.status).toBe(200);
     expect((await second.json()).data).toMatchObject({ status: 'reserved', programId: 'prog-video-editing-2026-06' });
+
+    expect(enrollments).toHaveLength(2);
+    expect(sentEmails().map((email) => email.to)).toEqual(['aarav.gupta@example.com', 'aarav.gupta@example.com']);
+  });
+
+  it('sends nothing for the same programme reserved again within 24 hours', async () => {
+    await reserveWithOrderFailureAt(T0, 'prog-digital-marketing-2026-06');
+    expect(enrollments[0]).toMatchObject({ status: 'reserved' });
+    expect(enrollments[0]?.razorpay_order_id).toBeUndefined();
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
+
+    const retry = await reserveAt(new Date(T0.getTime() + 23 * HOUR), 'prog-digital-marketing-2026-06');
+
+    expect(retry.status).toBe(200);
     expect(enrollments).toHaveLength(2);
     expect(mocks.resendSend).toHaveBeenCalledTimes(1);
   });
 
-  it('sends again once 24 hours have passed since the last reservation', async () => {
-    await reserveAt(T0, 'prog-digital-marketing-2026-06');
-    await reserveAt(new Date(T0.getTime() + 24 * HOUR + 60 * 1000), 'prog-video-editing-2026-06');
+  it('sends again for the same programme once 24 hours have passed', async () => {
+    await reserveWithOrderFailureAt(T0, 'prog-digital-marketing-2026-06');
+    await reserveAt(new Date(T0.getTime() + 24 * HOUR + 60 * 1000), 'prog-digital-marketing-2026-06');
 
+    expect(enrollments).toHaveLength(2);
     expect(mocks.resendSend).toHaveBeenCalledTimes(2);
+  });
+
+  it('a retry that reuses the existing order creates no reservation and sends nothing', async () => {
+    await reserveAt(T0, 'prog-digital-marketing-2026-06');
+    await reserveAt(new Date(T0.getTime() + HOUR), 'prog-digital-marketing-2026-06');
+
+    expect(enrollments).toHaveLength(1);
+    expect(mocks.resendSend).toHaveBeenCalledTimes(1);
   });
 
   it("does not count someone else's reservation", async () => {
