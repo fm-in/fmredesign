@@ -136,6 +136,12 @@ describe('firstNameOf', () => {
     ['  Rahul  ', 'Rahul'],
     ['Unknown', 'there'],
     ['+919833257659', 'there'],
+    ['asha.mehta', 'there'],
+    ['rahul123', 'there'],
+    ['sam_k', 'there'],
+    ['Priya Shah', 'Priya'],
+    ["D'Souza Anil", "D'Souza"],
+    ['Anne-Marie Rao', 'Anne-Marie'],
     ['', 'there'],
   ])('%s → %s', (input, expected) => {
     expect(firstNameOf(input)).toBe(expected);
@@ -318,6 +324,14 @@ describe('scorecard-v1 templates', () => {
     expect(email.html).toContain('Your results stay on file either way.');
     expect(email.text).toContain("I'll stop following up on your scorecard now.");
     expect(email.text).toContain(`Book a call: ${ctx.bookingUrl}`);
+  });
+});
+
+describe('names taken from an email address', () => {
+  it.each(['asha.mehta', 'rahul123', 'sam_k'])('%s greets with "Hi there," and a name-free subject', (name) => {
+    const email = renderSalesEmail('brief_intro', { ...ctx, firstName: firstNameOf(name) });
+    expect(email.subject).toBe('Your project brief');
+    expect(email.text.startsWith('Hi there,\n')).toBe(true);
   });
 });
 

@@ -261,9 +261,14 @@ export function renderSalesEmail(template: SalesEmailTemplate, ctx: SalesEmailCo
   return { subject: copy.subject, html, text };
 }
 
-/** "priya shah" → "Priya". Falls back to "there" when the name is not a name. */
+/**
+ * "priya shah" → "Priya". Falls back to "there" when the name is not a name —
+ * including an email local part that intake used because no name was given
+ * ("asha.mehta", "rahul123", "sam_k"): digits, dots and underscores never
+ * appear in a first name we should greet someone by.
+ */
 export function firstNameOf(fullName: string): string {
   const first = fullName.trim().split(/\s+/)[0] ?? '';
-  if (!first || first === 'Unknown' || !/^\p{L}/u.test(first)) return NO_FIRST_NAME;
+  if (!first || first === 'Unknown' || !/^\p{L}/u.test(first) || /[\d._]/.test(first)) return NO_FIRST_NAME;
   return first.charAt(0).toUpperCase() + first.slice(1);
 }

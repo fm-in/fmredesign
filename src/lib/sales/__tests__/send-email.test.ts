@@ -173,18 +173,36 @@ describe('deriveSalesEmailFields', () => {
     }
   });
 
-  it('leaves campaign undefined for Google and Meta leads, whose stored campaign is an id or an internal name', () => {
-    expect(deriveSalesEmailFields(leadRow({ source: 'google_lead_form', utm_campaign: '21498765432' })).campaign).toBeUndefined();
-    expect(deriveSalesEmailFields(leadRow({ source: 'meta_lead_ads', utm_campaign: 'FM_LeadGen_Sept2026' })).campaign).toBeUndefined();
+  it('never takes a campaign from utm_campaign, for any source', () => {
+    for (const [source, utmCampaign] of [
+      ['google_lead_form', '21498765432'],
+      ['meta_lead_ads', 'FM_LeadGen_Sept2026'],
+      ['website_form', 'sept_retarget_bhopal'],
+      ['connector', 'Growth audit for D2C brands'],
+    ] as const) {
+      expect(deriveSalesEmailFields(leadRow({ source, utm_campaign: utmCampaign })).campaign).toBeUndefined();
+    }
   });
 
-  it("uses a connector lead's explicit campaign field", () => {
-    const lead = leadRow({ source: 'connector', utm_campaign: 'Growth audit for D2C brands', source_detail: 'quora · Growth audit for D2C brands' });
+  it("uses a connector lead's explicitly posted campaign, stored in custom_fields.connectorCampaign", () => {
+    const lead = leadRow({
+      source: 'connector',
+      utm_campaign: 'Growth audit for D2C brands',
+      custom_fields: { platform: 'quora', connectorCampaign: 'Growth audit for D2C brands' },
+    });
     expect(deriveSalesEmailFields(lead).campaign).toBe('Growth audit for D2C brands');
   });
 
-  it('leaves campaign undefined for a website lead, whose utm_campaign is an internal tracking value', () => {
-    expect(deriveSalesEmailFields(leadRow({ source: 'website_form', utm_campaign: 'sept_retarget_bhopal' })).campaign).toBeUndefined();
+  it('leaves campaign undefined for a connector lead that posted none', () => {
+    const lead = leadRow({ source: 'connector', custom_fields: { platform: 'linkedin', connectorCampaign: null } });
+    expect(deriveSalesEmailFields(lead).campaign).toBeUndefined();
+  });
+
+  it('ignores a connectorCampaign key on any other source, where a form could have supplied it', () => {
+    for (const source of ['website_form', 'google_lead_form', 'meta_lead_ads', 'scorecard'] as const) {
+      const lead = leadRow({ source, custom_fields: { connectorCampaign: 'Injected campaign' } });
+      expect(deriveSalesEmailFields(lead).campaign).toBeUndefined();
+    }
   });
 
   it.each([
@@ -211,6 +229,23 @@ describe('deriveSalesEmailFields', () => {
   it('derives a connector platform from custom_fields.platform first, with the brand spelling', () => {
     const lead = leadRow({ source: 'connector', custom_fields: { platform: 'linkedin' }, source_detail: 'linkedin · Lead Gen' });
     expect(deriveSalesEmailFields(lead).platform).toBe('LinkedIn');
+  });
+
+  it.each([
+    ['linkedin_ads', 'LinkedIn Ads'],
+    ['indiamart-leads', 'IndiaMART Leads'],
+    ['justdial', 'JustDial'],
+    ['quora', 'Quora'],
+    ['my_zap-source', 'My Zap Source'],
+    ['  snapchat__lead--gen ', 'Snapchat Lead Gen'],
+  ] as const)('humanises the connector platform %s as "%s"', (platform, expected) => {
+    const lead = leadRow({ source: 'connector', custom_fields: { platform } });
+    expect(deriveSalesEmailFields(lead).platform).toBe(expected);
+  });
+
+  it('leaves connector platform undefined when the posted value is only separators', () => {
+    const lead = leadRow({ source: 'connector', custom_fields: { platform: '_-_' }, source_detail: null });
+    expect(deriveSalesEmailFields(lead).platform).toBeUndefined();
   });
 
   it('falls back to source_detail for a connector platform when custom_fields lacks it', () => {

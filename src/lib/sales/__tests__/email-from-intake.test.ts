@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
-import { fake, payloadOf } from '@/test-utils/fake-supabase';
+import { eqValue, fake, payloadOf } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
 import type { LeadRow, SalesSettings } from '@/lib/sales/types';
 import type { SalesEmailTemplate } from '@/lib/sales/sequence';
@@ -214,6 +214,131 @@ describe('ad_intro from a real Zapier/Make connector post', () => {
     expect(email.subject).toBe('About your enquiry from Growth audit for D2C brands');
     expect(email.text).toContain('You filled in our form on Quora about Growth audit for D2C brands — thanks for that.');
     expectNoInternalValues(email);
+  });
+});
+
+describe('a connector lead later matched by a Google lead form (merge)', () => {
+  const googleForSamePerson = (extraColumns: Array<{ column_id: string; string_value: string; column_name: string }> = []) => ({
+    lead_id: 'CjwKCAjw-merge-9b1c',
+    form_id: 184467440737,
+    campaign_id: 21498765432,
+    google_key: 'secret-key',
+    is_test: false,
+    user_column_data: [
+      { column_id: 'FULL_NAME', string_value: 'Neha Kapoor', column_name: 'Full Name' },
+      { column_id: 'EMAIL', string_value: 'neha.kapoor@example.com', column_name: 'User Email' },
+      ...extraColumns,
+    ],
+  });
+
+  /**
+   * Stateful leads table for one person: the first insert is stored, a later
+   * lookup by that email finds it, and updates are applied to it — so the
+   * second arrival really merges through `mergeEmptyFields`.
+   */
+  function respondWithOneStoredLead(): { current: () => LeadRow; updates: () => Record<string, unknown>[] } {
+    let stored: Record<string, unknown> | null = null;
+    const updates: Record<string, unknown>[] = [];
+    fake.respond((call) => {
+      if (call.table !== 'leads') return { data: null, error: null };
+      if (call.op === 'insert') {
+        stored = payloadOf(call);
+        return { data: null, error: null };
+      }
+      if (call.op === 'update') {
+        if (stored && eqValue(call, 'id') === stored.id) {
+          updates.push(payloadOf(call));
+          stored = { ...stored, ...payloadOf(call) };
+        }
+        return { data: null, error: null };
+      }
+      const matchesEmail = stored !== null && eqValue(call, 'email') === stored.email;
+      return { data: matchesEmail ? [stored] : [], error: null };
+    });
+    return {
+      current: () => {
+        if (!stored) throw new Error('intake wrote no lead');
+        return { ...leadRow(), ...stored } as LeadRow;
+      },
+      updates: () => updates,
+    };
+  }
+
+  it('never shows the Google campaign id that the merge copies into utm_campaign', async () => {
+    const table = respondWithOneStoredLead();
+    await ingestLead(
+      mapConnectorLead({ platform: 'linkedin', name: 'Neha Kapoor', email: 'neha.kapoor@example.com', formName: 'CXO form' }, NOW)
+    );
+    const merged = await ingestLead(mapGoogleLead(googleForSamePerson(), NOW));
+    expect(merged.created).toBe(false);
+
+    const lead = table.current();
+    // The leak is real: the merge fills the empty utm_campaign with Google's id and source stays connector.
+    expect(lead.source).toBe('connector');
+    expect(lead.utm_campaign).toBe('21498765432');
+
+    const email = await emailFor(lead, 'ad_intro');
+    expect(email.subject).toBe('About your enquiry');
+    expect(email.text).toContain('You filled in one of our forms on LinkedIn — thanks for that.');
+    expectNoInternalValues(email);
+  });
+
+  it('cannot fill connectorCampaign even when the later form has a field of that name', async () => {
+    const table = respondWithOneStoredLead();
+    await ingestLead(mapConnectorLead({ platform: 'linkedin', name: 'Neha Kapoor', email: 'neha.kapoor@example.com' }, NOW));
+    await ingestLead(
+      mapGoogleLead(
+        googleForSamePerson([{ column_id: 'connectorCampaign', string_value: 'Campaign 21498765432', column_name: 'connectorCampaign' }]),
+        NOW
+      )
+    );
+
+    expect(table.current().custom_fields).toMatchObject({ connectorCampaign: null });
+    const email = await emailFor(table.current(), 'ad_intro');
+    expect(email.subject).toBe('About your enquiry');
+    expectNoInternalValues(email);
+  });
+
+  it('keeps showing the campaign a connector lead did post, after the same merge', async () => {
+    const table = respondWithOneStoredLead();
+    await ingestLead(
+      mapConnectorLead(
+        { platform: 'linkedin_ads', name: 'Neha Kapoor', email: 'neha.kapoor@example.com', campaign: 'Growth audit for D2C brands' },
+        NOW
+      )
+    );
+    await ingestLead(mapGoogleLead(googleForSamePerson(), NOW));
+
+    const email = await emailFor(table.current(), 'ad_intro');
+    expect(email.subject).toBe('About your enquiry from Growth audit for D2C brands');
+    expect(email.text).toContain('You filled in our form on LinkedIn Ads about Growth audit for D2C brands — thanks for that.');
+    expectNoInternalValues(email);
+  });
+});
+
+describe('a lead with no name, named from its email address', () => {
+  it('greets with "Hi there," and a name-free subject, never the email local part', async () => {
+    await ingestLead(
+      mapGoogleLead(
+        {
+          lead_id: 'CjwKCAjw-noname-1',
+          campaign_id: 21498765432,
+          is_test: false,
+          user_column_data: [{ column_id: 'EMAIL', string_value: 'asha.mehta@example.com', column_name: 'User Email' }],
+        },
+        NOW
+      )
+    );
+    const lead = storedLead();
+    expect(lead.name).toBe('asha.mehta');
+
+    const intro = await emailFor(lead, 'ad_intro');
+    expect(intro.text.startsWith('Hi there,\n')).toBe(true);
+    expect(intro.text.toLowerCase()).not.toContain('asha.mehta,');
+    expectNoInternalValues(intro);
+
+    const reply = await emailFor(lead, 'instant_reply');
+    expect(reply.subject).toBe('Got your message');
   });
 });
 

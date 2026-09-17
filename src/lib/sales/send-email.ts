@@ -120,14 +120,28 @@ function bandPhrase(value: string | undefined): string | undefined {
   return BAND_PHRASE_OVERRIDES[value] ?? BAND_LABELS[value].toLowerCase();
 }
 
+/**
+ * A zap's free-text platform as a name: "linkedin_ads" -> "LinkedIn Ads".
+ * Underscores and hyphens become spaces, known brands keep their spelling,
+ * and every other word gets a capital first letter.
+ */
+function humanizePlatform(raw: string): string | undefined {
+  const words = raw.split(/[\s_-]+/).filter(Boolean);
+  if (words.length === 0) return undefined;
+  return words
+    .map((word) => {
+      const known = word.toLowerCase();
+      return Object.hasOwn(CONNECTOR_PLATFORM_NAMES, known)
+        ? CONNECTOR_PLATFORM_NAMES[known]
+        : word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
 function platformFromConnector(lead: LeadRow): string | undefined {
   const cf = customFieldsRecord(lead);
   const raw = readCustomString(cf, 'platform') ?? nonEmptyString(lead.source_detail)?.split('·')[0]?.trim();
-  if (!raw) return undefined;
-  const known = raw.toLowerCase();
-  return Object.hasOwn(CONNECTOR_PLATFORM_NAMES, known)
-    ? CONNECTOR_PLATFORM_NAMES[known]
-    : raw.charAt(0).toUpperCase() + raw.slice(1);
+  return raw ? humanizePlatform(raw) : undefined;
 }
 
 /** Meta intake stores where the lead ad ran in utm_source ("facebook" or "instagram"). */
@@ -158,13 +172,14 @@ function derivePlatform(lead: LeadRow): string | undefined {
 
 /**
  * A campaign name a customer would recognise, or undefined. Only a connector
- * lead has one: the zap posts it in its own `campaign` field, which intake
- * stores as utm_campaign. Google stores a numeric campaign id there and Meta
- * an internal campaign name, website UTMs are tracking values, and
- * source_detail mixes the platform with form names — none of those are shown.
+ * lead has one: the campaign the zap explicitly posted, which intake keeps in
+ * `custom_fields.connectorCampaign`. `utm_campaign` is never read — Google
+ * stores a numeric id there, Meta an internal name, website UTMs are tracking
+ * values, and a merge can copy any of those onto a connector lead. The key is
+ * ignored on other sources, where a submitted form could have supplied it.
  */
 function customerCampaign(lead: LeadRow): string | undefined {
-  return lead.source === 'connector' ? nonEmptyString(lead.utm_campaign) : undefined;
+  return lead.source === 'connector' ? readCustomString(customFieldsRecord(lead), 'connectorCampaign') : undefined;
 }
 
 /**

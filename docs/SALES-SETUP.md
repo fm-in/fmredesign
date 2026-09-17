@@ -42,8 +42,9 @@ The button is replaced with a plain-English reason whenever a lead can't be star
 seven, checked in this order:
 
 1. **No email address** — the lead didn't leave one, so there's nothing to send to.
-2. **A test lead from an ad platform** — Google's **Send test data** and similar test leads
-   arrive tagged `test`, and follow-ups are always switched off for them.
+2. **A test lead from an ad platform** — leads from Google Ads' **Send test data** arrive
+   tagged `test`, and follow-ups are always switched off for them. (Leads from Meta's Lead Ads
+   Testing Tool are not tagged, so Start is offered for them like any other lead.)
 3. **Booked a call directly** — the lead came in through a Cal.com booking, so there's no
    follow-up sequence to run; the call itself is the next step.
 4. **On the do-not-contact list** — this address has unsubscribed or bounced before.

@@ -34,6 +34,12 @@ export function mapConnectorLead(payload: unknown, now: Date = new Date()): Inta
 
   const body = parsed.data;
   const platform = body.platform.toLowerCase();
+  // The campaign the zap explicitly posted — the only campaign a sales email may
+  // show. It is kept in its own custom field, always present (null when none was
+  // posted), because mergeEmptyFields only adds custom-field keys a lead lacks:
+  // a later Google, Meta or website arrival for the same person can fill an
+  // empty utm_campaign, but can never fill this.
+  const connectorCampaign = body.campaign?.replace(/\s+/g, ' ').trim() || null;
 
   return {
     source: 'connector',
@@ -50,7 +56,7 @@ export function mapConnectorLead(payload: unknown, now: Date = new Date()): Inta
       evidence: { platform, formName: body.formName ?? null, consentText: body.consentText ?? null },
       capturedAt: now.toISOString(),
     },
-    customFields: { platform },
+    customFields: { platform, connectorCampaign },
   };
 }
 
