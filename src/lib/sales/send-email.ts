@@ -12,6 +12,7 @@ import { firstNameOf, renderSalesEmail, type SalesEmailContext } from '@/lib/sal
 import { bookingUrl, companyWhatsappUrl } from '@/lib/sales/links';
 import { isSuppressed } from '@/lib/sales/suppression';
 import { isUnsubscribeConfigured, oneClickUnsubscribeUrl, unsubscribeUrl } from '@/lib/sales/unsubscribe-token';
+import { DIMENSIONS, RECOMMENDATIONS } from '@/lib/scorecard/questions';
 import { BAND_LABELS } from '@/lib/scorecard/scoring';
 import type { Band } from '@/lib/scorecard/types';
 import { SITE_URL } from '@/lib/site-url';
@@ -22,7 +23,7 @@ export const SALES_FROM_DEFAULT = 'FreakingMinds <hello@freakingminds.in>';
 
 type DerivedEmailFields = Pick<
   SalesEmailContext,
-  'timeline' | 'projectType' | 'campaign' | 'platform' | 'score' | 'band' | 'weakestArea' | 'weakestScore'
+  'timeline' | 'projectType' | 'campaign' | 'platform' | 'score' | 'band' | 'weakestArea' | 'weakestScore' | 'weakestFix'
 >;
 
 const WEAKEST_CHALLENGE_PATTERN = /^(.+?)\s*\((\d{1,3})\/100\)$/;
@@ -96,6 +97,21 @@ export function parseWeakestChallenge(value: string | null | undefined): { area:
   const score = Number(match[2]);
   if (!area || !Number.isFinite(score)) return undefined;
   return { area, score };
+}
+
+/**
+ * The scorecard's advice for the lead's weakest area, stored at conversion as
+ * `custom_fields.scorecardFix`. Used only when it is one of the scorecard's
+ * own recommendations for that very area: a public form merged into the lead
+ * later can add `custom_fields` keys, and posted text must never be quoted in
+ * an email sent in the owner's name. Anything else leaves the original copy.
+ */
+function scorecardFix(cf: Record<string, unknown>, weakestArea: string | undefined): string | undefined {
+  const fix = readCustomString(cf, 'scorecardFix');
+  if (!fix || !weakestArea) return undefined;
+  const dimension = DIMENSIONS.find((candidate) => candidate.label === weakestArea);
+  const advice = dimension && Object.hasOwn(RECOMMENDATIONS, dimension.id) ? Object.values(RECOMMENDATIONS[dimension.id]) : [];
+  return advice.includes(fix) ? fix : undefined;
 }
 
 /** A known project type as a phrase; undefined for anything else. */
@@ -207,6 +223,7 @@ export function deriveSalesEmailFields(lead: LeadRow): DerivedEmailFields {
     band: bandPhrase(readCustomString(cf, 'scorecardBand')),
     weakestArea: weakest?.area,
     weakestScore: weakest?.score,
+    weakestFix: scorecardFix(cf, weakest?.area),
   };
 }
 

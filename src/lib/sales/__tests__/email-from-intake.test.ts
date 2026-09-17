@@ -13,7 +13,7 @@ import { eqValue, fake, payloadOf } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
 import type { LeadRow, SalesSettings } from '@/lib/sales/types';
 import type { SalesEmailTemplate } from '@/lib/sales/sequence';
-import type { AnswerMap, Band } from '@/lib/scorecard/types';
+import type { AnswerMap, Band, DimensionId } from '@/lib/scorecard/types';
 
 const mocks = vi.hoisted(() => ({
   send: vi.fn<(payload: unknown, options?: unknown) => Promise<{ data: { id: string }; error: null }>>(async () => ({
@@ -41,7 +41,7 @@ import { mapConnectorLead } from '@/lib/sales/intake/adapters/connector';
 import { mapGoogleLead } from '@/lib/sales/intake/adapters/google';
 import { ingestLead } from '@/lib/sales/intake/ingest';
 import { mapMetaLead } from '@/lib/sales/intake/meta-graph';
-import { QUESTIONS } from '@/lib/scorecard/questions';
+import { DIMENSIONS, QUESTIONS, RECOMMENDATIONS } from '@/lib/scorecard/questions';
 import { scoreScorecard } from '@/lib/scorecard/scoring';
 import { sendSalesEmail } from '../send-email';
 
@@ -338,7 +338,7 @@ describe('a lead with no name, named from its email address', () => {
     expectNoInternalValues(intro);
 
     const reply = await emailFor(lead, 'instant_reply');
-    expect(reply.subject).toBe('Got your message');
+    expect(reply.subject).toBe('A quick call about your enquiry');
   });
 });
 
@@ -419,6 +419,62 @@ describe('scorecard emails from a real converted scorecard submission', () => {
   it.each(['scorecard_fix', 'scorecard_close'] as const)('%s carries no internal values', async (template) => {
     const { lead } = await convert(ANSWERS_BY_BAND.at_risk);
     expectNoInternalValues(await emailFor(lead, template));
+  });
+
+  describe("scorecard_fix quotes the scorecard's own advice for the weakest area", () => {
+    /**
+     * Answers where `weakest` is the only dimension below full marks, at the
+     * option score given; every other question gets its best answer.
+     */
+    function weakestIn(weakest: DimensionId, score: 0 | 1 | 2): AnswerMap {
+      return Object.fromEntries(
+        QUESTIONS.map((question) => {
+          const wanted = question.dimension === weakest ? score : 3;
+          return [question.id, question.options.find((o) => o.score === wanted)?.value ?? ''];
+        })
+      );
+    }
+
+    const CASES = DIMENSIONS.flatMap((dimension) =>
+      ([0, 2] as const).map((score) => [dimension.id, score] as const)
+    );
+
+    it.each(CASES)('weakest dimension %s (answers scoring %i)', async (dimensionId, optionScore) => {
+      const answers = weakestIn(dimensionId, optionScore);
+      const scored = scoreScorecard(answers);
+      const weakest = scored.dimensions[0];
+      // The fixture really does make this dimension the weakest, at a real band.
+      expect(weakest?.id).toBe(dimensionId);
+      expect(scored.dimensions[1]?.score).toBe(100);
+
+      const { lead } = await convert(answers);
+      const recommendation = RECOMMENDATIONS[dimensionId]?.[weakest?.band ?? ''];
+      expect(recommendation).toBeTruthy();
+      // Stored at conversion from the submission's own dimension_scores[0].
+      expect(lead.custom_fields).toMatchObject({ scorecardFix: weakest?.recommendation });
+
+      const email = await emailFor(lead, 'scorecard_fix');
+      expect(email.subject).toBe("The one fix I'd start with");
+      expect(email.html).toContain(`For ${weakest?.label}, specifically.</div>`);
+      expect(email.text).toContain(
+        `Hi Karan,\nYour scorecard's weakest area was ${weakest?.label}. Here's where I'd start:\n${recommendation}\nHappy to look at yours specifically and tell you what I'd do.\n`
+      );
+      expectNoInternalValues(email);
+      expect(email.html).not.toMatch(/<p[^>]*>\s*<\/p>/);
+    });
+
+    it('a scorecard lead converted before the advice was stored gets the original approved copy', async () => {
+      const { lead } = await convert(weakestIn('measurement', 0));
+      const { scorecardFix: stored, ...before } = lead.custom_fields as Record<string, unknown>;
+      expect(stored).toBeTruthy();
+
+      const email = await emailFor({ ...lead, custom_fields: before }, 'scorecard_fix');
+      expect(email.html).toContain('Usually the simplest one, not more budget.</div>');
+      expect(email.text).toContain(
+        "On Measurement, the fix that usually moves the needle first is the simplest one — and it's rarely more budget."
+      );
+      expectNoInternalValues(email);
+    });
   });
 });
 

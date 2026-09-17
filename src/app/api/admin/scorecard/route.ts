@@ -101,6 +101,10 @@ export async function POST(request: NextRequest) {
   }
 
   const weakest = row.dimension_scores?.[0];
+  // dimension_scores is stored worst-first and each entry carries the advice the
+  // person was shown for that dimension at its band (scoreScorecard). The
+  // scorecard_fix email quotes the weakest one.
+  const weakestFix = typeof weakest?.recommendation === 'string' ? weakest.recommendation.trim() : '';
   const summary = (row.dimension_scores || []).map((d) => `${d.label}: ${d.score}/100`).join(' · ');
 
   let leadId: string;
@@ -115,7 +119,12 @@ export async function POST(request: NextRequest) {
       source: 'scorecard',
       sourceDetail: `Scorecard (${row.band})`,
       consent: { basis: 'inbound_request', evidence: { scorecardId: row.id }, capturedAt: row.created_at },
-      customFields: { scorecardId: row.id, scorecardBand: row.band, scorecardScore: row.overall_score },
+      customFields: {
+        scorecardId: row.id,
+        scorecardBand: row.band,
+        scorecardScore: row.overall_score,
+        ...(weakestFix ? { scorecardFix: weakestFix } : {}),
+      },
       tags: ['scorecard'],
       ipAddress: row.ip_address,
       userAgent: row.user_agent,

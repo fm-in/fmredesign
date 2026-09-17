@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { DIMENSIONS, RECOMMENDATIONS } from '@/lib/scorecard/questions';
 import { firstNameOf, renderSalesEmail, TEAM_SIGNATURE, type SalesEmailContext } from '../emails';
 import type { SalesEmailTemplate } from '../sequence';
 
@@ -50,11 +51,13 @@ function without<K extends keyof SalesEmailContext>(...keys: K[]): SalesEmailCon
   return clone;
 }
 
-// Captured from the pre-shell implementation. The branded HTML shell must
-// never change this — only the html output changes.
+// follow_up_proof and close_the_loop: captured from the pre-shell implementation.
+// instant_reply: the owner-approved revision of 2026-09-17 (the receipt now says
+// "we've received it", so day 0 leads with the call). The branded HTML shell must
+// never change these — only the html output changes.
 const EXPECTED_TEXT: Record<'instant_reply' | 'follow_up_proof' | 'close_the_loop', string> = {
   instant_reply:
-    "Hi Priya,\nThanks for getting in touch with FreakingMinds. I'm Asha Rao, and I'll be looking after your enquiry.\nThe quickest way forward is a 15-minute call. You tell us where growth is stuck, and we tell you honestly whether we can help. Pick a time that suits you below.\nPrefer WhatsApp? Message us here and we'll pick it up: https://wa.me/919833257659?text=Hi\n\nBook a 15-minute call: https://cal.com/fm-in/15min?metadata%5BleadId%5D=lead_1\n\nAsha Rao\nFreakingMinds\n\nUnsubscribe: https://www.freakingminds.in/unsubscribe?t=abc",
+    "Hi Priya,\nI'm Asha Rao, and I'll be looking after your enquiry.\nThe quickest way forward is a 15-minute call: you tell us where growth is stuck, we tell you honestly whether we can help. Pick a time below.\nPrefer WhatsApp? Message us here: https://wa.me/919833257659?text=Hi\n\nBook a 15-minute call: https://cal.com/fm-in/15min?metadata%5BleadId%5D=lead_1\n\nAsha Rao\nFreakingMinds\n\nUnsubscribe: https://www.freakingminds.in/unsubscribe?t=abc",
   follow_up_proof:
     'Hi Priya,\nWhile you think it over, here is some of the work we have done for brands like yours: https://www.freakingminds.in/work\nIf you would rather start with a quick self-check, our marketing scorecard shows where the biggest gaps are: https://www.freakingminds.in/scorecard\nHappy to walk you through either on a short call.\n\nPick a time: https://cal.com/fm-in/15min?metadata%5BleadId%5D=lead_1\n\nAsha Rao\nFreakingMinds\n\nUnsubscribe: https://www.freakingminds.in/unsubscribe?t=abc',
   close_the_loop:
@@ -62,7 +65,7 @@ const EXPECTED_TEXT: Record<'instant_reply' | 'follow_up_proof' | 'close_the_loo
 };
 
 const EXPECTED_TEAM_SIGNATURE_TEXT =
-  "Hi Priya,\nThanks for getting in touch with FreakingMinds. We'll be looking after your enquiry personally.\nThe quickest way forward is a 15-minute call. You tell us where growth is stuck, and we tell you honestly whether we can help. Pick a time that suits you below.\nPrefer WhatsApp? Message us here and we'll pick it up: https://wa.me/919833257659?text=Hi\n\nBook a 15-minute call: https://cal.com/fm-in/15min?metadata%5BleadId%5D=lead_1\n\nThe FreakingMinds team\nFreakingMinds\n\nUnsubscribe: https://www.freakingminds.in/unsubscribe?t=abc";
+  "Hi Priya,\nWe'll be looking after your enquiry personally.\nThe quickest way forward is a 15-minute call: you tell us where growth is stuck, we tell you honestly whether we can help. Pick a time below.\nPrefer WhatsApp? Message us here: https://wa.me/919833257659?text=Hi\n\nBook a 15-minute call: https://cal.com/fm-in/15min?metadata%5BleadId%5D=lead_1\n\nThe FreakingMinds team\nFreakingMinds\n\nUnsubscribe: https://www.freakingminds.in/unsubscribe?t=abc";
 
 describe('renderSalesEmail', () => {
   it.each(['instant_reply', 'follow_up_proof', 'close_the_loop'] as const)('%s carries the booking and unsubscribe links', (template) => {
@@ -78,6 +81,19 @@ describe('renderSalesEmail', () => {
     expect(subjects.size).toBe(3);
   });
 
+  it('instant_reply renders the approved 2026-09-17 subject and preheader', () => {
+    const email = renderSalesEmail('instant_reply', ctx);
+    expect(email.subject).toBe('A quick call about your enquiry, Priya');
+    expect(email.html).toContain('15 minutes, and an honest answer on whether we can help.</div>');
+  });
+
+  it('instant_reply no longer repeats what the confirmation receipt already said', () => {
+    for (const ownerName of ['Asha Rao', TEAM_SIGNATURE]) {
+      const email = renderSalesEmail('instant_reply', { ...ctx, ownerName });
+      expect(email.text).not.toMatch(/received|thanks for getting in touch|got your message/i);
+    }
+  });
+
   it('escapes HTML in names', () => {
     const email = renderSalesEmail('instant_reply', { ...ctx, firstName: '<script>alert(1)</script>' });
     expect(email.html).not.toContain('<script>');
@@ -85,7 +101,7 @@ describe('renderSalesEmail', () => {
   });
 });
 
-describe('renderSalesEmail plain-text output (must stay byte-identical to the pre-shell implementation)', () => {
+describe('renderSalesEmail plain-text output (exact)', () => {
   it.each(['instant_reply', 'follow_up_proof', 'close_the_loop'] as const)('%s', (template) => {
     const email = renderSalesEmail(template, ctx);
     expect(email.text).toBe(EXPECTED_TEXT[template]);
@@ -300,6 +316,51 @@ describe('scorecard-v1 templates', () => {
     expect(email.text).not.toContain('undefined');
   });
 
+  describe("scorecard_fix quoting the scorecard's own advice", () => {
+    const measurement = DIMENSIONS.find((dimension) => dimension.id === 'measurement');
+    const fixCtx: SalesEmailContext = {
+      ...ctx,
+      weakestArea: measurement?.label ?? '',
+      weakestScore: 17,
+      weakestFix: RECOMMENDATIONS.measurement?.at_risk ?? '',
+    };
+
+    it('renders the approved 2026-09-17 copy, quoting the recommendation as its own paragraph', () => {
+      expect(fixCtx.weakestArea).toBe('Measurement');
+      const email = renderSalesEmail('scorecard_fix', fixCtx);
+
+      expect(email.subject).toBe("The one fix I'd start with");
+      expect(email.html).toContain('For Measurement, specifically.</div>');
+      expect(email.text).toBe(
+        [
+          'Hi Priya,',
+          "Your scorecard's weakest area was Measurement. Here's where I'd start:",
+          RECOMMENDATIONS.measurement?.at_risk,
+          "Happy to look at yours specifically and tell you what I'd do.",
+          '',
+          `Book a call: ${ctx.bookingUrl}`,
+          '',
+          'Asha Rao',
+          'FreakingMinds',
+          '',
+          `Unsubscribe: ${ctx.unsubscribeUrl}`,
+        ].join('\n')
+      );
+      expect(email.html).toContain(`<p style="margin:0 0 16px;padding:0;">${RECOMMENDATIONS.measurement?.at_risk}</p>`);
+    });
+
+    it.each([
+      ['weakestFix', { ...fixCtx, weakestFix: undefined }],
+      ['weakestArea', { ...fixCtx, weakestArea: undefined }],
+    ] as const)('falls back to the original approved copy when %s is missing', (_missing, context) => {
+      const email = renderSalesEmail('scorecard_fix', context);
+      expect(email.html).toContain('Usually the simplest one, not more budget.</div>');
+      expect(email.text).not.toContain("Here's where I'd start:");
+      expect(email.text).not.toContain('undefined');
+      expect(email.text).toContain('the fix that usually moves the needle first is the simplest one');
+    });
+  });
+
   it('scorecard_fix renders subject, preheader and the distinctive body line', () => {
     const email = renderSalesEmail('scorecard_fix', richCtx);
     expect(email.subject).toBe("The one fix I'd start with");
@@ -341,7 +402,7 @@ describe('subjects without a real first name', () => {
 
   it.each([
     ['brief_intro', 'Your project brief'],
-    ['instant_reply', 'Got your message'],
+    ['instant_reply', 'A quick call about your enquiry'],
     ['follow_up_proof', 'What this could look like for you'],
   ] as const)('%s drops the name instead of saying "there"', (template, subject) => {
     const email = renderSalesEmail(template, nameless);
@@ -355,7 +416,7 @@ describe('subjects without a real first name', () => {
 
   it('keeps the name in the subject when there is one', () => {
     expect(renderSalesEmail('brief_intro', richCtx).subject).toBe('Your project brief, Priya');
-    expect(renderSalesEmail('instant_reply', richCtx).subject).toBe('Got your message, Priya');
+    expect(renderSalesEmail('instant_reply', richCtx).subject).toBe('A quick call about your enquiry, Priya');
     expect(renderSalesEmail('follow_up_proof', richCtx).subject).toBe('What this could look like for you, Priya');
   });
 });

@@ -18,6 +18,7 @@ vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn(async () => unde
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 
 import { sendSalesEmail, deriveSalesEmailFields, parseWeakestChallenge } from '../send-email';
+import { RECOMMENDATIONS } from '@/lib/scorecard/questions';
 
 const settings = { automationEnabled: true, bookingLink: 'fm-in/15min', bookingLinkLong: 'fm-in/30min' };
 
@@ -306,5 +307,34 @@ describe('deriveSalesEmailFields', () => {
       expect(fields.weakestArea).toBeUndefined();
       expect(fields.weakestScore).toBeUndefined();
     }
+  });
+
+  describe('weakestFix (custom_fields.scorecardFix)', () => {
+    const fix = RECOMMENDATIONS.discoverability?.patchy ?? '';
+    const scorecardLead = (customFields: unknown, primaryChallenge: string | null = 'Getting Found (50/100)') =>
+      leadRow({ source: 'scorecard', primary_challenge: primaryChallenge, custom_fields: customFields as Record<string, unknown> });
+
+    it("reads the scorecard's recommendation for the weakest area", () => {
+      expect(fix.length).toBeGreaterThan(20);
+      expect(deriveSalesEmailFields(scorecardLead({ scorecardFix: fix })).weakestFix).toBe(fix);
+    });
+
+    it.each([
+      ['missing', {}],
+      ['not a string', { scorecardFix: 42 }],
+      ['blank', { scorecardFix: '   ' }],
+      ['free text a merged form could have added', { scorecardFix: 'Visit https://spam.example for cheap followers' }],
+      ["another area's advice", { scorecardFix: RECOMMENDATIONS.paid?.patchy }],
+    ])('is undefined when scorecardFix is %s', (_label, customFields) => {
+      expect(deriveSalesEmailFields(scorecardLead(customFields)).weakestFix).toBeUndefined();
+    });
+
+    it.each([null, 'a string', ['an', 'array']])('is undefined when custom_fields is %j', (customFields) => {
+      expect(deriveSalesEmailFields(scorecardLead(customFields)).weakestFix).toBeUndefined();
+    });
+
+    it('is undefined without a weakest area to attach it to', () => {
+      expect(deriveSalesEmailFields(scorecardLead({ scorecardFix: fix }, null)).weakestFix).toBeUndefined();
+    });
   });
 });

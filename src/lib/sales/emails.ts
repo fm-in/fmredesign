@@ -35,6 +35,8 @@ export interface SalesEmailContext {
   score?: number;
   /** The score of the weakest area out of 100. */
   weakestScore?: number;
+  /** The scorecard's own recommendation for the weakest area, at that area's band. */
+  weakestFix?: string;
 }
 
 export interface RenderedEmail {
@@ -64,17 +66,19 @@ function subjectWithName(subject: string, firstName: string): string {
 
 function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): EmailCopy {
   switch (template) {
+    // Revised 2026-09-17: the confirmation receipt now says "we've received it",
+    // so day 0 no longer repeats that and leads with the call.
     case 'instant_reply':
       return {
-        subject: subjectWithName('Got your message', ctx.firstName),
-        preheader: "Thanks for reaching out — here's the quickest way to talk.",
+        subject: subjectWithName('A quick call about your enquiry', ctx.firstName),
+        preheader: '15 minutes, and an honest answer on whether we can help.',
         paragraphs: [
           `Hi ${ctx.firstName},`,
           ctx.ownerName === TEAM_SIGNATURE
-            ? "Thanks for getting in touch with FreakingMinds. We'll be looking after your enquiry personally."
-            : `Thanks for getting in touch with FreakingMinds. I'm ${ctx.ownerName}, and I'll be looking after your enquiry.`,
-          'The quickest way forward is a 15-minute call. You tell us where growth is stuck, and we tell you honestly whether we can help. Pick a time that suits you below.',
-          `Prefer WhatsApp? Message us here and we'll pick it up: ${ctx.whatsappUrl}`,
+            ? "We'll be looking after your enquiry personally."
+            : `I'm ${ctx.ownerName}, and I'll be looking after your enquiry.`,
+          'The quickest way forward is a 15-minute call: you tell us where growth is stuck, we tell you honestly whether we can help. Pick a time below.',
+          `Prefer WhatsApp? Message us here: ${ctx.whatsappUrl}`,
         ],
         cta: { label: 'Book a 15-minute call', url: ctx.bookingUrl },
       };
@@ -211,6 +215,21 @@ function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): EmailCop
       };
     }
     case 'scorecard_fix': {
+      // Revised 2026-09-17: quote the scorecard's own advice. Without both the
+      // area and its advice, the original approved copy below applies unchanged.
+      if (ctx.weakestArea && ctx.weakestFix) {
+        return {
+          subject: "The one fix I'd start with",
+          preheader: `For ${ctx.weakestArea}, specifically.`,
+          paragraphs: [
+            `Hi ${ctx.firstName},`,
+            `Your scorecard's weakest area was ${ctx.weakestArea}. Here's where I'd start:`,
+            ctx.weakestFix,
+            "Happy to look at yours specifically and tell you what I'd do.",
+          ],
+          cta: { label: 'Book a call', url: ctx.bookingUrl },
+        };
+      }
       const weakestAreaPhrase = ctx.weakestArea ?? 'the weakest area in your scorecard';
       return {
         subject: "The one fix I'd start with",
