@@ -1,9 +1,10 @@
 /**
  * academyCheckoutReminderFn: sleeps an hour, then decides whether to send
- * exactly one reminder. `isSuppressed` is exercised for real (not mocked)
- * against a fake `suppression_list`, so this also confirms it blocks every
- * do-not-contact reason — including 'unsubscribed', unlike the looser
- * `blocksReceipts` receipts use.
+ * exactly one reminder. `isSuppressedOrThrow` is exercised for real (not
+ * mocked) against a fake `suppression_list`, so this also confirms it blocks
+ * every do-not-contact reason — including 'unsubscribed', unlike the looser
+ * `blocksReceipts` receipts use — and fails closed (throws, so Inngest
+ * retries) on a lookup error rather than reading it as "not suppressed".
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -291,6 +292,57 @@ describe('academy-checkout-reminder', () => {
 
     expect(result).toEqual({ skipped: 'suppressed' });
     expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  it('throws (retries) when the suppression lookup itself errors, instead of sending to a possibly-suppressed address', async () => {
+    fake.respond((call) => {
+      if (call.table === 'enrollments' && call.op === 'select') {
+        const idFilter = eqValue(call, 'id');
+        if (idFilter !== undefined) {
+          return { data: enrollment && enrollment.id === idFilter ? { ...enrollment } : null, error: null };
+        }
+        return { data: [], error: null }; // no paid sibling
+      }
+      if (call.table === 'programs' && call.op === 'select') {
+        const idFilter = eqValue(call, 'id');
+        return { data: program && program.id === idFilter ? { ...program } : null, error: null };
+      }
+      if (call.table === 'suppression_list' && call.op === 'select') {
+        return { data: null, error: { code: '57014', message: 'canceling statement due to statement timeout' } };
+      }
+      return { data: [], error: null };
+    });
+    const { step } = fakeStep();
+
+    await expect(
+      reminderFn.handler({ event: { data: { enrollmentId: 'enr-1' } }, step })
+    ).rejects.toThrow(/suppression lookup failed/);
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  it('treats a missing suppression_list table (pre-migration) as not suppressed', async () => {
+    fake.respond((call) => {
+      if (call.table === 'enrollments' && call.op === 'select') {
+        const idFilter = eqValue(call, 'id');
+        if (idFilter !== undefined) {
+          return { data: enrollment && enrollment.id === idFilter ? { ...enrollment } : null, error: null };
+        }
+        return { data: [], error: null };
+      }
+      if (call.table === 'programs' && call.op === 'select') {
+        const idFilter = eqValue(call, 'id');
+        return { data: program && program.id === idFilter ? { ...program } : null, error: null };
+      }
+      if (call.table === 'suppression_list' && call.op === 'select') {
+        return { data: null, error: { code: 'PGRST205', message: 'table not found in schema cache' } };
+      }
+      return { data: [], error: null };
+    });
+    const { step } = fakeStep();
+
+    const result = await reminderFn.handler({ event: { data: { enrollmentId: 'enr-1' } }, step });
+
+    expect(result).toEqual({ sent: true });
   });
 
   it('skips when Resend is not configured', async () => {

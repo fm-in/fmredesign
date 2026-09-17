@@ -399,6 +399,72 @@ describe('POST /api/academy/razorpay-webhook', () => {
     expect(seenEventIds.has('evt_1')).toBe(false); // payment_events row removed
   });
 
+  it('re-delivery of the same event after a 500 cleanup flips the row and sends exactly one confirmation — the failed attempt sent no admin notification', async () => {
+    const row = seedRow({ status: 'reserved' });
+    let updateAttempts = 0;
+    fake.respond((call) => {
+      if (call.table === 'enrollments' && call.op === 'update' && 'status' in payloadOf(call)) {
+        updateAttempts += 1;
+        if (updateAttempts === 1) {
+          // First delivery: the update itself errors (e.g. a lost response) —
+          // the row never flips.
+          return { data: null, error: { code: '55000', message: 'no space left on device' } };
+        }
+        // Razorpay's retry of the same event, after the 500 cleanup below
+        // removed the payment_events row: the update now succeeds normally.
+        const idFilter = eqValue(call, 'id') as string | undefined;
+        const found = rows.find((r) => r.id === idFilter);
+        if (!found) return { data: [], error: null };
+        const inFilter = call.filters.find((f) => f.method === 'in' && f.args[0] === 'status');
+        const allowed = (inFilter?.args[1] as string[] | undefined) ?? [];
+        if (!allowed.includes(found.status)) return { data: [], error: null };
+        Object.assign(found, payloadOf(call));
+        return { data: [{ id: found.id }], error: null };
+      }
+      if (call.table === 'payment_events' && call.op === 'insert') {
+        const id = payloadOf(call).id as string;
+        if (seenEventIds.has(id)) {
+          return { data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "payment_events_pkey"' } };
+        }
+        seenEventIds.add(id);
+        return { data: payloadOf(call), error: null };
+      }
+      if (call.table === 'payment_events' && call.op === 'delete') {
+        const id = eqValue(call, 'id') as string;
+        seenEventIds.delete(id);
+        return { data: null, error: null };
+      }
+      if (call.table === 'enrollments' && call.op === 'select') {
+        const orderId = eqValue(call, 'razorpay_order_id');
+        const found = rows.find((r) => r.razorpay_order_id === orderId);
+        return { data: found ? { ...found } : null, error: null };
+      }
+      if (call.table === 'enrollments' && call.op === 'update') {
+        // The invite_sent_at stamp — a plain update, no status guard.
+        const idFilter = eqValue(call, 'id') as string | undefined;
+        const found = rows.find((r) => r.id === idFilter);
+        if (found) Object.assign(found, payloadOf(call));
+        return { data: null, error: null };
+      }
+      return { data: [], error: null };
+    });
+
+    const event = capturedEvent({ id: 'evt_1', orderId: row.razorpay_order_id!, paymentId: 'pay_1' });
+
+    const first = await POST(webhookRequest(event));
+    expect(first.status).toBe(500);
+    expect(row.status).toBe('reserved');
+    expect(emailSends()).toHaveLength(0);
+    expect(adminNotifications()).toHaveLength(0); // the failed attempt sent no admin notification
+
+    // Razorpay retries the exact same delivery (same event id).
+    const second = await POST(webhookRequest(event));
+    expect(second.status).toBe(200);
+    expect(row.status).toBe('paid');
+    expect(emailSends()).toHaveLength(1);
+    expect(adminNotifications()).toHaveLength(1);
+  });
+
   it('a database error on the enrollment lookup responds 500 and removes this event\'s payment_events row', async () => {
     const row = seedRow({ status: 'reserved' });
     fake.respond((call) => {

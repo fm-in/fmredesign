@@ -286,7 +286,6 @@ export function ReserveSeatForm({
         <p className="text-sm text-fm-neutral-600">
           We couldn&rsquo;t open the payment window. Please try again in a few minutes.
         </p>
-        {err && <p className="text-xs text-red-700">{err}</p>}
         <button
           type="button"
           onClick={startCheckout}

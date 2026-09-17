@@ -7,6 +7,7 @@
  */
 
 import { getResend } from '@/lib/email/resend';
+import { safeErrorMessage } from '@/lib/safe-log';
 import { recordActivity } from '@/lib/sales/activity';
 import { firstNameOf, renderSalesEmail, whatsappPrefillText, type SalesEmailContext } from '@/lib/sales/emails';
 import { bookingUrl, companyWhatsappUrl } from '@/lib/sales/links';
@@ -289,7 +290,7 @@ export async function sendSalesEmail({ lead, template, settings, ownerName }: Se
   );
 
   // Throwing lets Inngest retry a transient Resend failure.
-  if (error || !data) throw new Error(`Resend send failed: ${error?.message ?? 'no response'}`);
+  if (error || !data) throw new Error(`Resend send failed: ${error ? safeErrorMessage(error) : 'no response'}`);
 
   await recordActivity({
     leadId: lead.id,

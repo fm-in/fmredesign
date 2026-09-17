@@ -132,6 +132,20 @@ export async function POST(request: NextRequest) {
       // A real DB error (not "no match") — remove this event's row so
       // Razorpay's retry is processed fresh instead of short-circuiting as
       // a duplicate next time.
+      //
+      // Two edge cases here, neither of which double-credits a seat:
+      //  (a) the paid-flip update actually committed but supabase-js reported
+      //      an error anyway (a lost response) — the retried delivery's update
+      //      then matches zero rows (status is already 'paid'), so it just
+      //      returns `ok: true` without sending a second confirmation.
+      //  (b) a Razorpay retry that overlaps this slow attempt inserts its
+      //      payment_events row first and gets 23505 → 200 *before* this
+      //      cleanup runs, deleting the row the overlapping retry just wrote —
+      //      so that specific delivery is never retried again. `order.paid`
+      //      normally still arrives as a separate event and covers it, and
+      //      even if it doesn't, this call's own retry (Razorpay retries a
+      //      500 regardless of what the delivery that raced it did) reaches
+      //      `handlePaymentCaptured` again and flips the row itself.
       const { error: cleanupErr } = await supabase.from('payment_events').delete().eq('id', eventId);
       if (cleanupErr) console.error('payment_events cleanup failed:', safeErrorLog(cleanupErr));
       return NextResponse.json({ ok: false, error: 'Storage error' }, { status: 500 });

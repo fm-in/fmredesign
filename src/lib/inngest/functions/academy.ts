@@ -22,7 +22,7 @@ import { inngest } from '../client';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getResend } from '@/lib/email/resend';
 import { checkoutReminderEventId, renderCheckoutReminderEmail } from '@/lib/academy/checkout-reminder';
-import { isSuppressed } from '@/lib/sales/suppression';
+import { isSuppressedOrThrow } from '@/lib/sales/suppression';
 import { toE164 } from '@/lib/sales/phone';
 import { likeLiteral } from '@/lib/postgrest';
 import { SALES_FROM_DEFAULT } from '@/lib/sales/send-email';
@@ -107,8 +107,11 @@ async function decideAndSend(enrollmentId: string): Promise<ReminderResult> {
 
   // Phone is normalised the same way sales intake does (src/lib/sales/phone.ts),
   // so a do-not-contact entry recorded against the E.164 form still matches.
+  // `isSuppressedOrThrow` (not `isSuppressed`) fails closed: a lookup error
+  // throws so Inngest retries, instead of a DB blip reading as "not
+  // suppressed" and emailing someone who asked not to be contacted.
   const phoneE164 = toE164(row.buyer_phone);
-  if (await isSuppressed({ email: row.buyer_email, phoneE164 })) {
+  if (await isSuppressedOrThrow({ email: row.buyer_email, phoneE164 })) {
     return { skipped: 'suppressed' };
   }
 
@@ -138,7 +141,7 @@ async function decideAndSend(enrollmentId: string): Promise<ReminderResult> {
   if (sendError) {
     // Throwing lets Inngest retry a transient Resend failure, the same as sendSalesEmail.
     console.error('[academy] checkout-reminder send failed:', safeErrorLog(sendError));
-    throw new Error(`Resend send failed: ${sendError.message ?? 'no response'}`);
+    throw new Error(`Resend send failed: ${safeErrorMessage(sendError)}`);
   }
 
   return { sent: true };

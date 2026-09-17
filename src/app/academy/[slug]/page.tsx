@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: PageProps) {
   const description = (
     p.shortDescription ||
     p.longDescription ||
-    `Reserve your seat for ${p.title} by the Freaking Minds team.`
+    `Book your seat for ${p.title} by the Freaking Minds team.`
   ).replace(/\s+/g, ' ').trim();
 
   /**

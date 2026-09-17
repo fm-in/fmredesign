@@ -11,7 +11,11 @@
  *   Response:
  *     {
  *       success: true,
- *       data: <enrollment>,
+ *       data: { id, status },      // never buyer fields, notes or Razorpay ids —
+ *                                   // this is a public, unauthenticated endpoint,
+ *                                   // and an email lookup means an attacker who
+ *                                   // guesses (or already knows) an address must
+ *                                   // learn nothing else about that buyer from it
  *       meta: {
  *         razorpay: { orderId, amount, currency, keyId }   // absent when
  *                                                           // checkout could
@@ -31,22 +35,19 @@
  * reservation per buyer per program) so legitimate retries are not blocked.
  */
 
-import { NextRequest, after } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { ApiResponse } from '@/lib/api-response';
 import { inngest } from '@/lib/inngest/client';
-import {
-  generateEnrollmentId,
-  transformEnrollmentRow,
-} from '@/lib/admin/academy-types';
+import { generateEnrollmentId } from '@/lib/admin/academy-types';
 import { checkoutReminderEventId } from '@/lib/academy/checkout-reminder';
 import { createOrder } from '@/lib/razorpay';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
 import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
 import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
 import { notifyAdmins } from '@/lib/notifications';
+import { afterResponse } from '@/lib/sales/transactional-email';
 import { safeErrorLog, safeErrorMessage } from '@/lib/safe-log';
-import { likeLiteral } from '@/lib/postgrest';
 
 interface RazorpayMeta {
   orderId: string;
@@ -55,33 +56,22 @@ interface RazorpayMeta {
   keyId: string;
 }
 
+// `*` is a valid character in an email local-part, but PostgREST reads it as
+// an `ilike`/`like` wildcard with no way to escape it. This route no longer
+// uses `ilike` (see the retry lookup below), but a plain, defensive reject
+// here means a stray wildcard can never reach any query in this file, now or
+// after a future edit.
 function isLikelyEmail(s: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+  return !s.includes('*') && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 }
 
-/**
- * Fires `academy/checkout.started` for a brand-new enrollment row so
- * `academyCheckoutReminderFn` can send one reminder an hour later if the
- * buyer still hasn't paid. Deferred via `after()` (as POST /api/leads does
- * for its confirmation receipt) so a slow or failed event send never delays
- * or changes the response; a failure is logged by message only.
- */
-function dispatchCheckoutReminder(enrollmentId: string): void {
-  const send = () =>
-    inngest
-      .send({
-        id: checkoutReminderEventId(enrollmentId),
-        name: 'academy/checkout.started',
-        data: { enrollmentId },
-      })
-      .catch((err) => console.error('[enroll] checkout-reminder event send failed:', safeErrorMessage(err)));
-
-  try {
-    after(send);
-  } catch {
-    // after() unavailable outside a request scope — fire and forget instead.
-    void send();
-  }
+/** Only what the public form reads back (`data.status`, plus the separate
+ *  `razorpay` meta) — never buyer contact details, admin notes or Razorpay
+ *  ids. This is an unauthenticated endpoint keyed on an email address the
+ *  caller supplies, so the response must never let a lookup double as a way
+ *  to read another buyer's row. */
+function publicEnrollment(row: Record<string, unknown>): { id: string; status: string } {
+  return { id: row.id as string, status: row.status as string };
 }
 
 export async function POST(request: NextRequest) {
@@ -152,29 +142,46 @@ export async function POST(request: NextRequest) {
   //   reserved / failed, with an order → return that order (retry payment).
   //   reserved / failed, no order yet  → an earlier order creation failed;
   //     create one now for this same row (never insert a new row).
-  // `buyerEmail` was already trimmed and lowercased above; matching here with
-  // an escaped `ilike` (rather than `eq`) also catches a stored row whose
-  // email carries different case — the same defensive pattern
-  // src/lib/sales/suppression.ts uses for the do-not-contact list.
+  // `buyerEmail` was already trimmed and lowercased above, and every row this
+  // route has ever written stores a lowercased email, so a plain `.eq()`
+  // already finds it. An `ilike` here previously let an anonymous caller
+  // enumerate any buyer's row with a wildcard (`buyerEmail: "*@*.*"` — the
+  // pattern PostgREST builds from an escaped literal — matches everyone,
+  // since `*` itself is read as `%` and cannot be escaped); an old row whose
+  // stored email differs only in case simply won't be matched.
+  //
+  // A `paid` row is checked first, on its own, and takes priority regardless
+  // of recency: the second query below only ever returns `reserved`/`failed`
+  // rows, so a newer unpaid row (e.g. a stale duplicate from before this
+  // route reused rows) can never be picked over an older `paid` one.
+  const { data: paidRows } = await supabase
+    .from('enrollments')
+    .select('*')
+    .eq('program_id', programId)
+    .eq('buyer_email', buyerEmail)
+    .eq('status', 'paid')
+    .limit(1);
+
+  if (paidRows && paidRows.length > 0) {
+    return ApiResponse.success(publicEnrollment(paidRows[0]), {
+      message: 'You are already enrolled.',
+    });
+  }
+
   const { data: existing } = await supabase
     .from('enrollments')
     .select('*')
     .eq('program_id', programId)
-    .ilike('buyer_email', likeLiteral(buyerEmail))
-    .in('status', ['reserved', 'failed', 'paid'])
+    .eq('buyer_email', buyerEmail)
+    .in('status', ['reserved', 'failed'])
     .order('created_at', { ascending: false })
     .limit(1);
 
   if (existing && existing.length > 0) {
     const row = existing[0];
-    if (row.status === 'paid') {
-      return ApiResponse.success(transformEnrollmentRow(row), {
-        message: 'You are already enrolled.',
-      });
-    }
     // Reserved or failed but with an existing order — reuse it.
     if (row.razorpay_order_id) {
-      return ApiResponse.success(transformEnrollmentRow(row), {
+      return ApiResponse.success(publicEnrollment(row), {
         razorpay: {
           orderId: row.razorpay_order_id as string,
           amount: Math.round((Number(row.amount_inr) || 0) * 100),
@@ -198,11 +205,7 @@ export async function POST(request: NextRequest) {
       amountInr,
     });
     return ApiResponse.success(
-      transformEnrollmentRow({
-        ...row,
-        razorpay_order_id: razorpayMeta?.orderId,
-        amount_inr: razorpayMeta ? amountInr : row.amount_inr,
-      }),
+      publicEnrollment(row),
       razorpayMeta ? { razorpay: razorpayMeta } : undefined
     );
   }
@@ -249,12 +252,21 @@ export async function POST(request: NextRequest) {
   if (insertErr || !inserted) {
     // Code and message only: a Postgres error's `details` can quote the whole row.
     console.error('Enrollment insert error:', insertErr ? safeErrorLog(insertErr) : 'no row returned');
-    return ApiResponse.error('Could not create reservation');
+    return ApiResponse.error('Could not start checkout — please try again.');
   }
 
   // A brand-new row only: the retry paths above return before reaching here,
   // so this never double-schedules a reminder for a row that already exists.
-  dispatchCheckoutReminder(id);
+  // Deferred via `afterResponse()` (as POST /api/leads does for its
+  // confirmation receipt) so a slow or failed event send never delays or
+  // changes the response.
+  afterResponse('checkout-reminder event send', () =>
+    inngest.send({
+      id: checkoutReminderEventId(id),
+      name: 'academy/checkout.started',
+      data: { enrollmentId: id },
+    })
+  );
 
   // Surface the checkout in the admin dashboard. The header used to claim
   // this happened via Inngest, but no notification was ever sent — every
@@ -294,7 +306,7 @@ export async function POST(request: NextRequest) {
     .catch((err) => console.error('Inngest notification failed:', safeErrorMessage(err)));
 
   return ApiResponse.success(
-    transformEnrollmentRow({ ...inserted, razorpay_order_id: razorpayMeta?.orderId }),
+    publicEnrollment(inserted),
     razorpayMeta ? { razorpay: razorpayMeta } : undefined
   );
 }
@@ -313,10 +325,19 @@ function deriveAmountInr(program: {
 }
 
 /**
- * Create a Razorpay order for an existing enrollment row and write the order
- * id (and today's price) back onto it. Returns null — never throws — on
- * failure, so the caller can fall back to "checkout unavailable" without
- * losing the reservation row.
+ * Create a Razorpay order for an enrollment row and write the order id (and
+ * today's price) back onto it — but only if the row is still order-less.
+ * Returns null — never throws — on failure, so the caller can fall back to
+ * "checkout unavailable" without losing the reservation row.
+ *
+ * The write is conditional (`.is('razorpay_order_id', null)`) because this
+ * runs on the retry path too: two concurrent retries on the same order-less
+ * row would otherwise both create a Razorpay order here, and an
+ * unconditional last-write-wins would silently orphan whichever order lost —
+ * the buyer holding that order id would pay into a slot the row no longer
+ * points at. Whichever call loses the race (zero rows updated) re-reads the
+ * row and returns the order that actually stuck, instead of the one it just
+ * created.
  */
 async function attemptCreateOrder(opts: {
   enrollmentId: string;
@@ -338,14 +359,52 @@ async function attemptCreateOrder(opts: {
       },
     });
 
-    await supabase
+    const { data: updated, error: updateErr } = await supabase
       .from('enrollments')
       .update({
         razorpay_order_id: order.id,
         amount_inr: opts.amountInr,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', opts.enrollmentId);
+      .eq('id', opts.enrollmentId)
+      .is('razorpay_order_id', null)
+      .select('id');
+
+    if (updateErr) {
+      // The order exists in Razorpay but the row never learned its id — if we
+      // returned it anyway, the webhook would later see payment.captured for
+      // an order_id no row carries (200, "unknown order_id"): captured money,
+      // no seat, no confirmation. Safer to tell the buyer checkout is
+      // unavailable and let them retry, which re-reads this same row.
+      console.error('Razorpay order write-back failed:', safeErrorLog(updateErr));
+      return null;
+    }
+
+    if (!updated || updated.length === 0) {
+      // Lost the race: some other call (a concurrent retry) already wrote an
+      // order onto this row between our read and this write. Re-read and
+      // return that order instead of the one we just created, so the order
+      // we made here — which no row will ever point at — is simply unused
+      // rather than orphaning the other buyer's checkout.
+      const { data: current, error: reReadErr } = await supabase
+        .from('enrollments')
+        .select('razorpay_order_id, amount_inr, currency')
+        .eq('id', opts.enrollmentId)
+        .maybeSingle();
+      if (reReadErr || !current?.razorpay_order_id) {
+        console.error(
+          'Razorpay order re-read after a lost write race failed:',
+          reReadErr ? safeErrorLog(reReadErr) : 'no stored order found on re-read'
+        );
+        return null;
+      }
+      return {
+        orderId: current.razorpay_order_id as string,
+        amount: Math.round((Number(current.amount_inr) || 0) * 100),
+        currency: (current.currency as string) || 'INR',
+        keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || '',
+      };
+    }
 
     return {
       orderId: order.id,

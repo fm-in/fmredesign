@@ -36,6 +36,8 @@ describe('ReserveSeatForm — checkout unavailable', () => {
       json: async () => ({ success: true, data: { id: 'enr-1', status: 'reserved' } }),
     });
 
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+
     render(<ReserveSeatForm programId="prog-1" programTitle="Digital Marketing" amountInr={29999} />);
 
     fillAndSubmit();
@@ -48,13 +50,14 @@ describe('ReserveSeatForm — checkout unavailable', () => {
       'mailto:freakingmindsdigital@gmail.com'
     );
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(openSpy).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /try again/i }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     // Still the unavailable state — no payment page or modal was opened.
     expect(await screen.findByRole('heading', { name: /Payment isn.t available right now/ })).toBeInTheDocument();
-    expect((window as { Razorpay?: unknown }).Razorpay).toBeUndefined();
+    expect(openSpy).not.toHaveBeenCalled();
 
     const [, secondCallInit] = fetchMock.mock.calls[1] as [string, RequestInit];
     const body = JSON.parse(secondCallInit.body as string);

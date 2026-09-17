@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import { checkoutReminderEventId, renderCheckoutReminderEmail } from '../checkout-reminder';
 import { SITE_URL } from '@/lib/site-url';
+import { TEAM_SIGNATURE } from '@/lib/sales/emails';
 
 describe('checkoutReminderEventId', () => {
   it('is deterministic per enrollment', () => {
@@ -41,6 +42,23 @@ describe('renderCheckoutReminderEmail', () => {
     expect(email.text).toContain(`Finish booking: ${expectedUrl}`);
     expect(email.html).toContain(expectedUrl);
     expect(email.html).toMatch(/>Finish booking<\/a>/);
+  });
+
+  it('the plain-text part is exactly the approved paragraphs, CTA and shell sign-off — nothing else', () => {
+    const expectedUrl = `${SITE_URL}/academy/digital-marketing`;
+    expect(email.text).toBe(
+      [
+        'Hi Aarav,',
+        "You started booking a seat on Digital Marketing, but the payment didn't go through, so your seat isn't booked yet.",
+        "If you'd still like to join, it takes a couple of minutes to finish.",
+        'Questions? Just reply to this email.',
+        '',
+        `Finish booking: ${expectedUrl}`,
+        '',
+        TEAM_SIGNATURE,
+        'FreakingMinds',
+      ].join('\n')
+    );
   });
 
   it('falls back to "Hi there," when the buyer has no usable first name', () => {

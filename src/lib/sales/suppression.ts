@@ -4,7 +4,7 @@
  */
 
 import { likeLiteral } from '@/lib/postgrest';
-import { safeErrorLog } from '@/lib/safe-log';
+import { safeErrorLog, safeErrorMessage } from '@/lib/safe-log';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { generateSalesId } from '@/lib/sales/types';
 import type { SuppressionReason } from '@/lib/sales/types';
@@ -44,6 +44,38 @@ const RECEIPT_ALLOWED_REASON: SuppressionReason = 'unsubscribed';
 
 /** PostgREST (PGRST205) and Postgres (42P01) codes for a table that does not exist. */
 const MISSING_TABLE_CODES: ReadonlySet<string> = new Set(['PGRST205', '42P01']);
+
+/**
+ * Like `isSuppressed`, but fails closed on a lookup error: throws instead of
+ * treating an error as "not suppressed". `isSuppressed` itself stays as it
+ * is for its other callers — this is for a caller inside a durable job
+ * (Inngest), where throwing lets the platform retry rather than risk a
+ * message reaching someone who asked not to be contacted during a DB blip.
+ * A missing `suppression_list` table (before the sales migration is
+ * applied) is not an error here — there is no list yet, so nothing blocks.
+ */
+export async function isSuppressedOrThrow(contact: { email?: string | null; phoneE164?: string | null }): Promise<boolean> {
+  const email = normaliseEmail(contact.email);
+  const phone = contact.phoneE164 || null;
+  if (!email && !phone) return false;
+
+  const supabase = getSupabaseAdmin();
+  const lookups = [
+    email ? () => supabase.from('suppression_list').select('id').ilike('email', likeLiteral(email)).limit(1) : null,
+    phone ? () => supabase.from('suppression_list').select('id').eq('phone_e164', phone).limit(1) : null,
+  ];
+
+  for (const lookup of lookups) {
+    if (!lookup) continue;
+    const { data, error } = await lookup();
+    if (error) {
+      if (error.code && MISSING_TABLE_CODES.has(error.code)) continue;
+      throw new Error(`suppression lookup failed: ${safeErrorMessage(error)}`);
+    }
+    if (Array.isArray(data) && data.length > 0) return true;
+  }
+  return false;
+}
 
 /**
  * True when a confirmation receipt must not go to this person. A receipt is
