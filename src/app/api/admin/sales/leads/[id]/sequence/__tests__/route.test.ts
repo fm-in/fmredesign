@@ -6,7 +6,7 @@ import type { LeadRow } from '@/lib/sales/types';
 
 const mocks = vi.hoisted(() => ({
   user: { id: 'u-mgr', name: 'Maya', role: 'manager', permissions: ['sales.read', 'sales.write'] },
-  send: vi.fn(async () => undefined),
+  send: vi.fn<(event: unknown) => Promise<unknown>>(async () => undefined),
 }));
 
 vi.mock('@/lib/admin-auth-middleware', () => ({
@@ -125,6 +125,24 @@ describe('POST /api/admin/sales/leads/[id]/sequence — start refusals', () => {
     expect(mocks.send).not.toHaveBeenCalled();
   });
 
+  it('refuses an ad-platform test lead', async () => {
+    respond({ lead: { source: 'google_lead_form', tags: ['test'] } });
+    const res = await POST(postBody({ action: 'start', sequenceKey: 'ad-lead-v1' }), context);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe('This is a test lead from an ad platform, so follow-ups are switched off for it.');
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
+  it('refuses a lead that booked a call directly', async () => {
+    respond({ lead: { source: 'cal_booking' } });
+    const res = await POST(postBody({ action: 'start', sequenceKey: 'enquiry-v1' }), context);
+    expect(res.status).toBe(400);
+    const json = await res.json();
+    expect(json.error).toBe("This lead booked a call directly, so there's no follow-up sequence to run.");
+    expect(mocks.send).not.toHaveBeenCalled();
+  });
+
   it("404s for a lead a manager may not touch, exactly like stop", async () => {
     respond({ lead: { owner_id: 'someone-else' } });
     const res = await POST(postBody({ action: 'start', sequenceKey: 'enquiry-v1' }), context);
@@ -144,6 +162,7 @@ describe('POST /api/admin/sales/leads/[id]/sequence — start success', () => {
     expect(json.data).toMatchObject({ started: true, sequenceKey: 'brief-v1' });
 
     expect(mocks.send).toHaveBeenCalledWith({
+      id: 'sales-sequence-start-lead_1',
       name: 'sales/sequence.start',
       data: { leadId: 'lead_1', sequenceKey: 'brief-v1' },
     });
@@ -159,11 +178,51 @@ describe('POST /api/admin/sales/leads/[id]/sequence — start success', () => {
     });
   });
 
+  it('sends the start event with a deterministic id, so Inngest drops a double start', async () => {
+    respond({ lead: { sequence_status: null } });
+    await POST(postBody({ action: 'start', sequenceKey: 'enquiry-v1' }), context);
+    respond({ lead: { sequence_status: null } });
+    await POST(postBody({ action: 'start', sequenceKey: 'ad-lead-v1' }), context);
+
+    const ids = mocks.send.mock.calls.map(([event]) => (event as { id?: unknown }).id);
+    expect(ids).toEqual(['sales-sequence-start-lead_1', 'sales-sequence-start-lead_1']);
+  });
+
   it('accepts every key in the registry', async () => {
     for (const key of ['brief-v1', 'enquiry-v1', 'ad-lead-v1', 'scorecard-v1']) {
       respond({ lead: { sequence_status: null } });
       const res = await POST(postBody({ action: 'start', sequenceKey: key }), context);
       expect(res.status).toBe(200);
     }
+  });
+});
+
+describe('POST /api/admin/sales/leads/[id]/sequence — start failure', () => {
+  it('returns 503 and records no activity when the start event cannot be queued', async () => {
+    respond({ lead: { sequence_status: null } });
+    mocks.send.mockRejectedValueOnce(new Error('Inngest unreachable'));
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const res = await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context);
+
+    expect(res.status).toBe(503);
+    const json = await res.json();
+    expect(json.error).toBe("Couldn't start follow-ups right now. Try again in a minute.");
+    expect(fake.callsTo('lead_activities', 'insert')).toHaveLength(0);
+    consoleError.mockRestore();
+  });
+
+  it('records the sequence_started activity only after the event is queued', async () => {
+    respond({ lead: { sequence_status: null } });
+    let activitiesWhenSent = -1;
+    mocks.send.mockImplementationOnce(async () => {
+      activitiesWhenSent = fake.callsTo('lead_activities', 'insert').length;
+      return undefined;
+    });
+
+    await POST(postBody({ action: 'start', sequenceKey: 'brief-v1' }), context);
+
+    expect(activitiesWhenSent).toBe(0);
+    expect(fake.callsTo('lead_activities', 'insert')).toHaveLength(1);
   });
 });

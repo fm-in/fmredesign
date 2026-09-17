@@ -12,6 +12,7 @@ import { changeStage, recordActivity } from '@/lib/sales/activity';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
 import { recommendSequence, sequenceStartState } from '@/lib/sales/sequence';
 import { getSalesSettings } from '@/lib/sales/settings';
+import type { SequenceStartInfo } from '@/lib/sales/api-types';
 import type { LeadRow } from '@/lib/sales/types';
 import { firstIssue, leadPatchSchema } from '@/lib/sales/schemas';
 import { isSuppressed } from '@/lib/sales/suppression';
@@ -19,6 +20,10 @@ import { isSuppressed } from '@/lib/sales/suppression';
 export const dynamic = 'force-dynamic';
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+function isSequenceStartedActivity(row: unknown): boolean {
+  return typeof row === 'object' && row !== null && 'type' in row && row.type === 'sequence_started';
+}
 
 /**
  * camelCase for the API, except form answers and activity metadata: their keys are
@@ -48,10 +53,13 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     ]);
 
     // Reuses the same refusal logic the start route enforces, so the panel
-    // never offers a set the endpoint would then refuse.
-    const sequences = {
+    // never offers a set the endpoint would then refuse. `starting` covers the
+    // gap between the start being queued and the sequence enrolling the lead.
+    const latestActivity: unknown = activities.data?.[0];
+    const sequences: SequenceStartInfo = {
       recommended: recommendSequence(lead),
       ...sequenceStartState(lead, { suppressed, automationEnabled: settings.automationEnabled }),
+      starting: lead.sequence_status === null && isSequenceStartedActivity(latestActivity),
     };
 
     return ApiResponse.success({

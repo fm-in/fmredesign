@@ -46,6 +46,7 @@ export interface SalesLead {
   utmSource: string | null;
   utmMedium: string | null;
   utmCampaign: string | null;
+  sequenceKey: string | null;
   sequenceStatus: SequenceStatus | null;
   sequenceStopReason: string | null;
   firstResponseAt: string | null;
@@ -102,6 +103,8 @@ export interface SequenceStartInfo {
   recommended: string | null;
   canStart: boolean;
   blockedReason: string | null;
+  /** A start was queued (latest activity is `sequence_started`) but the sequence has not enrolled yet. */
+  starting: boolean;
 }
 
 export interface LeadDetailPayload {

@@ -121,7 +121,46 @@ describe('/api/admin/sales/leads/[id]', () => {
 
     const res = await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context);
     const json = await res.json();
-    expect(json.data.sequences).toEqual({ recommended: 'brief-v1', canStart: true, blockedReason: null });
+    expect(json.data.sequences).toEqual({ recommended: 'brief-v1', canStart: true, blockedReason: null, starting: false });
+  });
+
+  function respondWithStartActivity(sequenceStatus: 'active' | null, latestType: string) {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') {
+        return { data: leadRow({ owner_id: null, sequence_status: sequenceStatus, sequence_key: sequenceStatus ? 'enquiry-v1' : null }), error: null };
+      }
+      if (call.table === 'lead_activities') {
+        return {
+          data: [
+            { id: 'act_2', lead_id: 'lead_1', type: latestType, metadata: {}, occurred_at: '2026-09-16T05:00:00.000Z' },
+            { id: 'act_1', lead_id: 'lead_1', type: 'form_submitted', metadata: {}, occurred_at: '2026-09-15T04:00:00.000Z' },
+          ],
+          error: null,
+        };
+      }
+      if (call.table === 'admin_settings') return { data: { sales: { automationEnabled: true } }, error: null };
+      if (call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+  }
+
+  it('reports starting while the latest activity is sequence_started and no sequence status is set yet', async () => {
+    respondWithStartActivity(null, 'sequence_started');
+    const json = await (await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context)).json();
+    expect(json.data.sequences.starting).toBe(true);
+  });
+
+  it('is not starting once the sequence is running', async () => {
+    respondWithStartActivity('active', 'sequence_started');
+    const json = await (await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context)).json();
+    expect(json.data.sequences.starting).toBe(false);
+    expect(json.data.lead.sequenceKey).toBe('enquiry-v1');
+  });
+
+  it('is not starting when the latest activity is something else', async () => {
+    respondWithStartActivity(null, 'note');
+    const json = await (await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context)).json();
+    expect(json.data.sequences.starting).toBe(false);
   });
 
   it('reports the blocked reason in the sequences payload when automation is off', async () => {

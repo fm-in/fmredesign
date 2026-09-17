@@ -3,7 +3,6 @@ import { ApiResponse } from '@/lib/api-response';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 import { canAccessLead } from '@/lib/sales/access';
 import { recordActivity, stopSequence } from '@/lib/sales/activity';
-import { sendSalesEvent } from '@/lib/sales/events';
 import { loadLead } from '@/lib/sales/lead-store';
 import { sequenceStartState } from '@/lib/sales/sequence';
 import { getSalesSettings } from '@/lib/sales/settings';
@@ -45,8 +44,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return ApiResponse.validationError(state.blockedReason);
   }
 
+  // Send directly, not through the shared sales event helper, which swallows
+  // failures: the person clicking Start must be told when nothing was queued.
+  // The id is fixed per lead, so Inngest drops a second start (a double click,
+  // two tabs) — only one sequence ever runs per lead anyway.
+  try {
+    const { inngest } = await import('@/lib/inngest/client');
+    await inngest.send({ id: `sales-sequence-start-${id}`, name: 'sales/sequence.start', data: { leadId: id, sequenceKey } });
+  } catch (err) {
+    console.error(`[sales] failed to queue sales/sequence.start for ${id}:`, err);
+    return ApiResponse.error("Couldn't start follow-ups right now. Try again in a minute.", 503);
+  }
+
+  // Recorded only once the start is queued, so the timeline never claims a start that did not happen.
   await recordActivity({ leadId: id, type: 'sequence_started', actor, metadata: { sequenceKey } });
-  await sendSalesEvent({ name: 'sales/sequence.start', data: { leadId: id, sequenceKey } });
 
   return ApiResponse.success({ started: true, sequenceKey });
 }

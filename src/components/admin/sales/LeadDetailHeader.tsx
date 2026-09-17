@@ -28,11 +28,23 @@ const SEQUENCE_TEXT: Record<string, string> = {
   stopped: 'Follow-ups stopped',
 };
 
+/** "Ad lead follow-ups running", or plain "Follow-ups running" for a key with no label (e.g. a retired set). */
+function sequenceStatusText(status: string, sequenceKey: string | null): string {
+  const text = SEQUENCE_TEXT[status] ?? 'Follow-ups';
+  if (!sequenceKey || !Object.hasOwn(SEQUENCE_LABELS, sequenceKey)) return text;
+  return `${SEQUENCE_LABELS[sequenceKey]} ${text.charAt(0).toLowerCase()}${text.slice(1)}`;
+}
+
 /** Shown on the lead page only until the lead's one-and-only sequence has been started. */
 function StartSequencePanel({ sequences, onStart }: { sequences: SequenceStartInfo; onStart: (sequenceKey: string) => Promise<boolean> }) {
   const keys = Object.keys(SEQUENCE_LABELS);
-  const [selected, setSelected] = useState(sequences.recommended ?? keys[0]);
+  // No recommendation means no preselected set: a person has to choose one deliberately.
+  const [selected, setSelected] = useState(sequences.recommended ?? '');
   const [starting, setStarting] = useState(false);
+
+  if (sequences.starting) {
+    return <p className="text-sm text-fm-neutral-700">Starting follow-ups…</p>;
+  }
 
   return (
     <div className="space-y-2">
@@ -40,6 +52,11 @@ function StartSequencePanel({ sequences, onStart }: { sequences: SequenceStartIn
         Follow-up set
       </label>
       <Select id="sequence-key" value={selected} onChange={(e) => setSelected(e.target.value)} disabled={starting}>
+        {!sequences.recommended && (
+          <option value="" disabled>
+            Choose a set
+          </option>
+        )}
         {keys.map((key) => (
           <option key={key} value={key}>
             {SEQUENCE_LABELS[key]}
@@ -50,8 +67,9 @@ function StartSequencePanel({ sequences, onStart }: { sequences: SequenceStartIn
         <DashboardButton
           variant="secondary"
           size="sm"
-          disabled={starting}
+          disabled={starting || !selected}
           onClick={async () => {
+            if (!selected) return;
             setStarting(true);
             try {
               await onStart(selected);
@@ -220,7 +238,7 @@ export function LeadDetailHeader({
             {lead.sequenceStatus ? (
               <>
                 <p className="text-sm text-fm-neutral-700">
-                  {SEQUENCE_TEXT[lead.sequenceStatus]}
+                  {sequenceStatusText(lead.sequenceStatus, lead.sequenceKey)}
                   {lead.sequenceStopReason ? ` (${lead.sequenceStopReason.replace(/_/g, ' ')})` : ''}
                 </p>
                 {lead.sequenceStatus === 'active' && (

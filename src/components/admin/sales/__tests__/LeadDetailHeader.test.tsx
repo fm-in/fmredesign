@@ -25,6 +25,7 @@ const lead: SalesLead = {
   utmSource: null,
   utmMedium: null,
   utmCampaign: null,
+  sequenceKey: null,
   sequenceStatus: null,
   sequenceStopReason: null,
   firstResponseAt: null,
@@ -47,11 +48,12 @@ const baseProps = {
   onStopSequence: vi.fn().mockResolvedValue(true),
 };
 
-const canStart: SequenceStartInfo = { recommended: 'ad-lead-v1', canStart: true, blockedReason: null };
+const canStart: SequenceStartInfo = { recommended: 'ad-lead-v1', canStart: true, blockedReason: null, starting: false };
 const blocked: SequenceStartInfo = {
   recommended: 'enquiry-v1',
   canStart: false,
   blockedReason: "Automation is switched off in Settings, so follow-ups can't be sent.",
+  starting: false,
 };
 
 describe('LeadDetailHeader — Start follow-ups panel', () => {
@@ -118,6 +120,79 @@ describe('LeadDetailHeader — Start follow-ups panel', () => {
       />
     );
     expect(screen.queryByLabelText(/follow-up set/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Follow-ups running')).toBeInTheDocument();
+  });
+
+  it('shows "Choose a set" and cannot start when there is no recommendation', async () => {
+    const onStartSequence = vi.fn().mockResolvedValue(true);
+    render(
+      <LeadDetailHeader
+        {...baseProps}
+        sequences={{ ...canStart, recommended: null }}
+        onStartSequence={onStartSequence}
+      />
+    );
+
+    const select = screen.getByLabelText(/follow-up set/i) as HTMLSelectElement;
+    expect(select.value).toBe('');
+    expect(screen.getByRole('option', { name: 'Choose a set' })).toBeInTheDocument();
+    const button = screen.getByRole('button', { name: /start follow-ups/i });
+    expect(button).toBeDisabled();
+    fireEvent.click(button);
+    expect(onStartSequence).not.toHaveBeenCalled();
+
+    fireEvent.change(select, { target: { value: 'enquiry-v1' } });
+    expect(screen.getByRole('button', { name: /start follow-ups/i })).not.toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /start follow-ups/i }));
+    await waitFor(() => expect(onStartSequence).toHaveBeenCalledWith('enquiry-v1'));
+  });
+
+  it('does not offer the "Choose a set" placeholder when a set is recommended', () => {
+    render(<LeadDetailHeader {...baseProps} sequences={canStart} onStartSequence={vi.fn().mockResolvedValue(true)} />);
+    expect(screen.queryByRole('option', { name: 'Choose a set' })).not.toBeInTheDocument();
+  });
+
+  it('shows "Starting follow-ups…" instead of the select and button while the start is queued', () => {
+    render(
+      <LeadDetailHeader
+        {...baseProps}
+        sequences={{ ...canStart, starting: true }}
+        onStartSequence={vi.fn().mockResolvedValue(true)}
+      />
+    );
+    expect(screen.getByText('Starting follow-ups…')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/follow-up set/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /start follow-ups/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('LeadDetailHeader — the running set is named', () => {
+  it.each([
+    ['active', 'ad-lead-v1', 'Ad lead follow-ups running'],
+    ['completed', 'brief-v1', 'Project brief follow-ups finished'],
+    ['stopped', 'scorecard-v1', 'Scorecard follow-ups stopped (replied)'],
+    ['active', 'enquiry-v1', 'Enquiry follow-ups running'],
+  ] as const)('%s %s reads "%s"', (sequenceStatus, sequenceKey, text) => {
+    render(
+      <LeadDetailHeader
+        {...baseProps}
+        lead={{ ...lead, sequenceStatus, sequenceKey, sequenceStopReason: sequenceStatus === 'stopped' ? 'replied' : null }}
+        sequences={blocked}
+        onStartSequence={vi.fn().mockResolvedValue(true)}
+      />
+    );
+    expect(screen.getByText(text)).toBeInTheDocument();
+  });
+
+  it.each([null, 'inbound-v1', 'constructor'])('falls back to plain wording for sequence key %s', (sequenceKey) => {
+    render(
+      <LeadDetailHeader
+        {...baseProps}
+        lead={{ ...lead, sequenceStatus: 'active', sequenceKey }}
+        sequences={blocked}
+        onStartSequence={vi.fn().mockResolvedValue(true)}
+      />
+    );
     expect(screen.getByText('Follow-ups running')).toBeInTheDocument();
   });
 });

@@ -51,7 +51,8 @@ export const SEQUENCES: Readonly<Record<string, readonly SequenceStep[]>> = {
 };
 
 export function getSequence(key: string): readonly SequenceStep[] | null {
-  return SEQUENCES[key] ?? null;
+  // Own keys only: 'constructor' or 'toString' must not resolve to Object.prototype members.
+  return Object.hasOwn(SEQUENCES, key) ? SEQUENCES[key] : null;
 }
 
 /** Reads `custom_fields.formName` defensively: it is jsonb, so it may be null, a non-object, or missing the key. */
@@ -113,6 +114,13 @@ export function sequenceStartState(
 ): { canStart: true; blockedReason: null } | { canStart: false; blockedReason: string } {
   if (!lead.email) {
     return { canStart: false, blockedReason: "This lead has no email address, so follow-ups can't be sent." };
+  }
+  // The owner was promised that ad-platform test leads and Cal.com bookings never get follow-ups.
+  if (lead.tags?.includes('test')) {
+    return { canStart: false, blockedReason: 'This is a test lead from an ad platform, so follow-ups are switched off for it.' };
+  }
+  if (lead.source === 'cal_booking') {
+    return { canStart: false, blockedReason: "This lead booked a call directly, so there's no follow-up sequence to run." };
   }
   if (check.suppressed) {
     return { canStart: false, blockedReason: "This email address is on the do-not-contact list, so follow-ups can't be sent." };

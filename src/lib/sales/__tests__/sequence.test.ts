@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { SEQUENCES, getSequence, recommendSequence, sequenceStartState, shouldContinue, type ContinueState } from '../sequence';
+import { SEQUENCE_LABELS } from '../api-types';
 import { leadRow } from '@/test-utils/lead-row';
 import type { LeadRow } from '@/lib/sales/types';
 
@@ -40,6 +41,11 @@ describe('SEQUENCES', () => {
   it('has exactly the four documented keys', () => {
     expect(Object.keys(SEQUENCES).sort()).toEqual(['ad-lead-v1', 'brief-v1', 'enquiry-v1', 'scorecard-v1']);
   });
+
+  it('has a human label for exactly the registry keys, in the same order', () => {
+    // SEQUENCE_LABELS lives in the client-safe api-types; this server-side test keeps it from drifting.
+    expect(Object.keys(SEQUENCE_LABELS)).toEqual(Object.keys(SEQUENCES));
+  });
 });
 
 describe('getSequence', () => {
@@ -50,6 +56,13 @@ describe('getSequence', () => {
   it('returns null for an unknown key', () => {
     expect(getSequence('inbound-v1')).toBeNull();
     expect(getSequence('nonsense')).toBeNull();
+  });
+
+  it('returns null for object prototype members', () => {
+    expect(getSequence('constructor')).toBeNull();
+    expect(getSequence('toString')).toBeNull();
+    expect(getSequence('__proto__')).toBeNull();
+    expect(getSequence('hasOwnProperty')).toBeNull();
   });
 });
 
@@ -165,11 +178,63 @@ describe('sequenceStartState', () => {
     expect(result.blockedReason).toMatch(/automation is switched off/i);
   });
 
-  it('checks in order: email, suppression, consent, prior sequence, automation', () => {
-    // A lead failing every check should report the first one, not the last.
-    const lead = leadRow({ email: null, consent_basis: 'none', sequence_status: 'stopped' });
-    const result = sequenceStartState(lead, { suppressed: true, automationEnabled: false });
-    expect(result.blockedReason).toMatch(/no email address/i);
+  it('blocks an ad-platform test lead', () => {
+    const lead = leadRow({ email: 'priya@example.com', source: 'google_lead_form', tags: ['test'] });
+    expect(sequenceStartState(lead, check)).toEqual({
+      canStart: false,
+      blockedReason: 'This is a test lead from an ad platform, so follow-ups are switched off for it.',
+    });
+  });
+
+  it('blocks a lead that booked a call directly', () => {
+    const lead = leadRow({ email: 'priya@example.com', source: 'cal_booking' });
+    expect(sequenceStartState(lead, check)).toEqual({
+      canStart: false,
+      blockedReason: "This lead booked a call directly, so there's no follow-up sequence to run.",
+    });
+  });
+
+  it('keeps the five existing refusal messages verbatim', () => {
+    expect(sequenceStartState(leadRow({ email: null }), check).blockedReason).toBe(
+      "This lead has no email address, so follow-ups can't be sent."
+    );
+    expect(sequenceStartState(leadRow(), { ...check, suppressed: true }).blockedReason).toBe(
+      "This email address is on the do-not-contact list, so follow-ups can't be sent."
+    );
+    expect(sequenceStartState(leadRow({ consent_basis: 'none' }), check).blockedReason).toBe(
+      "This lead hasn't given consent to be emailed, so follow-ups can't be sent."
+    );
+    expect(sequenceStartState(leadRow({ sequence_status: 'completed' }), check).blockedReason).toBe(
+      'This lead has already had a follow-up sequence — only one ever runs per lead.'
+    );
+    expect(sequenceStartState(leadRow(), { ...check, automationEnabled: false }).blockedReason).toBe(
+      "Automation is switched off in Settings, so follow-ups can't be sent."
+    );
+  });
+
+  it('checks in order: email, test lead, booking, suppression, consent, prior sequence, automation', () => {
+    // Start from a lead failing all seven checks, then clear them one at a time:
+    // each time the next check in the order must be the one reported.
+    let lead: Partial<LeadRow> = { email: null, tags: ['test'], source: 'cal_booking', consent_basis: 'none', sequence_status: 'stopped' };
+    let current = { suppressed: true, automationEnabled: false };
+    expect(sequenceStartState(leadRow(lead), current).blockedReason).toMatch(/no email address/i);
+
+    const fixes: Array<{ lead?: Partial<LeadRow>; check?: Partial<typeof current>; next: RegExp | null }> = [
+      { lead: { email: 'priya@example.com' }, next: /test lead from an ad platform/i },
+      { lead: { tags: [] }, next: /booked a call directly/i },
+      { lead: { source: 'website_form' }, next: /do-not-contact/i },
+      { check: { suppressed: false }, next: /consent/i },
+      { lead: { consent_basis: 'inbound_request' }, next: /already had a follow-up sequence/i },
+      { lead: { sequence_status: null }, next: /automation is switched off/i },
+      { check: { automationEnabled: true }, next: null },
+    ];
+    for (const fix of fixes) {
+      lead = { ...lead, ...fix.lead };
+      current = { ...current, ...fix.check };
+      const result = sequenceStartState(leadRow(lead), current);
+      if (fix.next) expect(result.blockedReason).toMatch(fix.next);
+      else expect(result).toEqual({ canStart: true, blockedReason: null });
+    }
   });
 });
 
