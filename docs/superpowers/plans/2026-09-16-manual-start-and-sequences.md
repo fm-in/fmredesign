@@ -9,7 +9,7 @@ sequence, and every sales email carries full FreakingMinds branding.
 
 **Architecture:** The sequence runner becomes key-driven: a registry maps a key to steps,
 `sales/sequence.start` carries the key, and a new admin action starts it. Email templates
-grow from three to eleven, all rendered through one branded shell.
+grow from three to twelve, all rendered through one branded shell.
 
 ## Global Constraints
 
@@ -43,7 +43,7 @@ Steps: write the failing test first (header band `#a82548`, logo `https://www.fr
 
 **Files:** modify `src/lib/sales/sequence.ts` + test.
 
-**Produces:** `SalesEmailTemplate` widened to the eleven template names in the spec;
+**Produces:** `SalesEmailTemplate` widened to the twelve template names in the spec;
 `SEQUENCES: Record<string, readonly SequenceStep[]>` keyed `brief-v1`, `enquiry-v1`,
 `ad-lead-v1`, `scorecard-v1`; `getSequence(key)`; `recommendSequence(lead: LeadRow): string | null`
 implementing the spec's table, returning `null` for `cal_booking`, a `test` tag, or no email.
@@ -52,7 +52,7 @@ implementing the spec's table, returning `null` for `cal_booking`, a `test` tag,
 Tests cover every row of the spec's table, including the get-started versus contact-page
 split on `custom_fields.formName`.
 
-### Task 3: Email copy for the eight new templates
+### Task 3: Email copy for the nine new templates
 
 **Files:** modify `src/lib/sales/emails.ts` + test.
 

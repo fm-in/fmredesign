@@ -3,8 +3,68 @@
 > **Apply the migration before deploying this code.** Run §1 first. Until the migration is
 > applied, the website form saves enquiries the old way and no other lead source works.
 
+> **Follow-ups are started by a person.** A new lead is assigned an owner, gets an AI-written
+> brief and a first-touch task automatically — but the system never emails anyone on its own.
+> Nobody hears from FreakingMinds until a person opens the lead and clicks **Start
+> follow-ups**. This is the biggest change from earlier versions of this system, and it's why
+> automation can be left switched on safely: nothing goes out until someone decides it should.
+
 Everything ships switched off. Work through these in order; each step can be checked in
 **Admin → Settings → Sales**.
+
+## How follow-ups work
+
+When a lead comes in, FreakingMinds assigns it to someone, writes an AI brief and creates a
+"first touch" task — automatically, whether or not automation is on. That's all that happens
+on its own. The owner then opens the lead at **Admin → Leads → (the lead's name)** and, when
+ready, clicks **Start follow-ups**. Only that click sends the first email.
+
+### The four follow-up sets
+
+Every lead recommends one of four sets, based on where it came from. The recommendation is
+preselected on the lead page, but the owner can pick a different one before starting.
+
+| Set | Recommended for | Timing |
+|---|---|---|
+| **Project brief** | Get-started form submissions | Day 0: an email confirming the brief is read and inviting a 30-minute scoping call. Day 2: a task to call or WhatsApp them. Day 4: an email asking the two questions that shape the proposal. Day 8: a close-the-loop email if there's been no reply. |
+| **Enquiry** | Contact form, referrals, partners and events | Day 0: an instant reply. Day 2: a proof email with examples of past work. Day 4: a task to call or WhatsApp them. Day 6: a close-the-loop email. |
+| **Ad lead** | Meta, Google and anything sent through Zapier/Make | Day 0: an intro email. Day 1: a task to call them. Day 3: a proof email. Day 7: a close-the-loop email. |
+| **Scorecard** | Marketing scorecard submissions | Day 0: their score and the weakest area. Day 3: the one fix worth trying first. Day 6: a close-the-loop email. |
+
+A booking sourced from Cal.com, anything tagged `test`, and any lead with no email address get
+no recommendation — Start follow-ups stays unavailable for those.
+
+### Why "Start follow-ups" might not be available
+
+The button is replaced with a plain-English reason whenever a lead can't be started yet:
+
+1. **No email address** — the lead didn't leave one, so there's nothing to send to.
+2. **On the do-not-contact list** — this address has unsubscribed or bounced before.
+3. **No consent to email** — the lead didn't come in through a form or channel that counts as
+   asking to be contacted.
+4. **Already started once** — only one follow-up sequence ever runs per lead, so this stays
+   blocked even after that sequence finishes or is stopped.
+5. **Automation is off** — turn it on in **Settings → Sales** first.
+
+### Two booking links
+
+**Settings → Sales** holds two booking links:
+
+- **Booking link (short call)** — the existing 15-minute link, used by Enquiry, Ad lead and
+  Scorecard.
+- **Scoping call booking link (30 min)** — used only by Project brief, default `fm-in/30min`.
+
+> **Warning:** the Cal.com event type behind the scoping link must actually exist before the
+> Project brief set is used. If it doesn't, every email in that sequence links to a dead page —
+> and those go to your highest-intent leads, the people who filled in the full get-started
+> form.
+
+### Branded email
+
+Every sales email now carries the FreakingMinds header band, brand colours, a single button
+and a footer with the sender's name, "FreakingMinds", the registered company address, and an
+unsubscribe link. It still sends alongside a plain-text version, and reads correctly even when
+the recipient's email client blocks images.
 
 ## 1. Database
 
@@ -130,14 +190,19 @@ Snapchat, JustDial and IndiaMART.
 ## 9. First run
 
 1. Keep automation **off**. Submit the contact form with your own email.
-2. Open the lead: it has an owner, an AI brief and a "First touch within the hour" task.
+2. Open the lead: it has an owner, an AI brief and a "First touch within the hour" task —
+   and no email has been sent. Nothing is emailed until you click Start follow-ups, whether
+   or not automation is on.
 3. Before turning automation on, confirm the Inngest dashboard lists all four sales functions:
-   `sales-lead-created`, `sales-sequence-inbound-v1`, `sales-meta-leadgen` and
-   `sales-meeting-prep`. If one is missing, resync the app in Inngest first.
+   `sales-lead-created`, `sales-sequence`, `sales-meta-leadgen` and `sales-meeting-prep`.
+   If one is missing, resync the app in Inngest first.
 4. Turn automation **on**. Submit again with a different email address you control.
-5. You receive the instant reply. Reply to it: the reply appears on the timeline, follow-ups
+5. Open that lead and click **Start follow-ups**. It preselects the recommended set — for a
+   contact-form submission that's Enquiry — so just click Start. Still no email goes out
+   until this click.
+6. You receive the instant reply. Reply to it: the reply appears on the timeline, follow-ups
    stop, and the reply is forwarded to the owner.
-6. Book through the link in the email: the lead moves to "Discovery scheduled" and a
+7. Book through the link in the email: the lead moves to "Discovery scheduled" and a
    pre-call brief arrives two hours before the call.
 
 ## 10. Check the admin screens
