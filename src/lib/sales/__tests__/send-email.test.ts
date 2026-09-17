@@ -76,7 +76,7 @@ describe('sendSalesEmail', () => {
   });
 
   it('threads the new context fields (project type, timeline, long booking link) through to the rendered email', async () => {
-    const lead = leadRow({ project_type: 'web_app', timeline: 'Next quarter' });
+    const lead = leadRow({ project_type: 'web_app', timeline: '3_6_months' });
     await sendSalesEmail({ lead, template: 'brief_intro', settings, ownerName: 'Asha' });
 
     const payload = mocks.send.mock.calls[0]?.[0] as { text: string };
@@ -89,6 +89,29 @@ describe('sendSalesEmail', () => {
 
     const payload = mocks.send.mock.calls[0]?.[0] as { text: string };
     expect(payload.text).toContain('https://cal.com/fm-in/15min');
+  });
+
+  /** The decoded `text=` of the company WhatsApp link in the plain-text email. */
+  function whatsappPrefill(text: string): string | undefined {
+    const match = /https:\/\/wa\.me\/\d+\?text=(\S+)/.exec(text);
+    return match?.[1] ? decodeURIComponent(match[1]) : undefined;
+  }
+
+  it.each([
+    ['website_form', 'I sent an enquiry on your website'],
+    ['meta_lead_ads', 'I filled in your form'],
+    ['google_lead_form', 'I filled in your form'],
+    ['google_ads', 'I filled in your form'],
+    ['connector', 'I filled in your form'],
+    ['scorecard', 'I took your marketing scorecard'],
+    ['referral', 'I got in touch'],
+    ['cal_booking', 'I got in touch'],
+    ['other', 'I got in touch'],
+  ] as const)('prefills the WhatsApp message for a %s lead with "%s"', async (source, line) => {
+    await sendSalesEmail({ lead: leadRow({ source }), template: 'instant_reply', settings, ownerName: 'Asha' });
+
+    const payload = mocks.send.mock.calls[0]?.[0] as { text: string };
+    expect(whatsappPrefill(payload.text)).toBe(`Hi, this is Priya Shah. ${line}`);
   });
 });
 
@@ -114,26 +137,66 @@ describe('parseWeakestChallenge', () => {
 
 describe('deriveSalesEmailFields', () => {
   it('reads timeline directly off the lead row, undefined when blank or absent', () => {
-    expect(deriveSalesEmailFields(leadRow({ timeline: 'ASAP' })).timeline).toBe('ASAP');
+    expect(deriveSalesEmailFields(leadRow({ timeline: 'asap' })).timeline).toBe('asap');
     expect(deriveSalesEmailFields(leadRow({ timeline: null })).timeline).toBeUndefined();
     expect(deriveSalesEmailFields(leadRow({ timeline: '   ' })).timeline).toBeUndefined();
   });
 
-  it('humanises a slug-shaped project type but leaves a natural-language one alone', () => {
-    expect(deriveSalesEmailFields(leadRow({ project_type: 'web_app' })).projectType).toBe('web app');
-    expect(deriveSalesEmailFields(leadRow({ project_type: 'landing-page' })).projectType).toBe('landing page');
-    expect(deriveSalesEmailFields(leadRow({ project_type: 'Website Redesign' })).projectType).toBe('Website Redesign');
-    expect(deriveSalesEmailFields(leadRow({ project_type: null })).projectType).toBeUndefined();
-  });
-
-  it('campaign prefers utm_campaign, falls back to source_detail, then undefined', () => {
-    expect(deriveSalesEmailFields(leadRow({ utm_campaign: 'Diwali Sale', source_detail: 'other' })).campaign).toBe('Diwali Sale');
-    expect(deriveSalesEmailFields(leadRow({ utm_campaign: null, source_detail: 'Referral: Acme' })).campaign).toBe('Referral: Acme');
-    expect(deriveSalesEmailFields(leadRow({ utm_campaign: null, source_detail: null })).campaign).toBeUndefined();
+  it('treats a "flexible" timeline as no timeline', () => {
+    expect(deriveSalesEmailFields(leadRow({ timeline: 'flexible' })).timeline).toBeUndefined();
+    expect(deriveSalesEmailFields(leadRow({ timeline: ' Flexible ' })).timeline).toBeUndefined();
   });
 
   it.each([
-    ['meta_lead_ads', 'Meta'],
+    ['website_design', 'website design'],
+    ['ecommerce', 'e-commerce'],
+    ['web_app', 'web app'],
+    ['mobile_app', 'mobile app'],
+    ['branding', 'branding'],
+    ['digital_marketing', 'digital marketing'],
+    ['full_service', 'full-service marketing'],
+    ['consultation', 'strategy'],
+  ] as const)('labels the project type %s as "%s"', (projectType, label) => {
+    expect(deriveSalesEmailFields(leadRow({ project_type: projectType })).projectType).toBe(label);
+  });
+
+  it('leaves an unknown or missing project type undefined, so the "your project" fallback applies', () => {
+    for (const value of ['other', 'maintenance', 'landing-page', 'Website Redesign', '', null] as const) {
+      expect(deriveSalesEmailFields(leadRow({ project_type: value })).projectType).toBeUndefined();
+    }
+  });
+
+  it('never takes a campaign from source_detail', () => {
+    for (const source of ['website_form', 'connector', 'meta_lead_ads', 'google_lead_form', 'referral'] as const) {
+      const lead = leadRow({ source, utm_campaign: null, source_detail: 'linkedin · CXO lead form' });
+      expect(deriveSalesEmailFields(lead).campaign).toBeUndefined();
+    }
+  });
+
+  it('leaves campaign undefined for Google and Meta leads, whose stored campaign is an id or an internal name', () => {
+    expect(deriveSalesEmailFields(leadRow({ source: 'google_lead_form', utm_campaign: '21498765432' })).campaign).toBeUndefined();
+    expect(deriveSalesEmailFields(leadRow({ source: 'meta_lead_ads', utm_campaign: 'FM_LeadGen_Sept2026' })).campaign).toBeUndefined();
+  });
+
+  it("uses a connector lead's explicit campaign field", () => {
+    const lead = leadRow({ source: 'connector', utm_campaign: 'Growth audit for D2C brands', source_detail: 'quora · Growth audit for D2C brands' });
+    expect(deriveSalesEmailFields(lead).campaign).toBe('Growth audit for D2C brands');
+  });
+
+  it('leaves campaign undefined for a website lead, whose utm_campaign is an internal tracking value', () => {
+    expect(deriveSalesEmailFields(leadRow({ source: 'website_form', utm_campaign: 'sept_retarget_bhopal' })).campaign).toBeUndefined();
+  });
+
+  it.each([
+    ['instagram', 'Instagram'],
+    ['facebook', 'Facebook'],
+    [null, 'Meta'],
+    ['meta', 'Meta'],
+  ] as const)('derives a Meta platform from utm_source %s as %s', (utmSource, expected) => {
+    expect(deriveSalesEmailFields(leadRow({ source: 'meta_lead_ads', utm_source: utmSource })).platform).toBe(expected);
+  });
+
+  it.each([
     ['google_lead_form', 'Google'],
     ['google_ads', 'Google'],
   ] as const)('derives platform for %s as %s', (source, expected) => {
@@ -145,9 +208,9 @@ describe('deriveSalesEmailFields', () => {
     expect(deriveSalesEmailFields(leadRow({ source: 'website_form' })).platform).toBeUndefined();
   });
 
-  it('derives a connector platform from custom_fields.platform first', () => {
+  it('derives a connector platform from custom_fields.platform first, with the brand spelling', () => {
     const lead = leadRow({ source: 'connector', custom_fields: { platform: 'linkedin' }, source_detail: 'linkedin · Lead Gen' });
-    expect(deriveSalesEmailFields(lead).platform).toBe('Linkedin');
+    expect(deriveSalesEmailFields(lead).platform).toBe('LinkedIn');
   });
 
   it('falls back to source_detail for a connector platform when custom_fields lacks it', () => {
@@ -160,11 +223,22 @@ describe('deriveSalesEmailFields', () => {
     expect(deriveSalesEmailFields(lead).platform).toBeUndefined();
   });
 
-  it('reads the scorecard score and band from custom_fields', () => {
-    const lead = leadRow({ custom_fields: { scorecardScore: 62, scorecardBand: 'developing' } });
+  it.each([
+    ['strong', 'strong'],
+    ['solid', 'solid'],
+    ['patchy', 'patchy'],
+    ['at_risk', 'needs-attention'],
+  ] as const)('reads the scorecard band %s as the phrase "%s"', (band, phrase) => {
+    const lead = leadRow({ custom_fields: { scorecardScore: 62, scorecardBand: band } });
     const fields = deriveSalesEmailFields(lead);
     expect(fields.score).toBe(62);
-    expect(fields.band).toBe('developing');
+    expect(fields.band).toBe(phrase);
+  });
+
+  it('leaves an unknown band undefined, so the range clause is dropped', () => {
+    for (const band of ['average', 'Needs attention', 'constructor', 'toString', '']) {
+      expect(deriveSalesEmailFields(leadRow({ custom_fields: { scorecardBand: band } })).band).toBeUndefined();
+    }
   });
 
   it('leaves score/band undefined for custom_fields that is null, a string, or an array', () => {

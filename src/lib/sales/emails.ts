@@ -21,13 +21,13 @@ export interface SalesEmailContext {
   bookingUrlLong?: string;
   /** The lead's stated timeline. Only its presence is used: it gates a clause in `brief_intro`, never its literal text. */
   timeline?: string;
-  /** What the get-started brief describes the project as, e.g. "a website rebuild". */
+  /** The get-started project type as a mid-sentence phrase, e.g. "website design". */
   projectType?: string;
   /** The ad campaign name the lead came from. */
   campaign?: string;
   /** The ad platform the lead came from, e.g. "Instagram". */
   platform?: string;
-  /** The scorecard's overall band, e.g. "developing". */
+  /** The scorecard's overall band as a mid-sentence phrase, e.g. "patchy". */
   band?: string;
   /** The scorecard's lowest-scoring area, e.g. "landing pages". */
   weakestArea?: string;
@@ -53,11 +53,19 @@ interface Copy {
 /** Signature used when a lead has no owner yet. */
 export const TEAM_SIGNATURE = 'The FreakingMinds team';
 
+/** What `firstNameOf` returns when the lead's name is not a usable name. Reads well after "Hi", not in a subject. */
+const NO_FIRST_NAME = 'there';
+
+/** "Your project brief, Priya" — or just "Your project brief" when there is no real first name. */
+function subjectWithName(subject: string, firstName: string): string {
+  return firstName === NO_FIRST_NAME ? subject : `${subject}, ${firstName}`;
+}
+
 function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
   switch (template) {
     case 'instant_reply':
       return {
-        subject: `Got your message, ${ctx.firstName}`,
+        subject: subjectWithName('Got your message', ctx.firstName),
         preheader: "Thanks for reaching out — here's the quickest way to talk.",
         paragraphs: [
           `Hi ${ctx.firstName},`,
@@ -71,7 +79,7 @@ function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
       };
     case 'follow_up_proof':
       return {
-        subject: `What this could look like for you, ${ctx.firstName}`,
+        subject: subjectWithName('What this could look like for you', ctx.firstName),
         preheader: 'A bit of proof, in case it helps you decide.',
         paragraphs: [
           `Hi ${ctx.firstName},`,
@@ -100,7 +108,7 @@ function copyFor(template: SalesEmailTemplate, ctx: SalesEmailContext): Copy {
       // clause after the comma entirely — never claim a timeline that was never given.
       const timelineClause = ctx.timeline ? ', and the timeline you mentioned is workable' : '';
       return {
-        subject: `Your project brief, ${ctx.firstName}`,
+        subject: subjectWithName('Your project brief', ctx.firstName),
         preheader: "I've read it — here's what happens next.",
         paragraphs: [
           `Hi ${ctx.firstName},`,
@@ -256,6 +264,6 @@ export function renderSalesEmail(template: SalesEmailTemplate, ctx: SalesEmailCo
 /** "priya shah" → "Priya". Falls back to "there" when the name is not a name. */
 export function firstNameOf(fullName: string): string {
   const first = fullName.trim().split(/\s+/)[0] ?? '';
-  if (!first || first === 'Unknown' || !/^\p{L}/u.test(first)) return 'there';
+  if (!first || first === 'Unknown' || !/^\p{L}/u.test(first)) return NO_FIRST_NAME;
   return first.charAt(0).toUpperCase() + first.slice(1);
 }

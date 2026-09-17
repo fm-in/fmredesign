@@ -12,6 +12,8 @@ import { firstNameOf, renderSalesEmail, type SalesEmailContext } from '@/lib/sal
 import { bookingUrl, companyWhatsappUrl } from '@/lib/sales/links';
 import { isSuppressed } from '@/lib/sales/suppression';
 import { isUnsubscribeConfigured, oneClickUnsubscribeUrl, unsubscribeUrl } from '@/lib/sales/unsubscribe-token';
+import { BAND_LABELS } from '@/lib/scorecard/scoring';
+import type { Band } from '@/lib/scorecard/types';
 import { SITE_URL } from '@/lib/site-url';
 import type { SalesEmailTemplate } from '@/lib/sales/sequence';
 import type { LeadRow, SalesSettings } from '@/lib/sales/types';
@@ -24,8 +26,40 @@ type DerivedEmailFields = Pick<
 >;
 
 const WEAKEST_CHALLENGE_PATTERN = /^(.+?)\s*\((\d{1,3})\/100\)$/;
-/** A slug looks like snake_case or kebab-case with no spaces, e.g. "web_app". */
-const SLUG_PATTERN = /^[a-z0-9]+(?:[_-][a-z0-9]+)+$/i;
+
+/**
+ * How each get-started project type reads mid-sentence ("your brief on …",
+ * "your … project"). Anything not listed — including free text — is left
+ * out, so the approved "your project" wording applies instead of a guess.
+ */
+const PROJECT_TYPE_PHRASES: Record<string, string> = {
+  website_design: 'website design',
+  ecommerce: 'e-commerce',
+  web_app: 'web app',
+  mobile_app: 'mobile app',
+  branding: 'branding',
+  digital_marketing: 'digital marketing',
+  full_service: 'full-service marketing',
+  consultation: 'strategy',
+};
+
+/**
+ * Scorecard bands as they read after "which puts you in the … range".
+ * `BAND_LABELS` lowercased reads naturally for every band except "Needs
+ * attention" ("the needs attention range"), which is hyphenated here.
+ */
+const BAND_PHRASE_OVERRIDES: Partial<Record<Band, string>> = {
+  at_risk: 'needs-attention',
+};
+
+/** Brand spelling for connector platforms that capitalising the first letter gets wrong (intake lowercases them). */
+const CONNECTOR_PLATFORM_NAMES: Record<string, string> = {
+  linkedin: 'LinkedIn',
+  justdial: 'JustDial',
+  indiamart: 'IndiaMART',
+};
+
+const AD_SOURCES: ReadonlySet<string> = new Set(['meta_lead_ads', 'google_lead_form', 'google_ads', 'connector']);
 
 function nonEmptyString(value: string | null | undefined): string | undefined {
   if (typeof value !== 'string') return undefined;
@@ -64,23 +98,54 @@ export function parseWeakestChallenge(value: string | null | undefined): { area:
   return { area, score };
 }
 
-/** "web_app" -> "web app"; "Website Redesign" (already natural language) is left alone. */
-function humanizeProjectType(value: string | null): string | undefined {
-  const trimmed = nonEmptyString(value);
-  if (!trimmed) return undefined;
-  return SLUG_PATTERN.test(trimmed) ? trimmed.replace(/[_-]+/g, ' ').toLowerCase() : trimmed;
+/** A known project type as a phrase; undefined for anything else. */
+function projectTypePhrase(value: string | null): string | undefined {
+  const key = nonEmptyString(value);
+  return key && Object.hasOwn(PROJECT_TYPE_PHRASES, key) ? PROJECT_TYPE_PHRASES[key] : undefined;
+}
+
+/** A timeline worth mentioning. "flexible" is no timeline: that lead never mentioned one. */
+function statedTimeline(value: string | null): string | undefined {
+  const timeline = nonEmptyString(value);
+  return timeline && timeline.toLowerCase() !== 'flexible' ? timeline : undefined;
+}
+
+function isBand(value: string): value is Band {
+  return Object.hasOwn(BAND_LABELS, value);
+}
+
+/** A stored band slug as a mid-sentence phrase; undefined for anything that is not a band. */
+function bandPhrase(value: string | undefined): string | undefined {
+  if (!value || !isBand(value)) return undefined;
+  return BAND_PHRASE_OVERRIDES[value] ?? BAND_LABELS[value].toLowerCase();
 }
 
 function platformFromConnector(lead: LeadRow): string | undefined {
   const cf = customFieldsRecord(lead);
   const raw = readCustomString(cf, 'platform') ?? nonEmptyString(lead.source_detail)?.split('·')[0]?.trim();
-  return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : undefined;
+  if (!raw) return undefined;
+  const known = raw.toLowerCase();
+  return Object.hasOwn(CONNECTOR_PLATFORM_NAMES, known)
+    ? CONNECTOR_PLATFORM_NAMES[known]
+    : raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+/** Meta intake stores where the lead ad ran in utm_source ("facebook" or "instagram"). */
+function platformFromMeta(lead: LeadRow): string {
+  switch (nonEmptyString(lead.utm_source)?.toLowerCase()) {
+    case 'facebook':
+      return 'Facebook';
+    case 'instagram':
+      return 'Instagram';
+    default:
+      return 'Meta';
+  }
 }
 
 function derivePlatform(lead: LeadRow): string | undefined {
   switch (lead.source) {
     case 'meta_lead_ads':
-      return 'Meta';
+      return platformFromMeta(lead);
     case 'google_lead_form':
     case 'google_ads':
       return 'Google';
@@ -91,17 +156,40 @@ function derivePlatform(lead: LeadRow): string | undefined {
   }
 }
 
+/**
+ * A campaign name a customer would recognise, or undefined. Only a connector
+ * lead has one: the zap posts it in its own `campaign` field, which intake
+ * stores as utm_campaign. Google stores a numeric campaign id there and Meta
+ * an internal campaign name, website UTMs are tracking values, and
+ * source_detail mixes the platform with form names — none of those are shown.
+ */
+function customerCampaign(lead: LeadRow): string | undefined {
+  return lead.source === 'connector' ? nonEmptyString(lead.utm_campaign) : undefined;
+}
+
+/**
+ * The WhatsApp prefill's second sentence, matching how the lead reached us.
+ * No closing full stop: the link would end in "." and sit before the email
+ * sentence's own full stop, reading ".." in plain text.
+ */
+function whatsappIntroLine(source: string | null): string {
+  if (source === 'website_form') return 'I sent an enquiry on your website';
+  if (source === 'scorecard') return 'I took your marketing scorecard';
+  if (source && AD_SOURCES.has(source)) return 'I filled in your form';
+  return 'I got in touch';
+}
+
 /** Builds the email-template context fields that come from the lead row, reading every value defensively. */
 export function deriveSalesEmailFields(lead: LeadRow): DerivedEmailFields {
   const cf = customFieldsRecord(lead);
   const weakest = parseWeakestChallenge(lead.primary_challenge);
   return {
-    timeline: nonEmptyString(lead.timeline),
-    projectType: humanizeProjectType(lead.project_type),
-    campaign: nonEmptyString(lead.utm_campaign) ?? nonEmptyString(lead.source_detail),
+    timeline: statedTimeline(lead.timeline),
+    projectType: projectTypePhrase(lead.project_type),
+    campaign: customerCampaign(lead),
     platform: derivePlatform(lead),
     score: readCustomNumber(cf, 'scorecardScore'),
-    band: readCustomString(cf, 'scorecardBand'),
+    band: bandPhrase(readCustomString(cf, 'scorecardBand')),
     weakestArea: weakest?.area,
     weakestScore: weakest?.score,
   };
@@ -137,7 +225,7 @@ export async function sendSalesEmail({ lead, template, settings, ownerName }: Se
     ownerName,
     bookingUrl: bookingUrl(settings.bookingLink, prefill),
     bookingUrlLong: bookingUrl(settings.bookingLinkLong, prefill),
-    whatsappUrl: companyWhatsappUrl(`Hi, this is ${lead.name}. I sent an enquiry on your website.`),
+    whatsappUrl: companyWhatsappUrl(`Hi, this is ${lead.name}. ${whatsappIntroLine(lead.source)}`),
     unsubscribeUrl: unsubscribeUrl(lead.email),
     workUrl: `${SITE_URL}/work`,
     scorecardUrl: `${SITE_URL}/scorecard`,

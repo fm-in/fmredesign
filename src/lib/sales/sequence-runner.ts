@@ -127,7 +127,7 @@ export async function recordStepProgress(leadId: string, step: SequenceStep, ind
     if (!current) return;
 
     if (current.status === 'new') {
-      await changeStage(leadId, 'contacted', SYSTEM_ACTOR, { reason: 'Instant reply sent' });
+      await changeStage(leadId, 'contacted', SYSTEM_ACTOR, { reason: 'First follow-up email sent' });
     }
   }
 

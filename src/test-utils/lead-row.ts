@@ -22,6 +22,7 @@ export function leadRow(overrides: Partial<LeadRow> = {}): LeadRow {
     source: 'website_form',
     source_detail: null,
     external_source_id: null,
+    utm_source: null,
     utm_campaign: null,
     lead_score: 50,
     owner_id: 'user-1',

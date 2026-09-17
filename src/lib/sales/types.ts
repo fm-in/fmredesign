@@ -165,6 +165,7 @@ export type LeadRow = {
   source: string | null;
   source_detail: string | null;
   external_source_id: string | null;
+  utm_source: string | null;
   utm_campaign: string | null;
   lead_score: number | null;
   owner_id: string | null;

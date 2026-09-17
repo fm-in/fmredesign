@@ -91,6 +91,23 @@ describe('renderShell', () => {
     expect(html).toContain('<a href="https://www.freakingminds.in/work" style="color:#a82548">https://www.freakingminds.in/work</a>');
   });
 
+  it('does not swallow sentence punctuation after a link', () => {
+    const html = renderShell({
+      ...baseInput,
+      paragraphs: [
+        'See our work: https://www.freakingminds.in/work. Then reply.',
+        'Message us (https://wa.me/919833257659?text=Hi), or call: https://cal.com/fm-in/15min, https://x.in/a; https://x.in/b: https://x.in/c! https://x.in/d?',
+      ],
+    });
+    expect(html).toContain('<a href="https://www.freakingminds.in/work" style="color:#a82548">https://www.freakingminds.in/work</a>. Then reply.');
+    expect(html).toContain('(<a href="https://wa.me/919833257659?text=Hi" style="color:#a82548">https://wa.me/919833257659?text=Hi</a>),');
+    expect(html).toContain('<a href="https://cal.com/fm-in/15min" style="color:#a82548">https://cal.com/fm-in/15min</a>,');
+    expect(html).toContain('<a href="https://x.in/a" style="color:#a82548">https://x.in/a</a>;');
+    expect(html).toContain('<a href="https://x.in/b" style="color:#a82548">https://x.in/b</a>:');
+    expect(html).toContain('<a href="https://x.in/c" style="color:#a82548">https://x.in/c</a>!');
+    expect(html).toContain('<a href="https://x.in/d" style="color:#a82548">https://x.in/d</a>?');
+  });
+
   it('puts a hidden preheader as the first element in the body, carrying the given text', () => {
     const html = renderShell(baseInput);
     const bodyIndex = html.indexOf('<body');

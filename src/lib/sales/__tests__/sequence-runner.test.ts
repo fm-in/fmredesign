@@ -98,6 +98,10 @@ describe('recordStepProgress', () => {
     const updates = updateCalls.map(payloadOf);
     expect(updates.some((p) => p.status === 'contacted')).toBe(true);
     expect(updates.some((p) => p.sequence_step === 1)).toBe(true);
+
+    // Set-neutral: the first email of any set, not only the enquiry set's instant reply.
+    const stageChange = fake.callsTo('lead_activities', 'insert').map(payloadOf).find((p) => p.type === 'stage_changed');
+    expect(stageChange?.metadata).toMatchObject({ reason: 'First follow-up email sent' });
   });
 
   it('does not call changeStage when the fresh status is already past new', async () => {

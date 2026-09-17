@@ -18,7 +18,8 @@ const FOOTER_BG = '#f4f1f2';
 const OUTER_BG = '#eeeeee';
 const FONT_STACK = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif";
 
-const URL_RE = /(https?:\/\/[^\s<]+)/g;
+/** A bare URL. It never ends in sentence punctuation, so "see https://x.in/work." links only the URL. */
+const URL_RE = /(https?:\/\/[^\s<]*[^\s<.,;:!?)])/g;
 
 export function escapeHtml(value: string): string {
   return value

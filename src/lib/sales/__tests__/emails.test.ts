@@ -15,11 +15,11 @@ const ctx: SalesEmailContext = {
 // Full context for the eight new templates — every new optional field populated.
 const richCtx: SalesEmailContext = {
   ...ctx,
-  timeline: 'in the next 3 months',
-  projectType: 'a website rebuild',
+  timeline: '2_3_months',
+  projectType: 'website design',
   campaign: 'Diwali Sale',
   platform: 'Instagram',
-  band: 'developing',
+  band: 'patchy',
   weakestArea: 'landing pages',
   score: 62,
   weakestScore: 40,
@@ -148,7 +148,7 @@ describe('brief-v1 templates', () => {
     expect(email.subject).toBe('Your project brief, Priya');
     expect(email.html).toContain("I&#39;ve read it — here&#39;s what happens next.");
     expect(email.text).toContain(
-      "Thanks for sending the details through — I've read your brief on a website rebuild, and the timeline you mentioned is workable."
+      "Thanks for sending the details through — I've read your brief on website design, and the timeline you mentioned is workable."
     );
     expect(email.text).toContain(`Book a 30-minute call: ${richCtx.bookingUrlLong}`);
   });
@@ -171,7 +171,7 @@ describe('brief-v1 templates', () => {
   it('brief_intro drops the timeline clause entirely when timeline is missing', () => {
     const missing = without('timeline');
     const email = renderSalesEmail('brief_intro', missing);
-    expect(email.text).toContain("Thanks for sending the details through — I've read your brief on a website rebuild.");
+    expect(email.text).toContain("Thanks for sending the details through — I've read your brief on website design.");
     expect(email.text).not.toContain('the timeline you mentioned is workable');
     expect(email.text).not.toContain('undefined');
   });
@@ -179,7 +179,7 @@ describe('brief-v1 templates', () => {
   it('brief_intro includes the timeline clause when a timeline is present', () => {
     const email = renderSalesEmail('brief_intro', richCtx);
     expect(email.text).toContain(
-      "Thanks for sending the details through — I've read your brief on a website rebuild, and the timeline you mentioned is workable."
+      "Thanks for sending the details through — I've read your brief on website design, and the timeline you mentioned is workable."
     );
   });
 
@@ -188,7 +188,7 @@ describe('brief-v1 templates', () => {
     expect(email.subject).toBe('Two things that shape the proposal');
     expect(email.html).toContain('Both change the answer quite a lot.');
     expect(email.text).toContain(
-      "Before I put numbers against your a website rebuild project, two questions that change the answer quite a lot:"
+      "Before I put numbers against your website design project, two questions that change the answer quite a lot:"
     );
     expect(email.text).toContain("1. What's driving the timeline — a launch, a campaign, a funding round, or something else?");
     expect(email.text).toContain('2. Besides you, who needs to be happy with this decision?');
@@ -265,7 +265,7 @@ describe('scorecard-v1 templates', () => {
     const email = renderSalesEmail('scorecard_intro', richCtx);
     expect(email.subject).toBe('Your scorecard: 62/100');
     expect(email.html).toContain("And the one area I&#39;d fix first.");
-    expect(email.text).toContain("Here's where your marketing landed: 62/100, which puts you in the developing range.");
+    expect(email.text).toContain("Here's where your marketing landed: 62/100, which puts you in the patchy range.");
     expect(email.text).toContain("The weakest area is landing pages at 40/100. That's where I'd start, because it's usually what holds the rest back.");
     expect(email.text).toContain(`Book the walkthrough: ${ctx.bookingUrl}`);
   });
@@ -318,6 +318,30 @@ describe('scorecard-v1 templates', () => {
     expect(email.html).toContain('Your results stay on file either way.');
     expect(email.text).toContain("I'll stop following up on your scorecard now.");
     expect(email.text).toContain(`Book a call: ${ctx.bookingUrl}`);
+  });
+});
+
+describe('subjects without a real first name', () => {
+  const nameless: SalesEmailContext = { ...richCtx, firstName: firstNameOf('Unknown') };
+
+  it.each([
+    ['brief_intro', 'Your project brief'],
+    ['instant_reply', 'Got your message'],
+    ['follow_up_proof', 'What this could look like for you'],
+  ] as const)('%s drops the name instead of saying "there"', (template, subject) => {
+    const email = renderSalesEmail(template, nameless);
+    expect(email.subject).toBe(subject);
+    expect(email.text).toContain('Hi there,');
+  });
+
+  it.each(ALL_TEMPLATES)('%s never ends a subject with ", there"', (template) => {
+    expect(renderSalesEmail(template, nameless).subject).not.toMatch(/,\s*there$/i);
+  });
+
+  it('keeps the name in the subject when there is one', () => {
+    expect(renderSalesEmail('brief_intro', richCtx).subject).toBe('Your project brief, Priya');
+    expect(renderSalesEmail('instant_reply', richCtx).subject).toBe('Got your message, Priya');
+    expect(renderSalesEmail('follow_up_proof', richCtx).subject).toBe('What this could look like for you, Priya');
   });
 });
 
