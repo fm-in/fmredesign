@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, MessageCircle, ArrowRight, ChevronDown, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
 import { SERVICE_ENQUIRY_OPTIONS as services } from "@/lib/services-catalogue";
 import { CalButton } from "@/components/ui/CalButton";
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
@@ -117,35 +119,37 @@ export default function ContactPage() {
   };
 
   return (
-    <V2PageWrapper>
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
       {/* Hero Section */}
-      <section className="relative z-10 v2-section v2-section--hero">
-        <div className="v2-container v2-container-wide">
+      <section className="relative z-10 py-site-section">
+        <div className="site-measure site-measure">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
-            <div className="v2-badge v2-badge-glass mb-8">
-              <MessageCircle className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Let's Start the Conversation</span>
+            <div className="site-chip mb-8">
+              <MessageCircle className="w-4 h-4 text-site-text" />
+              <span className="text-site-text">Let's Start the Conversation</span>
             </div>
 
             {/* Headline */}
-            <h1 className="v2-display font-display font-bold v2-text-primary mb-8 leading-tight">
+            <h1 className="text-site-display font-site-display font-bold text-site-text mb-8 leading-tight">
               Let's Talk About{' '}
-              <span className="v2-accent">Your Growth</span>
+              <span className="text-site-accent">Your Growth</span>
             </h1>
 
             {/* Description */}
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
+            <p className="text-lg md:text-xl text-site-muted leading-relaxed" style={{ marginBottom: '48px' }}>
               Get in touch with our team of marketing and creative experts. We're here to help you achieve your business goals with strategic marketing solutions that deliver real results.
             </p>
 
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <CalButton calLink="fm-in/15min" className="v2-btn v2-btn-primary">
+              <CalButton calLink="fm-in/15min" className="site-button">
                 <Phone className="w-5 h-5" />
                 Schedule a Call
               </CalButton>
-              <Link href="#contact-form" className="v2-btn v2-btn-secondary">
+              <Link href="#contact-form" className="site-button site-button--quiet">
                 Get Instant Quote
               </Link>
             </div>
@@ -158,32 +162,32 @@ export default function ContactPage() {
             src="/3dasset/brain-creative.webp"
             alt="Creative Solutions"
             loading="lazy"
-            className="h-auto animate-v2-hero-float"
+            className="h-auto"
             style={{
               width: 'min(180px, 30vw)',
-              filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+              filter: 'grayscale(1) brightness(0.72) contrast(1.45)',
             }}
           />
         </div>
       </section>
 
       {/* Contact Form & Info */}
-      <section id="contact-form" className="relative z-10 v2-section">
-        <div className="v2-container">
+      <section id="contact-form" className="relative z-10 py-site-section">
+        <div className="site-measure">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
-            <div className="v2-paper-lg rounded-3xl p-5 sm:p-8 lg:p-10">
-              <h2 className="v2-h4 font-display font-bold text-fm-neutral-900 mb-2">
+            <div className="site-surface rounded-3xl p-5 sm:p-8 lg:p-10">
+              <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-2">
                 Let's Discuss Your Project
               </h2>
-              <p className="text-fm-neutral-600 mb-8">
+              <p className="text-site-muted mb-8">
                 Fill out the form below and we'll get back to you within 24 hours with a custom proposal.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Your Name *</label>
+                    <label className="block text-sm font-semibold text-site-text mb-2">Your Name *</label>
                     <input
                       type="text"
                       required
@@ -204,7 +208,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Email Address *</label>
+                    <label className="block text-sm font-semibold text-site-text mb-2">Email Address *</label>
                     <input
                       type="email"
                       required
@@ -228,7 +232,7 @@ export default function ContactPage() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Phone Number</label>
+                    <label className="block text-sm font-semibold text-site-text mb-2">Phone Number</label>
                     <input
                       type="tel"
                       value={formData.phone}
@@ -248,7 +252,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Company Name</label>
+                    <label className="block text-sm font-semibold text-site-text mb-2">Company Name</label>
                     <input
                       type="text"
                       value={formData.company}
@@ -271,7 +275,7 @@ export default function ContactPage() {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Service Required *</label>
+                    <label className="block text-sm font-semibold text-site-text mb-2">Service Required *</label>
                     <select
                       required
                       value={formData.service}
@@ -300,7 +304,7 @@ export default function ContactPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Budget Range</label>
+                    <label className="block text-sm font-semibold text-site-text mb-2">Budget Range</label>
                     <select
                       value={formData.budget}
                       onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
@@ -330,7 +334,7 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-fm-neutral-700 mb-2">Project Details *</label>
+                  <label className="block text-sm font-semibold text-site-text mb-2">Project Details *</label>
                   <textarea
                     required
                     value={formData.message}
@@ -370,7 +374,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting || submitStatus === 'success'}
-                  className="v2-btn v2-btn-magenta v2-btn-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="site-button w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>
@@ -385,7 +389,7 @@ export default function ContactPage() {
                   )}
                 </button>
 
-                <p className="text-xs text-fm-neutral-500 leading-relaxed">{INBOUND_CONSENT_TEXT}</p>
+                <p className="text-xs text-site-muted leading-relaxed">{INBOUND_CONSENT_TEXT}</p>
 
                 {submitStatus === 'success' && (
                   <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
@@ -409,9 +413,9 @@ export default function ContactPage() {
 
             {/* Contact Info */}
             <div className="space-y-6">
-              <div className="v2-paper rounded-2xl p-8">
-                <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-6">Get in Touch</h3>
-                <p className="text-fm-neutral-600 mb-8">
+              <div className="site-surface rounded-2xl p-8">
+                <h3 className="font-site-display text-xl font-bold text-site-text mb-6">Get in Touch</h3>
+                <p className="text-site-muted mb-8">
                   Prefer to speak directly? Our team is available through multiple channels.
                 </p>
 
@@ -420,13 +424,13 @@ export default function ContactPage() {
                     const Icon = info.icon;
                     return (
                       <div key={info.title} className="flex gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-fm-magenta-50 flex items-center justify-center flex-shrink-0">
-                          <Icon className="w-5 h-5 text-fm-magenta-600" />
+                        <div className="w-12 h-12 rounded-xl bg-site-raised flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-5 h-5 text-site-accent" />
                         </div>
                         <div>
-                          <h4 className="font-semibold text-fm-neutral-900 mb-1">{info.title}</h4>
+                          <h4 className="font-semibold text-site-text mb-1">{info.title}</h4>
                           {info.details.map((detail, idx) => (
-                            <p key={idx} className="text-fm-neutral-600 text-sm">{detail}</p>
+                            <p key={idx} className="text-site-muted text-sm">{detail}</p>
                           ))}
                         </div>
                       </div>
@@ -436,19 +440,19 @@ export default function ContactPage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="v2-paper rounded-2xl p-8">
-                <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-4">Quick Actions</h3>
+              <div className="site-surface rounded-2xl p-8">
+                <h3 className="font-site-display text-xl font-bold text-site-text mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <a
                     href="tel:+919833257659"
-                    className="v2-btn v2-btn-magenta v2-btn-full"
+                    className="site-button w-full justify-center"
                   >
                     <Phone className="w-5 h-5" />
                     Call Now
                   </a>
                   <a
                     href="mailto:freakingmindsdigital@gmail.com"
-                    className="v2-btn v2-btn-outline v2-btn-full"
+                    className="site-button site-button--quiet w-full justify-center"
                   >
                     <Mail className="w-5 h-5" />
                     Send Email
@@ -457,7 +461,7 @@ export default function ContactPage() {
                     href="https://wa.me/919833257659"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="v2-btn v2-btn-outline v2-btn-full"
+                    className="site-button site-button--quiet w-full justify-center"
                   >
                     <MessageCircle className="w-5 h-5" />
                     WhatsApp
@@ -470,18 +474,18 @@ export default function ContactPage() {
       </section>
 
       {/* Map Section */}
-      <section className="relative z-10 v2-section">
-        <div className="v2-container">
+      <section className="relative z-10 py-site-section">
+        <div className="site-measure">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 className="v2-h3 font-display font-bold v2-text-primary mb-6 leading-tight">
-              Find <span className="v2-accent">Us</span>
+            <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-6 leading-tight">
+              Find <span className="text-site-accent">Us</span>
             </h2>
-            <p className="v2-text-secondary">
+            <p className="text-site-muted">
               Based in Central India, we serve brands across the country and worldwide.
             </p>
           </div>
 
-          <div className="v2-paper rounded-2xl overflow-hidden aspect-[4/3] md:aspect-video">
+          <div className="site-surface rounded-2xl overflow-hidden aspect-[4/3] md:aspect-video">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3665.9740851406573!2d77.39836927554988!3d23.2440300790192!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x397c434b09a56f8d%3A0xb51d32849457f0e6!2sFreaking%20Minds!5e0!3m2!1sen!2sin!4v1770984668410!5m2!1sen!2sin"
               width="100%"
@@ -497,31 +501,31 @@ export default function ContactPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="relative z-10 v2-section v2-section--outro">
-        <div className="v2-container v2-container-narrow">
+      <section className="relative z-10 py-site-section">
+        <div className="site-measure site-measure site-measure--narrow">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 className="v2-h3 font-display font-bold v2-text-primary leading-tight">
-              Frequently Asked <span className="v2-accent">Questions</span>
+            <h2 className="text-site-h3 font-site-display font-bold text-site-text leading-tight">
+              Frequently Asked <span className="text-site-accent">Questions</span>
             </h2>
           </div>
 
           <div className="space-y-4">
             {faqData.map((faq, index) => (
-              <div key={index} className="v2-paper-sm rounded-xl overflow-hidden">
+              <div key={index} className="site-surface rounded-xl overflow-hidden">
                 <button
                   onClick={() => setActiveAccordion(activeAccordion === index ? null : index)}
                   className="w-full px-4 sm:px-6 py-4 flex items-center justify-between text-left"
                 >
-                  <span className="font-semibold text-fm-neutral-900 pr-2 sm:pr-4">{faq.question}</span>
+                  <span className="font-semibold text-site-text pr-2 sm:pr-4">{faq.question}</span>
                   <ChevronDown
-                    className={`w-5 h-5 text-fm-neutral-400 transition-transform ${
+                    className={`w-5 h-5 text-site-muted transition-transform ${
                       activeAccordion === index ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
                 {activeAccordion === index && (
                   <div className="px-6 pb-4">
-                    <p className="text-fm-neutral-600 text-sm leading-relaxed">{faq.answer}</p>
+                    <p className="text-site-muted text-sm leading-relaxed">{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -530,6 +534,8 @@ export default function ContactPage() {
         </div>
       </section>
 
-    </V2PageWrapper>
+    </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }

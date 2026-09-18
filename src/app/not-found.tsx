@@ -1,54 +1,62 @@
-/**
- * Deliberately plain. `V2PageWrapper` is a marketing surface; a 404 is not one,
- * and it must render even when the marketing theme is mid-migration.
- */
 import Link from 'next/link';
-import { ArrowRight, Home } from 'lucide-react';
+import Image from 'next/image';
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { Container, Display, Label, Section, Text } from '@/components/site/primitives';
 
+/**
+ * 404.
+ *
+ * Gets the full site chrome, because the most useful thing on a 404 is the
+ * navigation. The mascot takes the same graphite treatment as everywhere else
+ * — in native colours it is pink and purple, which on a bone page reads as
+ * clip art.
+ */
 export default function NotFound() {
   return (
-    <div className="bg-fm-neutral-50">
-      <section className="min-h-[70vh] flex items-center justify-center py-16 md:py-24">
-        <div className="v2-container">
-          <div className="max-w-2xl mx-auto" style={{ textAlign: 'center' }}>
-            <img
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
+        <Section>
+          <Container width="narrow">
+            <Image
               src="/3dasset/brain-confused.webp"
-              alt="Page not found"
-              loading="lazy"
-              className="mx-auto mb-8"
-              style={{
-                width: 'min(160px, 40vw)',
-                height: 'auto',
-                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
-              }}
+              alt=""
+              aria-hidden
+              width={220}
+              height={220}
+              className="h-auto"
+              style={{ maxWidth: '180px', filter: 'grayscale(1) brightness(0.72) contrast(1.45)' }}
             />
-
-            <h1 className="font-display text-7xl sm:text-8xl md:text-9xl font-bold text-fm-magenta-600 mb-4">
-              404
-            </h1>
-
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-6">
-              Oops! Page Not Found
-            </h2>
-
-            <p className="text-lg text-fm-neutral-600 mb-10 leading-relaxed max-w-md mx-auto">
-              The page you&rsquo;re looking for doesn&rsquo;t exist or has been moved.
-              Let&rsquo;s get you back on track.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/" className="v2-btn v2-btn-magenta">
-                <Home className="w-5 h-5" />
-                Back to Homepage
+            <Label className="mt-10 block">Error 404</Label>
+            <Display level="h1" className="mt-5">
+              This page does not exist.
+            </Display>
+            <Text size="lead" muted className="mt-8">
+              It may have moved, or the link may be wrong. The work, the services and the writing
+              are all still where they were.
+            </Text>
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <Link
+                href="/"
+                className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
+                style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
+              >
+                Back to the homepage
               </Link>
-              <Link href="/contact" className="v2-btn v2-btn-outline">
-                Contact Us
-                <ArrowRight className="w-5 h-5" />
+              <Link
+                href="/contact"
+                className="font-site-sans text-site-body"
+                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
+              >
+                Tell us what you were looking for
               </Link>
             </div>
-          </div>
-        </div>
-      </section>
-    </div>
+          </Container>
+        </Section>
+      </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }

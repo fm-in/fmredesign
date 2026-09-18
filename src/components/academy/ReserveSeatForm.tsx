@@ -237,8 +237,8 @@ export function ReserveSeatForm({
     return (
       <div className="space-y-3" style={{ textAlign: 'center' }}>
         <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-        <h4 className="font-semibold text-fm-neutral-900">You&rsquo;re in!</h4>
-        <p className="text-sm text-fm-neutral-600">
+        <h4 className="font-semibold text-site-text">You&rsquo;re in!</h4>
+        <p className="text-sm text-site-muted">
           Your seat in <strong>{programTitle}</strong> is confirmed.
           A welcome email with the next steps is on its way.
         </p>
@@ -251,8 +251,8 @@ export function ReserveSeatForm({
     return (
       <div className="space-y-3" style={{ textAlign: 'center' }}>
         <XCircle className="w-10 h-10 text-amber-600 mx-auto" />
-        <h4 className="font-semibold text-fm-neutral-900">Payment not completed</h4>
-        <p className="text-sm text-fm-neutral-600">
+        <h4 className="font-semibold text-site-text">Payment not completed</h4>
+        <p className="text-sm text-site-muted">
           You closed the payment window before finishing. Your seat in{' '}
           <strong>{programTitle}</strong> isn&rsquo;t confirmed yet.
         </p>
@@ -261,15 +261,15 @@ export function ReserveSeatForm({
           <button
             type="button"
             onClick={retryPayment}
-            className="v2-btn v2-btn-magenta w-full inline-flex items-center justify-center gap-2"
+            className="site-button w-full inline-flex items-center justify-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
             Retry payment
           </button>
         )}
-        <p className="text-[11px] text-fm-neutral-500">
+        <p className="text-[11px] text-site-muted">
           Trouble paying? Email us at{' '}
-          <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-magenta-600 hover:underline">
+          <a href="mailto:freakingmindsdigital@gmail.com" className="text-site-accent hover:underline">
             freakingmindsdigital@gmail.com
           </a>
         </p>
@@ -282,21 +282,21 @@ export function ReserveSeatForm({
     return (
       <div className="space-y-3" style={{ textAlign: 'center' }}>
         <AlertTriangle className="w-10 h-10 text-amber-600 mx-auto" />
-        <h4 className="font-semibold text-fm-neutral-900">Payment isn&rsquo;t available right now</h4>
-        <p className="text-sm text-fm-neutral-600">
+        <h4 className="font-semibold text-site-text">Payment isn&rsquo;t available right now</h4>
+        <p className="text-sm text-site-muted">
           We couldn&rsquo;t open the payment window. Please try again in a few minutes.
         </p>
         <button
           type="button"
           onClick={startCheckout}
-          className="v2-btn v2-btn-magenta w-full inline-flex items-center justify-center gap-2"
+          className="site-button w-full inline-flex items-center justify-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
           Try again
         </button>
-        <p className="text-[11px] text-fm-neutral-500">
+        <p className="text-[11px] text-site-muted">
           Still stuck? Email{' '}
-          <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-magenta-600 hover:underline">
+          <a href="mailto:freakingmindsdigital@gmail.com" className="text-site-accent hover:underline">
             freakingmindsdigital@gmail.com
           </a>
         </p>
@@ -306,7 +306,7 @@ export function ReserveSeatForm({
 
   // ── Phase: idle / submitting / awaiting_payment (form visible) ──
   const inputCls =
-    'w-full px-3 py-2 rounded-lg border border-fm-neutral-200 bg-white text-fm-neutral-900 text-sm focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent disabled:opacity-50';
+    'w-full px-3 py-2 rounded-lg border border-site-line bg-white text-site-text text-sm focus:ring-2 focus:ring-site-accent focus:border-transparent disabled:opacity-50';
   const formDisabled = phase === 'submitting' || phase === 'awaiting_payment';
 
   return (
@@ -389,7 +389,7 @@ export function ReserveSeatForm({
       <button
         type="submit"
         disabled={formDisabled}
-        className="v2-btn v2-btn-magenta w-full inline-flex items-center justify-center gap-2"
+        className="site-button w-full inline-flex items-center justify-center gap-2"
       >
         {phase === 'submitting' && (
           <>
@@ -406,7 +406,7 @@ export function ReserveSeatForm({
         {(phase === 'idle') && <>Pay {formatInr(amountInr)} to book</>}
       </button>
 
-      <p className="text-[11px] text-fm-neutral-500" style={{ textAlign: 'center' }}>
+      <p className="text-[11px] text-site-muted" style={{ textAlign: 'center' }}>
         Secure payment by Razorpay — UPI, cards, netbanking & wallets accepted.
       </p>
     </form>

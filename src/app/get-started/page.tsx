@@ -20,7 +20,9 @@ import {
   BarChart3,
   Gift
 } from 'lucide-react';
-import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
 import { CalButton } from "@/components/ui/CalButton";
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
@@ -258,19 +260,21 @@ export default function GetStartedPage() {
   }
 
   return (
-    <V2PageWrapper>
-      <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
-        <div className="v2-container">
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
+      <section className="relative z-10 py-site-section">
+        <div className="site-measure">
           {/* 3D Brain Decoration */}
           <div className="absolute right-8 lg:right-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
             <img
               src="/3dasset/brain-rocket.webp"
               alt="Launch Your Project"
               loading="lazy"
-              className="h-auto animate-v2-hero-float"
+              className="h-auto"
               style={{
                 width: 'min(180px, 30vw)',
-                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
+                filter: 'grayscale(1) brightness(0.72) contrast(1.45)',
               }}
             />
           </div>
@@ -278,14 +282,14 @@ export default function GetStartedPage() {
           <div className="max-w-4xl mx-auto">
             {/* Page Header */}
             <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-              <div className="v2-badge v2-badge-glass" style={{ marginBottom: '24px' }}>
-                <Sparkles className="w-4 h-4 v2-text-primary" />
-                <span className="v2-text-primary">Start Your Project</span>
+              <div className="site-chip" style={{ marginBottom: '24px' }}>
+                <Sparkles className="w-4 h-4 text-site-text" />
+                <span className="text-site-text">Start Your Project</span>
               </div>
-              <h1 className="v2-h2 font-display font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
-                Let&apos;s Grow Your <span className="v2-accent">Brand</span>
+              <h1 className="text-site-h2 font-site-display font-bold text-site-text leading-tight" style={{ marginBottom: '16px' }}>
+                Let&apos;s Grow Your <span className="text-site-accent">Brand</span>
               </h1>
-              <p className="text-base md:text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
+              <p className="text-base md:text-lg text-site-muted leading-relaxed max-w-2xl mx-auto">
                 Tell us about your project. We&apos;ll get back within 24 hours with a customized proposal.
               </p>
             </div>
@@ -301,8 +305,8 @@ export default function GetStartedPage() {
                         <div
                           className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
                             ${currentStep >= step
-                              ? 'bg-fm-magenta-700 border-fm-magenta-700 text-white shadow-lg'
-                              : 'border-fm-neutral-300 text-fm-neutral-500 bg-white'}`}
+                              ? 'bg-site-accent border-site-accent text-white shadow-lg'
+                              : 'border-site-line text-site-muted bg-white'}`}
                         >
                           {currentStep > step ? (
                             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -311,7 +315,7 @@ export default function GetStartedPage() {
                           )}
                         </div>
                         <span className={`text-[11px] sm:text-xs mt-1 sm:mt-2 font-medium ${
-                          currentStep >= step ? 'text-fm-magenta-700' : 'text-fm-neutral-500'
+                          currentStep >= step ? 'text-site-accent' : 'text-site-muted'
                         }`}>
                           {step === 1 && 'Contact'}
                           {step === 2 && 'Project'}
@@ -321,9 +325,9 @@ export default function GetStartedPage() {
                       </div>
                     ))}
                   </div>
-                  <div className="w-full bg-fm-neutral-200 rounded-full" style={{ height: '6px' }}>
+                  <div className="w-full bg-site-raised rounded-full" style={{ height: '6px' }}>
                     <div
-                      className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 rounded-full transition-[width] duration-500 ease-out"
+                      className="bg-gradient-to-r rounded-full transition-[width] duration-500 ease-out"
                       style={{ width: `${((currentStep - 1) / 3) * 100}%`, height: '6px' }}
                     />
                   </div>
@@ -335,20 +339,20 @@ export default function GetStartedPage() {
                   {currentStep === 1 && (
                     <div className="space-y-8">
                       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
-                          <Users className="w-8 h-8 text-fm-magenta-700" />
+                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+                          <Users className="w-8 h-8 text-site-accent" />
                         </div>
-                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
                           Let&apos;s get to know you
                         </h2>
-                        <p className="text-lg text-fm-neutral-600">
+                        <p className="text-lg text-site-muted">
                           Share your contact details so we can connect
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                          <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                             Your Name *
                           </label>
                           <input
@@ -364,11 +368,11 @@ export default function GetStartedPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                          <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                             Email Address *
                           </label>
                           <div className="relative">
-                            <Mail className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-fm-neutral-500" />
+                            <Mail className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-site-muted" />
                             <input
                               type="email"
                               value={formData.email || ''}
@@ -383,11 +387,11 @@ export default function GetStartedPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                          <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                             Company Name *
                           </label>
                           <div className="relative">
-                            <Building className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-fm-neutral-500" />
+                            <Building className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-site-muted" />
                             <input
                               type="text"
                               value={formData.company || ''}
@@ -402,11 +406,11 @@ export default function GetStartedPage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                          <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                             Phone Number
                           </label>
                           <div className="relative">
-                            <Phone className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-fm-neutral-500" />
+                            <Phone className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-site-muted" />
                             <input
                               type="tel"
                               value={formData.phone || ''}
@@ -421,11 +425,11 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                           Website (Optional)
                         </label>
                         <div className="relative">
-                          <Globe className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-fm-neutral-500" />
+                          <Globe className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-site-muted" />
                           <input
                             type="url"
                             value={formData.website || ''}
@@ -444,19 +448,19 @@ export default function GetStartedPage() {
                   {currentStep === 2 && (
                     <div className="space-y-8">
                       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
-                          <Target className="w-8 h-8 text-fm-magenta-700" />
+                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+                          <Target className="w-8 h-8 text-site-accent" />
                         </div>
-                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
                           What do you need?
                         </h2>
-                        <p className="text-lg text-fm-neutral-600">
+                        <p className="text-lg text-site-muted">
                           Tell us about your project requirements
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '24px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '24px' }}>
                           Project Type *
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -465,16 +469,16 @@ export default function GetStartedPage() {
                               key={type.value}
                               type="button"
                               onClick={() => updateFormData({ projectType: type.value })}
-                              className={`p-4 sm:p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300 group
+                              className={`p-4 sm:p-6 border-2 rounded-xl text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300 group
                                 ${formData.projectType === type.value
-                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
-                                  : 'border-fm-neutral-200'}`}
+                                  ? 'border-site-accent bg-site-raised shadow-lg'
+                                  : 'border-site-line'}`}
                             >
                               <div className="flex items-start space-x-3 sm:space-x-4">
-                                <span className="v2-h4 text-xl">{type.icon}</span>
+                                <span className="text-site-h3 text-xl">{type.icon}</span>
                                 <div>
-                                  <div className="font-semibold text-fm-neutral-900 mb-1">{type.label}</div>
-                                  <div className="text-sm text-fm-neutral-600">{type.description}</div>
+                                  <div className="font-semibold text-site-text mb-1">{type.label}</div>
+                                  <div className="text-sm text-site-muted">{type.description}</div>
                                 </div>
                               </div>
                             </button>
@@ -484,7 +488,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                           Project Description *
                         </label>
                         <textarea
@@ -497,15 +501,15 @@ export default function GetStartedPage() {
                           placeholder="Describe your project in detail. What are you looking to build or improve?"
                         />
                         <div className="flex justify-between text-sm mt-2">
-                          <span className={errors.projectDescription ? 'text-red-500 font-medium' : 'text-fm-neutral-500'}>
+                          <span className={errors.projectDescription ? 'text-red-500 font-medium' : 'text-site-muted'}>
                             {errors.projectDescription || 'Minimum 10 characters'}
                           </span>
-                          <span className="text-fm-neutral-500">{formData.projectDescription?.length || 0} characters</span>
+                          <span className="text-site-muted">{formData.projectDescription?.length || 0} characters</span>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                           Industry (Optional)
                         </label>
                         <select
@@ -530,19 +534,19 @@ export default function GetStartedPage() {
                   {currentStep === 3 && (
                     <div className="space-y-8">
                       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
-                          <DollarSign className="w-8 h-8 text-fm-magenta-700" />
+                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+                          <DollarSign className="w-8 h-8 text-site-accent" />
                         </div>
-                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
                           Budget & Timeline
                         </h2>
-                        <p className="text-lg text-fm-neutral-600">
+                        <p className="text-lg text-site-muted">
                           Help us create the perfect proposal for you
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '24px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '24px' }}>
                           Budget Range *
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -551,14 +555,14 @@ export default function GetStartedPage() {
                               key={budget.value}
                               type="button"
                               onClick={() => updateFormData({ budgetRange: budget.value })}
-                              className={`p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300 relative
+                              className={`p-6 border-2 rounded-xl text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300 relative
                                 ${formData.budgetRange === budget.value
-                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
-                                  : 'border-fm-neutral-200'}`}
+                                  ? 'border-site-accent bg-site-raised shadow-lg'
+                                  : 'border-site-line'}`}
                             >
-                              <div className="font-semibold text-fm-neutral-900">{budget.label}</div>
+                              <div className="font-semibold text-site-text">{budget.label}</div>
                               {budget.popular && (
-                                <span className="absolute top-3 right-3 bg-fm-magenta-700 text-white text-xs px-3 py-1 rounded-full font-medium">
+                                <span className="absolute top-3 right-3 bg-site-accent text-white text-xs px-3 py-1 rounded-full font-medium">
                                   Popular
                                 </span>
                               )}
@@ -569,7 +573,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '24px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '24px' }}>
                           Timeline *
                         </label>
                         <div className="space-y-3">
@@ -578,15 +582,15 @@ export default function GetStartedPage() {
                               key={timeline.value}
                               type="button"
                               onClick={() => updateFormData({ timeline: timeline.value })}
-                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300
+                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300
                                 ${formData.timeline === timeline.value
-                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
-                                  : 'border-fm-neutral-200'}`}
+                                  ? 'border-site-accent bg-site-raised shadow-lg'
+                                  : 'border-site-line'}`}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-semibold text-fm-neutral-900">{timeline.label}</span>
+                                <span className="font-semibold text-site-text">{timeline.label}</span>
                                 {timeline.urgent && (
-                                  <span className="flex items-center text-fm-magenta-600 font-medium">
+                                  <span className="flex items-center text-site-accent font-medium">
                                     <Zap className="w-4 h-4 mr-1" />
                                     Urgent
                                   </span>
@@ -604,19 +608,19 @@ export default function GetStartedPage() {
                   {currentStep === 4 && (
                     <div className="space-y-8">
                       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                        <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
-                          <AlertCircle className="w-8 h-8 text-fm-magenta-700" />
+                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+                          <AlertCircle className="w-8 h-8 text-site-accent" />
                         </div>
-                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
                           Tell us your challenges
                         </h2>
-                        <p className="text-lg text-fm-neutral-600">
+                        <p className="text-lg text-site-muted">
                           Understanding your pain points helps us deliver better solutions
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                           What&apos;s your biggest challenge right now? *
                         </label>
                         <textarea
@@ -632,7 +636,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                           Any specific requirements? (Optional)
                         </label>
                         <textarea
@@ -647,7 +651,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '24px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '24px' }}>
                           Company Size *
                         </label>
                         <div className="space-y-3">
@@ -656,14 +660,14 @@ export default function GetStartedPage() {
                               key={size.value}
                               type="button"
                               onClick={() => updateFormData({ companySize: size.value })}
-                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-fm-magenta-50 hover:border-fm-magenta-300 transition-[background-color,border-color] duration-300
+                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300
                                 ${formData.companySize === size.value
-                                  ? 'border-fm-magenta-700 bg-fm-magenta-50 shadow-lg'
-                                  : 'border-fm-neutral-200'}`}
+                                  ? 'border-site-accent bg-site-raised shadow-lg'
+                                  : 'border-site-line'}`}
                             >
                               <div className="flex items-center space-x-4">
                                 <span className="text-xl">{size.icon}</span>
-                                <span className="font-semibold text-fm-neutral-900">{size.label}</span>
+                                <span className="font-semibold text-site-text">{size.label}</span>
                               </div>
                             </button>
                           ))}
@@ -672,7 +676,7 @@ export default function GetStartedPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-fm-neutral-800" style={{ marginBottom: '12px' }}>
+                        <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
                           Your Role at the Company (Optional)
                         </label>
                         <input
@@ -690,7 +694,7 @@ export default function GetStartedPage() {
                 </div>
 
                 {currentStep === 4 && (
-                  <p className="text-xs text-fm-neutral-500 leading-relaxed" style={{ marginTop: '32px' }}>
+                  <p className="text-xs text-site-muted leading-relaxed" style={{ marginTop: '32px' }}>
                     {INBOUND_CONSENT_TEXT}
                   </p>
                 )}
@@ -706,14 +710,14 @@ export default function GetStartedPage() {
                 />
 
                 {/* Navigation Buttons */}
-                <div className="flex justify-between items-center border-t border-fm-neutral-200" style={{ marginTop: '48px', paddingTop: '32px' }}>
+                <div className="flex justify-between items-center border-t border-site-line" style={{ marginTop: '48px', paddingTop: '32px' }}>
                   <button
                     onClick={prevStep}
                     disabled={currentStep === 1}
                     className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-[background-color,color] duration-300 ${
                       currentStep === 1
-                        ? 'text-fm-neutral-400 cursor-not-allowed'
-                        : 'text-fm-neutral-700 hover:bg-fm-neutral-100'
+                        ? 'text-site-muted cursor-not-allowed'
+                        : 'text-site-text hover:bg-site-raised'
                     }`}
                   >
                     <ChevronLeft className="w-5 h-5" />
@@ -723,7 +727,7 @@ export default function GetStartedPage() {
                   {currentStep < 4 ? (
                     <button
                       onClick={nextStep}
-                      className="v2-btn v2-btn-magenta v2-btn-lg"
+                      className="site-button"
                     >
                       Continue
                       <ChevronRight className="w-5 h-5" />
@@ -732,7 +736,7 @@ export default function GetStartedPage() {
                     <button
                       onClick={submitForm}
                       disabled={isSubmitting}
-                      className="v2-btn v2-btn-magenta v2-btn-lg disabled:opacity-50"
+                      className="site-button disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <>
@@ -752,7 +756,7 @@ export default function GetStartedPage() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="v2-paper rounded-2xl p-6 md:p-8 max-w-3xl mx-auto" style={{ marginBottom: '64px' }}>
+            <div className="site-surface rounded-2xl p-6 md:p-8 max-w-3xl mx-auto" style={{ marginBottom: '64px' }}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                 {[
                   { icon: Zap, label: "24hr Response" },
@@ -763,8 +767,8 @@ export default function GetStartedPage() {
                   const Icon = item.icon;
                   return (
                     <div key={item.label} className="flex flex-col items-center">
-                      <Icon className="w-6 h-6 text-fm-magenta-600 mb-1.5" />
-                      <div className="text-sm text-fm-neutral-600 font-medium">{item.label}</div>
+                      <Icon className="w-6 h-6 text-site-accent mb-1.5" />
+                      <div className="text-sm text-site-muted font-medium">{item.label}</div>
                     </div>
                   );
                 })}
@@ -773,35 +777,39 @@ export default function GetStartedPage() {
           </div>
         </div>
       </section>
-    </V2PageWrapper>
+    </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }
 
 // Thank You Step Component
 function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
   return (
-    <V2PageWrapper>
-      <section className="relative z-10 min-h-screen flex items-center justify-center v2-section">
-        <div className="v2-container">
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
+      <section className="relative z-10 min-h-screen flex items-center justify-center py-site-section">
+        <div className="site-measure">
           <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 lg:p-16 text-center">
             {/* Success Icon */}
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
 
-            <h1 className="v2-h2 font-bold text-fm-neutral-900 mb-6">
+            <h1 className="text-site-h2 font-bold text-site-text mb-6">
               Thank You, {formData.name}!
             </h1>
 
-            <p className="text-xl text-fm-neutral-600 mb-10 leading-relaxed">
+            <p className="text-xl text-site-muted mb-10 leading-relaxed">
               We&apos;ve received your project details and our expert team will get back to you within
-              <span className="font-semibold text-fm-magenta-700"> 24 hours </span>
+              <span className="font-semibold text-site-accent"> 24 hours </span>
               with a customized proposal.
             </p>
 
             {/* What's Next Section */}
-            <div className="bg-fm-magenta-50 rounded-2xl p-8 mb-10 text-left">
-              <h3 className="font-bold text-fm-neutral-900 mb-6 text-xl text-center">What happens next?</h3>
+            <div className="bg-site-raised rounded-2xl p-8 mb-10 text-left">
+              <h3 className="font-bold text-site-text mb-6 text-xl text-center">What happens next?</h3>
               <ul className="space-y-4">
                 {[
                   { step: 1, title: "Expert Review", desc: "Our team will carefully analyze your requirements and challenges" },
@@ -810,12 +818,12 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
                   { step: 4, title: "Project Kickoff", desc: "Start building your amazing project with our expert team!" }
                 ].map((item) => (
                   <li key={item.step} className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-fm-magenta-700 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-8 h-8 bg-site-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                       <span className="text-white font-semibold text-sm">{item.step}</span>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-fm-neutral-900">{item.title}</h4>
-                      <p className="text-fm-neutral-600">{item.desc}</p>
+                      <h4 className="font-semibold text-site-text">{item.title}</h4>
+                      <p className="text-site-muted">{item.desc}</p>
                     </div>
                   </li>
                 ))}
@@ -827,22 +835,22 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
               <CalButton
                 calLink={DEFAULT_BOOKING_LINK}
                 prefill={{ name: formData.name, email: formData.email }}
-                className="v2-btn v2-btn-magenta"
+                className="site-button"
               >
                 Book your discovery call now
                 <ArrowRight className="w-5 h-5" />
               </CalButton>
-              <Link href="/" className="v2-btn v2-btn-outline">
+              <Link href="/" className="site-button site-button--quiet">
                 Return to Homepage
               </Link>
 
-              <p className="text-sm text-fm-neutral-500">
+              <p className="text-sm text-site-muted">
                 Questions? Email us at{' '}
-                <a href="mailto:freakingmindsdigital@gmail.com" className="text-fm-magenta-700 hover:underline font-medium">
+                <a href="mailto:freakingmindsdigital@gmail.com" className="text-site-accent hover:underline font-medium">
                   freakingmindsdigital@gmail.com
                 </a>{' '}
                 or call us at{' '}
-                <a href="tel:+919833257659" className="text-fm-magenta-700 hover:underline font-medium">
+                <a href="tel:+919833257659" className="text-site-accent hover:underline font-medium">
                   +91 98332 57659
                 </a>
               </p>
@@ -850,6 +858,8 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
           </div>
         </div>
       </section>
-    </V2PageWrapper>
+    </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }

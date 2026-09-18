@@ -220,11 +220,11 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-fm-neutral-900 mb-3">Application Submitted!</h2>
-          <p className="text-fm-neutral-600 mb-6">
+          <h2 className="text-2xl font-bold text-site-text mb-3">Application Submitted!</h2>
+          <p className="text-site-muted mb-6">
             Thank you for applying to join CreativeMinds. Our team will review your application within 24-48 hours.
           </p>
-          <button onClick={onCancel} className="v2-btn v2-btn-magenta">
+          <button onClick={onCancel} className="site-button">
             Back to CreativeMinds
           </button>
         </div>
@@ -244,8 +244,8 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
                   <div
                     className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
                       ${currentStep >= step.number
-                        ? 'bg-fm-magenta-700 border-fm-magenta-700 text-white shadow-lg'
-                        : 'border-fm-neutral-300 text-fm-neutral-500 bg-white'}`}
+                        ? 'bg-site-accent border-site-accent text-white shadow-lg'
+                        : 'border-site-line text-site-muted bg-white'}`}
                   >
                     {currentStep > step.number ? (
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -254,16 +254,16 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
                     )}
                   </div>
                   <span className={`text-[11px] sm:text-xs mt-1 sm:mt-2 font-medium ${
-                    currentStep >= step.number ? 'text-fm-magenta-700' : 'text-fm-neutral-500'
+                    currentStep >= step.number ? 'text-site-accent' : 'text-site-muted'
                   }`}>
                     {step.title}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="w-full bg-fm-neutral-200 rounded-full" style={{ height: '6px' }}>
+            <div className="w-full bg-site-raised rounded-full" style={{ height: '6px' }}>
               <div
-                className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 rounded-full transition-[width] duration-500 ease-out"
+                className="bg-gradient-to-r rounded-full transition-[width] duration-500 ease-out"
                 style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%`, height: '6px' }}
               />
             </div>
@@ -291,10 +291,10 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
           )}
 
           {/* Navigation */}
-          <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-8 pt-8 border-t border-fm-neutral-200 gap-3">
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-8 pt-8 border-t border-site-line gap-3">
             <button
               onClick={currentStep === 1 ? onCancel : handlePrev}
-              className="flex items-center justify-center gap-2 px-6 py-3 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 transition-colors min-h-[48px]"
+              className="flex items-center justify-center gap-2 px-6 py-3 text-sm border border-site-line rounded-lg hover:bg-site-raised transition-colors min-h-[48px]"
             >
               <ArrowLeft className="h-4 w-4" />
               {currentStep === 1 ? 'Cancel' : 'Previous'}
@@ -304,14 +304,14 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
               <button
                 onClick={handleSubmit}
                 disabled={submitStatus === 'submitting'}
-                className="v2-btn v2-btn-magenta disabled:opacity-60 min-h-[48px]"
+                className="site-button disabled:opacity-60 min-h-[48px]"
               >
                 {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Application'}
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-fm-magenta-600 text-white text-sm font-medium rounded-lg hover:bg-fm-magenta-700 transition-colors min-h-[48px]"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-site-accent text-white text-sm font-medium rounded-lg hover:bg-site-accent transition-colors min-h-[48px]"
               >
                 Next Step
                 <ArrowRight className="h-4 w-4" />
@@ -332,7 +332,7 @@ function FieldError({ message }: { message?: string }) {
 }
 
 const inputClass =
-  'w-full px-4 py-3 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-base';
+  'w-full px-4 py-3 border border-site-line rounded-lg focus:ring-2 focus:ring-site-accent focus:border-site-accent text-base';
 const inputErrorClass =
   'w-full px-4 py-3 border border-red-400 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 text-base';
 
@@ -360,13 +360,13 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">About You</h2>
-        <p className="text-fm-neutral-600">Tell us about yourself</p>
+        <h2 className="text-2xl font-bold text-site-text mb-2">About You</h2>
+        <p className="text-site-muted">Tell us about yourself</p>
       </div>
 
       <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Full Name *</label>
+          <label className="block text-sm font-medium text-site-text mb-1.5">Full Name *</label>
           <input
             type="text"
             value={pi.fullName}
@@ -379,7 +379,7 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Email *</label>
+            <label className="block text-sm font-medium text-site-text mb-1.5">Email *</label>
             <input
               type="email"
               value={pi.email}
@@ -390,7 +390,7 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
             <FieldError message={errors.email} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Phone *</label>
+            <label className="block text-sm font-medium text-site-text mb-1.5">Phone *</label>
             <input
               type="tel"
               value={pi.phone}
@@ -404,7 +404,7 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">City *</label>
+            <label className="block text-sm font-medium text-site-text mb-1.5">City *</label>
             <input
               type="text"
               value={pi.location.city}
@@ -415,7 +415,7 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
             <FieldError message={errors.city} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">State *</label>
+            <label className="block text-sm font-medium text-site-text mb-1.5">State *</label>
             <input
               type="text"
               value={pi.location.state}
@@ -426,7 +426,7 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
             <FieldError message={errors.state} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Country</label>
+            <label className="block text-sm font-medium text-site-text mb-1.5">Country</label>
             <select
               value={pi.location.country}
               onChange={(e) => handleLocationChange('country', e.target.value)}
@@ -442,8 +442,8 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            Professional Bio * <span className="text-fm-neutral-400 font-normal">(min 20 characters)</span>
+          <label className="block text-sm font-medium text-site-text mb-1.5">
+            Professional Bio * <span className="text-site-muted font-normal">(min 20 characters)</span>
           </label>
           <textarea
             value={pi.bio}
@@ -456,7 +456,7 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Languages</label>
+          <label className="block text-sm font-medium text-site-text mb-1.5">Languages</label>
           <div className="flex flex-wrap gap-2">
             {LANGUAGES.map((lang) => (
               <label key={lang} className="flex items-center gap-1.5 text-sm">
@@ -522,13 +522,13 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Your Expertise</h2>
-        <p className="text-fm-neutral-600">Share your skills, tools, and portfolio</p>
+        <h2 className="text-2xl font-bold text-site-text mb-2">Your Expertise</h2>
+        <p className="text-site-muted">Share your skills, tools, and portfolio</p>
       </div>
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-site-text mb-1.5">
             Primary Category *
           </label>
           <select
@@ -545,10 +545,10 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-site-text mb-1.5">
             Subcategories *
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 sm:max-h-40 overflow-y-auto border border-fm-neutral-200 rounded-lg p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 sm:max-h-40 overflow-y-auto border border-site-line rounded-lg p-4">
             {TALENT_CATEGORIES[pd.category].subcategories.map((sub) => (
               <label key={sub} className="flex items-center text-sm gap-2.5 min-h-[44px] px-1">
                 <input
@@ -571,7 +571,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            <label className="block text-sm font-medium text-site-text mb-1.5">
               Experience Level *
             </label>
             <select
@@ -592,7 +592,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            <label className="block text-sm font-medium text-site-text mb-1.5">
               Years of Experience *
             </label>
             <input
@@ -612,7 +612,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Core Skills *</label>
+          <label className="block text-sm font-medium text-site-text mb-1.5">Core Skills *</label>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SKILLS.map((skill) => (
               <button
@@ -621,8 +621,8 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
                 onClick={() => handleSkillToggle(skill)}
                 className={`px-4 py-2 rounded-full text-sm border transition-colors min-h-[44px] ${
                   pd.skills?.find((s) => s.name === skill)
-                    ? 'bg-fm-magenta-100 border-fm-magenta-300 text-fm-magenta-800'
-                    : 'bg-fm-neutral-100 border-fm-neutral-300 text-fm-neutral-700 hover:bg-fm-neutral-200'
+                    ? 'bg-site-raised border-site-accent text-site-accent'
+                    : 'bg-site-raised border-site-line text-site-text hover:bg-site-raised'
                 }`}
               >
                 {skill}
@@ -633,7 +633,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Tools</label>
+          <label className="block text-sm font-medium text-site-text mb-1.5">Tools</label>
           <div className="flex flex-wrap gap-2">
             {POPULAR_TOOLS.map((tool) => (
               <button
@@ -643,7 +643,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
                 className={`px-4 py-2 rounded-full text-sm border transition-colors min-h-[44px] ${
                   pd.tools?.includes(tool)
                     ? 'bg-blue-100 border-blue-300 text-blue-800'
-                    : 'bg-fm-neutral-100 border-fm-neutral-300 text-fm-neutral-700 hover:bg-fm-neutral-200'
+                    : 'bg-site-raised border-site-line text-site-text hover:bg-site-raised'
                 }`}
               >
                 {tool}
@@ -652,11 +652,11 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
           </div>
         </div>
 
-        <div className="border-t border-fm-neutral-200 pt-6">
-          <h3 className="text-sm font-semibold text-fm-neutral-900 mb-3">Portfolio Links</h3>
+        <div className="border-t border-site-line pt-6">
+          <h3 className="text-sm font-semibold text-site-text mb-3">Portfolio Links</h3>
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+              <label className="block text-sm font-medium text-site-text mb-1.5">
                 Portfolio Website URL
               </label>
               <input
@@ -673,7 +673,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
 
             {[0, 1, 2].map((i) => (
               <div key={i}>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+                <label className="block text-sm font-medium text-site-text mb-1.5">
                   Work Sample URL {i + 1}
                 </label>
                 <input
@@ -705,22 +705,22 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Online Presence</h2>
-        <p className="text-fm-neutral-600">Help us understand your online reach (all optional)</p>
+        <h2 className="text-2xl font-bold text-site-text mb-2">Online Presence</h2>
+        <p className="text-site-muted">Help us understand your online reach (all optional)</p>
       </div>
 
       <div className="space-y-5">
         {/* Instagram */}
-        <div className="p-4 border border-fm-neutral-200 rounded-lg space-y-3">
-          <h3 className="text-sm font-semibold text-fm-neutral-900 flex items-center gap-2">
+        <div className="p-4 border border-site-line rounded-lg space-y-3">
+          <h3 className="text-sm font-semibold text-site-text flex items-center gap-2">
             <span className="w-5 h-5 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 rounded inline-block"></span>
             Instagram
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-fm-neutral-600 mb-1">Handle</label>
+              <label className="block text-xs text-site-muted mb-1">Handle</label>
               <div className="flex">
-                <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-fm-neutral-300 bg-fm-neutral-50 text-sm">
+                <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-site-line bg-site-raised text-sm">
                   @
                 </span>
                 <input
@@ -737,13 +737,13 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
                       },
                     })
                   }
-                  className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-r-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-sm"
+                  className="flex-1 px-3 py-2 border border-site-line rounded-r-lg focus:ring-2 focus:ring-site-accent focus:border-site-accent text-sm"
                   placeholder="your_handle"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-xs text-fm-neutral-600 mb-1">Followers (approx)</label>
+              <label className="block text-xs text-site-muted mb-1">Followers (approx)</label>
               <input
                 type="number"
                 value={sm.instagram?.followers || ''}
@@ -766,8 +766,8 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
         </div>
 
         {/* YouTube */}
-        <div className="p-4 border border-fm-neutral-200 rounded-lg space-y-3">
-          <h3 className="text-sm font-semibold text-fm-neutral-900 flex items-center gap-2">
+        <div className="p-4 border border-site-line rounded-lg space-y-3">
+          <h3 className="text-sm font-semibold text-site-text flex items-center gap-2">
             <span className="w-5 h-5 bg-red-600 rounded inline-flex items-center justify-center text-white text-[10px] font-bold">
               &#9654;
             </span>
@@ -775,7 +775,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-fm-neutral-600 mb-1">Channel URL</label>
+              <label className="block text-xs text-site-muted mb-1">Channel URL</label>
               <input
                 type="url"
                 value={sm.youtube?.channel || ''}
@@ -796,7 +796,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
               />
             </div>
             <div>
-              <label className="block text-xs text-fm-neutral-600 mb-1">Subscribers (approx)</label>
+              <label className="block text-xs text-site-muted mb-1">Subscribers (approx)</label>
               <input
                 type="number"
                 value={sm.youtube?.subscribers || ''}
@@ -821,7 +821,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
 
         {/* LinkedIn */}
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-site-text mb-1.5">
             LinkedIn Profile URL
           </label>
           <input
@@ -840,7 +840,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
 
         {/* Behance */}
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-site-text mb-1.5">
             Behance Profile URL
           </label>
           <input
@@ -866,7 +866,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
 
         {/* Dribbble */}
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-site-text mb-1.5">
             Dribbble Profile URL
           </label>
           <input
@@ -919,15 +919,15 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Availability & Pricing</h2>
-        <p className="text-fm-neutral-600">Set your availability and rate ranges</p>
+        <h2 className="text-2xl font-bold text-site-text mb-2">Availability & Pricing</h2>
+        <p className="text-site-muted">Set your availability and rate ranges</p>
       </div>
 
       <div className="space-y-6">
         {/* Availability section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            <label className="block text-sm font-medium text-site-text mb-1.5">
               Current Status
             </label>
             <select
@@ -944,7 +944,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            <label className="block text-sm font-medium text-site-text mb-1.5">
               Hours per Week *
             </label>
             <input
@@ -973,13 +973,13 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
             }
             className="rounded"
           />
-          <label htmlFor="remoteWork" className="text-sm font-medium text-fm-neutral-700">
+          <label htmlFor="remoteWork" className="text-sm font-medium text-site-text">
             Available for remote work
           </label>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-site-text mb-1.5">
             Project Commitment
           </label>
           <select
@@ -1001,7 +1001,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+            <label className="block text-sm font-medium text-site-text mb-1.5">
               Minimum Project Value
             </label>
             <input
@@ -1017,7 +1017,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Currency</label>
+            <label className="block text-sm font-medium text-site-text mb-1.5">Currency</label>
             <select
               value={prefs.currency}
               onChange={(e) =>
@@ -1035,7 +1035,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+          <label className="block text-sm font-medium text-site-text mb-1.5">
             Communication Style
           </label>
           <select
@@ -1054,11 +1054,11 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
         </div>
 
         {/* Pricing section */}
-        <div className="border-t border-fm-neutral-200 pt-6">
-          <h3 className="text-sm font-semibold text-fm-neutral-900 mb-1">
+        <div className="border-t border-site-line pt-6">
+          <h3 className="text-sm font-semibold text-site-text mb-1">
             Pricing Rates *
           </h3>
-          <p className="text-xs text-fm-neutral-500 mb-4">
+          <p className="text-xs text-site-muted mb-4">
             Fill at least one rate range ({currencySymbol})
           </p>
           {errors.pricing && <FieldError message={errors.pricing} />}
@@ -1066,7 +1066,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
           <div className="space-y-4">
             {/* Hourly */}
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+              <label className="block text-sm font-medium text-site-text mb-1.5">
                 Hourly Rate ({currencySymbol})
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -1090,7 +1090,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
 
             {/* Per-project */}
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+              <label className="block text-sm font-medium text-site-text mb-1.5">
                 Per-project Rate ({currencySymbol})
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -1114,7 +1114,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
 
             {/* Monthly retainer */}
             <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
+              <label className="block text-sm font-medium text-site-text mb-1.5">
                 Monthly Retainer ({currencySymbol})
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -1147,22 +1147,22 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
               }
               className="rounded"
             />
-            <label htmlFor="negotiation" className="text-sm text-fm-neutral-700">
+            <label htmlFor="negotiation" className="text-sm text-site-text">
               Open to negotiation on rates
             </label>
           </div>
         </div>
 
         {/* Ready box */}
-        <div className="bg-fm-magenta-50 border border-fm-magenta-200 rounded-xl p-6 mt-4">
+        <div className="bg-site-raised border border-site-accent rounded-xl p-6 mt-4">
           <div className="flex items-center gap-3 mb-3">
-            <CheckCircle className="h-5 w-5 text-fm-magenta-600" />
-            <h3 className="text-lg font-semibold text-fm-magenta-900">Ready to Submit!</h3>
+            <CheckCircle className="h-5 w-5 text-site-accent" />
+            <h3 className="text-lg font-semibold text-site-accent">Ready to Submit!</h3>
           </div>
-          <p className="text-fm-magenta-700 mb-4">
+          <p className="text-site-accent mb-4">
             Review your information and submit your application.
           </p>
-          <div className="text-sm text-fm-magenta-600">
+          <div className="text-sm text-site-accent">
             <strong>What happens next:</strong>
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Application review (24-48 hours)</li>

@@ -16,7 +16,9 @@ import {
   Calendar, Users, Sparkles, ArrowRight, GraduationCap,
   CheckCircle2, Building2, Award,
 } from 'lucide-react';
-import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
 import {
   formatProgramPrice,
   type Program,
@@ -70,42 +72,48 @@ export default async function AcademyPage() {
 
   if (programs.length === 0) {
     return (
-      <V2PageWrapper>
-        <section className="v2-section">
-          <div className="v2-container">
-            <div className="v2-paper rounded-3xl p-12 max-w-2xl mx-auto" style={{ textAlign: 'center' }}>
-              <GraduationCap className="w-12 h-12 text-fm-neutral-400 mx-auto mb-4" />
-              <h2 className="v2-h4 font-display font-bold text-fm-neutral-900 mb-3">
+      <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
+        <section className="py-site-section">
+          <div className="site-measure">
+            <div className="site-surface rounded-3xl p-12 max-w-2xl mx-auto" style={{ textAlign: 'center' }}>
+              <GraduationCap className="w-12 h-12 text-site-muted mx-auto mb-4" />
+              <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-3">
                 New programs launching soon
               </h2>
-              <p className="text-fm-neutral-600 mb-6">
+              <p className="text-site-muted mb-6">
                 We&apos;re putting the finishing touches on our upcoming batch.
                 Drop us a line if you&apos;d like early access.
               </p>
-              <Link href="/contact" className="v2-btn v2-btn-magenta">
+              <Link href="/contact" className="site-button">
                 Get notified
               </Link>
             </div>
           </div>
         </section>
-      </V2PageWrapper>
+      </main>
+      <SiteFooter />
+    </SiteShell>
     );
   }
 
   return (
-    <V2PageWrapper>
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="v2-section pt-24">
-        <div className="v2-container">
+      <section className="py-site-section pt-24">
+        <div className="site-measure">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
-            <div className="v2-badge v2-badge-glass mb-6 inline-flex">
-              <GraduationCap className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">FM Academy &middot; Creator Program</span>
+            <div className="site-chip mb-6 inline-flex">
+              <GraduationCap className="w-4 h-4 text-site-text" />
+              <span className="text-site-text">FM Academy &middot; Creator Program</span>
             </div>
-            <h1 className="v2-display font-display font-bold v2-text-primary mb-6 leading-[1.05]">
-              Learn the skills that build <span className="v2-accent">careers, brands & businesses</span>.
+            <h1 className="text-site-display font-site-display font-bold text-site-text mb-6 leading-[1.05]">
+              Learn the skills that build <span className="text-site-accent">careers, brands & businesses</span>.
             </h1>
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed max-w-2xl mx-auto mb-8">
+            <p className="text-lg md:text-xl text-site-muted leading-relaxed max-w-2xl mx-auto mb-8">
               Six in-person courses by the Freaking Minds team — digital marketing,
               performance ads, design, video editing, AI filmmaking and web design.
               Taught in our Bhopal studio.
@@ -127,7 +135,7 @@ export default async function AcademyPage() {
       {/* ── Featured Bundle ──────────────────────────────────── */}
       {bundle && (
         <section className="py-12">
-          <div className="v2-container">
+          <div className="site-measure">
             <BundleCard p={bundle} saving={bundleSaving} />
           </div>
         </section>
@@ -136,12 +144,12 @@ export default async function AcademyPage() {
       {/* ── Individual courses ──────────────────────────────── */}
       {courses.length > 0 && (
         <section className="py-12">
-          <div className="v2-container">
+          <div className="site-measure">
             <div className="max-w-3xl mx-auto mb-10" style={{ textAlign: 'center' }}>
-              <h2 className="v2-h3 font-display font-bold v2-text-primary mb-4">
+              <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-4">
                 Or pick a single course
               </h2>
-              <p className="text-base md:text-lg v2-text-secondary leading-relaxed">
+              <p className="text-base md:text-lg text-site-muted leading-relaxed">
                 Want to go deep on just one craft? Each course runs as its own cohort
                 in the same batch — pick the one that fits where you&apos;re heading.
               </p>
@@ -158,7 +166,7 @@ export default async function AcademyPage() {
 
       {/* ── Trust band ──────────────────────────────────────── */}
       <section className="py-16">
-        <div className="v2-container">
+        <div className="site-measure">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             <TrustItem
               icon={<Building2 className="w-6 h-6" />}
@@ -178,7 +186,9 @@ export default async function AcademyPage() {
           </div>
         </div>
       </section>
-    </V2PageWrapper>
+    </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }
 
@@ -213,7 +223,7 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
   return (
     <Link
       href={`/academy/${p.slug}`}
-      className="group block relative overflow-hidden rounded-3xl bg-gradient-to-br from-fm-magenta-700 via-fm-magenta-600 to-fm-purple-700 p-10 md:p-14 hover:shadow-2xl transition-shadow"
+      className="group block relative overflow-hidden rounded-3xl bg-gradient-to-br p-10 md:p-14 hover:shadow-2xl transition-shadow"
     >
       {/* glow / pattern */}
       <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.5),transparent_50%)]" />
@@ -224,7 +234,7 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
             <Sparkles className="w-3.5 h-3.5" />
             Most popular &middot; All 6 courses
           </div>
-          <h3 className="v2-h2 font-display font-bold leading-tight">
+          <h3 className="text-site-h2 font-site-display font-bold leading-tight">
             The full Creator Program
           </h3>
           <p className="text-white/85 text-base md:text-lg leading-relaxed max-w-xl">
@@ -252,7 +262,7 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
               {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
             </div>
             <div className="flex items-baseline gap-3 lg:justify-end">
-              <span className="v2-h2 font-bold text-white">{price.current}</span>
+              <span className="text-site-h2 font-bold text-white">{price.current}</span>
               {price.earlyBirdActive && (
                 <span className="text-white/60 line-through text-lg">{price.original}</span>
               )}
@@ -265,7 +275,7 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
             )}
           </div>
 
-          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-fm-magenta-700 font-semibold group-hover:translate-x-1 transition-transform">
+          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-site-accent font-semibold group-hover:translate-x-1 transition-transform">
             See the full curriculum
             <ArrowRight className="w-4 h-4" />
           </div>
@@ -283,10 +293,10 @@ function CourseCard({ p }: { p: Program }) {
   return (
     <Link
       href={`/academy/${p.slug}`}
-      className="group block v2-paper rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all"
+      className="group block site-surface rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all"
     >
       {p.coverImageUrl ? (
-        <div className="relative h-44 w-full bg-fm-neutral-100">
+        <div className="relative h-44 w-full bg-site-raised">
           <Image
             src={p.coverImageUrl}
             alt={p.title}
@@ -296,15 +306,15 @@ function CourseCard({ p }: { p: Program }) {
           />
         </div>
       ) : (
-        <div className="relative h-44 w-full bg-gradient-to-br from-fm-magenta-100 via-fm-magenta-50 to-fm-purple-100 flex items-center justify-center overflow-hidden">
-          <GraduationCap className="w-14 h-14 text-fm-magenta-600 opacity-50" />
+        <div className="relative h-44 w-full bg-gradient-to-br flex items-center justify-center overflow-hidden">
+          <GraduationCap className="w-14 h-14 text-site-accent opacity-50" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(201,50,93,0.15),transparent_50%)]" />
         </div>
       )}
 
       <div className="p-6 space-y-3">
         <div className="flex items-center gap-2 text-xs flex-wrap">
-          <span className="text-fm-neutral-500 inline-flex items-center gap-1">
+          <span className="text-site-muted inline-flex items-center gap-1">
             <Calendar className="w-3 h-3" />
             {cardSchedule.shortLabel}
           </span>
@@ -316,22 +326,22 @@ function CourseCard({ p }: { p: Program }) {
           )}
         </div>
 
-        <h3 className="text-xl font-bold text-fm-neutral-900 group-hover:text-fm-magenta-700 transition-colors">
+        <h3 className="text-xl font-bold text-site-text group-hover:text-site-accent transition-colors">
           {p.title}
         </h3>
 
         {p.shortDescription && (
-          <p className="text-sm text-fm-neutral-600 line-clamp-2">{p.shortDescription}</p>
+          <p className="text-sm text-site-muted line-clamp-2">{p.shortDescription}</p>
         )}
 
-        <div className="flex items-baseline gap-2 pt-3 border-t border-fm-neutral-100">
-          <span className="v2-h4 font-bold text-fm-magenta-700">{price.current}</span>
+        <div className="flex items-baseline gap-2 pt-3 border-t border-site-line">
+          <span className="text-site-h3 font-bold text-site-accent">{price.current}</span>
           {price.earlyBirdActive && (
-            <span className="text-sm text-fm-neutral-400 line-through">{price.original}</span>
+            <span className="text-sm text-site-muted line-through">{price.original}</span>
           )}
         </div>
 
-        <div className="flex items-center gap-1 text-sm text-fm-magenta-700 font-medium pt-1">
+        <div className="flex items-center gap-1 text-sm text-site-accent font-medium pt-1">
           Book your seat
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </div>
@@ -342,12 +352,12 @@ function CourseCard({ p }: { p: Program }) {
 
 function TrustItem({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <div className="v2-paper rounded-2xl p-6 space-y-3">
-      <div className="w-12 h-12 rounded-xl bg-fm-magenta-50 text-fm-magenta-600 flex items-center justify-center">
+    <div className="site-surface rounded-2xl p-6 space-y-3">
+      <div className="w-12 h-12 rounded-xl bg-site-raised text-site-accent flex items-center justify-center">
         {icon}
       </div>
-      <h3 className="font-semibold text-fm-neutral-900 text-lg">{title}</h3>
-      <p className="text-sm text-fm-neutral-600 leading-relaxed">{body}</p>
+      <h3 className="font-semibold text-site-text text-lg">{title}</h3>
+      <p className="text-sm text-site-muted leading-relaxed">{body}</p>
     </div>
   );
 }

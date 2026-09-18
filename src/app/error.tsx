@@ -1,14 +1,18 @@
-/**
- * Deliberately plain. This page renders when something else already failed, so
- * it must not depend on the marketing theme (`V2PageWrapper` pulls in GSAP and
- * a client-side starfield — both unnecessary risk on an error boundary).
- */
 'use client';
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { RefreshCw, Home } from 'lucide-react';
 
+/**
+ * The error boundary.
+ *
+ * Deliberately self-contained: no `SiteShell`, no header, no footer, no
+ * images, no context. This renders *because something else already failed*, so
+ * every dependency it takes is another way for the fallback itself to fail.
+ * It reads the theme tokens directly — those are plain CSS custom properties
+ * on `:root`, available with no component involved — and sets its own ground
+ * colour since it is rendering outside `[data-site]`.
+ */
 export default function Error({
   error,
   reset,
@@ -21,44 +25,73 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="bg-fm-neutral-50">
-      <section className="min-h-[70vh] flex items-center justify-center py-16 md:py-24">
-        <div className="v2-container">
-          <div className="max-w-2xl mx-auto" style={{ textAlign: 'center' }}>
-            <img
-              src="/3dasset/brain-confused.webp"
-              alt="Something went wrong"
-              loading="lazy"
-              className="mx-auto mb-8"
-              style={{
-                width: 'min(160px, 40vw)',
-                height: 'auto',
-                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
-              }}
-            />
-
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6">
-              Something Went Wrong
-            </h1>
-
-            <p className="text-lg text-fm-neutral-600 mb-10 leading-relaxed max-w-md mx-auto">
-              We encountered an unexpected error. Don&rsquo;t worry, our team has been
-              notified and is working on it.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button onClick={reset} className="v2-btn v2-btn-magenta">
-                <RefreshCw className="w-5 h-5" />
-                Try Again
-              </button>
-              <Link href="/" className="v2-btn v2-btn-outline">
-                <Home className="w-5 h-5" />
-                Back to Homepage
-              </Link>
-            </div>
-          </div>
+    <div
+      style={{
+        minHeight: '70vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '4rem 1.5rem',
+        background: 'var(--site-ground, #f7f4ef)',
+        color: 'var(--site-text, #13110f)',
+        fontFamily: 'var(--site-font-sans, system-ui, sans-serif)',
+      }}
+    >
+      <div style={{ maxWidth: '44ch' }}>
+        <p
+          style={{
+            fontSize: '0.75rem',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--site-muted, #6b635c)',
+            margin: 0,
+          }}
+        >
+          Something went wrong
+        </p>
+        <h1
+          style={{
+            fontFamily: 'var(--site-font-display, Georgia, serif)',
+            fontWeight: 400,
+            fontSize: 'clamp(2rem, 5vw, 3.2rem)',
+            lineHeight: 1.05,
+            margin: '1.25rem 0 0',
+          }}
+        >
+          This page did not load.
+        </h1>
+        <p style={{ color: 'var(--site-muted, #6b635c)', lineHeight: 1.6, marginTop: '1.5rem' }}>
+          The error has been logged. Trying again often works; if it does not, tell us what you
+          were doing and we will fix it.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem' }}>
+          <button
+            onClick={reset}
+            style={{
+              borderRadius: 'var(--radius-site-sm, 4px)',
+              padding: '0.75rem 1.25rem',
+              background: 'var(--site-text, #13110f)',
+              color: 'var(--site-ground, #f7f4ef)',
+              border: 0,
+              font: 'inherit',
+              cursor: 'pointer',
+            }}
+          >
+            Try again
+          </button>
+          <Link
+            href="/"
+            style={{
+              color: 'var(--site-text, #13110f)',
+              textDecoration: 'underline',
+              textUnderlineOffset: '6px',
+              alignSelf: 'center',
+            }}
+          >
+            Back to the homepage
+          </Link>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

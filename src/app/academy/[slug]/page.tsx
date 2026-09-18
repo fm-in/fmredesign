@@ -27,7 +27,9 @@ import {
   BadgeCheck,
   ChevronRight,
 } from 'lucide-react';
-import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { batchSchedule, seatScarcity, BATCH_CADENCE } from '@/lib/academy/schedule';
 import {
@@ -145,13 +147,15 @@ export default async function ProgramDetailPage({ params }: PageProps) {
   const isBundle = p.slug === 'creator-program-full';
 
   return (
-    <V2PageWrapper>
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
       {/* ── HERO ────────────────────────────────────────────── */}
       <section className="pt-24 pb-12 md:pb-16">
-        <div className="v2-container">
+        <div className="site-measure">
           <Link
             href="/academy"
-            className="inline-flex items-center gap-1 text-sm v2-text-secondary hover:v2-text-primary mb-8"
+            className="inline-flex items-center gap-1 text-sm text-site-muted hover:text-site-text mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to FM Academy
@@ -163,7 +167,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                 <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white/90 font-medium">
                   {isBundle ? 'Creator Program — Full Bundle' : FORMAT_LABELS[p.format]}
                 </span>
-                <span className="v2-text-secondary inline-flex items-center gap-1.5">
+                <span className="text-site-muted inline-flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" />
                   {schedule.isUpcoming ? `Starts ${schedule.long}` : BATCH_CADENCE}
                 </span>
@@ -175,17 +179,17 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                 )}
               </div>
 
-              <h1 className="v2-h2 font-display font-bold v2-text-primary leading-[1.05]">
+              <h1 className="text-site-h2 font-site-display font-bold text-site-text leading-[1.05]">
                 {p.title}
               </h1>
 
               {p.shortDescription && (
-                <p className="text-lg md:text-xl v2-text-secondary leading-relaxed max-w-xl">
+                <p className="text-lg md:text-xl text-site-muted leading-relaxed max-w-xl">
                   {p.shortDescription}
                 </p>
               )}
 
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm v2-text-secondary pt-2">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-site-muted pt-2">
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="w-4 h-4" /> 45-day program
                 </span>
@@ -216,11 +220,11 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   />
                 </div>
               ) : (
-                <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br from-fm-magenta-700 via-fm-magenta-600 to-fm-purple-700">
+                <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.4),transparent_50%)]" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8" style={{ textAlign: 'center' }}>
                     <GraduationCap className="w-20 h-20 mb-4 opacity-90" />
-                    <div className="v2-h3 font-display font-bold mb-2 leading-tight">
+                    <div className="text-site-h3 font-site-display font-bold mb-2 leading-tight">
                       {isBundle ? 'All 6 Courses' : p.title}
                     </div>
                     <div className="text-white/80 text-sm">FM Academy &middot; Creator Program</div>
@@ -234,13 +238,13 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 
       {/* ── BODY ────────────────────────────────────────────── */}
       <section className="pb-32 lg:pb-16">
-        <div className="v2-container">
+        <div className="site-measure">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* ── Main column ─────────────────────────────── */}
             <div className="lg:col-span-2 space-y-10">
               {p.longDescription && (
-                <div className="v2-paper rounded-2xl p-8 md:p-10">
-                  <p className="text-fm-neutral-700 whitespace-pre-line leading-relaxed text-base md:text-lg">
+                <div className="site-surface rounded-2xl p-8 md:p-10">
+                  <p className="text-site-text whitespace-pre-line leading-relaxed text-base md:text-lg">
                     {p.longDescription}
                   </p>
                 </div>
@@ -251,8 +255,8 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {p.outcomes.map((o, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-fm-magenta-600 mt-0.5 shrink-0" />
-                        <span className="text-fm-neutral-700">{o}</span>
+                        <CheckCircle2 className="w-5 h-5 text-site-accent mt-0.5 shrink-0" />
+                        <span className="text-site-text">{o}</span>
                       </li>
                     ))}
                   </ul>
@@ -265,12 +269,12 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     {p.syllabus.map((m, i) => (
                       <div
                         key={i}
-                        className="border-l-2 border-fm-magenta-500 pl-5 py-1"
+                        className="border-l-2 border-site-accent pl-5 py-1"
                       >
                         <div className="flex items-baseline gap-3 flex-wrap mb-2">
-                          <h4 className="font-semibold text-fm-neutral-900 text-lg">{m.title}</h4>
+                          <h4 className="font-semibold text-site-text text-lg">{m.title}</h4>
                           {m.durationLabel && (
-                            <span className="text-xs font-medium text-fm-magenta-700 bg-fm-magenta-50 px-2 py-0.5 rounded-full">
+                            <span className="text-xs font-medium text-site-accent bg-site-raised px-2 py-0.5 rounded-full">
                               {m.durationLabel}
                             </span>
                           )}
@@ -278,8 +282,8 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                         {m.items && m.items.length > 0 && (
                           <ul className="space-y-1.5">
                             {m.items.map((it, j) => (
-                              <li key={j} className="text-sm text-fm-neutral-600 flex items-start gap-2">
-                                <ChevronRight className="w-3.5 h-3.5 text-fm-magenta-400 mt-1 shrink-0" />
+                              <li key={j} className="text-sm text-site-muted flex items-start gap-2">
+                                <ChevronRight className="w-3.5 h-3.5 text-site-accent mt-1 shrink-0" />
                                 <span>{it}</span>
                               </li>
                             ))}
@@ -296,18 +300,18 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   <div className="space-y-2">
                     {p.schedule.map((s, i) => (
                       <div key={i} className="flex items-center gap-3 text-sm">
-                        <Calendar className="w-4 h-4 text-fm-magenta-600" />
-                        <span className="font-medium text-fm-neutral-900">
+                        <Calendar className="w-4 h-4 text-site-accent" />
+                        <span className="font-medium text-site-text">
                           {s.date && new Date(s.date).toLocaleDateString('en-IN', {
                             day: 'numeric', month: 'short',
                           })}
                         </span>
                         {s.time && (
-                          <span className="text-fm-neutral-600 inline-flex items-center gap-1">
+                          <span className="text-site-muted inline-flex items-center gap-1">
                             <Clock className="w-3 h-3" /> {s.time}
                           </span>
                         )}
-                        {s.topic && <span className="text-fm-neutral-700">— {s.topic}</span>}
+                        {s.topic && <span className="text-site-text">— {s.topic}</span>}
                       </div>
                     ))}
                   </div>
@@ -318,7 +322,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                 <SubSection title="Who you&rsquo;ll learn from">
                   <div className="flex items-start gap-4">
                     {p.instructorImageUrl && (
-                      <div className="relative w-20 h-20 rounded-full overflow-hidden shrink-0 bg-fm-neutral-100">
+                      <div className="relative w-20 h-20 rounded-full overflow-hidden shrink-0 bg-site-raised">
                         <Image
                           src={p.instructorImageUrl}
                           alt={p.instructorName}
@@ -329,9 +333,9 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                       </div>
                     )}
                     <div>
-                      <h4 className="font-semibold text-fm-neutral-900 text-lg">{p.instructorName}</h4>
+                      <h4 className="font-semibold text-site-text text-lg">{p.instructorName}</h4>
                       {p.instructorBio && (
-                        <p className="text-fm-neutral-600 mt-2 whitespace-pre-line leading-relaxed">
+                        <p className="text-site-muted mt-2 whitespace-pre-line leading-relaxed">
                           {p.instructorBio}
                         </p>
                       )}
@@ -346,12 +350,12 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     {p.testimonials.map((t, i) => (
                       <blockquote
                         key={i}
-                        className="border-l-4 border-fm-magenta-500 pl-5 py-2"
+                        className="border-l-4 border-site-accent pl-5 py-2"
                       >
-                        <p className="text-fm-neutral-700 italic text-lg leading-relaxed">
+                        <p className="text-site-text italic text-lg leading-relaxed">
                           &ldquo;{t.quote}&rdquo;
                         </p>
-                        <footer className="text-sm text-fm-neutral-500 mt-3">
+                        <footer className="text-sm text-site-muted mt-3">
                           — {t.name}{t.role && `, ${t.role}`}
                         </footer>
                       </blockquote>
@@ -365,8 +369,8 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   <div className="space-y-5">
                     {p.faq.map((f, i) => (
                       <div key={i}>
-                        <h4 className="font-semibold text-fm-neutral-900">{f.q}</h4>
-                        <p className="text-fm-neutral-600 mt-1.5 whitespace-pre-line leading-relaxed">
+                        <h4 className="font-semibold text-site-text">{f.q}</h4>
+                        <p className="text-site-muted mt-1.5 whitespace-pre-line leading-relaxed">
                           {f.a}
                         </p>
                       </div>
@@ -379,15 +383,15 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   Hidden on desktop (sticky aside covers it). On mobile this
                   is where the bottom sticky bar scrolls to. */}
               {!isSoldOut && (
-                <div id="reserve" className="lg:hidden v2-paper rounded-2xl p-6 space-y-5 scroll-mt-24">
+                <div id="reserve" className="lg:hidden site-surface rounded-2xl p-6 space-y-5 scroll-mt-24">
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-wider text-fm-neutral-500 mb-1">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-site-muted mb-1">
                       {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
                     </div>
                     <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="v2-h3 font-bold text-fm-magenta-700">{price.current}</span>
+                      <span className="text-site-h3 font-bold text-site-accent">{price.current}</span>
                       {price.earlyBirdActive && (
-                        <span className="text-sm text-fm-neutral-400 line-through">{price.original}</span>
+                        <span className="text-sm text-site-muted line-through">{price.original}</span>
                       )}
                     </div>
                     {price.earlyBirdActive && p.earlyBirdUntil && (
@@ -400,13 +404,13 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     )}
                   </div>
 
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-fm-magenta-50">
-                    <Calendar className="w-5 h-5 text-fm-magenta-600 shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-site-raised">
+                    <Calendar className="w-5 h-5 text-site-accent shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <div className="font-semibold text-fm-neutral-900">
+                      <div className="font-semibold text-site-text">
                         {schedule.isUpcoming ? 'Batch starts' : 'Intake'}
                       </div>
-                      <div className="text-fm-neutral-600">
+                      <div className="text-site-muted">
                         {schedule.isUpcoming ? schedule.long : BATCH_CADENCE}
                       </div>
                     </div>
@@ -418,7 +422,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     amountInr={buyerAmount}
                   />
 
-                  <p className="text-xs text-fm-neutral-500" style={{ textAlign: 'center' }}>
+                  <p className="text-xs text-site-muted" style={{ textAlign: 'center' }}>
                     Indian GST applies. Razorpay receipt issued on payment.
                   </p>
                 </div>
@@ -427,15 +431,15 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 
             {/* ── Sticky CTA column (desktop only) ────────── */}
             <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4">
-              <div className="v2-paper rounded-2xl p-6 space-y-5">
+              <div className="site-surface rounded-2xl p-6 space-y-5">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-fm-neutral-500 mb-1">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-site-muted mb-1">
                     {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
                   </div>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="v2-h3 font-bold text-fm-magenta-700">{price.current}</span>
+                    <span className="text-site-h3 font-bold text-site-accent">{price.current}</span>
                     {price.earlyBirdActive && (
-                      <span className="text-sm text-fm-neutral-400 line-through">{price.original}</span>
+                      <span className="text-sm text-site-muted line-through">{price.original}</span>
                     )}
                   </div>
                   {price.earlyBirdActive && p.earlyBirdUntil && (
@@ -448,13 +452,13 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   )}
                 </div>
 
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-fm-magenta-50">
-                  <Calendar className="w-5 h-5 text-fm-magenta-600 shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-site-raised">
+                  <Calendar className="w-5 h-5 text-site-accent shrink-0 mt-0.5" />
                   <div className="text-sm">
-                    <div className="font-semibold text-fm-neutral-900">
+                    <div className="font-semibold text-site-text">
                       {schedule.isUpcoming ? 'Batch starts' : 'Intake'}
                     </div>
-                    <div className="text-fm-neutral-600">
+                    <div className="text-site-muted">
                       {schedule.isUpcoming ? schedule.long : BATCH_CADENCE}
                     </div>
                   </div>
@@ -467,9 +471,9 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                         <Users className="w-4 h-4" /> Sold out
                       </p>
                     ) : (
-                      <p className="text-fm-neutral-700 inline-flex items-center gap-1">
-                        <Users className="w-4 h-4 text-fm-magenta-600" />
-                        <strong className="text-fm-neutral-900">{scarcity.remaining}</strong>
+                      <p className="text-site-text inline-flex items-center gap-1">
+                        <Users className="w-4 h-4 text-site-accent" />
+                        <strong className="text-site-text">{scarcity.remaining}</strong>
                         <span className="ml-1">of {p.seatsTotal} seats remaining</span>
                       </p>
                     )}
@@ -483,12 +487,12 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     amountInr={buyerAmount}
                   />
                 ) : (
-                  <Link href="/contact" className="v2-btn v2-btn-outline w-full" style={{ textAlign: 'center' }}>
+                  <Link href="/contact" className="site-button site-button--quiet w-full" style={{ textAlign: 'center' }}>
                     Notify me of the next batch
                   </Link>
                 )}
 
-                <p className="text-xs text-fm-neutral-500" style={{ textAlign: 'center' }}>
+                <p className="text-xs text-site-muted" style={{ textAlign: 'center' }}>
                   Indian GST applies. Razorpay receipt issued on payment.
                 </p>
               </div>
@@ -506,17 +510,19 @@ export default async function ProgramDetailPage({ params }: PageProps) {
           amountInr={buyerAmount}
         />
       )}
-    </V2PageWrapper>
+    </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }
 
 function SubSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="v2-h3 font-display font-bold v2-text-primary mb-5">
+      <h3 className="text-site-h3 font-site-display font-bold text-site-text mb-5">
         {title}
       </h3>
-      <div className="v2-paper rounded-2xl p-6 md:p-8">{children}</div>
+      <div className="site-surface rounded-2xl p-6 md:p-8">{children}</div>
     </div>
   );
 }
@@ -533,22 +539,22 @@ function MobileStickyBar({
   amountInr: number;
 }) {
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-fm-neutral-200 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] p-3">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-site-line shadow-[0_-8px_24px_rgba(0,0,0,0.08)] p-3">
       <div className="flex items-center gap-3 max-w-screen-sm mx-auto">
         <div className="flex flex-col">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-xl font-bold text-fm-magenta-700">{price}</span>
+            <span className="text-xl font-bold text-site-accent">{price}</span>
             {originalPrice && (
-              <span className="text-xs text-fm-neutral-400 line-through">{originalPrice}</span>
+              <span className="text-xs text-site-muted line-through">{originalPrice}</span>
             )}
           </div>
-          <span className="text-[11px] text-fm-neutral-500 leading-none">
+          <span className="text-[11px] text-site-muted leading-none">
             {batchSchedule(program.startsAt).shortLabel}
           </span>
         </div>
         <a
           href="#reserve"
-          className="ml-auto v2-btn v2-btn-magenta inline-flex items-center gap-2 flex-shrink-0"
+          className="ml-auto site-button inline-flex items-center gap-2 flex-shrink-0"
           aria-label={`Book a seat on ${program.title} for ${price}`}
         >
           Book now

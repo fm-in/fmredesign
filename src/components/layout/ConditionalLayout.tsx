@@ -46,10 +46,21 @@ const MIGRATED_ROUTES: readonly string[] = [
   '/services',
   '/freakquency',
   '/scorecard',
+  '/contact',
+  '/get-started',
+  '/academy',
+  '/creativeminds',
+  '/unsubscribe',
 ];
 
 /** Prefixes that behave like migrated routes — they render `SiteShell`. */
-const MIGRATED_PREFIXES: readonly string[] = ['/site-preview'];
+const MIGRATED_PREFIXES: readonly string[] = [
+  '/site-preview',
+  // Dynamic segments. `/creativeminds` is NOT a prefix here: `/creativeminds/login`
+  // and `/creativeminds/portal` bring their own shells and are matched above.
+  '/academy/',
+  '/freakquency/',
+];
 
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
