@@ -87,9 +87,6 @@ export interface Program {
   instructorBio?: string;
   instructorImageUrl?: string;
 
-  // Payment
-  paymentLinkUrl?: string;
-
   // Meta
   createdBy?: string;
   createdAt: string;
@@ -118,7 +115,6 @@ export interface Enrollment {
   razorpayPaymentId?: string;
   razorpayOrderId?: string;
   status: EnrollmentStatus;
-  paymentLinkSharedAt?: string;
   paidAt?: string;
 
   inviteSentAt?: string;
@@ -147,8 +143,15 @@ export const STATUS_LABELS: Record<ProgramStatus, string> = {
   archived: 'Archived',
 };
 
+/**
+ * The one client-safe label for each enrollment status — used everywhere the
+ * admin shows a status (stat cards, the filter dropdown, every row's status
+ * control) so a buyer's unpaid row never reads as anything but "Payment
+ * pending". A seat is never taken until payment succeeds, and it is never
+ * auto-cancelled while unpaid.
+ */
 export const ENROLLMENT_STATUS_LABELS: Record<EnrollmentStatus, string> = {
-  reserved: 'Reserved — payment pending',
+  reserved: 'Payment pending',
   paid: 'Paid',
   failed: 'Payment failed',
   refunded: 'Refunded',
@@ -222,7 +225,6 @@ export function transformProgramRow(row: Record<string, unknown>): Program {
     instructorName: (row.instructor_name as string) || undefined,
     instructorBio: (row.instructor_bio as string) || undefined,
     instructorImageUrl: (row.instructor_image_url as string) || undefined,
-    paymentLinkUrl: (row.payment_link_url as string) || undefined,
     createdBy: (row.created_by as string) || undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
@@ -243,7 +245,6 @@ export function transformEnrollmentRow(row: Record<string, unknown>): Enrollment
     razorpayPaymentId: (row.razorpay_payment_id as string) || undefined,
     razorpayOrderId: (row.razorpay_order_id as string) || undefined,
     status: row.status as EnrollmentStatus,
-    paymentLinkSharedAt: (row.payment_link_shared_at as string) || undefined,
     paidAt: (row.paid_at as string) || undefined,
     inviteSentAt: (row.invite_sent_at as string) || undefined,
     completedAt: (row.completed_at as string) || undefined,

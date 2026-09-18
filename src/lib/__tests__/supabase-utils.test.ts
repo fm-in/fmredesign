@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeMobileNumber } from '../supabase-utils';
+import { getRolePermissions, normalizeMobileNumber } from '../supabase-utils';
 
 describe('normalizeMobileNumber', () => {
   it('returns empty string for empty input', () => {
@@ -28,5 +28,18 @@ describe('normalizeMobileNumber', () => {
 
   it('returns cleaned string for unrecognized formats', () => {
     expect(normalizeMobileNumber('12345')).toBe('12345');
+  });
+});
+
+describe('getRolePermissions', () => {
+  it('grants sales access to managers, admins and super admins', () => {
+    for (const role of ['manager', 'admin', 'super_admin']) {
+      expect(getRolePermissions(role)).toEqual(expect.arrayContaining(['sales.read', 'sales.write']));
+    }
+  });
+
+  it('does not grant sales access to editors or viewers', () => {
+    expect(getRolePermissions('editor')).not.toContain('sales.read');
+    expect(getRolePermissions('viewer')).not.toContain('sales.read');
   });
 });

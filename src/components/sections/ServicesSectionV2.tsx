@@ -269,7 +269,11 @@ export function ServicesSectionV2() {
         scrollTrigger: {
           trigger: trigger,
           start: 'top top',
-          end: () => `+=${scrollDistance}`,
+          // The pin holds the viewport for exactly this distance. Mapping the
+          // full horizontal travel onto 55% of it keeps every card reachable
+          // while cutting the held stretch from ~2,300px to ~1,250px — the
+          // cards simply move a little faster per unit of scroll.
+          end: () => `+=${Math.round(scrollDistance * 0.55)}`,
           // Lowered from 1.5 → 0.6 for snappier scroll-follow without the
           // perceptible lag that caused jank in the horizontal pin section.
           scrub: 0.6,
@@ -353,14 +357,14 @@ export function ServicesSectionV2() {
   // ─── Mobile / Reduced Motion ─────────────────────────
   if (prefersReducedMotion || isMobile) {
     return (
-      <section ref={sectionRef} className="relative z-10 overflow-visible pt-32 md:pt-36">
+      <section ref={sectionRef} className="relative z-10 overflow-visible v2-section v2-tone-tint">
         <div ref={headerRef} className="v2-container pb-10">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
             <div className="reveal-item v2-badge v2-badge-glass mb-6">
               <Sparkles className="w-4 h-4 v2-text-primary" />
               <span className="v2-text-primary">Our Core Services</span>
             </div>
-            <h2 className="reveal-item font-display text-3xl sm:text-4xl md:text-5xl font-bold v2-text-primary mb-6 leading-tight">
+            <h2 className="v2-h2 reveal-item font-display font-bold v2-text-primary mb-6 leading-tight">
               Full-Service Marketing That <span className="v2-accent">Drives Growth</span>
             </h2>
             <p className="reveal-item text-base md:text-lg lg:text-xl v2-text-secondary leading-relaxed">
@@ -408,7 +412,7 @@ export function ServicesSectionV2() {
               <div className="cta-smoke-blob" style={{ width: '200px', height: '200px', bottom: '10%', left: '20%', background: 'radial-gradient(circle, rgba(255,127,80,0.1) 0%, rgba(255,127,80,0.03) 40%, transparent 70%)', animation: 'ctaSmokeFloat2 9s ease-in-out infinite 4s' }} />
             </div>
             <div className="relative z-10">
-              <h3 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '24px' }}>
+              <h3 className="v2-h3 font-display font-bold text-fm-neutral-900" style={{ marginBottom: '24px' }}>
                 Ready to see what we can do for you?
               </h3>
               <p className="text-fm-neutral-600 text-lg max-w-xl mx-auto leading-relaxed" style={{ marginBottom: '36px' }}>
@@ -430,7 +434,7 @@ export function ServicesSectionV2() {
 
   // ─── Desktop: Full-Width Cinematic Horizontal Scroll ──
   return (
-    <section ref={sectionRef} className="relative z-10 overflow-hidden">
+    <section ref={sectionRef} className="relative z-10 overflow-hidden v2-section v2-section--pinned v2-tone-tint">
       {/* Header — scrolls normally, then the pin begins */}
       <div ref={headerRef} className="relative z-10 v2-container pt-36 pb-20">
         <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
@@ -438,7 +442,7 @@ export function ServicesSectionV2() {
             <Sparkles className="w-4 h-4 v2-text-primary" />
             <span className="v2-text-primary">Our Core Services</span>
           </div>
-          <h2 className="reveal-item font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
+          <h2 className="v2-h2 reveal-item font-display font-bold v2-text-primary mb-6 leading-tight">
             Full-Service Marketing That <span className="v2-accent">Drives Growth</span>
           </h2>
           <p className="reveal-item text-lg md:text-xl v2-text-secondary leading-relaxed max-w-2xl mx-auto">
@@ -508,7 +512,7 @@ export function ServicesSectionV2() {
             <div className="cta-smoke-blob" style={{ width: '280px', height: '280px', bottom: '5%', left: '15%', background: 'radial-gradient(circle, rgba(255,127,80,0.1) 0%, rgba(255,127,80,0.03) 40%, transparent 70%)', animation: 'ctaSmokeFloat2 9s ease-in-out infinite 4s' }} />
           </div>
           <div className="relative z-10">
-            <h3 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold text-fm-neutral-900" style={{ marginBottom: '32px' }}>
+            <h3 className="v2-h3 font-display font-bold text-fm-neutral-900" style={{ marginBottom: '32px' }}>
               Ready to see what we can do for you?
             </h3>
             <p className="text-fm-neutral-600 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed" style={{ marginBottom: '48px' }}>

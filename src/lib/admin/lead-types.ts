@@ -17,7 +17,7 @@ export type LeadStatus =
   | 'archived';
 
 // Lead Source Tracking
-export type LeadSource = 
+export type LeadSource =
   | 'website_form'
   | 'referral'
   | 'social_media'
@@ -25,7 +25,12 @@ export type LeadSource =
   | 'cold_outreach'
   | 'event'
   | 'partner'
-  | 'other';
+  | 'other'
+  | 'meta_lead_ads'
+  | 'google_lead_form'
+  | 'connector'
+  | 'cal_booking'
+  | 'scorecard';
 
 // Project Types for Lead Classification
 export type ProjectType = 
@@ -104,6 +109,7 @@ export interface LeadProfile {
   status: LeadStatus;
   priority: LeadPriority;
   source: LeadSource;
+  utmCampaign?: string | null;
   leadScore: number; // 0-100
   
   // Assignment and Tracking
@@ -127,6 +133,8 @@ export interface LeadProfile {
   proposalSentAt?: Date;
   convertedToClientAt?: Date;
   clientId?: string;
+  ownerId?: string | null;
+  leadSource?: 'website' | 'scraped';
 }
 
 // Lead Creation Input (for forms)
@@ -206,6 +214,7 @@ export interface LeadFilters {
   };
   tags?: string[];
   searchQuery?: string;
+  owner?: 'mine' | 'unassigned';
 }
 
 // Lead Sort Options

@@ -19,6 +19,7 @@ export default function NewDiscoveryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const clientId = searchParams.get('clientId');
+  const leadId = searchParams.get('leadId');
   const templateParam = searchParams.get('template') as DiscoveryTemplate;
   
   const [currentSession, setCurrentSession] = useState<DiscoverySession | null>(null);
@@ -52,7 +53,7 @@ export default function NewDiscoveryPage() {
     setIsCreating(true);
     try {
       // Create discovery session with or without client ID
-      const newSession = await DiscoveryService.createDiscoverySession(clientId || null, template);
+      const newSession = await DiscoveryService.createDiscoverySession(clientId || null, template, leadId ?? undefined);
       setCurrentSession(newSession);
       setShowTemplateSelection(false);
     } catch (error) {

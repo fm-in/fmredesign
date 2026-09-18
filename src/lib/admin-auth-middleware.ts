@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { PermissionService } from '@/lib/admin/permissions';
+import { parseStoredPermissions, PermissionService } from '@/lib/admin/permissions';
 import { validateApiKey } from '@/lib/api-key-auth';
 import { rateLimitByKey } from '@/lib/rate-limiter';
 
@@ -251,9 +251,7 @@ export async function requirePermission(
     }
 
     // Parse permissions: stored as comma-separated string in DB
-    const userPermissions: string[] = dbUser.permissions
-      ? dbUser.permissions.split(',').map((p: string) => p.trim()).filter((p: string) => p.length > 0)
-      : [];
+    const userPermissions = parseStoredPermissions(dbUser.permissions);
 
     // 5. Check permission using PermissionService
     if (!PermissionService.hasPermission(userPermissions, permission)) {

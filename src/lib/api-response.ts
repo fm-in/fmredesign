@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
 export const ApiResponse = {
-  success: <T>(data: T, meta?: Record<string, unknown>) =>
-    NextResponse.json({ success: true, data, ...meta }),
+  success: <T>(data: T, meta?: Record<string, unknown>, status = 200) =>
+    NextResponse.json({ success: true, data, ...meta }, { status }),
 
   error: (message: string, status = 500) =>
     NextResponse.json({ success: false, error: message }, { status }),

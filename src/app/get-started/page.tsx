@@ -21,6 +21,11 @@ import {
   Gift
 } from 'lucide-react';
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { CalButton } from "@/components/ui/CalButton";
+import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
+import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
+import { DEFAULT_BOOKING_LINK } from '@/lib/sales/links';
+import { readFirstTouchSafely } from '@/lib/attribution';
 import type { LeadInput, ProjectType, BudgetRange, Timeline, CompanySize, Industry } from '@/lib/admin/lead-types';
 import { INDUSTRIES } from '@/lib/admin/lead-types';
 
@@ -117,6 +122,7 @@ export default function GetStartedPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<LeadInput>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [honeypot, setHoneypot] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -216,7 +222,11 @@ export default function GetStartedPage() {
         },
         body: JSON.stringify({
           ...formData,
-          source: 'website_form'
+          source: 'website_form',
+          [HONEYPOT_FIELD]: honeypot,
+          attribution: readFirstTouchSafely(),
+          consentText: INBOUND_CONSENT_TEXT,
+          customFields: { ...(formData.customFields ?? {}), formName: 'Get started' },
         }),
       });
 
@@ -249,7 +259,7 @@ export default function GetStartedPage() {
 
   return (
     <V2PageWrapper>
-      <section className="relative z-10 v2-section pt-40 pb-32">
+      <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
         <div className="v2-container">
           {/* 3D Brain Decoration */}
           <div className="absolute right-8 lg:right-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
@@ -272,7 +282,7 @@ export default function GetStartedPage() {
                 <Sparkles className="w-4 h-4 v2-text-primary" />
                 <span className="v2-text-primary">Start Your Project</span>
               </div>
-              <h1 className="font-display text-4xl md:text-5xl lg:text-5xl font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
+              <h1 className="v2-h2 font-display font-bold v2-text-primary leading-tight" style={{ marginBottom: '16px' }}>
                 Let&apos;s Grow Your <span className="v2-accent">Brand</span>
               </h1>
               <p className="text-base md:text-lg v2-text-secondary leading-relaxed max-w-2xl mx-auto">
@@ -328,7 +338,7 @@ export default function GetStartedPage() {
                         <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <Users className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           Let&apos;s get to know you
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -437,7 +447,7 @@ export default function GetStartedPage() {
                         <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <Target className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           What do you need?
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -461,7 +471,7 @@ export default function GetStartedPage() {
                                   : 'border-fm-neutral-200'}`}
                             >
                               <div className="flex items-start space-x-3 sm:space-x-4">
-                                <span className="text-xl sm:text-2xl">{type.icon}</span>
+                                <span className="v2-h4 text-xl">{type.icon}</span>
                                 <div>
                                   <div className="font-semibold text-fm-neutral-900 mb-1">{type.label}</div>
                                   <div className="text-sm text-fm-neutral-600">{type.description}</div>
@@ -523,7 +533,7 @@ export default function GetStartedPage() {
                         <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <DollarSign className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           Budget & Timeline
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -597,7 +607,7 @@ export default function GetStartedPage() {
                         <div className="w-16 h-16 bg-fm-magenta-100 rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <AlertCircle className="w-8 h-8 text-fm-magenta-700" />
                         </div>
-                        <h2 className="text-2xl sm:text-3xl font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
+                        <h2 className="v2-h3 font-bold text-fm-neutral-900" style={{ marginBottom: '12px' }}>
                           Tell us your challenges
                         </h2>
                         <p className="text-lg text-fm-neutral-600">
@@ -678,6 +688,22 @@ export default function GetStartedPage() {
                     </div>
                   )}
                 </div>
+
+                {currentStep === 4 && (
+                  <p className="text-xs text-fm-neutral-500 leading-relaxed" style={{ marginTop: '32px' }}>
+                    {INBOUND_CONSENT_TEXT}
+                  </p>
+                )}
+                <input
+                  type="text"
+                  name={HONEYPOT_FIELD}
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}
+                />
 
                 {/* Navigation Buttons */}
                 <div className="flex justify-between items-center border-t border-fm-neutral-200" style={{ marginTop: '48px', paddingTop: '32px' }}>
@@ -763,7 +789,7 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-fm-neutral-900 mb-6">
+            <h1 className="v2-h2 font-bold text-fm-neutral-900 mb-6">
               Thank You, {formData.name}!
             </h1>
 
@@ -798,12 +824,16 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
 
             {/* CTA Buttons */}
             <div className="space-y-6">
-              <Link
-                href="/"
+              <CalButton
+                calLink={DEFAULT_BOOKING_LINK}
+                prefill={{ name: formData.name, email: formData.email }}
                 className="v2-btn v2-btn-magenta"
               >
-                Return to Homepage
+                Book your discovery call now
                 <ArrowRight className="w-5 h-5" />
+              </CalButton>
+              <Link href="/" className="v2-btn v2-btn-outline">
+                Return to Homepage
               </Link>
 
               <p className="text-sm text-fm-neutral-500">

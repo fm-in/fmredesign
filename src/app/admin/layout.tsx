@@ -68,7 +68,7 @@ const NAV_PERMISSIONS: Record<string, string> = {
   '/admin/content': 'content.read',
   '/admin/invoices': 'finance.read',
   '/admin/proposals': 'finance.read',
-  '/admin/leads': 'clients.read',
+  '/admin/leads': 'sales.read',
   '/admin/scraped-contacts': 'users.read',    // Admin/super_admin only
   '/admin/scraped-contacts/scrape-jobs': 'users.read', // Sub-page surfaced in nav
   '/admin/academy': 'content.read',          // FM Academy — programs CRUD

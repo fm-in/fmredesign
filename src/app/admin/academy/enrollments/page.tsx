@@ -2,22 +2,27 @@
  * FM Academy — Enrollments admin view.
  *
  * The buyer ledger. Each row shows: who bought, which program, how much,
- * status, and quick actions to mark paid / send invite / add notes.
+ * status, and quick actions to add notes / mark an invite sent.
  *
- * Phase 1 workflow:
- *   1. Buyer submits the public "Reserve seat" form → row created status='reserved'.
- *   2. Admin emails them the Razorpay payment link (manual or click "Share link").
- *   3. Buyer pays via Razorpay → admin sees confirmation in Razorpay dashboard.
- *   4. Admin marks row as 'paid' here. SQL trigger increments seats_taken.
- *   5. Admin clicks "Send invite" → confirmation email with delivery details
- *      (Phase 2 — for now, admin sends manually & toggles invite_sent_at).
+ * Direct payment only — there is no manual payment link anywhere:
+ *   1. Buyer submits the public "Pay to book" form → row created
+ *      status='reserved' and Razorpay Checkout opens immediately.
+ *   2. Buyer pays → the Razorpay webhook flips the row to 'paid' itself; the
+ *      SQL trigger then increments seats_taken. A seat is never counted
+ *      until this happens.
+ *   3. An unpaid row is never auto-cancelled — it just shows "Payment
+ *      pending" here, and the buyer gets one reminder email an hour after
+ *      checkout started (see `academy-checkout-reminder`).
+ *   4. Once paid, the webhook itself emails the buyer's confirmation and
+ *      stamps invite_sent_at. "Mark invite as sent" below is only for a
+ *      confirmation that had to be resent by hand.
  */
 
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Mail, CheckCircle2, BarChart3, Users as UsersIcon } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, BarChart3, Users as UsersIcon } from 'lucide-react';
 import {
   DashboardCard as Card,
   CardContent,
@@ -115,7 +120,7 @@ export default function EnrollmentsAdminPage() {
       <PageHeader
         title="Academy enrollments"
         icon={<BarChart3 className="w-6 h-6" />}
-        description="Buyer ledger for workshops, cohorts and courses. Mark paid here once Razorpay confirms payment."
+        description="Buyer ledger for workshops, cohorts and courses. Status updates automatically once Razorpay confirms payment."
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
@@ -128,9 +133,8 @@ export default function EnrollmentsAdminPage() {
         <MetricCard
           variant="admin"
           icon={<UsersIcon className="w-4 h-4" />}
-          title="Reserved"
+          title={ENROLLMENT_STATUS_LABELS.reserved}
           value={String(stats?.byStatus.reserved ?? 0)}
-          subtitle="Awaiting payment"
         />
         <MetricCard
           variant="admin"
@@ -180,7 +184,7 @@ export default function EnrollmentsAdminPage() {
                   <th className="px-4 py-3 font-semibold">Program</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold" style={{ textAlign: 'right' }}>Amount</th>
-                  <th className="px-4 py-3 font-semibold">Reserved</th>
+                  <th className="px-4 py-3 font-semibold">Started</th>
                   <th className="px-4 py-3 font-semibold" style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
@@ -228,14 +232,6 @@ export default function EnrollmentsAdminPage() {
                     </td>
                     <td className="px-4 py-3" style={{ textAlign: 'right' }}>
                       <div className="inline-flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          title="Mark payment link as shared"
-                          onClick={() => update(r.id, { paymentLinkSharedAt: new Date().toISOString() })}
-                        >
-                          <Mail className="w-4 h-4" />
-                        </Button>
                         {r.status === 'paid' && !r.inviteSentAt && (
                           <Button
                             variant="ghost"

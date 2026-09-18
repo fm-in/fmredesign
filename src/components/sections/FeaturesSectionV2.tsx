@@ -312,10 +312,10 @@ export function FeaturesSectionV2() {
   // Mobile Layout - Horizontal scroll cards
   if (isMobile || prefersReducedMotion) {
     return (
-      <section ref={mobileSectionRef} className="relative z-10 v2-section" aria-labelledby="features-heading">
+      <section ref={mobileSectionRef} className="relative z-10 v2-section v2-section--chapter v2-tone-deep" aria-labelledby="features-heading">
         <div className="v2-container mb-10">
           <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
-            <h2 id="features-heading" className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-4 leading-tight">
+            <h2 id="features-heading" className="v2-h3 font-display font-bold v2-text-primary mb-4 leading-tight">
               Why Brands <span className="v2-accent">Choose Us</span>
             </h2>
             <p className="text-base v2-text-secondary leading-relaxed">
@@ -458,11 +458,11 @@ export function FeaturesSectionV2() {
 
   // Desktop Layout - Stacking Cards with JS-controlled transforms
   return (
-    <section className="relative z-10" aria-labelledby="features-heading">
+    <section className="relative z-10 v2-section v2-section--chapter v2-section--pinned v2-tone-deep" aria-labelledby="features-heading">
       {/* Section Header */}
       <div className="v2-container" style={{ paddingTop: 'var(--v2-section-padding)', paddingBottom: 'var(--v2-section-padding)' }}>
         <div className="max-w-3xl mx-auto" style={{ textAlign: 'center' }}>
-          <h2 id="features-heading" className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
+          <h2 id="features-heading" className="v2-h2 font-display font-bold v2-text-primary mb-6 leading-tight">
             Why Brands <span className="v2-accent">Choose Us</span>
           </h2>
           <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
@@ -471,11 +471,18 @@ export function FeaturesSectionV2() {
         </div>
       </div>
 
-      {/* Fix #4: Reduced from 100vh to 80vh per card — less scroll fatigue */}
+      {/* Scroll cost per card. This container's height IS the distance the page
+         is held: the panel below goes position:fixed for its whole length, so
+         the scrollbar moves while the view does not.
+
+         At 80vh x 4 cards that was 320vh — ~2,000px, 2.2 screens, roughly 17
+         wheel notches during which the page appears stuck. 40vh gives each
+         card ~360px of scroll (about 3 notches), which still reads as a
+         deliberate reveal but responds on the first swipe. */}
       <div
         ref={containerRef}
         className="relative"
-        style={{ height: `${features.length * 80}vh` }}
+        style={{ height: `${features.length * 40}vh` }}
       >
         {/* Cards viewport - fixed during scroll, absolute at start/end */}
         <div
@@ -576,7 +583,7 @@ export function FeaturesSectionV2() {
                           <span className="text-white/70 text-sm font-medium tracking-wide">{feature.tagline}</span>
                         </div>
 
-                        <h3 className="font-display text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
+                        <h3 className="v2-h3 font-display font-bold text-white mb-4 leading-tight">
                           {feature.title}
                         </h3>
 

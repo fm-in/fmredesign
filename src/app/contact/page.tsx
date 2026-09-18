@@ -5,6 +5,9 @@ import { MapPin, Phone, Mail, Clock, MessageCircle, ArrowRight, ChevronDown, Sen
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import { CalButton } from "@/components/ui/CalButton";
+import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
+import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
+import { readFirstTouchSafely } from '@/lib/attribution';
 
 const contactInfo = [
   {
@@ -80,6 +83,7 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [activeAccordion, setActiveAccordion] = useState<number | null>(null);
+  const [honeypot, setHoneypot] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +106,10 @@ export default function ContactPage() {
           primaryChallenge: formData.message,
           companySize: 'small_business',
           source: 'website_form',
+          [HONEYPOT_FIELD]: honeypot,
+          attribution: readFirstTouchSafely(),
+          consentText: INBOUND_CONSENT_TEXT,
+          customFields: { formName: 'Contact page', service: formData.service || null },
         }),
       });
 
@@ -119,7 +127,7 @@ export default function ContactPage() {
   return (
     <V2PageWrapper>
       {/* Hero Section */}
-      <section className="relative z-10 v2-section pt-40">
+      <section className="relative z-10 v2-section v2-section--hero">
         <div className="v2-container v2-container-wide">
           <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
             {/* Badge */}
@@ -129,7 +137,7 @@ export default function ContactPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="font-display text-4xl sm:text-5xl md:text-5xl lg:text-6xl xl:text-7xl font-bold v2-text-primary mb-8 leading-tight">
+            <h1 className="v2-display font-display font-bold v2-text-primary mb-8 leading-tight">
               Let's Talk About{' '}
               <span className="v2-accent">Your Growth</span>
             </h1>
@@ -173,7 +181,7 @@ export default function ContactPage() {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Form */}
             <div className="v2-paper-lg rounded-3xl p-5 sm:p-8 lg:p-10">
-              <h2 className="font-display text-2xl font-bold text-fm-neutral-900 mb-2">
+              <h2 className="v2-h4 font-display font-bold text-fm-neutral-900 mb-2">
                 Let's Discuss Your Project
               </h2>
               <p className="text-fm-neutral-600 mb-8">
@@ -352,6 +360,21 @@ export default function ContactPage() {
                   />
                 </div>
 
+                {/*
+                  Honeypot: hidden from people and screen readers, out of the tab
+                  order. Anything that fills it is automated.
+                */}
+                <input
+                  type="text"
+                  name={HONEYPOT_FIELD}
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}
+                />
+
                 <button
                   type="submit"
                   disabled={isSubmitting || submitStatus === 'success'}
@@ -369,6 +392,8 @@ export default function ContactPage() {
                     </>
                   )}
                 </button>
+
+                <p className="text-xs text-fm-neutral-500 leading-relaxed">{INBOUND_CONSENT_TEXT}</p>
 
                 {submitStatus === 'success' && (
                   <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
@@ -456,7 +481,7 @@ export default function ContactPage() {
       <section className="relative z-10 v2-section">
         <div className="v2-container">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary mb-6 leading-tight">
+            <h2 className="v2-h3 font-display font-bold v2-text-primary mb-6 leading-tight">
               Find <span className="v2-accent">Us</span>
             </h2>
             <p className="v2-text-secondary">
@@ -480,10 +505,10 @@ export default function ContactPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="relative z-10 v2-section pb-32">
+      <section className="relative z-10 v2-section v2-section--outro">
         <div className="v2-container v2-container-narrow">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 className="font-display text-3xl md:text-4xl font-bold v2-text-primary leading-tight">
+            <h2 className="v2-h3 font-display font-bold v2-text-primary leading-tight">
               Frequently Asked <span className="v2-accent">Questions</span>
             </h2>
           </div>

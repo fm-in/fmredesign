@@ -224,7 +224,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   if (loading) {
     return (
       <V2PageWrapper>
-        <section className="relative z-10 v2-section pt-40 pb-32">
+        <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
           <div className="v2-container flex items-center justify-center min-h-[400px]">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
           </div>
@@ -237,7 +237,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   if (error || !profile) {
     return (
       <V2PageWrapper>
-        <section className="relative z-10 v2-section pt-40 pb-32">
+        <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
           <div className="v2-container">
             <div className="max-w-lg mx-auto bg-white rounded-3xl shadow-2xl p-10" style={{ textAlign: 'center' }}>
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -295,7 +295,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
 
   return (
     <V2PageWrapper>
-      <section className="relative z-10 v2-section pt-40 pb-32">
+      <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
         <div className="v2-container">
           {/* Header */}
           <div className="max-w-4xl mx-auto" style={{ marginBottom: '40px' }}>

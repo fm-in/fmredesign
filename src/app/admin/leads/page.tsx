@@ -39,13 +39,13 @@ export default function LeadDashboard() {
     sortDirection,
     setSortDirection,
     filters,
+    setFilters,
     searchQuery,
     setSearchQuery,
     showAddLead,
     setShowAddLead,
     loadDashboardData,
     updateLeadStatus,
-    updateAssignedTo,
     convertToClient,
     exportLeads,
     formatStatus,
@@ -113,6 +113,8 @@ export default function LeadDashboard() {
           }}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          owner={filters.owner}
+          onOwnerChange={(owner) => setFilters((prev) => ({ ...prev, owner }))}
         />
       </SectionErrorBoundary>
 
@@ -127,7 +129,6 @@ export default function LeadDashboard() {
           selectedLead={selectedLead}
           onSelectLead={setSelectedLead}
           onUpdateStatus={updateLeadStatus}
-          onUpdateAssignedTo={updateAssignedTo}
           onConvertToClient={convertToClient}
           onAddLead={() => setShowAddLead(true)}
           searchQuery={searchQuery}

@@ -14,6 +14,8 @@ export { publishToSocialFn } from './functions/social';
 export { generateAIContentFn } from './functions/ai-content';
 export { platformEventFanoutFn } from './functions/platform-events';
 export { autoInvoiceDailyCron, generateAutoInvoiceFn } from './functions/auto-invoice';
+export { salesLeadCreatedFn, salesSequenceFn, salesMetaLeadgenFn, salesMeetingPrepFn } from './functions/sales';
+export { academyCheckoutReminderFn } from './functions/academy';
 
 // All functions array for serve()
 import { logAuditEventFn } from './functions/audit';
@@ -25,6 +27,8 @@ import { generateAIContentFn } from './functions/ai-content';
 import { platformEventFanoutFn } from './functions/platform-events';
 import { autoInvoiceDailyCron, generateAutoInvoiceFn } from './functions/auto-invoice';
 import { scrapeResourcesCron } from './functions/resources-scrape';
+import { salesLeadCreatedFn, salesSequenceFn, salesMetaLeadgenFn, salesMeetingPrepFn } from './functions/sales';
+import { academyCheckoutReminderFn } from './functions/academy';
 
 export const allFunctions = [
   logAuditEventFn,
@@ -39,4 +43,9 @@ export const allFunctions = [
   autoInvoiceDailyCron,
   generateAutoInvoiceFn,
   scrapeResourcesCron,
+  salesLeadCreatedFn,
+  salesSequenceFn,
+  salesMetaLeadgenFn,
+  salesMeetingPrepFn,
+  academyCheckoutReminderFn,
 ];

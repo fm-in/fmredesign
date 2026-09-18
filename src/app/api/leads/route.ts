@@ -5,20 +5,31 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { calculateLeadScore, determineLeadPriority, toCamelCaseKeys } from '@/lib/supabase-utils';
-import type { LeadInput } from '@/lib/admin/lead-types';
+import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { rateLimit, getClientIp } from '@/lib/rate-limiter';
-import { captureMeta, isMissingColumnError } from '@/lib/capture-meta';
-import { requireAdminAuth, requirePermission } from '@/lib/admin-auth-middleware';
+import { captureMeta, isMissingColumnError, type CaptureMeta } from '@/lib/capture-meta';
+import { requirePermission } from '@/lib/admin-auth-middleware';
 import { createLeadSchema, validateBody } from '@/lib/validations/schemas';
 import { notifyTeam, newLeadEmail } from '@/lib/email/send';
 import { logAuditEvent, getClientIP } from '@/lib/admin/audit-log';
 import { notifyAdmins } from '@/lib/notifications';
-import { emitEvent } from '@/lib/events/emitter';
+import { checkSpam, HONEYPOT_FIELD } from '@/lib/spam-guard';
+import { escapeSearchTerm } from '@/lib/postgrest';
+import { changeStage } from '@/lib/sales/activity';
+import { isLeadStatus } from '@/lib/sales/types';
+import { ingestLead, type IngestResult } from '@/lib/sales/intake/ingest';
+import { scoreLead } from '@/lib/sales/scoring';
+import { generateSalesId } from '@/lib/sales/types';
+import { IntakeError } from '@/lib/sales/errors';
+import { ApiResponse } from '@/lib/api-response';
+import { canAccessLead } from '@/lib/sales/access';
+import { sendEnquiryReceipt } from '@/lib/sales/receipts';
+import { afterResponse } from '@/lib/sales/transactional-email';
+import { safeErrorLog, safeErrorMessage } from '@/lib/safe-log';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.read');
+  const auth = await requirePermission(request, 'sales.read');
   if ('error' in auth) return auth.error;
 
   try {
@@ -43,10 +54,14 @@ export async function GET(request: NextRequest) {
     const projectTypeFilter = searchParams.get('projectType');
     const budgetRangeFilter = searchParams.get('budgetRange');
     const companySizeFilter = searchParams.get('companySize');
-    const assignedToFilter = myLeadsOnly ? auth.user.name : searchParams.get('assignedTo');
+    const assignedToFilter = myLeadsOnly ? null : searchParams.get('assignedTo');
+    const currentUserId = auth.user.id;
+    const scopedOwnerId = myLeadsOnly ? currentUserId : null;
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const searchQuery = searchParams.get('search');
+    const searchTerm = searchQuery ? escapeSearchTerm(searchQuery) : '';
+    const ownerFilter = searchParams.get('owner');
 
     // Sorting
     const sortBy = searchParams.get('sortBy');
@@ -74,9 +89,13 @@ export async function GET(request: NextRequest) {
       if (assignedToFilter) q = q.in('assigned_to', assignedToFilter.split(','));
       if (startDate) q = q.gte('created_at', startDate);
       if (endDate) q = q.lte('created_at', endDate);
-      if (searchQuery) {
+      // Managers see the leads they own plus unassigned ones.
+      if (scopedOwnerId) q = q.or(`owner_id.eq.${scopedOwnerId},owner_id.is.null`);
+      if (ownerFilter === 'mine') q = q.eq('owner_id', currentUserId);
+      if (ownerFilter === 'unassigned') q = q.is('owner_id', null);
+      if (searchTerm) {
         q = q.or(
-          `name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,project_description.ilike.%${searchQuery}%`
+          `name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,project_description.ilike.%${searchTerm}%`
         );
       }
       return q;
@@ -180,7 +199,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseBody);
   } catch (error) {
-    console.error('Error fetching leads:', error);
+    // Never the raw error: PostgREST can echo a search term, Postgres can quote a row.
+    console.error('Error fetching leads:', safeErrorLog(error));
     return NextResponse.json(
       { success: false, error: 'Failed to fetch leads' },
       { status: 500 }
@@ -188,10 +208,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/leads - Create new lead
+// POST /api/leads - Create a lead from a public form (or the admin Add Lead modal)
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting
     const clientIp = getClientIp(request);
     if (!rateLimit(clientIp, 5)) {
       return NextResponse.json(
@@ -201,141 +220,224 @@ export async function POST(request: NextRequest) {
     }
 
     const rawBody = await request.json();
+
+    const spam = checkSpam({
+      honeypot: rawBody?.[HONEYPOT_FIELD],
+      email: typeof rawBody?.email === 'string' ? rawBody.email : undefined,
+      name: typeof rawBody?.name === 'string' ? rawBody.name : undefined,
+    });
+    if (spam.isSpam) {
+      console.warn('[leads] rejected submission:', spam.reason);
+      return NextResponse.json({ success: false, error: 'A valid email is required' }, { status: 400 });
+    }
+
     const validation = validateBody(createLeadSchema, rawBody);
     if (!validation.success) {
       return NextResponse.json({ success: false, error: validation.error }, { status: 400 });
     }
-    const body = rawBody;
+    const body = validation.data;
+    const meta = captureMeta(request);
+    const nowIso = new Date().toISOString();
 
-    const stripHtml = (str: string) => str.replace(/<[^>]*>/g, '');
+    // Public forms send the consent text they displayed. The admin modal does
+    // not, and a lead typed in by staff must never be emailed automatically.
+    const fromPublicForm = Boolean(body.consentText);
+    const formName = typeof body.customFields?.formName === 'string' ? body.customFields.formName : undefined;
 
-    const leadInput: LeadInput = {
-      name: stripHtml(body.name.trim()),
-      email: body.email.trim().toLowerCase(),
-      phone: body.phone?.trim(),
-      company: stripHtml(body.company.trim()),
-      website: body.website?.trim(),
-      jobTitle: body.jobTitle ? stripHtml(body.jobTitle.trim()) : undefined,
-      companySize: body.companySize,
-      industry: body.industry,
-      projectType: body.projectType,
-      projectDescription: stripHtml(body.projectDescription.trim()),
-      budgetRange: body.budgetRange,
-      timeline: body.timeline,
-      primaryChallenge: stripHtml(body.primaryChallenge.trim()),
-      additionalChallenges: body.additionalChallenges
-        ?.filter((c: string) => c.trim())
-        .map((c: string) => stripHtml(c)),
-      specificRequirements: body.specificRequirements
-        ? stripHtml(body.specificRequirements.trim())
-        : undefined,
-      source: body.source || 'website_form',
-      customFields: body.customFields || {},
-    };
+    let ingested: IngestResult;
+    try {
+      ingested = await ingestLead({
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        company: body.company,
+        website: body.website,
+        jobTitle: body.jobTitle,
+        message: body.projectDescription,
+        // A public request cannot choose its source. No admin screen posts one either
+        // (the Add Lead modal sends none), so every submission here is a website form.
+        source: 'website_form',
+        sourceDetail: formName,
+        attribution: body.attribution,
+        consent: fromPublicForm
+          ? {
+              basis: 'inbound_request',
+              evidence: { consentText: body.consentText, formName: formName ?? null, ip: meta.ip_address, page: request.headers.get('referer') },
+              capturedAt: nowIso,
+            }
+          : { basis: 'none', evidence: { enteredBy: 'admin' }, capturedAt: nowIso },
+        customFields: body.customFields,
+        projectType: body.projectType,
+        budgetRange: body.budgetRange,
+        timeline: body.timeline,
+        companySize: body.companySize,
+        industry: body.industry,
+        primaryChallenge: body.primaryChallenge,
+        additionalChallenges: body.additionalChallenges,
+        specificRequirements: body.specificRequirements,
+        ipAddress: meta.ip_address,
+        userAgent: meta.user_agent,
+      });
+    } catch (error) {
+      if (!isSchemaBehindCode(error)) throw error;
+      console.warn('[leads] sales columns missing — apply migrations/2026-09-15-sales-foundation.sql');
 
-    // Calculate lead score and priority
-    const leadScore = calculateLeadScore({
-      budgetRange: leadInput.budgetRange,
-      timeline: leadInput.timeline,
-      companySize: leadInput.companySize,
-      industry: leadInput.industry,
-      primaryChallenge: leadInput.primaryChallenge,
-    });
-    const priority = determineLeadPriority(leadScore);
+      const { leadScore, priority } = scoreLead({
+        source: 'website_form',
+        budgetRange: body.budgetRange,
+        timeline: body.timeline,
+        companySize: body.companySize,
+        industry: body.industry,
+        primaryChallenge: body.primaryChallenge,
+        customFields: body.customFields,
+      });
+      const record = {
+        id: generateSalesId('lead'),
+        name: stripTags(body.name),
+        email: body.email.trim().toLowerCase(),
+        phone: body.phone?.trim() || null,
+        company: stripTags(body.company),
+        website: body.website?.trim() || null,
+        job_title: body.jobTitle ? stripTags(body.jobTitle) : null,
+        company_size: body.companySize,
+        industry: body.industry || null,
+        project_type: body.projectType,
+        project_description: stripTags(body.projectDescription),
+        budget_range: body.budgetRange,
+        timeline: body.timeline,
+        primary_challenge: stripTags(body.primaryChallenge),
+        additional_challenges: (body.additionalChallenges ?? []).map(stripTags).filter(Boolean),
+        specific_requirements: body.specificRequirements ? stripTags(body.specificRequirements) : null,
+        status: 'new',
+        priority,
+        source: 'website_form',
+        lead_score: leadScore,
+        tags: [],
+        notes: '',
+        custom_fields: body.customFields ?? {},
+      };
+      await saveBeforeMigration(record, meta);
 
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substr(2, 5);
-    const leadId = `lead_${timestamp}_${random}`;
+      notifyAdmins({
+        type: 'general',
+        title: 'New lead received',
+        message: `${record.name} — ${record.company || 'No company'}`,
+        priority: 'high',
+        actionUrl: '/admin/leads',
+      });
+      const emailData = newLeadEmail({
+        name: record.name,
+        email: record.email,
+        company: record.company,
+        projectType: record.project_type,
+        budgetRange: record.budget_range,
+        timeline: record.timeline,
+        primaryChallenge: record.primary_challenge,
+        leadScore,
+        priority,
+      });
+      notifyTeam(emailData.subject, emailData.html);
 
-    const record = {
-      id: leadId,
-      name: leadInput.name,
-      email: leadInput.email,
-      phone: leadInput.phone || null,
-      company: leadInput.company,
-      website: leadInput.website || null,
-      job_title: leadInput.jobTitle || null,
-      company_size: leadInput.companySize,
-      industry: leadInput.industry || null,
-      project_type: leadInput.projectType,
-      project_description: leadInput.projectDescription,
-      budget_range: leadInput.budgetRange,
-      timeline: leadInput.timeline,
-      primary_challenge: leadInput.primaryChallenge,
-      additional_challenges: leadInput.additionalChallenges || [],
-      specific_requirements: leadInput.specificRequirements || null,
-      status: 'new',
-      priority,
-      source: leadInput.source || 'website_form',
-      lead_score: leadScore,
-      tags: [],
-      notes: '',
-      custom_fields: leadInput.customFields || {},
-    };
+      // No lead_activities table before the migration, so no lead to note the receipt on.
+      if (fromPublicForm) afterResponse('enquiry receipt', () => sendEnquiryReceipt(body, null));
 
-    const supabase = getSupabaseAdmin();
+      return ApiResponse.success({ received: true }, undefined, 201);
+    }
+    const { leadId, created } = ingested;
 
-    // Record who sent this so genuine leads can later be told apart from bot
-    // traffic. If the capture-metadata migration has not been applied yet,
-    // retry without it — a lost lead is unrecoverable, a lost IP is a gap.
-    let { data, error } = await supabase
-      .from('leads')
-      .insert({ ...record, ...captureMeta(request) })
-      .select()
-      .single();
-
-    if (error && isMissingColumnError(error)) {
-      console.warn(
-        '[leads] capture-metadata columns absent — apply migrations/2026-08-10-capture-metadata.sql'
-      );
-      ({ data, error } = await supabase.from('leads').insert(record).select().single());
+    if (created) {
+      await announceNewLead(leadId);
     }
 
-    if (error) throw error;
+    // The person's own confirmation, on every accepted path. Transactional, so
+    // automationEnabled does not apply; sent after the response so it can never
+    // delay or change it. A lead typed in by staff (no consent text) gets none.
+    if (fromPublicForm) afterResponse('enquiry receipt', () => sendEnquiryReceipt(body, leadId));
 
-    // Fire-and-forget: notify admins about new lead
-    notifyAdmins({
-      type: 'general',
-      title: 'New lead received',
-      message: `${record.name} — ${record.company || 'No company'}`,
-      priority: 'high',
-      actionUrl: '/admin/leads',
-    });
-
-    // Fire-and-forget email notification
-    const emailData = newLeadEmail({
-      name: record.name,
-      email: record.email,
-      company: record.company,
-      projectType: record.project_type,
-      budgetRange: record.budget_range,
-      timeline: record.timeline,
-      primaryChallenge: record.primary_challenge,
-      leadScore,
-      priority,
-    });
-    notifyTeam(emailData.subject, emailData.html);
-
-    // Build camelCase response
-    const lead = toCamelCaseKeys(data);
-
-    return NextResponse.json(
-      { success: true, data: lead, message: 'Lead created successfully' },
-      { status: 201 }
-    );
+    // Every outcome (created, merged into an existing lead, or saved via the
+    // pre-migration fallback above) answers the same generic body: a public form
+    // must never reveal whether an email or phone already exists in the database.
+    return ApiResponse.success({ received: true }, undefined, 201);
   } catch (error) {
-    console.error('Error creating lead:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to create lead' },
-      { status: 500 }
-    );
+    if (error instanceof IntakeError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+    // Covers intake, merge and pre-migration fallback failures. Never the raw error:
+    // a Postgres error's details quote the failing row (email, phone).
+    console.error('Error creating lead:', safeErrorLog(error));
+    return NextResponse.json({ success: false, error: 'Failed to create lead' }, { status: 500 });
   }
+}
+
+const UNDEFINED_COLUMN = '42703';
+
+function stripTags(value: string): string {
+  return value.replace(/<[^>]*>/g, '').trim();
+}
+
+/**
+ * True when the database lacks a column this code expects: PGRST204 on write, or
+ * Postgres 42703 when intake filters on a column (e.g. phone_e164) that is not there yet.
+ */
+function isSchemaBehindCode(error: unknown): boolean {
+  if (isMissingColumnError(error)) return true;
+  return typeof error === 'object' && error !== null && 'code' in error && error.code === UNDEFINED_COLUMN;
+}
+
+/**
+ * The only insert into `leads` outside ingestLead(). The sales migration is applied by
+ * hand in the Supabase SQL editor, so this code can deploy before it. Until then
+ * ingestLead() fails on the new columns, and a lost enquiry cannot be recovered, so the
+ * submission is written in the pre-sales-automation row shape instead. Remove once
+ * migrations/2026-09-15-sales-foundation.sql is applied everywhere.
+ */
+async function saveBeforeMigration(record: Record<string, unknown>, meta: CaptureMeta): Promise<void> {
+  const supabase = getSupabaseAdmin();
+  let { error } = await supabase.from('leads').insert({ ...record, ...meta });
+  // The capture-metadata migration may be missing too; never lose a submission over telemetry.
+  if (error && isMissingColumnError(error)) {
+    ({ error } = await supabase.from('leads').insert(record));
+  }
+  if (error) throw error;
+}
+
+/** Tell the team about a new lead. Never fails the submission. */
+async function announceNewLead(leadId: string): Promise<void> {
+  const { data: row, error } = await getSupabaseAdmin().from('leads').select('*').eq('id', leadId).single();
+  if (error || !row) {
+    console.error('[leads] could not load the new lead to notify the team:', error ? safeErrorMessage(error) : 'no row');
+    return;
+  }
+
+  notifyAdmins({
+    type: 'general',
+    title: 'New lead received',
+    message: `${row.name} — ${row.company || 'No company'}`,
+    priority: 'high',
+    actionUrl: `/admin/leads/${leadId}`,
+  });
+
+  const emailData = newLeadEmail({
+    name: row.name,
+    email: row.email ?? '',
+    company: row.company ?? 'Not given',
+    projectType: row.project_type ?? undefined,
+    budgetRange: row.budget_range ?? undefined,
+    timeline: row.timeline ?? undefined,
+    primaryChallenge: row.primary_challenge ?? undefined,
+    leadScore: row.lead_score ?? undefined,
+    priority: row.priority ?? undefined,
+  });
+  notifyTeam(emailData.subject, emailData.html);
 }
 
 // DELETE /api/leads - Delete lead
 export async function DELETE(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.delete');
+  const auth = await requirePermission(request, 'sales.write');
   if ('error' in auth) return auth.error;
+  if (auth.user.role !== 'super_admin' && auth.user.role !== 'admin') {
+    return NextResponse.json({ success: false, error: 'Only admins can delete leads' }, { status: 403 });
+  }
 
   try {
     const { searchParams } = new URL(request.url);
@@ -363,7 +465,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Lead deleted' });
   } catch (error) {
-    console.error('Error deleting lead:', error);
+    console.error('Error deleting lead:', safeErrorLog(error));
     return NextResponse.json(
       { success: false, error: 'Failed to delete lead' },
       { status: 500 }
@@ -373,7 +475,7 @@ export async function DELETE(request: NextRequest) {
 
 // PUT /api/leads - Update lead
 export async function PUT(request: NextRequest) {
-  const auth = await requirePermission(request, 'clients.write');
+  const auth = await requirePermission(request, 'sales.write');
   if ('error' in auth) return auth.error;
 
   try {
@@ -389,9 +491,8 @@ export async function PUT(request: NextRequest) {
     const { id, ...updateData } = body;
 
     // Map camelCase fields to snake_case for Supabase
+    // Ownership changes only through PATCH /api/admin/sales/leads/[id], which checks who may assign.
     const updates: Record<string, unknown> = {};
-    if (updateData.status !== undefined) updates.status = updateData.status;
-    if (updateData.assignedTo !== undefined) updates.assigned_to = updateData.assignedTo;
     if (updateData.nextAction !== undefined) updates.next_action = updateData.nextAction;
     if (updateData.followUpDate !== undefined) updates.follow_up_date = updateData.followUpDate;
     if (updateData.notes !== undefined) updates.notes = updateData.notes;
@@ -404,32 +505,27 @@ export async function PUT(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
-    // Fetch previous status before update (for status change detection)
-    let previousStatus: string | null = null;
+    const { data: existing, error: existingError } = await supabase.from('leads').select('id, owner_id').eq('id', id).maybeSingle();
+    if (existingError) throw existingError;
+    // A manager may change only the leads they can see: their own and unassigned ones.
+    if (!existing || !canAccessLead(auth.user, existing)) {
+      return ApiResponse.notFound('Lead not found');
+    }
+
     if (updateData.status !== undefined) {
-      const { data: existing } = await supabase
-        .from('leads')
-        .select('status')
-        .eq('id', id)
-        .single();
-      previousStatus = existing?.status ?? null;
+      if (!isLeadStatus(updateData.status)) {
+        return NextResponse.json({ success: false, error: 'Invalid status' }, { status: 400 });
+      }
+      await changeStage(id, updateData.status, { id: auth.user.id, name: auth.user.name });
     }
 
-    const { data, error } = await supabase
-      .from('leads')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+    if (Object.keys(updates).length > 0) {
+      const { error: updateError } = await supabase.from('leads').update(updates).eq('id', id);
+      if (updateError) throw updateError;
+    }
 
+    const { data, error } = await supabase.from('leads').select('*').eq('id', id).single();
     if (error) throw error;
-
-    if (!data) {
-      return NextResponse.json(
-        { success: false, error: 'Lead not found' },
-        { status: 404 }
-      );
-    }
 
     // Transform response
     const updatedLead = toCamelCaseKeys(data);
@@ -445,31 +541,13 @@ export async function PUT(request: NextRequest) {
       ip_address: getClientIP(request),
     });
 
-    // Emit event when lead status changes (triggers outgoing webhooks → AgentWorks)
-    if (
-      updateData.status !== undefined &&
-      previousStatus !== null &&
-      updateData.status !== previousStatus
-    ) {
-      emitEvent('lead.status_changed', {
-        entityId: id,
-        actor: { id: auth.user.id, name: auth.user.name },
-        timestamp: new Date().toISOString(),
-        data: {
-          previousStatus,
-          newStatus: updateData.status,
-          lead: updatedLead,
-        },
-      });
-    }
-
     return NextResponse.json({
       success: true,
       data: updatedLead,
       message: 'Lead updated successfully',
     });
   } catch (error) {
-    console.error('Error updating lead:', error);
+    console.error('Error updating lead:', safeErrorLog(error));
     return NextResponse.json(
       { success: false, error: 'Failed to update lead' },
       { status: 500 }

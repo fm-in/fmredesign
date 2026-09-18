@@ -10,7 +10,7 @@ import path from 'path';
 import { requirePermission } from '@/lib/admin-auth-middleware';
 
 export async function POST(request: NextRequest) {
-  const auth = await requirePermission(request, 'content.write');
+  const auth = await requirePermission(request, 'settings.write');
   if ('error' in auth) return auth.error;
 
   try {

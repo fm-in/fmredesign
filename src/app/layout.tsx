@@ -7,6 +7,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { WebVitals } from "@/components/WebVitals";
 import { CookieConsent } from "@/components/CookieConsent";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
+import { AttributionCapture } from "@/components/AttributionCapture";
 import Script from "next/script";
 import { SITE_URL } from '@/lib/site-url';
 
@@ -254,11 +255,15 @@ export default function RootLayout({
         <Script id="ga-init" strategy="afterInteractive">
           {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WRBTEE11SH');`}
         </Script>
-        <Script
-          id="cal-embed"
-          src="https://cal.com/embed/embed.js"
-          strategy="lazyOnload"
-        />
+        {/*
+          Cal.com's embed expects its queueing stub to define window.Cal before
+          embed.js loads; loading embed.js on its own is what threw
+          "Cal is not defined" on every page. The stub loads embed.js itself.
+        */}
+        <Script id="cal-embed" strategy="lazyOnload">
+          {`(function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var d = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, "https://cal.com/embed/embed.js", "init"); Cal("init", { origin: "https://cal.com" });`}
+        </Script>
+        <AttributionCapture />
         <Script
           id="observatory-pixel"
           src="https://observatory.goodmantech.co/api/pixel/proj_freaking-minds_misvd05m"

@@ -156,7 +156,7 @@ export function ClientsSectionV2() {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-visible z-20"
+      className="relative overflow-visible z-20 v2-section v2-tone-paper v2-section--tight-bottom"
     >
       {/* Ambient Gradient Orbs — reduced blur for scroll perf */}
       <GradientOrb
@@ -188,7 +188,7 @@ export function ClientsSectionV2() {
               </span>
             </div>
 
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-6 leading-tight">
+            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-6 leading-tight">
               Trusted by 100+ Brands{' '}
               <span className="v2-accent">Worldwide</span>
             </h2>

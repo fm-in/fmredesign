@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Briefcase, Users, ClipboardList, Loader2 } from 'lucide-react';
+import { SalesTasksSection } from '@/components/admin/sales/SalesTasksSection';
 
 interface Assignment {
   id: string;
@@ -115,6 +116,8 @@ export default function MyWorkPage() {
         <h1 className="text-2xl font-bold text-fm-neutral-900">My Work</h1>
         <p className="text-fm-neutral-600 mt-1">Your assignments, projects, and clients.</p>
       </div>
+
+      <SalesTasksSection />
 
       {message && assignments.length === 0 && (
         <div className="rounded-lg border border-fm-neutral-200 p-8" style={{ textAlign: 'center' }}>
