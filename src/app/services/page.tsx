@@ -1,269 +1,243 @@
-'use client';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { Container, Display, Label, Rule, Section, Text } from '@/components/site/primitives';
+import { SERVICES, serviceHref } from '@/lib/services-catalogue';
+import { serviceDeepDiveData } from '@/data/serviceDeepDiveData';
 
-import { useState } from "react";
-import { ArrowRight, Zap, Target, Award, CheckCircle2 } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
-import { ServiceDeepDiveModal } from "@/components/services/ServiceDeepDiveModal";
-import { SERVICES as services } from "@/lib/services-catalogue";
+/**
+ * Services.
+ *
+ * The detail that used to live behind `ServiceDeepDiveModal` — a five-slide
+ * overlay across seven files — is on the page now, one anchored section per
+ * service. A visitor reading about SEO can link someone straight to it and a
+ * crawler can index it; neither was true of the modal.
+ *
+ * What did NOT come across: the eighteen `resultsCTA.metrics`. "150%+ average
+ * traffic increase", "3x more qualified leads", "100+ brands transformed" and
+ * the rest are hardcoded in `serviceDeepDiveData` with nothing behind them.
+ * The pillars and personas describe what is actually offered, so those stay.
+ *
+ * A server component: the modal was the only reason this page held state.
+ */
+export const metadata: Metadata = {
+  title: 'Services',
+  description:
+    'SEO, social media, performance marketing, brand identity, web development and content — what each one actually involves.',
+  alternates: { canonical: '/services' },
+};
 
-const process = [
-  { step: "01", title: "Discovery & Audit", description: "We analyze your current digital presence, understand your goals, and identify opportunities for growth." },
-  { step: "02", title: "Strategy Development", description: "Our team creates a comprehensive digital marketing strategy tailored to your business objectives and target audience." },
-  { step: "03", title: "Implementation", description: "We execute your custom strategy with precision, using the latest tools and best practices for maximum impact." },
-  { step: "04", title: "Monitor & Optimize", description: "Continuous monitoring and optimization ensure your campaigns deliver the best possible results and ROI." }
-];
+const PROCESS = [
+  {
+    step: '01',
+    title: 'Discovery & Audit',
+    description:
+      'We analyze your current digital presence, understand your goals, and identify opportunities for growth.',
+  },
+  {
+    step: '02',
+    title: 'Strategy Development',
+    description:
+      'Our team creates a comprehensive digital marketing strategy tailored to your business objectives and target audience.',
+  },
+  {
+    step: '03',
+    title: 'Implementation',
+    description:
+      'We execute your custom strategy with precision, using the latest tools and best practices for maximum impact.',
+  },
+  {
+    step: '04',
+    title: 'Monitor & Optimize',
+    description:
+      'Continuous monitoring and optimization ensure your campaigns deliver the best possible results and ROI.',
+  },
+] as const;
 
 export default function ServicesPage() {
-  const [modalServiceId, setModalServiceId] = useState<string | null>(null);
+  return (
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
+        <Section as="div" className="pb-0">
+          <Container>
+            <Label>What we do</Label>
+            <Display level="display" className="mt-6 max-w-[14ch]">
+              Six things, done properly.
+            </Display>
+            <Text size="lead" muted className="mt-8 max-w-2xl">
+              Strategy, creative and performance under one roof. Each one below says what it
+              actually involves and who it tends to be right for.
+            </Text>
 
-  return (<>
-    <V2PageWrapper>
-      {/* Hero Section */}
-      <section className="relative z-10 v2-tone-tint v2-section v2-section--hero">
-        <div className="v2-container v2-container-wide">
-          <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
-            {/* Badge */}
-            <div className="v2-badge v2-badge-glass mb-8">
-              <Zap className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Full-Service Marketing Solutions</span>
-            </div>
+            {/* An index, so the page is navigable without scrolling six sections. */}
+            <ul
+              className="mt-12 flex flex-wrap gap-x-6 gap-y-3"
+              style={{ listStyle: 'none', margin: '3rem 0 0', padding: 0 }}
+            >
+              {SERVICES.map((service) => (
+                <li key={service.id}>
+                  <Link
+                    href={serviceHref(service.id)}
+                    className="font-site-sans text-site-body"
+                    style={{
+                      color: 'var(--site-text)',
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '6px',
+                    }}
+                  >
+                    {service.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Container>
+        </Section>
 
-            {/* Headline */}
-            <h1 className="v2-display font-display font-bold v2-text-primary mb-8 leading-tight">
-              Marketing Services That{' '}
-              <span className="v2-accent">Drive</span>{' '}
-              Growth
-            </h1>
+        {SERVICES.map((service, index) => {
+          const detail = serviceDeepDiveData.find((d) => d.serviceId === service.id);
+          return (
+            <Section
+              key={service.id}
+              id={service.id}
+              tone={index % 2 === 1 ? 'raised' : 'ground'}
+              className="scroll-mt-24"
+            >
+              <Container>
+                <div className="grid gap-10 lg:grid-cols-[minmax(0,26ch)_1fr] lg:gap-16">
+                  <div>
+                    <Label>{String(index + 1).padStart(2, '0')}</Label>
+                    <Display level="h2" as="h2" className="mt-4">
+                      {service.title}
+                    </Display>
+                    <Text muted className="mt-5">
+                      {service.tagline}
+                    </Text>
+                  </div>
 
-            {/* Description */}
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed" style={{ marginBottom: '48px' }}>
-              From brand strategy and creative design to SEO and performance marketing, we offer full-service marketing solutions that drive real business growth. Every strategy is custom-crafted to achieve your unique goals.
-            </p>
+                  <div>
+                    <Text size="lead">{detail?.hook.problemStatement ?? service.description}</Text>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/contact" className="v2-btn v2-btn-primary">
-                Get Custom Proposal
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link href="#process" className="v2-btn v2-btn-secondary">
-                View Our Process
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+                    {detail && (
+                      <>
+                        <Text muted className="mt-8">
+                          {detail.whatWeDo.intro}
+                        </Text>
 
-      {/* Services Grid */}
-      <section className="relative z-10 v2-tone-paper v2-section">
-        <div className="v2-container">
-          <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <div className="v2-badge v2-badge-glass mb-6">
-              <Award className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">What We Offer</span>
-            </div>
-            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-8 leading-tight">
-              Our <span className="v2-accent">Core Services</span>
-            </h2>
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-              End-to-end marketing solutions designed to accelerate your business growth.
-            </p>
-          </div>
+                        <div className="mt-10 grid gap-8 sm:grid-cols-3">
+                          {detail.whatWeDo.pillars.map((pillar) => (
+                            <div key={pillar.name}>
+                              <Rule />
+                              <h3 className="mt-5 font-site-sans text-site-body text-site-text">
+                                {pillar.name}
+                              </h3>
+                              <ul
+                                className="mt-3 space-y-2"
+                                style={{ listStyle: 'none', margin: '0.75rem 0 0', padding: 0 }}
+                              >
+                                {pillar.deliverables.map((item) => (
+                                  <li
+                                    key={item}
+                                    className="font-site-sans text-site-body text-site-muted"
+                                  >
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
 
-          <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-            {services.map((service) => {
-              const Icon = service.icon;
-              return (
-                <div
-                  key={service.title}
-                  id={service.id}
-                  className="relative v2-paper rounded-2xl p-5 sm:p-6 md:p-8 hover:shadow-2xl transition-[box-shadow,transform] duration-300 hover:-translate-y-1 scroll-mt-24 cursor-pointer"
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Learn more about ${service.title}`}
-                  onClick={() => setModalServiceId(service.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setModalServiceId(service.id);
-                    }
-                  }}
-                >
-                  {/* Icon & Tagline */}
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className={`w-14 h-14 rounded-xl ${service.colorClass} flex items-center justify-center shadow-lg`}>
-                      <Icon className="w-7 h-7 text-white" />
+                        <div className="mt-14">
+                          <Label>Who it tends to be right for</Label>
+                          <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                            {detail.whoItsFor.personas.map((persona) => (
+                              <div key={persona.title}>
+                                <h3 className="font-site-sans text-site-body text-site-text">
+                                  {persona.title}
+                                </h3>
+                                <Text muted className="mt-2">
+                                  {persona.description}
+                                </Text>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <div className="mt-12">
+                      <Link
+                        href="/get-started"
+                        className="font-site-sans text-site-body"
+                        style={{
+                          color: 'var(--site-text)',
+                          textDecoration: 'underline',
+                          textUnderlineOffset: '6px',
+                        }}
+                      >
+                        Talk to us about {service.name.toLowerCase()}
+                      </Link>
                     </div>
-                    <p className="text-fm-magenta-600 font-semibold text-sm tracking-wide uppercase">{service.tagline}</p>
-                  </div>
-
-                  {/* Title & Description */}
-                  <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-3">{service.title}</h3>
-                  <p className="text-fm-neutral-600 text-sm mb-6 leading-relaxed">{service.description}</p>
-
-                  {/* Features */}
-                  <div className="space-y-2 mb-6">
-                    {service.features.map((feature) => (
-                      <div key={feature} className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-fm-magenta-500 flex-shrink-0" />
-                        <span className="text-sm text-fm-neutral-600">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Results Badge + Learn More */}
-                  <div className="pt-4 border-t border-fm-neutral-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <p className="text-sm text-fm-magenta-600 font-semibold">{service.results}</p>
-                    <span className="text-sm text-fm-magenta-500 font-medium flex items-center gap-1 flex-shrink-0">
-                      Learn More <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+              </Container>
+            </Section>
+          );
+        })}
 
-      {/* Wave Divider */}
-      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
-        <Image src="/textures/wave-divider.svg" alt="" width={1920} height={60} className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
-      </div>
-
-      {/* Process Section */}
-      <section id="process" className="relative z-10 v2-tone-deep v2-section v2-texture-mesh">
-        <div className="v2-container">
-          {/* Floating Brain */}
-          <div className="absolute right-8 lg:right-20 top-0 hidden lg:block" style={{ zIndex: 10 }}>
-            <Image
-              src="/3dasset/brain-teaching.webp"
-              alt="Our Proven Process"
-              width={180}
-              height={180}
-              loading="lazy"
-              className="h-auto animate-v2-hero-float"
-              style={{
-                width: 'min(180px, 30vw)',
-                height: 'auto',
-                filter: 'drop-shadow(0 20px 40px rgba(140,25,60,0.2))',
-              }}
-            />
-          </div>
-
-          <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <div className="v2-badge v2-badge-glass mb-6">
-              <Target className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">Our Proven Process</span>
-            </div>
-            <h2 className="v2-h2 font-display font-bold v2-text-primary mb-8 leading-tight">
-              A Systematic Approach to{' '}
-              <span className="v2-accent">Success</span>
-            </h2>
-            <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">
-              A systematic approach that ensures consistent results and sustainable growth for your business.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-6 lg:gap-8">
-            {process.map((step, index) => (
-              <div key={step.step} className="v2-paper rounded-2xl p-8 text-center relative">
-                <div className="v2-h2 font-display font-bold text-fm-magenta-100 mb-4">{step.step}</div>
-                <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-3">{step.title}</h3>
-                <p className="text-fm-neutral-600 text-sm leading-relaxed">{step.description}</p>
-                {index < process.length - 1 && (
-                  <div className="hidden lg:block absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10">
-                    <ArrowRight className="w-6 h-6 text-fm-neutral-300" />
+        <Section id="process" className="scroll-mt-24">
+          <Container>
+            <Label>How we work</Label>
+            <Display level="h2" as="h2" className="mt-5 max-w-[18ch]">
+              The same four steps, every time.
+            </Display>
+            <ul className="mt-14" style={{ listStyle: 'none', margin: '3.5rem 0 0', padding: 0 }}>
+              {PROCESS.map((item) => (
+                <li key={item.step} style={{ borderTop: '1px solid var(--site-line-soft)' }}>
+                  <div className="grid gap-3 py-8 sm:grid-cols-[4rem_minmax(0,18ch)_1fr] sm:gap-10">
+                    <span className="font-site-sans text-site-label text-site-muted">{item.step}</span>
+                    <Display level="h3" as="h3">
+                      {item.title}
+                    </Display>
+                    <Text muted>{item.description}</Text>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+                </li>
+              ))}
+            </ul>
+            <Rule soft />
+          </Container>
+        </Section>
 
-      {/* Wave Divider */}
-      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
-        <Image src="/textures/wave-divider.svg" alt="" width={1920} height={60} className="w-full" style={{ height: '60px', display: 'block' }} />
-      </div>
-
-      {/* Custom Quote CTA Section */}
-      <section className="relative z-10 v2-tone-tint v2-section v2-texture-dots">
-        <div className="v2-container v2-container-narrow">
-          <div className="v2-paper rounded-3xl p-8 md:p-12 lg:p-16" style={{ textAlign: 'center' }}>
-            <div className="v2-badge v2-badge-light mb-6">
-              <Zap className="w-4 h-4" />
-              <span>Tailored For You</span>
-            </div>
-            <h2 className="v2-h2 font-display font-bold text-fm-neutral-900 mb-6 leading-tight">
-              Every Business Is <span className="text-fm-magenta-600">Different</span>
-            </h2>
-            <p className="text-fm-neutral-600 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto" style={{ marginBottom: '32px' }}>
-              We don&apos;t believe in one-size-fits-all packages. Tell us about your goals and we&apos;ll craft a strategy and plan that fits your business, your market, and your budget.
-            </p>
-
-            <div className="grid sm:grid-cols-3 gap-6 max-w-2xl mx-auto" style={{ marginBottom: '40px' }}>
-              <div className="p-4">
-                <div className="v2-h3 font-bold text-fm-magenta-600 mb-1">100%</div>
-                <p className="text-sm text-fm-neutral-600">Custom Strategy</p>
-              </div>
-              <div className="p-4">
-                <div className="v2-h3 font-bold text-fm-magenta-600 mb-1">No</div>
-                <p className="text-sm text-fm-neutral-600">Lock-in Contracts</p>
-              </div>
-              <div className="p-4">
-                <div className="v2-h3 font-bold text-fm-magenta-600 mb-1">Free</div>
-                <p className="text-sm text-fm-neutral-600">Initial Consultation</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/get-started" className="v2-btn v2-btn-magenta">
-                Get Your Custom Proposal
-                <ArrowRight className="w-5 h-5" />
+        <Section tone="raised">
+          <Container width="narrow">
+            <Display level="h1">Not sure which one you need?</Display>
+            <Text size="lead" muted className="mt-8">
+              Most projects are two or three of these together. Tell us the outcome and we will
+              tell you what it takes.
+            </Text>
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <Link
+                href="/get-started"
+                className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
+                style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
+              >
+                Start a project
               </Link>
-              <Link href="/contact" className="v2-btn v2-btn-outline">
-                Talk to Us First
+              <Link
+                href="/scorecard"
+                className="font-site-sans text-site-body"
+                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
+              >
+                Or take the Growth Scorecard
               </Link>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative z-10 v2-tone-accent v2-section v2-section--outro">
-        <div className="v2-container v2-container-narrow">
-          <div className="v2-paper rounded-3xl p-6 sm:p-8 md:p-10 lg:p-14" style={{ textAlign: 'center' }}>
-            <div className="v2-badge v2-badge-light mb-6">
-              <Target className="w-4 h-4" />
-              <span>Ready to Get Started?</span>
-            </div>
-            <h2 className="v2-h3 font-display font-bold text-fm-neutral-900 mb-6 leading-tight">
-              Ready to Accelerate Your Growth?
-            </h2>
-            <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">
-              Let's discuss your goals and create a custom marketing strategy that drives real results for your business.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/contact" className="v2-btn v2-btn-magenta">
-                Start Your Project Today
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link href="tel:+919833257659" className="v2-btn v2-btn-outline">
-                Call +91 98332 57659
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    </V2PageWrapper>
-
-    <ServiceDeepDiveModal
-      isOpen={!!modalServiceId}
-      onClose={() => setModalServiceId(null)}
-      serviceId={modalServiceId}
-    />
-  </>
+          </Container>
+        </Section>
+      </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }

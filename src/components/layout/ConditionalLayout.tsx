@@ -43,6 +43,9 @@ const MIGRATED_ROUTES: readonly string[] = [
   '/work',
   '/privacy',
   '/terms',
+  '/services',
+  '/freakquency',
+  '/scorecard',
 ];
 
 /** Prefixes that behave like migrated routes — they render `SiteShell`. */

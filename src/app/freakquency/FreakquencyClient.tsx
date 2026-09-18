@@ -149,15 +149,15 @@ function Pill({
         'rounded-full text-sm font-medium border transition-colors whitespace-nowrap',
         subtle ? 'px-3 py-1.5' : 'px-4 py-2',
         active
-          ? 'bg-fm-magenta-600 text-white border-fm-magenta-600'
+          ? 'bg-site-accent text-white border-site-accent'
           : dead
-            ? 'bg-white/40 text-fm-neutral-300 border-fm-neutral-100 cursor-not-allowed'
-            : 'bg-white text-fm-neutral-700 border-fm-neutral-200 hover:border-fm-magenta-300',
+            ? 'bg-white/40 text-site-muted border-site-line-soft cursor-not-allowed'
+            : 'bg-white text-site-text border-site-line-soft hover:border-site-line',
       ].join(' ')}
     >
       {label}
       {count !== undefined && (
-        <span className={active ? 'text-white/70 ml-1.5' : 'text-fm-neutral-400 ml-1.5'}>{count}</span>
+        <span className={active ? 'text-white/70 ml-1.5' : 'text-site-muted ml-1.5'}>{count}</span>
       )}
     </button>
   );
@@ -246,12 +246,12 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
   const clearAll = () => { setF(EMPTY); setSort('newest'); setShown(PAGE_SIZE); setPanelOpen(false); };
 
   return (
-    <div className="v2-container v2-container-wide v2-section">
+    <div className="site-measure site-measure py-site-section">
       <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h1 className="font-display text-4xl md:text-6xl font-bold v2-text-primary mb-4 leading-tight">
-          Freak<span className="v2-accent">quency</span>
+        <h1 className="font-site-display text-4xl md:text-6xl font-bold text-site-text mb-4 leading-tight">
+          Freak<span className="text-site-accent">quency</span>
         </h1>
-        <p className="text-base md:text-lg v2-text-secondary leading-relaxed">
+        <p className="text-base md:text-lg text-site-muted leading-relaxed">
           What actually happened in marketing, filtered — refreshed every morning.
         </p>
       </div>
@@ -260,14 +260,14 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
       {/* Sticks below the fixed site header (81px) so the one axis people
           actually browse by stays reachable deep into a long list. */}
       <div className="sticky z-30 -mx-2 px-2 py-2" style={{ top: '84px' }}>
-        <div className="v2-paper rounded-2xl px-3 py-2.5 flex items-center gap-3">
+        <div className="site-surface rounded-2xl px-3 py-2.5 flex items-center gap-3">
           <div
             ref={streamScroller.ref}
             className={`flex gap-2 overflow-x-auto no-scrollbar flex-1 ${streamScroller.fadeClass}`}
           >
             <Pill label="Everything" count={streamCounts.all} active={f.stream === 'all'} onClick={() => set('stream', 'all')} />
             <Pill label="Our guides" count={streamCounts.guides} active={f.stream === 'guides'} onClick={() => set('stream', 'guides')} />
-            <span className="w-px bg-fm-neutral-200 shrink-0 my-1" aria-hidden />
+            <span className="w-px bg-site-raised shrink-0 my-1" aria-hidden />
             {topics.map((t) => (
               <Pill key={t} label={CATEGORY_LABELS[t] ?? t} count={streamCounts[t] ?? 0}
                 active={f.stream === t} onClick={() => set('stream', t)} />
@@ -284,13 +284,13 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
                   onChange={(e) => set('q', e.target.value)}
                   onBlur={() => { if (!f.q) setSearchOpen(false); }}
                   placeholder="Search…"
-                  className="w-40 md:w-56 pl-8 pr-2 py-2 rounded-full border border-fm-neutral-200 bg-white text-fm-neutral-900 text-sm focus:ring-2 focus:ring-fm-magenta-500 focus:border-transparent"
+                  className="w-40 md:w-56 pl-8 pr-2 py-2 rounded-full border border-site-line-soft bg-white text-site-text text-sm focus:ring-2 focus:ring-site-accent focus:border-transparent"
                 />
-                <Search className="w-4 h-4 text-fm-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-site-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
               </div>
             ) : (
               <button onClick={() => setSearchOpen(true)} aria-label="Search the feed"
-                className="p-2 rounded-full border border-fm-neutral-200 bg-white text-fm-neutral-600 hover:border-fm-magenta-300">
+                className="p-2 rounded-full border border-site-line-soft bg-white text-site-muted hover:border-site-line">
                 <Search className="w-4 h-4" />
               </button>
             )}
@@ -301,8 +301,8 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
               className={[
                 'inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium border transition-colors',
                 refineCount > 0
-                  ? 'bg-fm-magenta-600 text-white border-fm-magenta-600'
-                  : 'bg-white text-fm-neutral-700 border-fm-neutral-200 hover:border-fm-magenta-300',
+                  ? 'bg-site-accent text-white border-site-accent'
+                  : 'bg-white text-site-text border-site-line-soft hover:border-site-line',
               ].join(' ')}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -314,7 +314,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
 
         {/* Opt-in panel. Everything here is a refinement, not a browse axis. */}
         {panelOpen && (
-          <div className="v2-paper rounded-2xl mt-2 p-4 md:p-5 space-y-4">
+          <div className="site-surface rounded-2xl mt-2 p-4 md:p-5 space-y-4">
             <PanelRow label="Written for">
               {INTENTS.map((i) => (
                 <Pill key={i.key} subtle label={i.label} count={intentCounts[i.key]}
@@ -339,7 +339,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
             </PanelRow>
             {anyActive && (
               <button onClick={clearAll}
-                className="inline-flex items-center gap-1.5 text-sm text-fm-magenta-600 hover:text-fm-magenta-700 font-medium">
+                className="inline-flex items-center gap-1.5 text-sm text-site-accent hover:text-site-accent font-medium">
                 <X className="w-4 h-4" /> Clear everything
               </button>
             )}
@@ -347,18 +347,18 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
         )}
       </div>
 
-      <p className="text-sm v2-text-tertiary mt-4 mb-4" style={{ textAlign: 'center' }}>
+      <p className="text-sm text-site-muted mt-4 mb-4" style={{ textAlign: 'center' }}>
         {filtered.length} {filtered.length === 1 ? 'item' : 'items'}
       </p>
 
       {filtered.length === 0 ? (
-        <div className="v2-paper rounded-3xl p-12" style={{ textAlign: 'center' }}>
-          <p className="text-fm-neutral-700 font-medium mb-1">Nothing matches all of that.</p>
-          <p className="text-sm text-fm-neutral-500 mb-5">
+        <div className="site-surface rounded-3xl p-12" style={{ textAlign: 'center' }}>
+          <p className="text-site-text font-medium mb-1">Nothing matches all of that.</p>
+          <p className="text-sm text-site-muted mb-5">
             Every count is measured against your other choices, so widening any one of them
             brings results back.
           </p>
-          <button onClick={clearAll} className="v2-btn v2-btn-magenta">Clear everything</button>
+          <button onClick={clearAll} className="site-button">Clear everything</button>
         </div>
       ) : (
         <>
@@ -368,7 +368,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
           </div>
           {rest.length + 1 < filtered.length && (
             <div style={{ textAlign: 'center', marginTop: '40px' }}>
-              <button onClick={() => setShown((n) => n + PAGE_SIZE)} className="v2-btn v2-btn-secondary">
+              <button onClick={() => setShown((n) => n + PAGE_SIZE)} className="site-button site-button--quiet">
                 Show more ({filtered.length - rest.length - 1} left)
               </button>
             </div>
@@ -382,7 +382,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
 function PanelRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-      <span className="text-xs uppercase tracking-wide text-fm-neutral-400 sm:w-24 shrink-0">{label}</span>
+      <span className="text-xs uppercase tracking-wide text-site-muted sm:w-24 shrink-0">{label}</span>
       <div className="flex gap-2 flex-wrap">{children}</div>
     </div>
   );
@@ -405,7 +405,7 @@ function Thumb({ item, tall = false }: { item: FeedItem; tall?: boolean }) {
 
   return (
     <div
-      className={`relative overflow-hidden bg-fm-neutral-100 ${tall ? 'aspect-[16/10]' : 'aspect-[16/9]'}`}
+      className={`relative overflow-hidden bg-site-raised ${tall ? 'aspect-[16/10]' : 'aspect-[16/9]'}`}
     >
       {showImage ? (
         // eslint-disable-next-line @next/next/no-img-element -- see note above
@@ -427,7 +427,7 @@ function Thumb({ item, tall = false }: { item: FeedItem; tall?: boolean }) {
             // eslint-disable-next-line @next/next/no-img-element -- see note above
             <img src={item.sourceLogoUrl} alt="" width={28} height={28} loading="lazy" className="opacity-60" />
           ) : (
-            <span className="font-display text-2xl font-bold text-fm-magenta-600/30">FM</span>
+            <span className="font-site-display text-2xl font-bold text-site-accent/30">FM</span>
           )}
         </div>
       )}
@@ -456,8 +456,8 @@ function SourceMark({ item }: { item: FeedItem }) {
 /** Shared chrome so the two card shapes stay visually related. */
 function Meta({ item }: { item: FeedItem }) {
   return (
-    <div className="flex items-center gap-2 text-xs text-fm-neutral-500 flex-wrap">
-      <span className="px-2 py-0.5 rounded-full bg-fm-magenta-50 text-fm-magenta-700 font-medium">
+    <div className="flex items-center gap-2 text-xs text-site-muted flex-wrap">
+      <span className="px-2 py-0.5 rounded-full bg-site-raised text-site-accent font-medium">
         {RESOURCE_TYPE_LABELS[item.type] ?? item.type}
       </span>
       {item.sourceName && (
@@ -485,18 +485,18 @@ function FeaturedCard({ item }: { item: FeedItem }) {
 
   return (
     <Wrapper {...props} className="block group">
-      <article className="v2-paper rounded-3xl overflow-hidden md:flex">
+      <article className="site-surface rounded-3xl overflow-hidden md:flex">
         <div className="md:w-2/5">
           <Thumb item={item} tall />
         </div>
         <div className="p-6 md:p-8 flex flex-col justify-center md:w-3/5">
           <Meta item={item} />
-          <h2 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mt-3 mb-3 leading-snug group-hover:text-fm-magenta-700 transition-colors">
+          <h2 className="font-site-display text-2xl md:text-3xl font-bold text-site-text mt-3 mb-3 leading-snug group-hover:text-site-accent transition-colors">
             {item.title}
-            {item.external && <ArrowUpRight className="inline w-5 h-5 ml-1 text-fm-neutral-400" />}
+            {item.external && <ArrowUpRight className="inline w-5 h-5 ml-1 text-site-muted" />}
           </h2>
           {item.excerpt && (
-            <p className="text-fm-neutral-600 leading-relaxed line-clamp-3">{item.excerpt}</p>
+            <p className="text-site-muted leading-relaxed line-clamp-3">{item.excerpt}</p>
           )}
         </div>
       </article>
@@ -512,16 +512,16 @@ function Card({ item }: { item: FeedItem }) {
 
   return (
     <Wrapper {...props} className="block group h-full">
-      <article className="v2-paper rounded-2xl overflow-hidden h-full flex flex-col hover:-translate-y-0.5 transition-transform">
+      <article className="site-surface rounded-2xl overflow-hidden h-full flex flex-col hover:-translate-y-0.5 transition-transform">
         <Thumb item={item} />
         <div className="p-5 flex flex-col flex-1">
         <Meta item={item} />
-        <h3 className="font-display text-lg font-bold text-fm-neutral-900 mt-3 mb-2 leading-snug group-hover:text-fm-magenta-700 transition-colors">
+        <h3 className="font-site-display text-lg font-bold text-site-text mt-3 mb-2 leading-snug group-hover:text-site-accent transition-colors">
           {item.title}
-          {item.external && <ArrowUpRight className="inline w-4 h-4 ml-1 text-fm-neutral-400 shrink-0" />}
+          {item.external && <ArrowUpRight className="inline w-4 h-4 ml-1 text-site-muted shrink-0" />}
         </h3>
         {item.excerpt && (
-          <p className="text-sm text-fm-neutral-600 leading-relaxed line-clamp-3">{item.excerpt}</p>
+          <p className="text-sm text-site-muted leading-relaxed line-clamp-3">{item.excerpt}</p>
         )}
         </div>
       </article>

@@ -11,7 +11,9 @@
  */
 
 import type { Metadata } from 'next';
-import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
 import { OG_DEFAULTS } from '@/lib/seo';
 import { getFeedItems } from '@/lib/resources/public-data';
 import FreakquencyClient from './FreakquencyClient';
@@ -39,8 +41,10 @@ export default async function FreakquencyPage() {
   const items = await getFeedItems();
 
   return (
-    <V2PageWrapper>
-      <FreakquencyClient items={items} />
-    </V2PageWrapper>
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content"><FreakquencyClient items={items} /></main>
+      <SiteFooter />
+    </SiteShell>
   );
 }

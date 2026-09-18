@@ -8,7 +8,9 @@
  */
 
 import type { Metadata } from 'next';
-import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
 import ScorecardClient from './ScorecardClient';
 import { OG_DEFAULTS } from '@/lib/seo';
 
@@ -30,8 +32,10 @@ export const metadata: Metadata = {
 
 export default function ScorecardPage() {
   return (
-    <V2PageWrapper>
-      <ScorecardClient />
-    </V2PageWrapper>
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content"><ScorecardClient /></main>
+      <SiteFooter />
+    </SiteShell>
   );
 }

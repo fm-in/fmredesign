@@ -197,6 +197,64 @@
 
 @layer components {
   /*
+   * A small compatibility layer for pages migrated by token swap rather than
+   * rewrite — `/freakquency` and `/scorecard`, whose value is in their filter
+   * and quiz logic, not their markup. These map the handful of composite
+   * classes those pages used (`v2-paper`, `v2-btn`, `v2-container`) onto the
+   * new tokens, so the logic was not touched at all.
+   */
+  .site-surface {
+    background: var(--site-raised);
+    border: 1px solid var(--site-line-soft);
+    border-radius: var(--radius-site-lg);
+  }
+
+  .site-measure {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--site-max-width);
+    padding-inline: var(--spacing-site-gutter);
+  }
+
+  .site-measure--narrow {
+    max-width: 720px;
+  }
+
+  .site-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-site-sm);
+    padding: 0.75rem 1.25rem;
+    font-family: var(--site-font-sans);
+    font-size: var(--text-site-body);
+    background: var(--site-text);
+    color: var(--site-ground);
+  }
+
+  .site-button:disabled {
+    opacity: 0.6;
+  }
+
+  .site-button--quiet {
+    background: transparent;
+    color: var(--site-text);
+    border: 1px solid var(--site-line);
+  }
+
+  .site-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--site-line);
+    padding: 0.375rem 0.75rem;
+    font-family: var(--site-font-sans);
+    font-size: var(--text-site-label);
+    color: var(--site-muted);
+  }
+
+  /*
    * Long-form text. Scoped to `[data-prose]` so these element selectors reach
    * article and legal bodies only — the old site put equivalent rules on bare
    * `p`, `h2`, `ul` in unlayered CSS, where they beat every Tailwind utility
