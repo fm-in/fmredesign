@@ -92,8 +92,16 @@
   color-scheme: light;
 
   --site-ground: #f7f4ef;
-  /* The header scrim needs the ground as channels, not as a colour. */
-  --site-ground-rgb: 247, 244, 239;
+  /*
+   * The header scrim, ready-made.
+   *
+   * It was built as `rgba(var(--site-ground-rgb), 0.86)` from channels. That
+   * construct is exactly what made the OLD header's background never paint —
+   * a colour assembled at use time has several ways to silently resolve to
+   * nothing, and a header that fails this way looks fine until content
+   * scrolls under it. A literal rgba per theme has none of those ways.
+   */
+  --site-scrim: rgba(247, 244, 239, 0.86);
   --site-raised: #fffdfa;
   --site-text: #13110f;
   --site-muted: #6b635c;
@@ -113,7 +121,7 @@
   /* The creatives carry the colour; the chrome does not. */
   --site-logo-filter: grayscale(1);
   --site-logo-blend: multiply;
-  --site-logo-opacity: 0.72;
+  --site-logo-opacity: 0.88;
 
   --site-font-display: var(--font-instrument-serif), Georgia, 'Times New Roman', serif;
   --site-font-sans: var(--font-dm-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -126,7 +134,7 @@
   color-scheme: dark;
 
   --site-ground: #0b0a0c;
-  --site-ground-rgb: 11, 10, 12;
+  --site-scrim: rgba(11, 10, 12, 0.86);
   --site-raised: #151317;
   --site-text: #ede6de;
   --site-muted: #8e8189;
@@ -146,7 +154,7 @@
      ground it must be inverted and lifted. On paper, multiply does it cleanly. */
   --site-logo-filter: grayscale(1) invert(1) contrast(1.15);
   --site-logo-blend: normal;
-  --site-logo-opacity: 0.66;
+  --site-logo-opacity: 0.78;
 }
 
 @layer base {

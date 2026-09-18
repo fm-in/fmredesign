@@ -15,9 +15,11 @@ import { ThemeToggle } from './ThemeToggle';
  * - Six top-level destinations, no mega-menus. `HeaderV2` carried three
  *   hover dropdowns holding twelve links, four of which point at unreleased
  *   products.
- * - The scrim is a real background colour built from `--site-ground-rgb`.
- *   `HeaderV2` used a `color-mix()` gradient that never painted at all, which
- *   is why body text was readable straight through the bar mid-transition.
+ * - The scrim is a single ready-made colour token. `HeaderV2` used a
+ *   `color-mix()` gradient that never painted at all, which is why body text
+ *   was readable straight through the bar mid-transition; an rgba assembled
+ *   from channel variables failed the same way here, so the token is a
+ *   literal per theme.
  * - `backdrop-filter` applies in both states. It was previously inverted:
  *   applied at the top of the page where nothing is behind the header, and
  *   removed on scroll — exactly when content passes underneath.
@@ -76,7 +78,7 @@ export function SiteHeader() {
         className="sticky z-40 transition-colors duration-300"
         style={{
           top: 'env(safe-area-inset-top, 0px)',
-          backgroundColor: scrolled || menuOpen ? 'rgba(var(--site-ground-rgb), 0.86)' : 'transparent',
+          backgroundColor: scrolled || menuOpen ? 'var(--site-scrim)' : 'transparent',
           backdropFilter: scrolled || menuOpen ? 'blur(14px)' : 'none',
           WebkitBackdropFilter: scrolled || menuOpen ? 'blur(14px)' : 'none',
           borderBottom: scrolled ? '1px solid var(--site-line-soft)' : '1px solid transparent',
