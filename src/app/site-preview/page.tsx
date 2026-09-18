@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { SiteShell } from '@/components/site/SiteShell';
-import { ThemeToggle } from '@/components/site/ThemeToggle';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { FilmWall, type Film } from '@/components/site/FilmWall';
 import { Container, Display, Label, Rule, Section, Text } from '@/components/site/primitives';
 
 /**
@@ -21,6 +23,20 @@ export const metadata: Metadata = {
   alternates: { canonical: '/site-preview' },
 };
 
+/*
+ * Ordered so the two dark films anchor the ends of the row and the two
+ * high-key ones (Renny, Giovanni) sit inboard, where the hairline and their
+ * neighbours hold their edges against bone paper.
+ */
+const FILMS: readonly Film[] = [
+  { id: 'astroo_apaar', client: 'Astroo Apaar', note: 'Brand film' },
+  { id: 'renny', client: 'Renny', note: 'Social campaign' },
+  { id: 'kanha', client: 'Kanha', note: 'Promotional' },
+  { id: 'giovanni', client: 'Giovanni Village', note: 'Resort brand' },
+  { id: 'concept_studio', client: 'Concept Studio', note: 'Creative' },
+  { id: 'skr_group', client: 'SKR Group', note: 'Corporate' },
+];
+
 const SWATCHES = [
   ['Ground', 'var(--site-ground)'],
   ['Raised', 'var(--site-raised)'],
@@ -32,17 +48,13 @@ const SWATCHES = [
 export default function SitePreviewPage() {
   return (
     <SiteShell>
-      <Section>
+      <SiteHeader />
+      <Section as="div">
         <Container>
-          <div className="flex items-start justify-between gap-6">
-            <div>
-              <Label>Foundation</Label>
-              <Display level="h1" className="mt-4">
-                Ideas that move markets.
-              </Display>
-            </div>
-            <ThemeToggle />
-          </div>
+          <Label>Foundation</Label>
+          <Display level="h1" className="mt-4">
+            Ideas that move markets.
+          </Display>
 
           <Text size="lead" muted className="mt-8 max-w-2xl">
             Instrument Serif for display, DM Sans for text. Warm bone paper by default; ink behind
@@ -95,6 +107,16 @@ export default function SitePreviewPage() {
           </div>
         </Container>
       </Section>
+
+      <Section>
+        <Container>
+          <Label>Client films</Label>
+          <Rule className="mt-4 mb-10" />
+          <FilmWall films={FILMS} />
+        </Container>
+      </Section>
+
+      <SiteFooter />
     </SiteShell>
   );
 }
