@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { requireTalentAuth } from '@/lib/talent-session';
+import { requireTalentAuth, getTalentSessionFromCookie } from '@/lib/talent-session';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -92,8 +92,15 @@ export async function GET(
       );
     }
 
+    // The page renders inline Edit controls off this flag. Only the signed-in
+    // owner sees them; the PUT below is the actual guard, this just stops the
+    // page offering an action that would be rejected.
+    const session = getTalentSessionFromCookie(request);
+    const isOwner = session?.talentId === profile.id;
+
     return NextResponse.json({
       success: true,
+      isOwner,
       profile: transformProfile(profile),
     });
   } catch (error) {

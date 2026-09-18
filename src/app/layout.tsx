@@ -182,7 +182,7 @@ export default function RootLayout({
         publisher: { '@id': `${SITE_URL}/#organization` },
         potentialAction: {
           '@type': 'SearchAction',
-          target: `${SITE_URL}/blog?q={search_term_string}`,
+          target: `${SITE_URL}/freakquency?q={search_term_string}`,
           'query-input': 'required name=search_term_string',
         },
       },
@@ -190,12 +190,15 @@ export default function RootLayout({
         '@type': 'BreadcrumbList',
         '@id': `${SITE_URL}/#breadcrumb`,
         itemListElement: [
+          // `position` is an ordinal, not a depth marker. Every entry after Home
+          // was previously `position: 2`, which makes the list invalid.
           { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
           { '@type': 'ListItem', position: 2, name: 'Services', item: `${SITE_URL}/services` },
-          { '@type': 'ListItem', position: 2, name: 'Work', item: `${SITE_URL}/work` },
-          { '@type': 'ListItem', position: 2, name: 'About', item: `${SITE_URL}/about` },
-          { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog` },
-          { '@type': 'ListItem', position: 2, name: 'Contact', item: `${SITE_URL}/contact` },
+          { '@type': 'ListItem', position: 3, name: 'Work', item: `${SITE_URL}/work` },
+          { '@type': 'ListItem', position: 4, name: 'About', item: `${SITE_URL}/about` },
+          { '@type': 'ListItem', position: 5, name: 'FM Academy', item: `${SITE_URL}/academy` },
+          { '@type': 'ListItem', position: 6, name: 'Freakquency', item: `${SITE_URL}/freakquency` },
+          { '@type': 'ListItem', position: 7, name: 'Contact', item: `${SITE_URL}/contact` },
         ],
       },
     ],

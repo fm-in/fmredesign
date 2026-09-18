@@ -6,13 +6,16 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  Menu, X, ArrowUpRight, ChevronDown, ArrowRight,
-  Brain, Video, Code, PenTool, Users, Search,
-  Megaphone, BarChart3, Palette, Globe, Play, Layers
+  Menu, X, ChevronDown, ArrowRight,
+  Brain, Video, Code, PenTool, Users, Gauge,
+  Megaphone, Radio,
 } from 'lucide-react';
+import { SERVICES, serviceHref } from '@/lib/services-catalogue';
 
-// Tools data
+// Tools data. The Growth Scorecard leads because it is the only one that
+// actually works today — the other four are unreleased.
 const tools = [
+  { name: 'Growth Scorecard', icon: Gauge, desc: 'Eleven questions, a real score', href: '/scorecard', gradient: 'linear-gradient(135deg, #c9325d, #e8543e)', comingSoon: false },
   { name: 'Deep Dive', icon: Brain, desc: 'AI-powered brand analysis', href: 'https://deepdive.freakingminds.in', gradient: 'linear-gradient(135deg, #c9325d, #4a1942)', comingSoon: true },
   { name: 'Brand Kits', icon: Video, desc: 'AI logo asset generator', href: 'https://brandkits.freakingminds.in', gradient: 'linear-gradient(135deg, #e04d7d, #c9325d)', comingSoon: true },
   { name: 'WeBuild', icon: Code, desc: 'Website builder', href: '#', gradient: 'linear-gradient(135deg, #7a2155, #4a1942)', comingSoon: true },
@@ -43,20 +46,19 @@ const talent = {
   gradient: 'linear-gradient(135deg, #a82548, #4a1942)'
 };
 
-// Services data
-const services = [
-  { name: 'SEO', icon: Search, desc: 'Dominate search results', href: '/services#seo' },
-  { name: 'Social Media', icon: Megaphone, desc: 'Build engaged communities', href: '/services#social' },
-  { name: 'Performance Marketing', icon: BarChart3, desc: 'ROI-focused campaigns', href: '/services#performance' },
-  { name: 'Brand Identity', icon: Palette, desc: 'Unforgettable visuals', href: '/services#branding' },
-  { name: 'Web Development', icon: Globe, desc: 'Fast, beautiful sites', href: '/services#web' },
-  { name: 'Content & Video', icon: Play, desc: 'Stories that convert', href: '/services#content' },
-];
+// Services — shaped from the single catalogue so the header can never drift
+// from the footer, the services page or the contact form again.
+const services = SERVICES.map((s) => ({
+  name: s.name,
+  icon: s.icon,
+  desc: s.navDesc,
+  href: serviceHref(s.id),
+}));
 
 // Company data
 const company = [
   { name: 'About Us', icon: Users, desc: 'Our story & team', href: '/about' },
-  { name: 'Blog', icon: Layers, desc: 'Insights & updates', href: '/blog' },
+  { name: 'Freakquency', icon: Radio, desc: 'Writing, research & signal', href: '/freakquency' },
   { name: 'Contact', icon: Megaphone, desc: 'Get in touch', href: '/contact' },
 ];
 
@@ -257,6 +259,16 @@ export function HeaderV2() {
                 style={{ color: isLinkActive('/work') ? '#1a0a12' : '#6b4a5a' }}
               >
                 Work
+              </Link>
+
+              {/* Academy - No dropdown. The only page on the site that takes
+                  money, and it was reachable from the footer alone. */}
+              <Link
+                href="/academy"
+                className="px-4 py-2 text-sm font-medium transition-colors"
+                style={{ color: isLinkActive('/academy') ? '#1a0a12' : '#6b4a5a' }}
+              >
+                Academy
               </Link>
 
               {/* Products Dropdown (Tools + Talent) */}
@@ -483,6 +495,15 @@ export function HeaderV2() {
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <span className="font-medium">Work</span>
+                  <ArrowRight className="w-4 h-4" style={{ color: '#9a7888' }} />
+                </Link>
+                <Link
+                  href="/academy"
+                  className="flex items-center justify-between p-3 rounded-xl"
+                  style={{ color: '#1a0a12' }}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <span className="font-medium">Academy</span>
                   <ArrowRight className="w-4 h-4" style={{ color: '#9a7888' }} />
                 </Link>
               </div>

@@ -2,13 +2,18 @@
  * Talent Profile Page
  * Lightweight "My Profile" for approved CreativeMinds talent.
  * Slug-based access (no login) — similar to client portal.
+ *
+ * This page brings its own shell. It is excluded from `ConditionalLayout`, so
+ * it renders without the marketing header and footer, and it does not use
+ * `V2PageWrapper` — the starfield background is a marketing surface, not a
+ * profile one. That keeps the page independent of whatever the public site
+ * is being restyled to.
  */
 
 'use client';
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
 import {
   Mail,
   Phone,
@@ -101,6 +106,30 @@ function ProfileAvatar({ name, src }: { name: string; src?: string }) {
   );
 }
 
+/* ─── ProfileShell ─── */
+
+/** Plain, self-contained page ground. No dependency on the marketing theme. */
+function ProfileShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-fm-neutral-50">
+      <div className="border-b border-fm-neutral-200 bg-white">
+        <div className="v2-container flex items-center justify-between py-4">
+          <Link href="/" className="font-display text-lg font-bold text-fm-neutral-900">
+            Freaking<span className="text-fm-magenta-600">Minds</span>
+          </Link>
+          <Link
+            href="/creativeminds"
+            className="text-sm font-medium text-fm-neutral-600 hover:text-fm-magenta-600"
+          >
+            CreativeMinds
+          </Link>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 /* ─── Main Component ─── */
 
 export default function TalentProfilePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -108,6 +137,10 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   const [profile, setProfile] = useState<TalentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Only the signed-in owner gets the inline Edit controls. The PUT route is
+  // the real guard; this stops the page offering strangers an action that
+  // would be rejected.
+  const [isOwner, setIsOwner] = useState(false);
   const [editing, setEditing] = useState<EditSection>(null);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -124,6 +157,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
       .then((result) => {
         if (result.success) {
           setProfile(result.profile);
+          setIsOwner(Boolean(result.isOwner));
         } else {
           setError(result.error || 'Profile not found');
         }
@@ -223,21 +257,21 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
   // Loading state
   if (loading) {
     return (
-      <V2PageWrapper>
-        <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
+      <ProfileShell>
+        <section className="py-12 md:py-16">
           <div className="v2-container flex items-center justify-center min-h-[400px]">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-fm-magenta-600" />
           </div>
         </section>
-      </V2PageWrapper>
+      </ProfileShell>
     );
   }
 
   // Error / not found
   if (error || !profile) {
     return (
-      <V2PageWrapper>
-        <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
+      <ProfileShell>
+        <section className="py-12 md:py-16">
           <div className="v2-container">
             <div className="max-w-lg mx-auto bg-white rounded-3xl shadow-2xl p-10" style={{ textAlign: 'center' }}>
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -254,7 +288,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
             </div>
           </div>
         </section>
-      </V2PageWrapper>
+      </ProfileShell>
     );
   }
 
@@ -294,23 +328,23 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
     'w-full px-3 py-2 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-sm';
 
   return (
-    <V2PageWrapper>
-      <section className="relative z-10 v2-section v2-section--hero v2-section--outro">
+    <ProfileShell>
+      <section className="py-12 md:py-16">
         <div className="v2-container">
           {/* Header */}
           <div className="max-w-4xl mx-auto" style={{ marginBottom: '40px' }}>
-            <div className="v2-badge v2-badge-glass mb-6">
-              <Sparkles className="w-4 h-4 v2-text-primary" />
-              <span className="v2-text-primary">CreativeMinds Profile</span>
+            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-white border border-fm-neutral-200 text-sm font-medium text-fm-neutral-700">
+              <Sparkles className="w-4 h-4 text-fm-magenta-600" />
+              <span>CreativeMinds Profile</span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4">
                 <ProfileAvatar name={pi.fullName || ''} src={pi.profilePicture} />
                 <div>
-                  <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold v2-text-primary leading-tight mb-1">
+                  <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-fm-neutral-900 leading-tight mb-1">
                     {pi.fullName}
                   </h1>
-                  <p className="text-lg v2-text-secondary">
+                  <p className="text-lg text-fm-neutral-600">
                     {categoryLabel} &middot; {experienceLabel}
                   </p>
                 </div>
@@ -383,7 +417,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               <div className="v2-paper rounded-2xl p-6 md:p-8">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-fm-neutral-900">Portfolio</h2>
-                  {editing !== 'portfolio' && (
+                  {isOwner && editing !== 'portfolio' && (
                     <button onClick={() => startEditing('portfolio')} className="text-fm-magenta-600 hover:text-fm-magenta-700 text-sm font-medium flex items-center gap-1">
                       <Edit3 className="w-3.5 h-3.5" /> Edit
                     </button>
@@ -447,7 +481,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               <div className="v2-paper rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base font-bold text-fm-neutral-900">Contact</h2>
-                  {editing !== 'contact' && (
+                  {isOwner && editing !== 'contact' && (
                     <button onClick={() => startEditing('contact')} className="text-fm-magenta-600 hover:text-fm-magenta-700 text-sm font-medium flex items-center gap-1">
                       <Edit3 className="w-3.5 h-3.5" /> Edit
                     </button>
@@ -524,7 +558,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               <div className="v2-paper rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base font-bold text-fm-neutral-900">Availability</h2>
-                  {editing !== 'availability' && (
+                  {isOwner && editing !== 'availability' && (
                     <button onClick={() => startEditing('availability')} className="text-fm-magenta-600 hover:text-fm-magenta-700 text-sm font-medium flex items-center gap-1">
                       <Edit3 className="w-3.5 h-3.5" /> Edit
                     </button>
@@ -593,7 +627,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               <div className="v2-paper rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base font-bold text-fm-neutral-900">Rates</h2>
-                  {editing !== 'pricing' && (
+                  {isOwner && editing !== 'pricing' && (
                     <button onClick={() => startEditing('pricing')} className="text-fm-magenta-600 hover:text-fm-magenta-700 text-sm font-medium flex items-center gap-1">
                       <Edit3 className="w-3.5 h-3.5" /> Edit
                     </button>
@@ -677,7 +711,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
           </div>
         </div>
       </section>
-    </V2PageWrapper>
+    </ProfileShell>
   );
 }
 

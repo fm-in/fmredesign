@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { MapPin, Phone, Mail, Clock, MessageCircle, ArrowRight, ChevronDown, Send, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
+import { SERVICE_ENQUIRY_OPTIONS as services } from "@/lib/services-catalogue";
 import { CalButton } from "@/components/ui/CalButton";
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
@@ -32,16 +33,7 @@ const contactInfo = [
   }
 ];
 
-const services = [
-  "SEO & Digital Marketing",
-  "Social Media Marketing",
-  "PPC Advertising",
-  "Website Design & Development",
-  "Branding & Creative Design",
-  "Content Marketing",
-  "E-commerce Solutions",
-  "Other"
-];
+// Service options come from the single catalogue — see src/lib/services-catalogue.ts
 
 const budgetRanges = [
   { label: "₹25,000 - ₹50,000", value: "25k_50k" },

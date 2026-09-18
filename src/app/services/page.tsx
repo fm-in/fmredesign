@@ -1,78 +1,12 @@
 'use client';
 
 import { useState } from "react";
-import { ArrowRight, Search, Megaphone, Palette, BarChart3, Globe, Video, Zap, Target, Award, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Zap, Target, Award, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import { ServiceDeepDiveModal } from "@/components/services/ServiceDeepDiveModal";
-
-const services = [
-  {
-    icon: Search,
-    id: "seo",
-    title: "Search Engine Optimization (SEO)",
-    tagline: "Get found. Get chosen.",
-    description: "Dominate search results with our data-driven SEO strategies. We optimize your website for visibility, traffic, and conversions.",
-    features: ["Keyword Research & Strategy", "On-page & Technical SEO", "Link Building & Content Marketing", "Local SEO Optimization", "SEO Audits & Reporting"],
-    results: "Proven strategies to boost organic traffic and search visibility",
-    colorClass: "v2-gradient-seo"
-  },
-  {
-    icon: Megaphone,
-    id: "social",
-    title: "Social Media Marketing",
-    tagline: "Stop posting. Start connecting.",
-    description: "Build engaged communities and drive brand awareness across all major social platforms with strategic content and campaigns.",
-    features: ["Social Media Strategy", "Content Creation & Curation", "Community Management", "Paid Social Advertising", "Influencer Partnerships"],
-    results: "Build engaged communities that drive brand awareness",
-    colorClass: "v2-gradient-social"
-  },
-  {
-    icon: BarChart3,
-    id: "performance",
-    altIds: ["performance-marketing"],
-    title: "Pay-Per-Click (PPC) Advertising",
-    tagline: "Every rupee. Maximum impact.",
-    description: "Maximize your ROI with targeted PPC campaigns across Google Ads, Facebook, and other platforms.",
-    features: ["Google Ads Management", "Facebook & Instagram Ads", "Shopping Campaigns", "Remarketing Strategies", "Conversion Optimization"],
-    results: "Data-driven campaigns that maximize your ad spend ROI",
-    colorClass: "v2-gradient-performance"
-  },
-  {
-    icon: Palette,
-    id: "branding",
-    altIds: ["brand-strategy"],
-    title: "Creative Design & Branding",
-    tagline: "Look unforgettable.",
-    description: "Create compelling visual identities and marketing materials that resonate with your target audience.",
-    features: ["Brand Identity Design", "Logo & Visual Guidelines", "Marketing Collateral", "Packaging Design", "Brand Strategy Consulting"],
-    results: "Build memorable brand identities that stand out",
-    colorClass: "v2-gradient-brand"
-  },
-  {
-    icon: Globe,
-    id: "web",
-    altIds: ["digital-experience"],
-    title: "Website Design & Development",
-    tagline: "Fast. Beautiful. Converting.",
-    description: "Build fast, responsive, and conversion-optimized websites that serve as powerful marketing tools.",
-    features: ["Responsive Web Design", "E-commerce Development", "Landing Page Optimization", "CMS Integration", "Performance Optimization"],
-    results: "Fast, responsive sites that convert visitors into customers",
-    colorClass: "v2-gradient-web"
-  },
-  {
-    icon: Video,
-    id: "content",
-    altIds: ["creative-content"],
-    title: "Content Marketing & Video Production",
-    tagline: "Stories that sell.",
-    description: "Engage your audience with high-quality content that tells your brand story and drives action.",
-    features: ["Content Strategy", "Blog Writing & SEO Content", "Video Production", "Graphic Design", "Email Marketing"],
-    results: "Content that drives engagement and generates quality leads",
-    colorClass: "v2-gradient-content"
-  }
-];
+import { SERVICES as services } from "@/lib/services-catalogue";
 
 const process = [
   { step: "01", title: "Discovery & Audit", description: "We analyze your current digital presence, understand your goals, and identify opportunities for growth." },
@@ -157,10 +91,6 @@ export default function ServicesPage() {
                     }
                   }}
                 >
-                  {/* Alt anchor IDs for footer links */}
-                  {service.altIds?.map((altId) => (
-                    <div key={altId} id={altId} style={{ position: 'absolute', top: '-6rem' }} />
-                  ))}
                   {/* Icon & Tagline */}
                   <div className="flex items-center gap-4 mb-6">
                     <div className={`w-14 h-14 rounded-xl ${service.colorClass} flex items-center justify-center shadow-lg`}>

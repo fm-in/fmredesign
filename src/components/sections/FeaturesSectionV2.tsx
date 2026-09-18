@@ -7,6 +7,7 @@ import { useCountUp, parseMetric } from '@/hooks/useCountUp';
 import { MagneticButton } from '@/components/animations/Card3D';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { serviceHref } from '@/lib/services-catalogue';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -28,6 +29,7 @@ const shadowColors: Record<string, string> = {
   'v2-gradient-brand': 'rgba(140, 29, 74, 0.3)',
 };
 
+// Anchors come from the catalogue so a renamed service cannot orphan a link.
 const features = [
   {
     icon: Search,
@@ -40,7 +42,7 @@ const features = [
     mascotAlt: 'Brain mascot character analyzing strategy charts',
     gradientClass: 'v2-gradient-seo',
     accentClass: 'text-fm-orange-400',
-    ctaLink: '/services#seo',
+    ctaLink: serviceHref('seo'),
     bgColor: '#1c0e16',
   },
   {
@@ -54,7 +56,7 @@ const features = [
     mascotAlt: 'Creative brain mascot with artistic tools',
     gradientClass: 'v2-gradient-social',
     accentClass: 'text-fm-magenta-400',
-    ctaLink: '/services#social',
+    ctaLink: serviceHref('social'),
     bgColor: '#22101a',
   },
   {
@@ -68,7 +70,7 @@ const features = [
     mascotAlt: 'Brain mascot presenting performance data',
     gradientClass: 'v2-gradient-performance',
     accentClass: 'text-fm-magenta-400',
-    ctaLink: '/services#performance',
+    ctaLink: serviceHref('performance'),
     bgColor: '#2a1220',
   },
   {
@@ -82,7 +84,7 @@ const features = [
     mascotAlt: 'Celebrating brain mascot with design elements',
     gradientClass: 'v2-gradient-brand',
     accentClass: 'text-fm-magenta-400',
-    ctaLink: '/services#branding',
+    ctaLink: serviceHref('branding'),
     bgColor: '#1f0f18',
   },
 ];

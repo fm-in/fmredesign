@@ -1,5 +1,9 @@
+/**
+ * Reached from a link in a sales email. Deliberately plain: no starfield, no
+ * marketing background — `V2PageWrapper` is a marketing surface and this is a
+ * transactional one.
+ */
 import type { Metadata } from 'next';
-import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
 import { UnsubscribeForm } from '@/components/sales/UnsubscribeForm';
 
 export const metadata: Metadata = {
@@ -14,16 +18,16 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
   const { t } = await searchParams;
 
   return (
-    <V2PageWrapper>
-      <section className="v2-section v2-section--hero v2-section--outro">
+    <div className="bg-fm-neutral-50">
+      <section className="py-16 md:py-24">
         <div className="v2-container-narrow">
-          <div className="v2-paper rounded-3xl p-8 md:p-12" style={{ textAlign: 'center' }}>
-            <h1 className="v2-h2 text-fm-neutral-900 mb-4">Stop follow-up emails</h1>
+          <div className="bg-white border border-fm-neutral-200 rounded-3xl p-8 md:p-12" style={{ textAlign: 'center' }}>
+            <h1 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4">Stop follow-up emails</h1>
             <p className="text-fm-neutral-600 mb-8">Confirm below and we will not email you about your enquiry again.</p>
             <UnsubscribeForm token={t ?? ''} />
           </div>
         </div>
       </section>
-    </V2PageWrapper>
+    </div>
   );
 }

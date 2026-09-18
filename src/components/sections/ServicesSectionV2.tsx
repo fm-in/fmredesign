@@ -3,84 +3,66 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  ArrowRight,
-  Search,
-  Megaphone,
-  Palette,
-  BarChart3,
-  Globe,
-  Video,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MagneticButton } from '@/components/animations/Card3D';
+import { SERVICES } from '@/lib/services-catalogue';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const services = [
-  {
-    icon: Search,
-    title: 'Search Engine Optimization',
-    tagline: 'Get found. Get chosen.',
+/**
+ * Home-page cards. Identity (icon, title, tagline, colour) comes from the one
+ * catalogue so the home page, the header, the footer and `/services` cannot
+ * name the same service three different ways — which they did. Only the
+ * card-specific copy and artwork live here.
+ */
+const CARD_COPY: Record<string, { description: string; features: string[]; bgImage: string }> = {
+  seo: {
     description:
       'Dominate search results with data-driven SEO strategies that put you where customers are looking.',
     features: ['Keyword Strategy', 'Technical SEO', 'Content Authority', 'Local Search'],
-    colorClass: 'v2-gradient-seo',
     bgImage: '/3dasset/seo-bg.webp',
   },
-  {
-    icon: Megaphone,
-    title: 'Social Media Marketing',
-    tagline: 'Stop posting. Start connecting.',
+  social: {
     description:
       'Build engaged communities with thumb-stopping content that turns followers into customers.',
     features: ['Content Strategy', 'Community Building', 'Paid Campaigns', 'Influencer Marketing'],
-    colorClass: 'v2-gradient-social',
     bgImage: '/3dasset/social-media-bg.webp',
   },
-  {
-    icon: BarChart3,
-    title: 'Performance Marketing',
-    tagline: 'Every rupee. Maximum impact.',
+  performance: {
     description:
       'Laser-focused PPC campaigns that deliver qualified leads while maximizing your ROI.',
     features: ['Google Ads', 'Meta Ads', 'Retargeting', 'Conversion Optimization'],
-    colorClass: 'v2-gradient-performance',
     bgImage: '/3dasset/performance-marketing-bg.webp',
   },
-  {
-    icon: Palette,
-    title: 'Brand Identity Design',
-    tagline: 'Look unforgettable.',
+  branding: {
     description:
       'Visual identities that capture attention, build trust, and make competitors jealous.',
     features: ['Logo Design', 'Brand Guidelines', 'Visual Systems', 'Packaging'],
-    colorClass: 'v2-gradient-brand',
     bgImage: '/3dasset/brand-identity-bg.webp',
   },
-  {
-    icon: Globe,
-    title: 'Website Development',
-    tagline: 'Fast. Beautiful. Converting.',
-    description: "Lightning-fast websites that don't just look good—they close deals 24/7.",
+  web: {
+    description: "Lightning-fast websites that don't just look good\u2014they close deals 24/7.",
     features: ['Custom Development', 'E-commerce', 'CMS Solutions', 'Speed Optimization'],
-    colorClass: 'v2-gradient-web',
     bgImage: '/3dasset/web-development-bg.webp',
   },
-  {
-    icon: Video,
-    title: 'Content Production',
-    tagline: 'Stories that sell.',
+  content: {
     description: 'From scroll-stopping videos to blogs that rank, content that drives real action.',
     features: ['Video Production', 'Copywriting', 'Photography', 'Email Campaigns'],
-    colorClass: 'v2-gradient-content',
     bgImage: '/3dasset/content-production-bg.webp',
   },
-];
+};
+
+const services = SERVICES.map((s) => ({
+  icon: s.icon,
+  title: s.title,
+  tagline: s.tagline,
+  colorClass: s.colorClass,
+  ...CARD_COPY[s.id],
+}));
 
 /** Shared card markup used by both mobile and desktop */
 function ServiceCard({
