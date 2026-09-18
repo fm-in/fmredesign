@@ -195,6 +195,65 @@
   }
 }
 
+@layer components {
+  /*
+   * Long-form text. Scoped to `[data-prose]` so these element selectors reach
+   * article and legal bodies only — the old site put equivalent rules on bare
+   * `p`, `h2`, `ul` in unlayered CSS, where they beat every Tailwind utility
+   * on every page in the app.
+   */
+  [data-prose] > * + * {
+    margin-top: 1.25em;
+  }
+
+  [data-prose] h2 {
+    font-family: var(--site-font-display);
+    font-size: var(--text-site-h3);
+    line-height: 1.2;
+    margin-top: 2.5em;
+  }
+
+  [data-prose] h3 {
+    font-family: var(--site-font-sans);
+    font-size: var(--text-site-body);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-top: 2em;
+  }
+
+  [data-prose] p,
+  [data-prose] li {
+    color: var(--site-muted);
+    max-width: 68ch;
+  }
+
+  [data-prose] ul,
+  [data-prose] ol {
+    padding-left: 1.25em;
+  }
+
+  [data-prose] li + li {
+    margin-top: 0.5em;
+  }
+
+  [data-prose] a {
+    color: var(--site-text);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  [data-prose] strong {
+    color: var(--site-text);
+    font-weight: 600;
+  }
+
+  [data-prose] hr {
+    border: 0;
+    border-top: 1px solid var(--site-line-soft);
+    margin-top: 3em;
+  }
+}
+
 @layer base {
   /*
    * One reduced-motion gate for the whole site, replacing the 19 separate

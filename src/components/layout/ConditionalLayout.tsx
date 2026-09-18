@@ -39,6 +39,10 @@ const OWN_SHELL_PREFIXES = [
  */
 const MIGRATED_ROUTES: readonly string[] = [
   '/',
+  '/about',
+  '/work',
+  '/privacy',
+  '/terms',
 ];
 
 /** Prefixes that behave like migrated routes — they render `SiteShell`. */
