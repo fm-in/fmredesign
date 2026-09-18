@@ -1,0 +1,206 @@
+/*
+ * SITE TOKENS — the design layer for the public marketing site.
+ *
+ * Deliberately a separate namespace (`site-`) from the existing `fm-` palette.
+ * 80% of `fm-*` usage is admin / client / talent portal code, so the old tokens
+ * cannot be edited without repainting the dashboards. These live beside them;
+ * the old ones are deleted only once no public route references them.
+ *
+ * Two rules that are easy to get wrong in Tailwind v4:
+ *
+ * 1. `@theme` values are resolved once at build time, so a token declared
+ *    directly in `@theme` cannot change with the theme. Instead `@theme` maps
+ *    each Tailwind name to an indirection variable, and the real values live on
+ *    `:root` / `:root[data-theme="dark"]`. That is what makes `bg-site-ground`
+ *    swap when the theme does.
+ *
+ * 2. Only the documented namespaces generate utilities: `--color-*`, `--font-*`,
+ *    `--text-*`, `--leading-*`, `--tracking-*`, `--radius-*`, `--spacing-*`.
+ *    The 27 existing `--font-family-*`, `--font-size-*`, `--line-height-*`,
+ *    `--letter-spacing-*` and `--border-radius-*` tokens generate nothing at
+ *    all, which is why `.font-display` and the whole `.text-h1..h6` scale had to
+ *    be hand-written. Everything here uses a real namespace.
+ *
+ * `prefers-color-scheme` is deliberately ignored. Light is always the first
+ * impression; dark is opt-in through the header toggle, which sets
+ * `data-theme` on the root element.
+ */
+
+@theme {
+  /* ---- Colour: names Tailwind generates utilities for ------------------- */
+  --color-site-ground: var(--site-ground);
+  --color-site-raised: var(--site-raised);
+  --color-site-text: var(--site-text);
+  --color-site-muted: var(--site-muted);
+  --color-site-accent: var(--site-accent);
+  --color-site-line: var(--site-line);
+  --color-site-line-soft: var(--site-line-soft);
+
+  /* ---- Type -------------------------------------------------------------
+   * Namespaced `site-`, NOT `--font-sans`. Overriding Tailwind's own
+   * `--font-sans` would repoint the `font-sans` utility across every admin
+   * and portal page — precisely the coupling this phase removes.
+   */
+  --font-site-display: var(--site-font-display);
+  --font-site-sans: var(--site-font-sans);
+
+  /*
+   * One scale, fluid. The old scale was nine fixed sizes plus three display
+   * sizes, none of which generated a utility.
+   *
+   * A high-contrast serif carries far less visual weight than a heavy
+   * grotesque at the same size, so the display sizes run larger and tighter
+   * than a sans-led scale would.
+   */
+  --text-site-display: clamp(3.4rem, 9.5vw, 9rem);
+  --text-site-display--line-height: 0.92;
+  --text-site-display--letter-spacing: -0.02em;
+
+  --text-site-h1: clamp(2.9rem, 7vw, 6.8rem);
+  --text-site-h1--line-height: 0.96;
+  --text-site-h1--letter-spacing: -0.02em;
+
+  --text-site-h2: clamp(2rem, 4vw, 3.4rem);
+  --text-site-h2--line-height: 1.04;
+  --text-site-h2--letter-spacing: -0.015em;
+
+  --text-site-h3: clamp(1.35rem, 2vw, 1.75rem);
+  --text-site-h3--line-height: 1.2;
+
+  --text-site-lead: clamp(1.05rem, 1.3vw, 1.3rem);
+  --text-site-lead--line-height: 1.5;
+
+  --text-site-body: 1rem;
+  --text-site-body--line-height: 1.6;
+
+  /* Small caps labels. Never magenta — see the contrast note below. */
+  --text-site-label: 0.75rem;
+  --text-site-label--line-height: 1.2;
+  --text-site-label--letter-spacing: 0.12em;
+
+  /* ---- Rhythm ----------------------------------------------------------- */
+  --spacing-site-gutter: clamp(16px, 4vw, 56px);
+  --spacing-site-section: clamp(5rem, 10vw, 9.5rem);
+
+  --radius-site-sm: 4px;
+  --radius-site-md: 10px;
+  --radius-site-lg: 18px;
+}
+
+/* ---------- LIGHT (default, and the only first impression) -------------- */
+:root {
+  color-scheme: light;
+
+  --site-ground: #f7f4ef;
+  /* The header scrim needs the ground as channels, not as a colour. */
+  --site-ground-rgb: 247, 244, 239;
+  --site-raised: #fffdfa;
+  --site-text: #13110f;
+  --site-muted: #6b635c;
+  --site-accent: #c9325d;
+  --site-line: rgba(19, 17, 15, 0.14);
+  --site-line-soft: rgba(19, 17, 15, 0.07);
+
+  /* A warm, barely-there paper stock — not noise. */
+  --site-grain-opacity: 0.032;
+  --site-grain-blend: multiply;
+
+  /* Films are the only dark objects on paper, so they cast rather than glow. */
+  --site-film-shadow:
+    0 20px 44px -24px rgba(19, 17, 15, 0.5),
+    0 2px 6px -2px rgba(19, 17, 15, 0.18);
+
+  /* The creatives carry the colour; the chrome does not. */
+  --site-logo-filter: grayscale(1);
+  --site-logo-blend: multiply;
+  --site-logo-opacity: 0.72;
+
+  --site-font-display: var(--font-instrument-serif), Georgia, 'Times New Roman', serif;
+  --site-font-sans: var(--font-dm-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --site-max-width: 1380px;
+}
+
+/* ---------- DARK: a pure token swap, no layout or asset changes ---------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --site-ground: #0b0a0c;
+  --site-ground-rgb: 11, 10, 12;
+  --site-raised: #151317;
+  --site-text: #ede6de;
+  --site-muted: #8e8189;
+  /* Magenta measures ~4.7:1 on bone but only ~3.1:1 on ink, so dark gets a
+     lighter, hotter accent rather than the same hex. */
+  --site-accent: #e8336a;
+  --site-line: rgba(237, 230, 222, 0.14);
+  --site-line-soft: rgba(237, 230, 222, 0.07);
+
+  --site-grain-opacity: 0.05;
+  --site-grain-blend: normal;
+
+  /* Nothing casts a shadow on ink; the ground is already darker than the cast. */
+  --site-film-shadow: none;
+
+  /* Measured: every client logo is opaque dark artwork on white, so on a dark
+     ground it must be inverted and lifted. On paper, multiply does it cleanly. */
+  --site-logo-filter: grayscale(1) invert(1) contrast(1.15);
+  --site-logo-blend: normal;
+  --site-logo-opacity: 0.66;
+}
+
+@layer base {
+  /*
+   * Scoped to `[data-site]`, which `SiteShell` sets. Without the scope this
+   * would restyle every admin and portal page too — the exact coupling this
+   * whole phase exists to remove.
+   */
+  [data-site] {
+    background-color: var(--site-ground);
+    color: var(--site-text);
+    font-family: var(--site-font-sans);
+    font-size: var(--text-site-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  [data-site] h1,
+  [data-site] h2,
+  [data-site] h3 {
+    font-family: var(--site-font-display);
+    font-weight: 400;
+    color: var(--site-text);
+  }
+
+  /*
+   * The accent measures ~4.7:1 on bone. That passes AA for normal text, but
+   * only just, and it fails at small sizes in practice once antialiasing
+   * thins the strokes. Labels take ink; the accent is for display type,
+   * links and marks.
+   */
+  [data-site] .site-label {
+    font-size: var(--text-site-label);
+    letter-spacing: var(--text-site-label--letter-spacing);
+    text-transform: uppercase;
+    color: var(--site-muted);
+  }
+}
+
+@layer base {
+  /*
+   * One reduced-motion gate for the whole site, replacing the 19 separate
+   * implementations scattered through the old components. Anything that must
+   * still move under this preference opts back in with `[data-motion-safe]`.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    [data-site] *:not([data-motion-safe]),
+    [data-site] *:not([data-motion-safe])::before,
+    [data-site] *:not([data-motion-safe])::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -24,6 +24,8 @@ const OWN_SHELL_PREFIXES = [
   '/creativeminds/portal',
   '/creativeminds/login',
   '/talent/',
+  // The redesign's foundation preview brings its own SiteShell.
+  '/site-preview',
 ] as const;
 
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {

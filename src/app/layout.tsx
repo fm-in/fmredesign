@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
+import { Playfair_Display, Plus_Jakarta_Sans, Instrument_Serif, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { SmoothScrollProvider } from "@/providers/SmoothScrollProvider";
@@ -10,6 +10,7 @@ import { ChatbotWidget } from "@/components/ChatbotWidget";
 import { AttributionCapture } from "@/components/AttributionCapture";
 import Script from "next/script";
 import { SITE_URL } from '@/lib/site-url';
+import { THEME_INIT_SCRIPT } from '@/components/site/theme';
 
 // Display font - elegant serif for headlines (authority & sophistication)
 const playfair = Playfair_Display({
@@ -28,13 +29,32 @@ const jakarta = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
-// Accent font - for special moments
+/*
+ * Instrument Serif — the redesign's display face, and still the old system's
+ * accent face. `globals.css` aliases `--font-accent` to this so the existing
+ * `.font-accent` utility keeps working until Phase 9 removes it.
+ */
 const instrument = Instrument_Serif({
-  variable: "--font-accent",
+  variable: "--font-instrument-serif",
   subsets: ["latin"],
   display: "swap",
   weight: ["400"],
   style: ["normal", "italic"],
+});
+
+/*
+ * DM Sans — the redesign's text face. Paired with Instrument Serif: a high
+ * contrast display serif against a low-contrast geometric sans is the pairing
+ * the direction was approved on.
+ *
+ * Variable font, so one request covers 400–700 rather than the four static
+ * cuts Plus Jakarta ships.
+ */
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz"],
 });
 
 export const viewport = {
@@ -205,8 +225,18 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${instrument.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${instrument.variable} ${dmSans.variable}`}>
       <head>
+        {/*
+          Applies the stored theme before first paint. Without it the page
+          paints bone, hydrates, then swaps to ink — a full-screen flash on
+          every navigation for anyone who chose dark.
+
+          Deliberately a blocking inline script rather than next/script: it
+          must run before the first stylesheet-dependent paint, which is
+          exactly what every `strategy` option avoids.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {/*
           Warm up the third-party origins before the scripts below are
           requested. Lighthouse measured ~349ms of connection setup on mobile

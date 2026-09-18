@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* The redesign's token layer. Separate namespace (`site-`), separate file —
+   see src/styles/site-tokens.css for why it cannot live in this one. */
+@import '../styles/site-tokens.css';
 /* Import consolidated animations */
 @import '../styles/consolidated-animations.css';
 /* Note: performance-fixes.css is imported at the end to override component styles */
@@ -62,7 +65,11 @@
   /* Typography - Editorial Font Stack */
   --font-family-sans: var(--font-sans), 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-family-display: var(--font-display), 'Playfair Display', Georgia, serif;
-  --font-family-accent: var(--font-accent), 'Instrument Serif', Georgia, serif;
+  /* `next/font` now exposes Instrument Serif as --font-instrument-serif (the
+     redesign's display face). Aliased here so the hand-written `.font-accent`
+     utility keeps resolving until Phase 9 deletes it. */
+  --font-accent: var(--font-instrument-serif);
+  --font-family-accent: var(--font-instrument-serif), 'Instrument Serif', Georgia, serif;
 
   /* Custom Font Sizes - Display */
   --font-size-display-xl: 4rem;
@@ -282,7 +289,17 @@ html {
 body {
   background: theme(colors.fm.neutral.50);
   color: theme(colors.fm.neutral.900);
-  font-family: theme(fontFamily.sans);
+  /*
+   * Was `theme(fontFamily.sans)`, which resolves to Tailwind's DEFAULT sans
+   * stack — `ui-sans-serif, system-ui, ...` — not the `--font-family-sans`
+   * token above it (that token is in a namespace Tailwind v4 does not read,
+   * so it generates nothing). Verified in the compiled CSS: every paragraph
+   * on the site has been rendering in the OS system font while Plus Jakarta
+   * Sans was downloaded on every page and applied to nothing.
+   *
+   * This rule is unlayered, so it also beat the `font-sans` utility on <body>.
+   */
+  font-family: var(--font-sans), 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
