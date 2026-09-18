@@ -57,14 +57,20 @@ async function confirmedRecently(leadId: string): Promise<boolean> {
  * "Other", nothing chosen, or a value the page never offered — is left out, so
  * the approved fallback applies instead of repeating whatever was posted.
  */
+/**
+ * How each contact-form service reads mid-sentence: "…your enquiry about X."
+ *
+ * Keyed by the `name` of an entry in `src/lib/services-catalogue.ts`. The
+ * catalogue is not imported here — it carries lucide icons and this module
+ * renders email on the server — so a test asserts every option has a phrase.
+ */
 export const CONTACT_SERVICE_PHRASES: Readonly<Record<string, string>> = {
-  'SEO & Digital Marketing': 'SEO and digital marketing',
-  'Social Media Marketing': 'social media marketing',
-  'PPC Advertising': 'PPC advertising',
-  'Website Design & Development': 'website design and development',
-  'Branding & Creative Design': 'branding and creative design',
-  'Content Marketing': 'content marketing',
-  'E-commerce Solutions': 'e-commerce solutions',
+  'SEO': 'SEO',
+  'Social Media': 'social media marketing',
+  'Performance Marketing': 'performance marketing',
+  'Brand Identity': 'brand identity',
+  'Web Development': 'web design and development',
+  'Content & Video': 'content and video',
 };
 
 /** The fields of a `POST /api/leads` body a receipt reads. */

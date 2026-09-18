@@ -1,26 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowUpRight, Facebook, Instagram, Linkedin, Twitter, Sparkles, Send, Mail, Phone, MapPin } from 'lucide-react';
+import { ArrowUpRight, Facebook, Instagram, Linkedin, Twitter, Sparkles } from 'lucide-react';
+import { SERVICES, serviceHref } from '@/lib/services-catalogue';
 
 const navigation = {
-  services: [
-    { name: 'Brand Strategy', href: '/services#brand-strategy' },
-    { name: 'Performance Marketing', href: '/services#performance-marketing' },
-    { name: 'Creative & Content', href: '/services#creative-content' },
-    { name: 'Digital Experience', href: '/services#digital-experience' },
-  ],
+  // Four names that existed nowhere else on the site, pointing at four anchor
+  // ids that `/services` had to plant hidden shim elements to catch. Now the
+  // same six services the header and the services page use.
+  services: SERVICES.map((s) => ({ name: s.name, href: serviceHref(s.id) })),
   company: [
     { name: 'About', href: '/about' },
     { name: 'Work', href: '/work' },
-    { name: 'Blog', href: '/blog' },
     { name: 'Contact', href: '/contact' },
   ],
   resources: [
-    { name: 'Blog', href: '/blog' },
+    { name: 'Freakquency', href: '/freakquency' },
     { name: 'FM Academy', href: '/academy' },
+    { name: 'Growth Scorecard', href: '/scorecard' },
     { name: 'Get Started', href: '/get-started' },
     { name: 'CreativeMinds', href: '/creativeminds' },
   ],
@@ -39,7 +38,6 @@ const socialLinks = [
 
 export function FooterV2() {
   const currentYear = new Date().getFullYear();
-  const [email, setEmail] = useState('');
 
   return (
     <footer className="relative" style={{ borderTop: '1px solid rgba(201, 50, 93, 0.1)' }}>
@@ -252,34 +250,29 @@ export function FooterV2() {
               </div>
             </div>
 
-            {/* Newsletter */}
+            {/* Freakquency.
+                This slot held a newsletter input with no form, no handler and
+                no endpoint — anything typed into it was silently discarded.
+                Until there is a real subscription to offer, it points at the
+                writing itself. */}
             <div>
               <h4
                 className="text-[11px] font-bold uppercase tracking-[0.25em] mb-4"
                 style={{ color: '#8c1d4a' }}
               >
-                Newsletter
+                Freakquency
               </h4>
-              <div className="flex flex-col min-[400px]:flex-row gap-2">
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 px-3 min-[400px]:px-4 py-2.5 rounded-lg text-[13px] outline-none transition-colors"
-                  style={{
-                    background: 'rgba(255,255,255,0.6)',
-                    border: '1px solid rgba(201, 50, 93, 0.12)',
-                    color: '#1a0a12',
-                  }}
-                />
-                <button
-                  className="px-4 py-2.5 rounded-lg text-white text-[13px] font-medium transition-[filter] hover:brightness-110"
-                  style={{ background: '#8c1d4a' }}
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
+              <p className="text-[13px] leading-relaxed mb-3" style={{ color: '#6b4a5a' }}>
+                What we are reading, testing and getting wrong — written up in the open.
+              </p>
+              <Link
+                href="/freakquency"
+                className="inline-flex items-center gap-1.5 text-[13px] font-medium transition-colors hover:brightness-110"
+                style={{ color: '#8c1d4a' }}
+              >
+                Read Freakquency
+                <ArrowUpRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </div>

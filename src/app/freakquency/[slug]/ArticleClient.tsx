@@ -31,11 +31,11 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
       <section className="relative z-10 v2-section pt-40">
         <div className="v2-container v2-container-article">
           <Link
-            href="/blog"
+            href="/freakquency"
             className="inline-flex items-center gap-2 v2-text-secondary hover:v2-text-primary transition-colors mb-8 text-sm py-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Blog
+            Back to Freakquency
           </Link>
 
           <div className="v2-badge v2-badge-glass mb-6">
@@ -149,7 +149,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
               {related.map((r) => (
                 <Link
                   key={r.slug}
-                  href={`/blog/${r.slug}`}
+                  href={`/freakquency/${r.slug}`}
                   className="group v2-paper rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="flex items-center gap-2 mb-3">

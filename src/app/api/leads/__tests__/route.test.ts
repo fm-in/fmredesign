@@ -201,7 +201,7 @@ describe('POST /api/leads confirmation receipt', () => {
   }
 
   it('sends a contact-page enquirer the receipt after the response, naming the service, and notes it on the lead', async () => {
-    const res = await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'Priya.Shah@example.com', service: 'Social Media Marketing' })));
+    const res = await POST(postLead(contactPageBody({ name: 'Priya Shah', email: 'Priya.Shah@example.com', service: 'Social Media' })));
 
     expect(await responseOf(res)).toEqual(GENERIC);
     // Nothing is sent while the response is being built.

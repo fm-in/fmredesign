@@ -1,14 +1,16 @@
+/**
+ * Deliberately plain. `V2PageWrapper` is a marketing surface; a 404 is not one,
+ * and it must render even when the marketing theme is mid-migration.
+ */
 import Link from 'next/link';
-import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
 import { ArrowRight, Home } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <V2PageWrapper>
-      <section className="relative z-10 min-h-screen flex items-center justify-center v2-section">
+    <div className="bg-fm-neutral-50">
+      <section className="min-h-[70vh] flex items-center justify-center py-16 md:py-24">
         <div className="v2-container">
           <div className="max-w-2xl mx-auto" style={{ textAlign: 'center' }}>
-            {/* Brain Mascot */}
             <img
               src="/3dasset/brain-confused.webp"
               alt="Page not found"
@@ -21,26 +23,25 @@ export default function NotFound() {
               }}
             />
 
-            {/* 404 */}
-            <h1 className="font-display text-7xl sm:text-8xl md:text-9xl font-bold v2-accent mb-4">
+            <h1 className="font-display text-7xl sm:text-8xl md:text-9xl font-bold text-fm-magenta-600 mb-4">
               404
             </h1>
 
-            <h2 className="font-display text-2xl md:text-3xl font-bold v2-text-primary mb-6">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-6">
               Oops! Page Not Found
             </h2>
 
-            <p className="text-lg v2-text-secondary mb-10 leading-relaxed max-w-md mx-auto">
-              The page you're looking for doesn't exist or has been moved.
-              Let's get you back on track.
+            <p className="text-lg text-fm-neutral-600 mb-10 leading-relaxed max-w-md mx-auto">
+              The page you&rsquo;re looking for doesn&rsquo;t exist or has been moved.
+              Let&rsquo;s get you back on track.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/" className="v2-btn v2-btn-primary">
+              <Link href="/" className="v2-btn v2-btn-magenta">
                 <Home className="w-5 h-5" />
                 Back to Homepage
               </Link>
-              <Link href="/contact" className="v2-btn v2-btn-secondary">
+              <Link href="/contact" className="v2-btn v2-btn-outline">
                 Contact Us
                 <ArrowRight className="w-5 h-5" />
               </Link>
@@ -48,6 +49,6 @@ export default function NotFound() {
           </div>
         </div>
       </section>
-    </V2PageWrapper>
+    </div>
   );
 }

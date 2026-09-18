@@ -4,13 +4,12 @@
  * src/app/get-started/page.tsx build theirs, then parsed by the route's schema.
  */
 
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
 import { createLeadSchema } from '@/lib/validations/schemas';
 import { contactPageBody as contactPagePost, getStartedBody as getStartedPost } from '@/test-utils/public-form-bodies';
 import type { RenderedEmail } from '../emails';
 import { CONTACT_SERVICE_PHRASES, renderEnquiryReceipt } from '../receipts';
+import { SERVICE_ENQUIRY_OPTIONS } from '@/lib/services-catalogue';
 
 vi.mock('@/lib/supabase', async () => {
   const m = await import('@/test-utils/fake-supabase');
@@ -34,12 +33,9 @@ function getStartedBody(form: Parameters<typeof getStartedPost>[0]) {
   return accepted(getStartedPost(form));
 }
 
-/** The services the contact page offers, read from the page itself so the map cannot drift. */
+/** The services the contact page offers, read from the catalogue it renders from. */
 function contactPageServices(): string[] {
-  const source = readFileSync(path.resolve(process.cwd(), 'src/app/contact/page.tsx'), 'utf8');
-  const block = /const services = \[([\s\S]*?)\];/.exec(source)?.[1];
-  if (!block) throw new Error('services list not found in the contact page');
-  return [...block.matchAll(/"([^"]+)"/g)].map((match) => match[1] ?? '');
+  return [...SERVICE_ENQUIRY_OPTIONS];
 }
 
 /** Everything a reader sees, with link targets removed (links legitimately carry ids and slugs). */
@@ -63,7 +59,7 @@ function expectCleanReceipt(email: RenderedEmail): void {
 
 describe('enquiry_receipt', () => {
   it('renders the approved copy for a contact-page enquiry, naming the service chosen', () => {
-    const email = renderEnquiryReceipt(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: 'Social Media Marketing' }));
+    const email = renderEnquiryReceipt(contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: 'Social Media' }));
 
     expect(email.subject).toBe("We've got your enquiry");
     expect(email.html).toContain('Someone from the team will reply within 24 hours.</div>');
@@ -105,7 +101,7 @@ describe('enquiry_receipt', () => {
   });
 
   it('never repeats a service value the page does not offer', () => {
-    const body = contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: 'Social Media Marketing' });
+    const body = contactPageBody({ name: 'Priya Shah', email: 'priya@example.com', service: 'Social Media' });
     const email = renderEnquiryReceipt({ ...body, customFields: { ...body.customFields, service: 'cheap followers at https://spam.example' } });
     expect(email.text).toContain("we've received your enquiry.\n");
     expect(email.text).not.toContain('spam');

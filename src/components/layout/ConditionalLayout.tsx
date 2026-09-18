@@ -8,13 +8,29 @@ interface ConditionalLayoutProps {
   children: React.ReactNode;
 }
 
+/**
+ * Routes that bring their own shell and must NOT be wrapped in the marketing
+ * header and footer.
+ *
+ * The talent portal renders a full `DashboardLayout`, the two login screens
+ * render full-bleed panels, and `/talent/[slug]` is a signed-in-ish profile
+ * page — none of them are marketing surfaces, and all four were previously
+ * rendering inside the public chrome. Keeping this list explicit is what lets
+ * the public site be restyled without touching any portal.
+ */
+const OWN_SHELL_PREFIXES = [
+  '/admin',
+  '/client',
+  '/creativeminds/portal',
+  '/creativeminds/login',
+  '/talent/',
+] as const;
+
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
-  const isAdminRoute = pathname?.startsWith('/admin') || false;
-  const isClientRoute = pathname?.startsWith('/client') || false;
+  const hasOwnShell = OWN_SHELL_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
 
-  if (isAdminRoute || isClientRoute) {
-    // Admin and client routes render without the marketing header/footer
+  if (hasOwnShell) {
     return <main id="main-content">{children}</main>;
   }
 

@@ -133,7 +133,7 @@ export default function BlogAdminPage() {
                 <tr key={p.id} className="hover:bg-fm-neutral-50">
                   <td className="px-4 py-3">
                     <div className="font-medium text-fm-neutral-900 line-clamp-1">{p.title}</div>
-                    <div className="text-xs text-fm-neutral-500 line-clamp-1">/blog/{p.slug}</div>
+                    <div className="text-xs text-fm-neutral-500 line-clamp-1">/freakquency/{p.slug}</div>
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={p.status}>{STATUS_LABELS[p.status]}</StatusBadge>
@@ -154,7 +154,7 @@ export default function BlogAdminPage() {
                     <div className="flex items-center gap-1 justify-end">
                       {p.status === 'published' && (
                         <Link
-                          href={`/blog/${p.slug}`}
+                          href={`/freakquency/${p.slug}`}
                           target="_blank"
                           className="p-1.5 rounded-md hover:bg-fm-neutral-100 text-fm-neutral-600"
                           title="View live"
