@@ -24,21 +24,45 @@ const OWN_SHELL_PREFIXES = [
   '/creativeminds/portal',
   '/creativeminds/login',
   '/talent/',
-  // The redesign's foundation preview brings its own SiteShell.
-  '/site-preview',
 ] as const;
+
+/**
+ * Routes already migrated to the new design system.
+ *
+ * They render `SiteShell` + `SiteHeader` + `SiteFooter` themselves, so the old
+ * chrome must not wrap them. This list grows one route at a time; when it
+ * covers every public route, this whole component — along with `HeaderV2` and
+ * `FooterV2` — is deleted.
+ *
+ * Exact matches, not prefixes: `/work` migrating must not silently take
+ * `/work/[slug]` with it.
+ */
+const MIGRATED_ROUTES: readonly string[] = [
+  '/',
+];
+
+/** Prefixes that behave like migrated routes — they render `SiteShell`. */
+const MIGRATED_PREFIXES: readonly string[] = ['/site-preview'];
 
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
-  const hasOwnShell = OWN_SHELL_PREFIXES.some((prefix) => pathname?.startsWith(prefix));
 
-  if (hasOwnShell) {
+  // A migrated route renders its own <main id="main-content"> inside SiteShell,
+  // so wrapping it here would nest one landmark inside another.
+  if (
+    MIGRATED_ROUTES.includes(pathname ?? '') ||
+    MIGRATED_PREFIXES.some((prefix) => pathname?.startsWith(prefix))
+  ) {
+    return <>{children}</>;
+  }
+
+  // A portal route has its own chrome but no landmark of its own, so it still
+  // needs the <main> wrapper — the skip link and screen readers depend on it.
+  if (OWN_SHELL_PREFIXES.some((prefix) => pathname?.startsWith(prefix))) {
     return <main id="main-content">{children}</main>;
   }
 
-  // One header, one footer, for every public route. The previous V1 import
-  // was never rendered, and the V3 branch existed only to serve
-  // /showcase/home-v3 — both removed along with the showcase explorations.
+  // One header, one footer, for every public route not yet migrated.
   return (
     <>
       <HeaderV2 />

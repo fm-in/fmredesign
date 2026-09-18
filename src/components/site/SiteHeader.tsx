@@ -12,6 +12,9 @@ import { ThemeToggle } from './ThemeToggle';
  * New component rather than an edit to `HeaderV2`, which stays until no route
  * needs it. Differences that matter:
  *
+ * The desktop nav appears at `lg`, not `md`. At 768px the brand and the CTA
+ * both wrapped to two lines; the tablet gets the menu button instead.
+ *
  * - Six top-level destinations, no mega-menus. `HeaderV2` carried three
  *   hover dropdowns holding twelve links, four of which point at unreleased
  *   products.
@@ -90,13 +93,13 @@ export function SiteHeader() {
         >
           <Link
             href="/"
-            className="font-site-display text-site-h3 text-site-text"
+            className="whitespace-nowrap font-site-display text-site-h3 text-site-text"
             aria-label="Freaking Minds — home"
           >
             Freaking Minds
           </Link>
 
-          <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
+          <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
             {NAV.map((item) => (
               <Link
                 key={item.href}
@@ -117,7 +120,7 @@ export function SiteHeader() {
             <ThemeToggle />
             <Link
               href="/get-started"
-              className="hidden rounded-site-sm px-4 py-2 font-site-sans text-site-body md:inline-flex"
+              className="hidden whitespace-nowrap rounded-site-sm px-4 py-2 font-site-sans text-site-body lg:inline-flex"
               style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
             >
               Start a project
@@ -128,7 +131,7 @@ export function SiteHeader() {
               aria-expanded={menuOpen}
               aria-controls="site-menu"
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-site-sm md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-site-sm lg:hidden"
               style={{ border: '1px solid var(--site-line)', color: 'var(--site-text)' }}
             >
               {menuOpen ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
@@ -140,7 +143,7 @@ export function SiteHeader() {
       <div
         id="site-menu"
         hidden={!menuOpen}
-        className="fixed inset-0 z-30 md:hidden"
+        className="fixed inset-0 z-30 lg:hidden"
         style={{ background: 'var(--site-ground)', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 72px)' }}
       >
         <nav className="flex flex-col px-site-gutter" aria-label="Main">

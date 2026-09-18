@@ -49,6 +49,7 @@ export default function SitePreviewPage() {
   return (
     <SiteShell>
       <SiteHeader />
+      <main id="main-content">
       <Section as="div">
         <Container>
           <Label>Foundation</Label>
@@ -116,6 +117,7 @@ export default function SitePreviewPage() {
         </Container>
       </Section>
 
+      </main>
       <SiteFooter />
     </SiteShell>
   );

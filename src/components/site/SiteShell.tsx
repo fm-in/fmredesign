@@ -58,6 +58,12 @@ export function SiteShell({ children }: { children: ReactNode }) {
     <SiteThemeContext.Provider value={{ theme, toggleTheme, ready }}>
       <div data-site className="relative min-h-screen">
         <PaperGrain />
+        {/*
+          No <main> here: a page passes its header and footer as children too,
+          so wrapping them would put the banner and contentinfo landmarks
+          inside the main one. Each page renders its own
+          <main id="main-content"> between them.
+        */}
         <div className="relative" style={{ zIndex: 1 }}>
           {children}
         </div>
