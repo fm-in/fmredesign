@@ -115,7 +115,7 @@ function TalentLoginForm() {
 
 export default function TalentLoginPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fm-purple-700 via-[#2a1030] to-[#1a0a20] flex items-center justify-center p-4">
+    <main id="main-content" className="min-h-screen bg-gradient-to-br from-fm-purple-700 via-[#2a1030] to-[#1a0a20] flex items-center justify-center p-4">
       <Suspense fallback={
         <div className="flex items-center justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-fm-magenta-600" />
@@ -123,6 +123,6 @@ export default function TalentLoginPage() {
       }>
         <TalentLoginForm />
       </Suspense>
-    </div>
+    </main>
   );
 }

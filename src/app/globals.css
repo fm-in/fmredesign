@@ -439,20 +439,11 @@ section {
 /* Section Spacing Improvements */
 /* NOTE: Only apply default padding to sections WITHOUT v2-section class
    to avoid double-padding with V2 design system */
-section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py-"]) {
-  padding: 4rem 0;
-}
 
 @media (max-width: 768px) {
-  section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py-"]) {
-    padding: 3rem 0;
-  }
 }
 
 @media (max-width: 480px) {
-  section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py-"]) {
-    padding: 2rem 0;
-  }
 }
 
 /* Grid System Improvements */
@@ -577,10 +568,6 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
 /* Logo images - let component classes control sizing */
 
 /* Brain mascot animations */
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(201,50,93,0.4); }
-  50% { opacity: 0.5; box-shadow: 0 0 0 4px rgba(201,50,93,0); }
-}
 
 @keyframes brain-float {
   0%, 100% {
@@ -681,15 +668,6 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
 @keyframes featureSparkle {
   0%, 100% { opacity: 0.3; transform: scale(0.8); }
   50% { opacity: 0.8; transform: scale(1.2); }
-}
-
-@keyframes mascotWobble {
-  0% { transform: scale(1) rotate(0deg); }
-  20% { transform: scale(1.12) rotate(-6deg); }
-  40% { transform: scale(1.08) rotate(5deg); }
-  60% { transform: scale(1.1) rotate(-3deg); }
-  80% { transform: scale(1.04) rotate(2deg); }
-  100% { transform: scale(1) rotate(0deg); }
 }
 
 .animate-featureFloat {
@@ -1173,45 +1151,10 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
   }
 
   /* V2 Text Hierarchy Classes - color only */
-  .v2-text-primary {
-    color: var(--v2-text-primary);
-  }
-
-  .v2-text-secondary {
-    color: var(--v2-text-secondary);
-  }
-
-  .v2-text-tertiary {
-    color: var(--v2-text-tertiary);
-  }
-
-  .v2-text-muted {
-    color: var(--v2-text-muted);
-  }
 
   /* V2 Glass Card */
-  .v2-glass {
-    background: var(--v2-glass-bg);
-    border: 1px solid var(--v2-glass-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
-
-  .v2-glass:hover {
-    background: var(--v2-glass-bg-hover);
-    border-color: var(--v2-glass-border-hover);
-  }
 
   /* V2 Solid Card */
-  .v2-card {
-    background: var(--v2-card-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .v2-card:hover {
-    background: var(--v2-card-bg-hover);
-  }
 
   /* V2 Paper Card - White floating cards with magenta ambient shadows + grain */
   .v2-paper,
@@ -1274,56 +1217,9 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
     transform: translateY(-1px);
   }
 
-  .v2-paper-lg {
-    background: var(--v2-paper-bg);
-    box-shadow: var(--v2-shadow-paper-lg);
-    transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .v2-paper-lg:hover {
-    box-shadow: var(--v2-shadow-paper-hover);
-    transform: translateY(-4px);
-  }
-
   /* Paper card without hover effects (for static elements) */
-  .v2-paper-static {
-    background: var(--v2-paper-bg);
-    box-shadow: var(--v2-shadow-paper);
-  }
 
   /* Texture utilities */
-  .v2-texture-dots {
-    position: relative;
-    isolation: isolate;
-  }
-  .v2-texture-dots::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url('/textures/dot-grid-pattern.svg');
-    background-size: 24px 24px;
-    opacity: 0.15;
-    pointer-events: none;
-    z-index: -1;
-    border-radius: inherit;
-  }
-
-  .v2-texture-mesh {
-    position: relative;
-    isolation: isolate;
-  }
-  .v2-texture-mesh::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url('/textures/abstract-mesh-magenta.svg');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.06;
-    pointer-events: none;
-    z-index: -1;
-    border-radius: inherit;
-  }
 
 /* Hide scrollbar for horizontal scroll containers */
 .hide-scrollbar::-webkit-scrollbar {
@@ -1331,21 +1227,6 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
 }
 
   /* Text utilities for white backgrounds */
-  .v2-text-dark-primary {
-    color: var(--v2-text-on-white-primary);
-  }
-
-  .v2-text-dark-secondary {
-    color: var(--v2-text-on-white-secondary);
-  }
-
-  .v2-text-dark-tertiary {
-    color: var(--v2-text-on-white-tertiary);
-  }
-
-  .v2-text-dark-muted {
-    color: var(--v2-text-on-white-muted);
-  }
 
   /* V2 Container */
   .v2-container {
@@ -1385,49 +1266,19 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
     }
   }
 
-  .v2-container-narrow {
-    max-width: var(--v2-container-narrow);
-  }
-
-  .v2-container-wide {
-    max-width: var(--v2-container-wide);
-  }
-
   /* Article measure.
      v2-container-narrow (896px) minus its own 64px padding minus the card's
      64px padding left a 608px text column — about 52 characters per line at
      18px, where comfortable prose is 60-75. 64rem yields ~768px, or ~66
      characters. Used by every section of the blog detail page so the title,
      body and "read next" rail stay aligned to the same column. */
-  .v2-container-article {
-    max-width: 64rem;
-  }
 
   /* V2 Section Spacing — in @layer base so Tailwind utilities (pt-40 etc.) can override */
 @layer base {
-  .v2-section {
-    padding-top: var(--v2-section-padding);
-    padding-bottom: var(--v2-section-padding);
-    /* Add `paint` containment so each section gets its own paint
-       boundary — scrolling one section no longer triggers repaints in
-       other sections. NB: kept layout+style+paint and stopped short of
-       `content-visibility: auto` because the horizontal-pin section
-       (ServicesSectionV2) measures its width at GSAP setup time, and
-       content-visibility would zero that out for off-screen mounts. */
-    contain: layout style paint;
-  }
-
-  .v2-section-gap {
-    margin-top: var(--v2-section-gap);
-  }
 
   /* Opt-in: any below-the-fold section that DOES NOT pin/scrub can use
      this class to skip layout/paint when off-screen. Safe for static
      content sections. Apply to existing sections in a follow-up pass. */
-  .v2-section-defer {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 800px;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1457,21 +1308,13 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
 
   /* .v2-section (defined in @layer base above) is the standard rhythm.
      This is the chapter break — used only where the page changes subject. */
-  .v2-section--chapter {
-    padding-top: var(--v2-section-chapter);
-    padding-bottom: var(--v2-section-chapter);
-  }
 
   /* Collapses the seam when two same-tone sections sit back to back, so the
      pair reads as one movement rather than two stacked blocks. */
-  .v2-section--tight-top { padding-top: 0; }
-  .v2-section--tight-bottom { padding-bottom: 0; }
 
   /* The two recurring page-level roles. These were previously written as bare
      pt-40 (19 uses) and pb-32 (20 uses) alongside .v2-section, which made the
      rhythm look like ten arbitrary numbers when it was really four roles. */
-  .v2-section--hero  { padding-top: var(--v2-section-hero); }
-  .v2-section--outro { padding-bottom: var(--v2-section-chapter); }
 
   /* REQUIRED on any section that pins a child with GSAP ScrollTrigger.
      .v2-section sets `contain: layout style paint` for scroll performance,
@@ -1479,87 +1322,25 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
      fixed-position descendants — which is exactly how ScrollTrigger pins.
      Without this opt-out the pinned content collapses into the section box.
      Same failure mode as backdrop-filter on a fixed-positioned child. */
-  .v2-section--pinned { contain: none; }
 
   /* ── Tone: tint — the page's resting state ──────────────────────────── */
   /* Transparent, so the V2PageWrapper gradient and stars show through.
      This is the default and should still be the most common tone. */
-  .v2-tone-tint {
-    background-color: transparent;
-  }
 
   /* ── Tone: paper — a calm light band ────────────────────────────────── */
   /* Opaque, so it visibly lifts out of the pink wash. Use for sections whose
      content is dense and needs a quiet ground (feeds, grids, forms). */
-  .v2-tone-paper {
-    background-color: var(--v2-tone-paper-bg);
-  }
 
   /* ── Tone: deep — the anchor ────────────────────────────────────────── */
   /* The heaviest value on the page. Use sparingly: one, at most two per page.
      Sits fractionally darker than the dark feature cards (#1c0e16–#2a1220)
      so those cards still read as raised against it. */
-  .v2-tone-deep {
-    /* Deliberately kept below the darkest feature card (#1c0e16) at every
-       stop, so inset dark cards still read as raised panels rather than
-       dissolving into the ground. */
-    background-image: linear-gradient(
-      170deg,
-      #140a10 0%,
-      #180b13 55%,
-      #1b0d16 100%
-    );
-
-    /* Text tokens flip so .v2-text-* consumers stay legible */
-    --v2-text-primary: #fdf7fa;
-    --v2-text-secondary: rgba(253, 247, 250, 0.78);
-    --v2-text-tertiary: rgba(253, 247, 250, 0.60);
-    --v2-text-muted: rgba(253, 247, 250, 0.45);
-
-    /* Surface tokens flip so glass/solid cards don't blow out on dark */
-    --v2-glass-bg: rgba(255, 255, 255, 0.06);
-    --v2-glass-bg-hover: rgba(255, 255, 255, 0.10);
-    --v2-glass-border: rgba(255, 255, 255, 0.12);
-    --v2-glass-border-hover: rgba(255, 255, 255, 0.22);
-    --v2-card-bg: rgba(255, 255, 255, 0.05);
-    --v2-card-bg-hover: rgba(255, 255, 255, 0.08);
-
-    /* Magenta-on-magenta disappears, so the accent warms toward rose */
-    --v2-text-accent: #ff9dbd;
-    --v2-chip-bg: rgba(255, 255, 255, 0.08);
-    --v2-chip-border: rgba(255, 255, 255, 0.16);
-    --v2-chip-text: #ffc4d8;
-  }
 
   /* ── Tone: accent — reserved for the closing CTA ────────────────────── */
   /* One per page maximum, and only where we are asking for the click. */
-  .v2-tone-accent {
-    background-image: linear-gradient(
-      135deg,
-      var(--color-fm-magenta-800, #8c213d) 0%,
-      var(--color-fm-purple-800, #451530) 100%
-    );
-
-    --v2-text-primary: #fffafc;
-    --v2-text-secondary: rgba(255, 250, 252, 0.82);
-    --v2-text-tertiary: rgba(255, 250, 252, 0.64);
-    --v2-text-muted: rgba(255, 250, 252, 0.48);
-
-    --v2-glass-bg: rgba(255, 255, 255, 0.10);
-    --v2-glass-border: rgba(255, 255, 255, 0.18);
-
-    --v2-text-accent: #ffd0a8;
-    --v2-chip-bg: rgba(255, 255, 255, 0.12);
-    --v2-chip-border: rgba(255, 255, 255, 0.22);
-    --v2-chip-text: #fff3f7;
-  }
 
   /* Dark tones sit on an opaque ground, so the wrapper's decorative stars
      would be occluded anyway — drop them to save the paint. */
-  .v2-tone-deep .v2-star,
-  .v2-tone-accent .v2-star {
-    display: none;
-  }
 
   /* ── Type scale ─────────────────────────────────────────────────────────
      Replaces 20 distinct ad-hoc responsive size chains (text-4xl md:text-5xl
@@ -1571,43 +1352,8 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
      still wins where a genuine one-off is needed — but the one-off then has
      to be written deliberately rather than inherited by copy-paste. */
 
-  .v2-display {
-    font-size: clamp(2.5rem, 5.2vw, 4.25rem);   /* 40 → 68px */
-    line-height: 1.04;
-    letter-spacing: -0.022em;
-    text-wrap: balance;
-  }
-
-  .v2-h2 {
-    font-size: clamp(2rem, 3.6vw, 3rem);        /* 32 → 48px */
-    line-height: 1.1;
-    letter-spacing: -0.016em;
-    text-wrap: balance;
-  }
-
-  .v2-h3 {
-    font-size: clamp(1.5rem, 2.2vw, 2rem);      /* 24 → 32px */
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    text-wrap: balance;
-  }
-
-  .v2-h4 {
-    font-size: clamp(1.125rem, 1.4vw, 1.375rem); /* 18 → 22px */
-    line-height: 1.3;
-    letter-spacing: -0.005em;
-  }
-
   /* ── Tone-aware consumers ───────────────────────────────────────────── */
-  .v2-text-accent { color: var(--v2-text-accent); }
-
-  .v2-chip {
-    background-color: var(--v2-chip-bg);
-    border: 1px solid var(--v2-chip-border);
-    color: var(--v2-chip-text);
-  }
 }
-
 
   /* V2 Brand Shadows */
   .shadow-fm-sm {
@@ -1632,20 +1378,6 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
       var(--color-fm-magenta-600) 0%,
       var(--color-fm-magenta-700) 50%,
       var(--color-fm-magenta-800) 100%
-    );
-  }
-
-  .v2-gradient-warm {
-    background: linear-gradient(135deg,
-      var(--color-fm-orange-500) 0%,
-      var(--color-fm-magenta-600) 100%
-    );
-  }
-
-  .v2-gradient-deep {
-    background: linear-gradient(135deg,
-      var(--color-fm-magenta-700) 0%,
-      var(--color-fm-purple-700) 100%
     );
   }
 
@@ -1730,116 +1462,25 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
         0 0 0 transparent;
     }
   }
-
-  .v2-accent-solid {
-    color: var(--color-fm-magenta-600);
-  }
-
-  .v2-accent-warm {
-    background: linear-gradient(135deg,
-      var(--color-fm-orange-300) 0%,
-      var(--color-fm-magenta-400) 100%
-    );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    V2 BADGE VARIANTS - Differentiated section markers
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.v2-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.025em;
-}
-
 /* Default glass badge */
-.v2-badge-glass {
-  background: var(--v2-glass-bg);
-  border: 1px solid var(--v2-glass-border);
-  backdrop-filter: blur(12px);
-  color: var(--v2-text-primary);
-}
 
 /* Solid white badge for dark sections */
-.v2-badge-solid {
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--color-fm-magenta-700);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
 
 /* Gradient badge for emphasis */
-.v2-badge-gradient {
-  background: linear-gradient(135deg,
-    var(--color-fm-magenta-600) 0%,
-    var(--color-fm-magenta-500) 100%
-  );
-  color: white;
-  box-shadow: 0 4px 12px rgba(168, 37, 72, 0.3);
-}
 
 /* Outline badge for subtle marking */
-.v2-badge-outline {
-  background: transparent;
-  border: 2px solid var(--color-fm-magenta-400);
-  color: var(--color-fm-magenta-300);
-}
 
 /* Light badge for white card CTA sections */
-.v2-badge-light {
-  background: var(--color-fm-magenta-50);
-  border: 1px solid rgba(201, 50, 93, 0.15);
-  color: var(--color-fm-magenta-700);
-}
 
 /* ── Tag badges (compact pills for content tags) ── */
 
-.v2-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.v2-tag-neutral {
-  background: var(--color-fm-neutral-100);
-  color: var(--color-fm-neutral-600);
-}
-
-.v2-tag-neutral:hover {
-  background: var(--color-fm-magenta-50);
-  color: var(--color-fm-magenta-600);
-}
-
-.v2-tag-magenta {
-  background: var(--color-fm-magenta-50);
-  color: var(--color-fm-magenta-600);
-}
-
-.v2-tag-magenta:hover {
-  background: var(--color-fm-magenta-100);
-  color: var(--color-fm-magenta-700);
-}
-
 /* Overlay tag for image cards */
-.v2-tag-overlay {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-  color: white;
-  font-weight: 600;
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    V2 UNIFIED BUTTON SYSTEM
@@ -1911,28 +1552,11 @@ section:not(.v2-section):not([class*="v2-"]):not([class*="pt-"]):not([class*="py
 }
 
 /* Ensure button elements get correct backgrounds from variants */
-button.v2-btn-primary {
-  background: linear-gradient(135deg, #8c1d4a 0%, #a82548 100%) !important;
-  color: white !important;
-  border-color: #8c1d4a !important;
-}
-
-button.v2-btn-secondary {
-  background: transparent !important;
-  color: #3d2030 !important;
-  border-color: rgba(201, 50, 93, 0.25) !important;
-}
 
 button.v2-btn-magenta {
   background: linear-gradient(135deg, var(--color-fm-magenta-600) 0%, var(--color-fm-magenta-700) 100%) !important;
   color: white !important;
   border-color: transparent !important;
-}
-
-button.v2-btn-outline {
-  background: transparent !important;
-  color: var(--color-fm-magenta-700) !important;
-  border-color: var(--color-fm-magenta-300) !important;
 }
 
 .v2-btn:focus-visible {
@@ -1953,30 +1577,8 @@ button.v2-btn-outline {
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* Primary: Magenta button on light background - MAIN CTA */
-.v2-btn-primary {
-  background: linear-gradient(135deg, #8c1d4a 0%, #a82548 100%);
-  color: white;
-  border-color: #8c1d4a;
-  box-shadow: 0 10px 40px rgba(201, 50, 93, 0.25);
-}
-
-.v2-btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(201, 50, 93, 0.35);
-  background: linear-gradient(135deg, #a82548 0%, #8c213d 100%);
-}
 
 /* Secondary: Ghost/outline on light background - SECONDARY ACTION */
-.v2-btn-secondary {
-  background: transparent;
-  color: #3d2030;
-  border-color: rgba(201, 50, 93, 0.25);
-}
-
-.v2-btn-secondary:hover:not(:disabled) {
-  background: rgba(201, 50, 93, 0.06);
-  border-color: rgba(201, 50, 93, 0.4);
-}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    COLOR VARIANTS - FOR LIGHT BACKGROUNDS (White cards, light sections)
@@ -2003,41 +1605,12 @@ button.v2-btn-outline {
 }
 
 /* Outline: Magenta outline on light background - SECONDARY ACTION */
-.v2-btn-outline {
-  background: transparent;
-  color: var(--color-fm-magenta-700);
-  border-color: var(--color-fm-magenta-300);
-}
-
-.v2-btn-outline:hover:not(:disabled) {
-  background: var(--color-fm-magenta-50);
-  border-color: var(--color-fm-magenta-400);
-  color: var(--color-fm-magenta-800);
-}
 
 /* Neutral: Gray button on light background - TERTIARY ACTION */
-.v2-btn-neutral {
-  background: var(--color-fm-neutral-100);
-  color: var(--color-fm-neutral-700);
-  border-color: var(--color-fm-neutral-200);
-}
-
-.v2-btn-neutral:hover:not(:disabled) {
-  background: var(--color-fm-neutral-200);
-  border-color: var(--color-fm-neutral-300);
-  color: var(--color-fm-neutral-800);
-}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    SIZE MODIFIERS
    ───────────────────────────────────────────────────────────────────────────── */
-
-.v2-btn-sm {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.875rem;
-  gap: 0.375rem;
-  min-height: 44px;
-}
 
 .v2-btn-lg {
   padding: 1.125rem 2.5rem;
@@ -2074,37 +1647,10 @@ button.v2-btn-outline {
 
    GSAP power2.out == cubic ease-out == cubic-bezier(0.215, 0.61, 0.355, 1).
    ─────────────────────────────────────────────────────────────────────────── */
-@keyframes v2HeroRise {
-  from { opacity: 0; transform: translateY(var(--v2-hero-rise, 20px)); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes v2HeroFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.v2-hero-enter {
-  opacity: 0;
-  animation-name: v2HeroRise;
-  animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
-  animation-fill-mode: both;
-}
 
 /* Per-element offsets — matched 1:1 to the old timeline positions */
-.v2-hero-enter--headline  { --v2-hero-rise: 30px; animation-duration: 0.5s;  animation-delay: 0.1s;  }
-.v2-hero-enter--rotating  { --v2-hero-rise: 25px; animation-duration: 0.45s; animation-delay: 0.25s; }
-.v2-hero-enter--subhead   { --v2-hero-rise: 20px; animation-duration: 0.4s;  animation-delay: 0.4s;  }
-.v2-hero-enter--cta       { --v2-hero-rise: 15px; animation-duration: 0.35s; animation-delay: 0.55s; }
-.v2-hero-enter--mascot    { --v2-hero-rise: 20px; animation-duration: 0.5s;  animation-delay: 0.35s; }
-.v2-hero-enter--scroll    { animation-name: v2HeroFadeIn; animation-duration: 0.3s; animation-delay: 0.8s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .v2-hero-enter {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
 }
 
 /* Hero main float */
@@ -2114,10 +1660,6 @@ button.v2-btn-outline {
 }
 
 /* Hero scroll indicator bounce */
-@keyframes heroScrollBounce {
-  0%, 100% { transform: translateY(0); opacity: 1; }
-  50% { transform: translateY(8px); opacity: 0.5; }
-}
 
 /* Contact section float */
 @keyframes v2ContactFloat {
@@ -2291,24 +1833,6 @@ button.v2-btn-outline {
 }
 
 /* Depth particles floating with scale for depth illusion */
-@keyframes depthParticleFloat {
-  0%, 100% {
-    transform: scale(1) translate(0, 0);
-    opacity: 0.3;
-  }
-  25% {
-    transform: scale(1.5) translate(5px, -8px);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(0.8) translate(-3px, 5px);
-    opacity: 0.2;
-  }
-  75% {
-    transform: scale(1.3) translate(-5px, -3px);
-    opacity: 0.5;
-  }
-}
 
 /* Nebula floating animation - slow ethereal drift */
 @keyframes nebulaFloat {
@@ -2462,14 +1986,6 @@ button.v2-btn-outline {
 }
 
 /* Wave animation for flowing effects */
-@keyframes bgWave {
-  0%, 100% {
-    transform: translateX(0) scaleY(1);
-  }
-  50% {
-    transform: translateX(-5%) scaleY(1.05);
-  }
-}
 
 /* Utility classes for background animations */
 .bg-animate-float {
@@ -2616,11 +2132,6 @@ button.v2-btn-outline {
 
 /* Mobile performance: disable backdrop-blur on low-end devices */
 @media (max-width: 767px) {
-  .v2-glass,
-  .v2-badge-glass {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -102,7 +102,7 @@ function ClientLoginForm() {
   };
 
   return (
-    <div className="min-h-screen lg:h-screen lg:max-h-screen flex flex-col lg:flex-row lg:overflow-hidden">
+    <main id="main-content" className="min-h-screen lg:h-screen lg:max-h-screen flex flex-col lg:flex-row lg:overflow-hidden">
       {/* ================================================================== */}
       {/*  LEFT PANEL - Brand side (hidden on mobile, shown on lg+)          */}
       {/* ================================================================== */}
@@ -399,6 +399,6 @@ function ClientLoginForm() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

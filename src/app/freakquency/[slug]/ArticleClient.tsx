@@ -10,7 +10,9 @@ import Link from 'next/link';
 import {
   ArrowLeft, ArrowRight, Clock, User, Tag, Calendar, Share2,
 } from 'lucide-react';
-import { V2PageWrapper } from '@/components/layouts/V2PageWrapper';
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
 import type { PublicPost } from '@/lib/blog-data-public';
 
 interface BlogPostClientProps {
@@ -26,28 +28,30 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
   });
 
   return (
-    <V2PageWrapper>
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
       {/* Hero */}
-      <section className="relative z-10 v2-section pt-40">
-        <div className="v2-container v2-container-article">
+      <section className="relative z-10 py-site-section pt-40">
+        <div className="site-measure site-measure--narrow">
           <Link
             href="/freakquency"
-            className="inline-flex items-center gap-2 v2-text-secondary hover:v2-text-primary transition-colors mb-8 text-sm py-2"
+            className="inline-flex items-center gap-2 text-site-muted hover:text-site-text transition-colors mb-8 text-sm py-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Freakquency
           </Link>
 
-          <div className="v2-badge v2-badge-glass mb-6">
-            <Tag className="w-4 h-4 v2-text-primary" />
-            <span className="v2-text-primary">{post.category}</span>
+          <div className="site-chip mb-6">
+            <Tag className="w-4 h-4 text-site-text" />
+            <span className="text-site-text">{post.category}</span>
           </div>
 
-          <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold v2-text-primary mb-6 leading-tight">
+          <h1 className="font-site-display text-3xl md:text-4xl lg:text-5xl font-bold text-site-text mb-6 leading-tight">
             {post.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-4 v2-text-secondary text-sm mb-6">
+          <div className="flex flex-wrap items-center gap-4 text-site-muted text-sm mb-6">
             <span className="flex items-center gap-1.5">
               <User className="w-4 h-4" />
               {post.author}
@@ -67,7 +71,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
               {post.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 rounded-full text-xs font-medium v2-text-secondary"
+                  className="px-3 py-1 rounded-full text-xs font-medium text-site-muted"
                   style={{ background: 'rgba(201, 50, 93, 0.08)' }}
                 >
                   #{tag}
@@ -88,9 +92,9 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
       </section>
 
       {/* Article body */}
-      <section className="relative z-10 v2-section pt-0">
-        <div className="v2-container v2-container-article">
-          <div className="v2-paper-lg rounded-3xl p-8 md:p-12 lg:p-16">
+      <section className="relative z-10 py-site-section pt-0">
+        <div className="site-measure site-measure--narrow">
+          <div className="site-surface rounded-3xl p-8 md:p-12 lg:p-16">
             <div
               /* `prose prose-lg` were inert — @tailwindcss/typography is not
                  installed. `max-w-none` also beat the measure set by
@@ -100,9 +104,9 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
 
-            <div className="mt-12 pt-8 border-t border-fm-neutral-200">
+            <div className="mt-12 pt-8 border-t border-site-line">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <span className="flex items-center gap-2 text-fm-neutral-700 font-semibold">
+                <span className="flex items-center gap-2 text-site-text font-semibold">
                   <Share2 className="w-5 h-5" />
                   Share this article
                 </span>
@@ -111,7 +115,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
                     href={`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-fm-neutral-100 text-fm-neutral-700 rounded-full text-sm font-medium hover:bg-fm-magenta-50 hover:text-fm-magenta-600 transition-all"
+                    className="px-4 py-2 bg-site-raised text-site-text rounded-full text-sm font-medium hover:bg-site-raised hover:text-site-accent transition-all"
                   >
                     WhatsApp
                   </a>
@@ -119,7 +123,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
                     href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-fm-neutral-100 text-fm-neutral-700 rounded-full text-sm font-medium hover:bg-fm-magenta-50 hover:text-fm-magenta-600 transition-all"
+                    className="px-4 py-2 bg-site-raised text-site-text rounded-full text-sm font-medium hover:bg-site-raised hover:text-site-accent transition-all"
                   >
                     LinkedIn
                   </a>
@@ -127,7 +131,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
                     href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-fm-neutral-100 text-fm-neutral-700 rounded-full text-sm font-medium hover:bg-fm-magenta-50 hover:text-fm-magenta-600 transition-all"
+                    className="px-4 py-2 bg-site-raised text-site-text rounded-full text-sm font-medium hover:bg-site-raised hover:text-site-accent transition-all"
                   >
                     Twitter
                   </a>
@@ -140,9 +144,9 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
 
       {/* Related */}
       {related.length > 0 && (
-        <section className="relative z-10 v2-section">
-          <div className="v2-container v2-container-article">
-            <h2 className="font-display text-2xl md:text-3xl font-bold v2-text-primary mb-8">
+        <section className="relative z-10 py-site-section">
+          <div className="site-measure site-measure--narrow">
+            <h2 className="font-site-display text-2xl md:text-3xl font-bold text-site-text mb-8">
               Related Articles
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -150,16 +154,16 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
                 <Link
                   key={r.slug}
                   href={`/freakquency/${r.slug}`}
-                  className="group v2-paper rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  className="group site-surface rounded-2xl p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="v2-tag v2-tag-magenta">{r.category}</span>
-                    <span className="text-fm-neutral-500 text-xs">{r.readTime}</span>
+                    <span className="site-chip site-chip">{r.category}</span>
+                    <span className="text-site-muted text-xs">{r.readTime}</span>
                   </div>
-                  <h3 className="font-display text-lg font-bold text-fm-neutral-900 mb-2 group-hover:text-fm-magenta-700 transition-colors line-clamp-2">
+                  <h3 className="font-site-display text-lg font-bold text-site-text mb-2 group-hover:text-site-accent transition-colors line-clamp-2">
                     {r.title}
                   </h3>
-                  <p className="text-fm-neutral-600 text-sm line-clamp-2">{r.excerpt}</p>
+                  <p className="text-site-muted text-sm line-clamp-2">{r.excerpt}</p>
                 </Link>
               ))}
             </div>
@@ -168,27 +172,29 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
       )}
 
       {/* CTA */}
-      <section className="relative z-10 v2-section pb-32">
-        <div className="v2-container v2-container-article">
-          <div className="v2-paper rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-fm-neutral-900 mb-6 leading-tight">
-              Ready to Grow Your <span className="text-fm-magenta-600">Business</span>?
+      <section className="relative z-10 py-site-section pb-32">
+        <div className="site-measure site-measure--narrow">
+          <div className="site-surface rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
+            <h2 className="font-site-display text-3xl md:text-4xl font-bold text-site-text mb-6 leading-tight">
+              Ready to Grow Your <span className="text-site-accent">Business</span>?
             </h2>
-            <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">
+            <p className="text-site-muted mb-8 max-w-xl mx-auto">
               Turn these insights into action. Our team can help you implement proven strategies that drive real results.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/get-started" className="v2-btn v2-btn-magenta">
+              <Link href="/get-started" className="site-button">
                 Get a Free Consultation
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link href="/contact" className="v2-btn v2-btn-outline">
+              <Link href="/contact" className="site-button site-button--quiet">
                 Talk to Us
               </Link>
             </div>
           </div>
         </div>
       </section>
-    </V2PageWrapper>
+    </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }

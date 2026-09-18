@@ -81,30 +81,57 @@ for f in $(find src/app -name loading.tsx); do grep -rl "notFound()" $(dirname "
 canonical to every child. `blog/layout.tsx` declares `/blog`, so `[slug]` must
 override it — otherwise every post tells Google it is a duplicate of the listing.
 
-## V2 Design System
+## Design Systems — two, on purpose
 
-### Color Variables
-```css
---color-fm-magenta-600: #c9325d  /* Primary brand */
---color-fm-magenta-700: #a82548
---color-fm-purple-700: #4a1942
---color-fm-neutral-500: #525251  /* Body text on white */
---color-fm-neutral-600: #404040
---color-fm-neutral-700: #2d2d2d  /* Strong text */
---color-fm-neutral-900: #0f0f0f  /* Headings on white */
-```
+The **public site** and the **portals** use different systems. They were
+separated deliberately: 80% of `fm-*` usage is admin/client/talent code, so the
+public site could not be restyled in place without repainting the dashboards.
 
-### Text Classes
-**On Dark Backgrounds (V2PageWrapper):** `v2-text-primary` (white), `v2-text-secondary` (85%), `v2-text-tertiary` (70%), `v2-accent` (gradient highlight)
+### Public site — `site-*` tokens
 
-**On White Cards (v2-paper):** `text-fm-neutral-900` (headings), `text-fm-neutral-700` (subheadings), `text-fm-neutral-600` (body), `text-fm-magenta-600` (accent)
+Every public route renders `SiteShell` + `SiteHeader` + `SiteFooter` and is
+scoped by `[data-site]`.
 
-### UI Classes
-- **Cards**: `v2-paper`, `v2-paper-sm`, `v2-paper-lg`
-- **Buttons (dark bg)**: `v2-btn v2-btn-primary` (white), `v2-btn v2-btn-secondary` (glass)
-- **Buttons (white card)**: `v2-btn v2-btn-magenta` (gradient), `v2-btn v2-btn-outline`
-- **Badges**: `v2-badge v2-badge-glass|gradient|outline|solid`
-- **Layout**: `v2-container`, `v2-container-narrow`, `v2-container-wide`, `v2-section`
+- **Tokens**: `src/styles/site-tokens.css`. Light (warm bone `#F7F4EF`) is the
+  default; dark (`#0B0A0C`) is opt-in via the header toggle, which sets
+  `data-theme="dark"` on `<html>`. `prefers-color-scheme` is deliberately
+  ignored.
+- **Type**: Instrument Serif (display) + DM Sans (text), via `font-site-display`
+  / `font-site-sans`. Sizes are `text-site-display|h1|h2|h3|lead|body|label`.
+- **Colour**: `site-ground`, `site-raised`, `site-text`, `site-muted`,
+  `site-accent`, `site-line`, `site-line-soft`.
+- **Rhythm**: `py-site-section`, `px-site-gutter`, `rounded-site-sm|md|lg`.
+- **Primitives**: `src/components/site/` — `Section`, `Container`, `Display`,
+  `Text`, `Label`, `Rule`, `Prose`, `StillFrame`, `FilmWall`, `LogoWall`,
+  `ThemeToggle`, and the form set in `Field.tsx`.
+- **Motion**: `src/lib/motion/` only. GSAP is imported dynamically and never at
+  module scope; `prefersReducedMotion()` is a live check, not a cached boolean.
+
+**Tailwind v4 rules that bite here:**
+- `@theme` resolves once at build time, so a themeable token must be an
+  indirection: `@theme { --color-site-ground: var(--site-ground) }` with the
+  real value on `:root` / `:root[data-theme="dark"]`.
+- Only `--color-*`, `--font-*`, `--text-*`, `--leading-*`, `--tracking-*`,
+  `--radius-*`, `--spacing-*` generate utilities. The legacy `--font-size-*`,
+  `--line-height-*`, `--border-radius-*` tokens generate **nothing**.
+- Never override Tailwind's own `--font-sans`: it repoints `font-sans` across
+  every portal page.
+
+### Portals — `v2-*` / `fm-*` classes
+
+Still in use by `/admin`, `/client`, `/creativeminds/portal`, `/talent/[slug]`
+and the login screens. Surviving classes: `.v2-btn`, `.v2-btn-magenta`,
+`.v2-btn-lg`, `.v2-btn-full`, `.v2-paper`, `.v2-paper-sm`, `.v2-container`,
+`.v2-accent` and `.v2-gradient-*`, plus the whole `--color-fm-*` palette.
+
+63 other `v2-*` classes and their rules were deleted once no public route used
+them. Before deleting any more, grep both CSS **and** TSX — some animations are
+invoked from inline `style={{ animation: '…' }}`.
+
+### Services
+
+One catalogue: `src/lib/services-catalogue.ts`. Link via `serviceHref(id)`.
+There were five divergent copies; do not start a sixth.
 
 ## Authentication
 
@@ -307,41 +334,42 @@ Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`, amended by
 
 ## Common UI Patterns
 
-### Page Section Header (Dark Background)
-```tsx
-<div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
-  <div className="v2-badge v2-badge-glass mb-6">
-    <Icon className="w-4 h-4 v2-text-primary" />
-    <span className="v2-text-primary">Badge Text</span>
-  </div>
-  <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold v2-text-primary mb-8 leading-tight">
-    Section <span className="v2-accent">Title</span>
-  </h2>
-  <p className="text-lg md:text-xl v2-text-secondary leading-relaxed">Description</p>
-</div>
-```
+### Public page shell
 
-### CTA on White Card
 ```tsx
-<div className="v2-paper rounded-3xl p-10 lg:p-14" style={{ textAlign: 'center' }}>
-  <h2 className="font-display text-3xl font-bold text-fm-neutral-900 mb-6">
-    CTA <span className="text-fm-magenta-600">Title</span>
-  </h2>
-  <p className="text-fm-neutral-600 mb-8 max-w-xl mx-auto">Description</p>
-  <Link href="/get-started" className="v2-btn v2-btn-magenta">Primary CTA</Link>
-</div>
-```
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { Container, Display, Section, Text } from '@/components/site/primitives';
 
-### V2PageWrapper (required for all public pages)
-```tsx
-import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 export default function Page() {
-  return <V2PageWrapper>{/* content */}</V2PageWrapper>;
+  return (
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
+        <Section>
+          <Container>
+            <Display level="h1">Heading</Display>
+            <Text muted className="mt-6">Body</Text>
+          </Container>
+        </Section>
+      </main>
+      <SiteFooter />
+    </SiteShell>
+  );
 }
 ```
 
-### 3D Brain Decorations
-Assets: `/3dasset/brain-learning.png`, `brain-celebrating.png`, `brain-strategy.png`, `brain-creative.png`, `brain-teaching.png`
+`SiteShell` does NOT wrap children in `<main>` — the header and footer are
+children too, so each page renders its own `<main id="main-content">` between
+them.
+
+### 3D brain renders
+
+`/3dasset/brain-*.webp`. On the public site they take
+`filter: grayscale(1) brightness(0.72) contrast(1.45)` — in native colours the
+renders are pink and purple and read as clip art against bone paper. Use one,
+large, per page.
 
 ## Development Commands
 
@@ -388,8 +416,8 @@ GOOGLE_SHEETS_PRIVATE_KEY, GOOGLE_SHEETS_CLIENT_EMAIL, GOOGLE_SHEETS_SPREADSHEET
 ## Do's and Don'ts
 
 ### Do
-- Use `V2PageWrapper` for all public pages
-- Use inline `style={{ textAlign: 'center' }}` (not `text-center` class)
+- Use `SiteShell` + `SiteHeader` + `SiteFooter` for all public pages
+- Use inline `style={{ textAlign: 'center' }}` (not `text-center` class) — portal code only
 - Use `requireAdminAuth`/`requireClientAuth`/`requireTalentAuth` in ALL respective API routes
 - Use `resolveClientId()` in all client portal API routes
 - Use `ApiResponse.success()`/`.error()` for standardized responses
@@ -407,7 +435,7 @@ GOOGLE_SHEETS_PRIVATE_KEY, GOOGLE_SHEETS_CLIENT_EMAIL, GOOGLE_SHEETS_SPREADSHEET
 - Add a `loading.tsx` above any page that calls `notFound()` (returns 200, not 404)
 - Write a public-form row without `captureMeta(request)`
 - Store secrets in client code (`NEXT_PUBLIC_` only for public values)
-- Mix V1 and V2 design patterns
+- Use `v2-*` or `fm-*` classes on a public page (they are portal-only now)
 - Import from `emitter.ts` in client components (use `events/types.ts`)
 
 ## Related Documentation

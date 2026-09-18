@@ -125,7 +125,8 @@ function ProfileShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
       </div>
-      {children}
+      {/* ConditionalLayout used to supply this landmark; it no longer exists. */}
+      <main id="main-content">{children}</main>
     </div>
   );
 }

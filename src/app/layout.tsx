@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans, Instrument_Serif, DM_Sans } from "next/font/google";
 import "./globals.css";
-import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import { SmoothScrollProvider } from "@/providers/SmoothScrollProvider";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { WebVitals } from "@/components/WebVitals";
@@ -260,7 +259,7 @@ export default function RootLayout({
         </a>
         <QueryProvider>
           <SmoothScrollProvider>
-            <ConditionalLayout>{children}</ConditionalLayout>
+            {children}
           </SmoothScrollProvider>
         </QueryProvider>
         <WebVitals />

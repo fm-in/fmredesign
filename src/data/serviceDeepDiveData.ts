@@ -1,14 +1,16 @@
-import {
-  Search, Megaphone, BarChart3, Palette, Globe, Video,
-  FileSearch, Code, Link2, MapPin, FileText,
-  PenTool, Camera, Users, Heart, TrendingUp,
-  Target, DollarSign, ShoppingCart, Repeat,
-  Lightbulb, Eye, Brush, Package,
-  Layout, Smartphone, Gauge, ShoppingBag,
-  BookOpen, Film, Mail, BarChart,
-  type LucideIcon,
-} from 'lucide-react';
-
+/**
+ * Service detail, rendered inline on `/services`.
+ *
+ * The lucide icons were stripped when `ServiceDeepDiveModal` was deleted —
+ * they were decorative there and unused here, and importing them pulled React
+ * components into what is now a pure data module.
+ *
+ * NOTE: `resultsCTA.metrics` is retained by the type but deliberately NOT
+ * rendered. Those eighteen figures ("150%+ average traffic increase", "3x more
+ * qualified leads", "100+ brands transformed") are hardcoded with nothing
+ * behind them. They stay here only so deleting them is a separate, visible
+ * decision rather than a silent one.
+ */
 // ─── Types ──────────────────────────────────────────────────────
 
 export interface HookData {
@@ -20,7 +22,6 @@ export interface HookData {
 }
 
 export interface Pillar {
-  icon: LucideIcon;
   name: string;
   deliverables: string[];
 }
@@ -31,7 +32,6 @@ export interface WhatWeDoData {
 }
 
 export interface Persona {
-  icon: LucideIcon;
   title: string;
   description: string;
   painPoint: string;
@@ -43,7 +43,6 @@ export interface WhoItsForData {
 }
 
 export interface Step {
-  icon: LucideIcon;
   title: string;
   description: string;
   duration: string;
@@ -67,7 +66,6 @@ export interface ResultsCTAData {
 
 export interface ServiceDeepDive {
   serviceId: string;
-  icon: LucideIcon;
   title: string;
   colorClass: string;
   accentColorRgb: string;
@@ -84,7 +82,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
   // ── SEO ─────────────────────────────────────────────────────
   {
     serviceId: 'seo',
-    icon: Search,
     title: 'Search Engine Optimization',
     colorClass: 'v2-gradient-seo',
     accentColorRgb: '224, 77, 125',
@@ -101,7 +98,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'We build SEO strategies that compound over time — turning organic search into your most reliable growth channel.',
       pillars: [
         {
-          icon: FileSearch,
           name: 'Technical Foundation',
           deliverables: [
             'Site architecture audit',
@@ -111,7 +107,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: FileText,
           name: 'Content & Keywords',
           deliverables: [
             'Keyword gap analysis',
@@ -121,7 +116,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Link2,
           name: 'Authority Building',
           deliverables: [
             'Backlink acquisition',
@@ -137,25 +131,21 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'SEO works for every business that wants sustainable, long-term organic growth.',
       personas: [
         {
-          icon: ShoppingCart,
           title: 'E-commerce Brands',
           description: 'Product pages that rank and convert organic shoppers.',
           painPoint: 'Lost in a sea of competitors on page 2+',
         },
         {
-          icon: MapPin,
           title: 'Local Businesses',
           description: 'Dominate local search and Google Maps in your area.',
           painPoint: 'Invisible to nearby customers searching right now',
         },
         {
-          icon: Users,
           title: 'B2B Companies',
           description: 'Capture high-intent decision-makers researching solutions.',
           painPoint: 'Relying solely on paid ads for leads',
         },
         {
-          icon: TrendingUp,
           title: 'Startups & Scale-ups',
           description: 'Build organic visibility from day one for compounding growth.',
           painPoint: 'Zero organic traffic and brand awareness',
@@ -167,28 +157,24 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'A proven four-phase approach that delivers measurable results at every stage.',
       steps: [
         {
-          icon: FileSearch,
           title: 'Deep Audit',
           description:
             'We crawl every page, analyze competitors, and uncover the technical and content gaps holding you back.',
           duration: 'Week 1-2',
         },
         {
-          icon: Target,
           title: 'Strategy & Roadmap',
           description:
             'Prioritized keyword targets, content plan, and technical fixes mapped to your business goals.',
           duration: 'Week 2-3',
         },
         {
-          icon: Code,
           title: 'Execute & Optimize',
           description:
             'On-page fixes, content creation, link building, and technical improvements — rolled out systematically.',
           duration: 'Month 1-3',
         },
         {
-          icon: BarChart3,
           title: 'Measure & Scale',
           description:
             'Monthly reporting, rank tracking, and strategy refinements to keep momentum building.',
@@ -211,7 +197,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
   // ── Social Media ────────────────────────────────────────────
   {
     serviceId: 'social',
-    icon: Megaphone,
     title: 'Social Media Marketing',
     colorClass: 'v2-gradient-social',
     accentColorRgb: '236, 117, 160',
@@ -228,7 +213,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'We turn social channels into engines for community, brand love, and measurable business growth.',
       pillars: [
         {
-          icon: Target,
           name: 'Strategy & Planning',
           deliverables: [
             'Platform-specific strategy',
@@ -238,7 +222,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Camera,
           name: 'Content Creation',
           deliverables: [
             'Scroll-stopping visuals',
@@ -248,7 +231,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Heart,
           name: 'Growth & Engagement',
           deliverables: [
             'Community management',
@@ -264,25 +246,21 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'Social media is for brands that want real connection — not vanity metrics.',
       personas: [
         {
-          icon: ShoppingBag,
           title: 'D2C Brands',
           description: 'Build brand loyalty and drive direct sales through social.',
           painPoint: 'Low engagement despite posting regularly',
         },
         {
-          icon: MapPin,
           title: 'Restaurants & Hospitality',
           description: 'Showcase your vibe and drive foot traffic.',
           painPoint: 'Inconsistent posting with no clear strategy',
         },
         {
-          icon: Users,
           title: 'Personal Brands',
           description: 'Position yourself as a thought leader in your space.',
           painPoint: 'No time to create and manage content',
         },
         {
-          icon: ShoppingCart,
           title: 'E-commerce Stores',
           description: 'Turn followers into buyers with shoppable content.',
           painPoint: 'High follower count but low conversions',
@@ -294,28 +272,24 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'From strategy to execution — here\'s how we grow your social presence.',
       steps: [
         {
-          icon: FileSearch,
           title: 'Social Audit',
           description:
             'We analyze your current presence, audience demographics, and competitor landscape to find opportunities.',
           duration: 'Week 1',
         },
         {
-          icon: PenTool,
           title: 'Content Production',
           description:
             'Our creative team produces a month\'s worth of platform-optimized content — visuals, copy, and video.',
           duration: 'Week 2-3',
         },
         {
-          icon: TrendingUp,
           title: 'Launch & Engage',
           description:
             'We publish on schedule, engage with your community, and amplify top-performing content.',
           duration: 'Month 1+',
         },
         {
-          icon: BarChart,
           title: 'Analyze & Iterate',
           description:
             'Monthly performance reports and strategy tweaks to continuously improve results.',
@@ -338,7 +312,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
   // ── PPC ─────────────────────────────────────────────────────
   {
     serviceId: 'performance',
-    icon: BarChart3,
     title: 'Pay-Per-Click Advertising',
     colorClass: 'v2-gradient-performance',
     accentColorRgb: '140, 29, 74',
@@ -355,7 +328,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'We engineer paid campaigns that turn ad spend into predictable, profitable growth.',
       pillars: [
         {
-          icon: Search,
           name: 'Search Ads',
           deliverables: [
             'Google Ads management',
@@ -365,7 +337,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Megaphone,
           name: 'Social Ads',
           deliverables: [
             'Facebook & Instagram Ads',
@@ -375,7 +346,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Repeat,
           name: 'Optimization',
           deliverables: [
             'Conversion tracking setup',
@@ -391,25 +361,21 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'PPC is for businesses that want fast, measurable results from their ad spend.',
       personas: [
         {
-          icon: ShoppingCart,
           title: 'E-commerce Brands',
           description: 'Drive product sales with Shopping and search campaigns.',
           painPoint: 'High ad spend but low ROAS',
         },
         {
-          icon: Users,
           title: 'Lead-Gen Businesses',
           description: 'Fill your pipeline with qualified leads at scale.',
           painPoint: 'Inconsistent lead flow and high CPL',
         },
         {
-          icon: TrendingUp,
           title: 'Funded Startups',
           description: 'Scale user acquisition with data-driven paid growth.',
           painPoint: 'Need rapid growth but burning through budget',
         },
         {
-          icon: MapPin,
           title: 'Service Businesses',
           description: 'Capture local demand and book more appointments.',
           painPoint: 'Competitors outbidding you on every keyword',
@@ -421,28 +387,24 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'A disciplined process that maximizes every rupee of your ad budget.',
       steps: [
         {
-          icon: FileSearch,
           title: 'Account Audit',
           description:
             'We tear apart your existing campaigns (or start fresh) to find wasted spend and missed opportunities.',
           duration: 'Week 1',
         },
         {
-          icon: Layout,
           title: 'Campaign Architecture',
           description:
             'We build a structured account with tight ad groups, compelling copy, and optimized landing pages.',
           duration: 'Week 2-3',
         },
         {
-          icon: TrendingUp,
           title: 'Launch & Test',
           description:
             'Campaigns go live with rigorous A/B testing and daily bid management.',
           duration: 'Week 3-4',
         },
         {
-          icon: DollarSign,
           title: 'Scale Profitably',
           description:
             'We scale what works, cut what doesn\'t, and continuously optimize for better ROAS.',
@@ -465,7 +427,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
   // ── Branding ────────────────────────────────────────────────
   {
     serviceId: 'branding',
-    icon: Palette,
     title: 'Creative Design & Branding',
     colorClass: 'v2-gradient-brand',
     accentColorRgb: '224, 77, 125',
@@ -482,7 +443,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'We craft brand identities that are impossible to ignore — from strategy to every visual touchpoint.',
       pillars: [
         {
-          icon: Lightbulb,
           name: 'Brand Strategy',
           deliverables: [
             'Brand positioning & messaging',
@@ -492,7 +452,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Eye,
           name: 'Visual Identity',
           deliverables: [
             'Logo design & variations',
@@ -502,7 +461,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Brush,
           name: 'Marketing Design',
           deliverables: [
             'Social media templates',
@@ -518,25 +476,21 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'Branding is for anyone who wants to be remembered — not just recognized.',
       personas: [
         {
-          icon: TrendingUp,
           title: 'Startups',
           description: 'Launch with a brand that looks established from day one.',
           painPoint: 'DIY branding that looks amateur',
         },
         {
-          icon: Repeat,
           title: 'Rebranding Companies',
           description: 'Refresh your identity to match your evolved business.',
           painPoint: 'Outdated brand that no longer represents you',
         },
         {
-          icon: Package,
           title: 'Product Brands',
           description: 'Stand out on shelves and screens with cohesive design.',
           painPoint: 'Inconsistent visuals across touchpoints',
         },
         {
-          icon: Users,
           title: 'Personal Brands',
           description: 'Build a professional visual identity for your personal brand.',
           painPoint: 'No cohesive look across platforms',
@@ -548,28 +502,24 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'A collaborative process that translates your vision into a living brand system.',
       steps: [
         {
-          icon: Lightbulb,
           title: 'Discovery Workshop',
           description:
             'Deep dive into your brand DNA — values, audience, competitive landscape, and aspirations.',
           duration: 'Week 1',
         },
         {
-          icon: PenTool,
           title: 'Concept Development',
           description:
             'We present 2-3 distinct creative directions with mood boards, logo concepts, and color explorations.',
           duration: 'Week 2-3',
         },
         {
-          icon: Brush,
           title: 'Refinement & Systems',
           description:
             'Your chosen direction is refined into a complete brand system with guidelines and templates.',
           duration: 'Week 3-5',
         },
         {
-          icon: Package,
           title: 'Launch Kit Delivery',
           description:
             'You receive all brand assets, guidelines, and templates — ready for immediate use.',
@@ -592,7 +542,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
   // ── Web Development ─────────────────────────────────────────
   {
     serviceId: 'web',
-    icon: Globe,
     title: 'Website Design & Development',
     colorClass: 'v2-gradient-web',
     accentColorRgb: '90, 26, 56',
@@ -609,7 +558,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'We build websites that look stunning, load fast, and convert visitors into customers.',
       pillars: [
         {
-          icon: Layout,
           name: 'Design & UX',
           deliverables: [
             'Custom UI/UX design',
@@ -619,7 +567,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Code,
           name: 'Development',
           deliverables: [
             'Next.js / React development',
@@ -629,7 +576,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Gauge,
           name: 'Performance',
           deliverables: [
             'Core Web Vitals optimization',
@@ -645,25 +591,21 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'A great website is the foundation of every digital strategy.',
       personas: [
         {
-          icon: Repeat,
           title: 'Outdated Websites',
           description: 'Modernize your site to match your brand and goals.',
           painPoint: 'Website looks like it\'s from 2015',
         },
         {
-          icon: ShoppingCart,
           title: 'E-commerce Businesses',
           description: 'Build a store that handles traffic spikes and converts.',
           painPoint: 'Cart abandonment rates through the roof',
         },
         {
-          icon: TrendingUp,
           title: 'Startups',
           description: 'Launch fast with a site that scales with your growth.',
           painPoint: 'Need a professional web presence quickly',
         },
         {
-          icon: Users,
           title: 'B2B Companies',
           description: 'Generate and nurture leads with a high-authority site.',
           painPoint: 'Website doesn\'t generate any leads',
@@ -675,28 +617,24 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'A structured build process that delivers on time and exceeds expectations.',
       steps: [
         {
-          icon: FileSearch,
           title: 'Research & Planning',
           description:
             'We audit your current site, research competitors, and define information architecture and user flows.',
           duration: 'Week 1-2',
         },
         {
-          icon: PenTool,
           title: 'Design & Prototype',
           description:
             'High-fidelity designs and interactive prototypes — approved before a single line of code is written.',
           duration: 'Week 2-4',
         },
         {
-          icon: Code,
           title: 'Development & Testing',
           description:
             'Clean, performant code built with modern frameworks. Rigorous cross-browser and device testing.',
           duration: 'Week 4-7',
         },
         {
-          icon: TrendingUp,
           title: 'Launch & Support',
           description:
             'Smooth deployment, SEO checks, analytics setup, and 30 days of post-launch support.',
@@ -719,7 +657,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
   // ── Content Marketing ───────────────────────────────────────
   {
     serviceId: 'content',
-    icon: Video,
     title: 'Content Marketing & Video Production',
     colorClass: 'v2-gradient-content',
     accentColorRgb: '255, 160, 122',
@@ -736,7 +673,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'We create content ecosystems that attract, engage, and convert — across every format and channel.',
       pillars: [
         {
-          icon: BookOpen,
           name: 'Content Strategy',
           deliverables: [
             'Content audit & gap analysis',
@@ -746,7 +682,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: PenTool,
           name: 'Written Content',
           deliverables: [
             'Blog posts & articles',
@@ -756,7 +691,6 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          icon: Film,
           name: 'Video & Visual',
           deliverables: [
             'Brand videos & ads',
@@ -772,25 +706,21 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'Content marketing works for any brand ready to invest in long-term audience growth.',
       personas: [
         {
-          icon: Users,
           title: 'B2B Companies',
           description: 'Establish thought leadership and nurture leads with content.',
           painPoint: 'Long sales cycles with no content to support them',
         },
         {
-          icon: ShoppingCart,
           title: 'E-commerce Brands',
           description: 'Drive organic traffic and reduce ad dependency with content.',
           painPoint: '100% reliant on paid traffic for sales',
         },
         {
-          icon: TrendingUp,
           title: 'Personal Brands',
           description: 'Build authority and grow your audience with consistent content.',
           painPoint: 'Great expertise but no content to show for it',
         },
         {
-          icon: MapPin,
           title: 'Service Businesses',
           description: 'Attract local customers with helpful, trust-building content.',
           painPoint: 'No online content to differentiate from competitors',
@@ -802,28 +732,24 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'From strategy to publishing — a content engine that runs like clockwork.',
       steps: [
         {
-          icon: FileSearch,
           title: 'Content Audit',
           description:
             'We evaluate your existing content, identify gaps, and research what your audience actually wants.',
           duration: 'Week 1',
         },
         {
-          icon: BookOpen,
           title: 'Editorial Calendar',
           description:
             'A strategic content plan with topics, formats, keywords, and publishing schedule.',
           duration: 'Week 2',
         },
         {
-          icon: PenTool,
           title: 'Create & Publish',
           description:
             'Our writers, designers, and videographers produce and publish high-quality content on schedule.',
           duration: 'Month 1+',
         },
         {
-          icon: BarChart,
           title: 'Measure & Optimize',
           description:
             'Track performance, double down on winners, and continuously refine the content strategy.',
