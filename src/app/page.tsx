@@ -1,288 +1,453 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
-import { FilmWall, type Film } from '@/components/site/FilmWall';
-import { LogoWall, type ClientLogo } from '@/components/site/LogoWall';
-import { Container, Display, Label, Rule, Section, Text } from '@/components/site/primitives';
-import { SERVICES, serviceHref } from '@/lib/services-catalogue';
+import { HomeMotion } from '@/components/site/HomeMotion';
+import { getAcademyHomePricing } from '@/lib/academy/home-pricing';
+import { serviceHref } from '@/lib/services-catalogue';
 
 /**
- * The home page.
+ * The home page — the approved design, section for section.
  *
- * Replaces the V2 home: eight dynamically imported sections inside
- * `V2PageWrapper`, two competing scroll-pin engines, a rotating headline and a
- * 1.7s loading overlay. What is here scrolls, holds still, and states only
- * things that can be checked.
+ * Structure follows the accepted prototype exactly: hero over the studio's own
+ * film, the client marquees, the reel wall, the pinned campaign strip, the
+ * capability list, evidence, the in-house software, Academy, close.
+ *
+ * A server component. Every video, image and word is in the initial HTML;
+ * `HomeMotion` only animates markup that is already there, so the page is
+ * complete before it loads and complete if it never does.
+ *
+ * Prices are read from the database rather than hardcoded — an earlier
+ * hardcoded Academy price was wrong by ₹20,000.
  */
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
-/* Dark films anchor the ends; the two high-key reels sit inboard. */
-const FILMS: readonly Film[] = [
-  { id: 'astroo_apaar', client: 'Astroo Apaar', note: 'Brand film' },
-  { id: 'renny', client: 'Renny', note: 'Social campaign' },
-  { id: 'kanha', client: 'Kanha', note: 'Promotional' },
-  { id: 'giovanni', client: 'Giovanni Village', note: 'Resort brand' },
-  { id: 'concept_studio', client: 'Concept Studio', note: 'Creative' },
-  { id: 'skr_group', client: 'SKR Group', note: 'Corporate' },
-];
+export const revalidate = 60;
 
-/*
- * Optical weight, not importance: a wide wordmark needs more width than a
- * compact mark to read at the same size. The recognisable names lead.
- */
-/** Files in /public/clients. Stated rather than rounded up into a claim. */
-const TOTAL_CLIENT_LOGOS = 36;
-
-const LOGOS: readonly ClientLogo[] = [
-  { src: '/clients/Asset-11.png', name: 'Radisson', scale: 3 },
-  { src: '/clients/Asset-12.png', name: 'Jio Studios', scale: 2 },
-  { src: '/clients/Asset-13.png', name: 'BNI', scale: 2 },
-  { src: '/clients/Asset-18.png', name: 'Dainik Bhaskar', scale: 3 },
-  { src: '/clients/Asset-15.png', name: 'Zuper Hotels & Resorts', scale: 3 },
-  { src: '/clients/Asset-21.png', name: 'SKR Group', scale: 2 },
-  { src: '/clients/Asset-10.png', name: 'Wise Consultancy', scale: 2 },
-  { src: '/clients/Asset-14.png', name: 'Hind Wallcare', scale: 2 },
-  { src: '/clients/Asset-20.png', name: 'Galaxy Enclave', scale: 3 },
-  { src: '/clients/Asset-16.png', name: 'Indian Kayaking & Canoeing Association', scale: 2 },
-  { src: '/clients/Asset-17.png', name: 'Uthara Print', scale: 2 },
-  { src: '/clients/Asset-19.png', name: 'Bhaskar Denim', scale: 2 },
-];
-
-/*
- * The three ways people arrive. Written the way they would say it, not the way
- * an agency would categorise it.
- */
-const ENTRY_POINTS = [
-  {
-    title: 'You need someone to run it',
-    body: 'Strategy, campaigns, content and the reporting that tells you whether any of it worked. We act as the marketing team you would otherwise be hiring.',
-    href: '/get-started',
-    cta: 'Start a project',
-  },
-  {
-    title: 'You need something built',
-    body: 'Sites, storefronts and the tooling behind them — fourteen client sites live today, plus the platforms we build for ourselves and then hand over.',
-    href: '/work',
-    cta: 'See the work',
-  },
-  {
-    title: 'You want to learn it',
-    body: 'FM Academy runs the same playbooks we use on client work, taught by the people doing it. Paid, small, and not a webinar.',
-    href: '/academy',
-    cta: 'See the programmes',
-  },
+const HERO_FILMS = [
+  { speed: '0.09', films: ['giovanni', 'skr_group'] },
+  { speed: '-0.13', films: ['kanha', 'concept_studio'] },
+  { speed: '0.06', films: ['renny', 'astroo_apaar'] },
 ] as const;
 
-export default function Home() {
+/** Twenty marks, split across two counter-running rows. */
+const LOGO_ROWS = [
+  Array.from({ length: 10 }, (_, i) => `Asset-${10 + i}`),
+  Array.from({ length: 10 }, (_, i) => `Asset-${20 + i}`),
+] as const;
+
+const REELS = [
+  { speed: '0.08', items: [['giovanni', 'Giovanni', 'Campaign film'], ['skr_group', 'SKR Group', 'Brand film']] },
+  { speed: '-0.14', items: [['kanha', 'Kanha', 'Social campaign'], ['concept_studio', 'Concept Studio', 'Launch film']] },
+  { speed: '0.05', items: [['renny', 'Renny', 'Product film'], ['astroo_apaar', 'Astroo Apaar', 'Content series']] },
+] as const;
+
+const CAMPAIGNS = [
+  ['giovanni-service1', 'Giovanni — campaign'],
+  ['elisa-service1', 'Elisa — launch'],
+  ['skr-service1', 'SKR Group — brand'],
+  ['harsh-service1', 'Harsh — social'],
+  ['giovanni-service3', 'Giovanni — series'],
+  ['elisa-service3', 'Elisa — product'],
+  ['skr-service3', 'SKR Group — launch'],
+  ['harsh-service3', 'Harsh — campaign'],
+  ['giovanni-service5', 'Giovanni — film'],
+  ['skr-service5', 'SKR Group — social'],
+] as const;
+
+const CAPABILITY = [
+  ['seo', 'Search engine optimization', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.', '/work/services/giovanni-service1.jpg'],
+  ['social', 'Social media marketing', 'Stop posting. Start connecting.', 'Thumb-stopping content that turns followers into customers.', '/work/services/elisa-service1.jpg'],
+  ['performance', 'Performance marketing', 'Every rupee. Maximum impact.', 'Focused paid campaigns that deliver qualified leads and protect your ROI.', '/work/services/skr-service1.jpg'],
+  ['branding', 'Brand identity design', 'Look unforgettable.', 'Visual identities that capture attention, build trust, and make competitors jealous.', '/work/services/harsh-service1.jpg'],
+  ['web', 'Website development', 'Fast. Beautiful. Converting.', 'Responsive, conversion-first websites that work as marketing tools.', '/work/websites/elisa_website.jpg'],
+  ['content', 'Content production', 'Stories that sell.', 'From scroll-stopping videos to blogs that rank: content that drives action.', '/work/services/giovanni-service5.jpg'],
+] as const;
+
+const PILLARS = [
+  ['A', 'SEO that actually works', 'First-page rankings and quality leads, not vanity traffic.'],
+  ['B', 'Social that converts', 'Communities built on content people stop for, then buy from.'],
+  ['C', 'Performance you can measure', 'We obsess over your metrics so you can obsess over your business.'],
+  ['D', 'A brand people remember', 'Complete visual systems that leave a lasting impression.'],
+] as const;
+
+const TEAM = [
+  ['/team/Arushimaheshwari.png', 'Arushi'],
+  ['/team/Abhishek.png', 'Abhishek'],
+  ['/team/alii-palau.png', 'Ali'],
+] as const;
+
+const SYSTEMS = [
+  ['Growth Scorecard', 'A public diagnostic that scores a brand’s digital health.', '/scorecard'],
+  ['Freakquency', 'Our content engine. It ingests, publishes and distributes, on a schedule.', '/freakquency'],
+  ['CreativeMinds', 'The talent network platform — applications, portfolios and the people who make the work.', '/creativeminds'],
+  ['Client Portal', 'Project tracking, content approval, contracts and reports, in one place for every client.', null],
+  ['Sales System', 'Capture through follow-up, automated — the same machinery we build into your business.', null],
+] as const;
+
+/*
+ * The six courses. Titles live here; prices come from the database, because a
+ * hardcoded Academy price was once wrong by ₹20,000 and advertised an expired
+ * early-bird rate for ten weeks.
+ */
+const COURSES = [
+  ['digital-marketing', 'Digital Marketing'],
+  ['performance-marketing', 'Performance Marketing'],
+  ['graphic-design', 'Graphic Designing'],
+  ['video-editing', 'Video Editing'],
+  ['ai-filmmaking', 'AI Filmmaking'],
+  ['website-designing', 'Website Designing'],
+] as const;
+
+const SYSTEM_PROOF = [
+  ['elisa_website.jpg', 'Elisa'],
+  ['mahua_house_website.jpg', 'Mahua House'],
+  ['playpal_website.png', 'Playpal'],
+  ['restronaut_website.jpg', 'Restronaut'],
+  ['badastoor_website.jpg', 'Badastoor'],
+  ['mohdiamond_website.jpg', 'Mohdiamond'],
+] as const;
+
+export default async function Home() {
+  const pricing = await getAcademyHomePricing();
+
   return (
     <SiteShell>
-      <SiteHeader />
+      <SiteHeader floating />
+      <HomeMotion />
+
+      {/* The image that trails the cursor across the capability list. */}
+      <div className="hoverimg" aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img alt="" src="/work/services/elisa-service1.jpg" width={620} height={775} />
+      </div>
 
       <main id="main-content">
-        {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <Section as="div" className="pb-0 pt-6">
-          <Container>
-            <div className="grid items-end gap-10 lg:grid-cols-[1.35fr_0.65fr]">
+        {/* ═══ HERO ═══════════════════════════════════════════════════ */}
+        <section className="hero">
+          <div className="hero-shade" aria-hidden />
+          <div className="wrap hero-grid">
+            <div className="hero-in">
+              <div className="eyebrow">
+                <span className="tag tag--a">Marketing &amp; digital partner</span>
+              </div>
+              <h1 className="d">Ideas that move markets.</h1>
+              <p className="lede">
+                We are the marketing and digital partner for brands that intend to grow. Strategy,
+                creative, performance &mdash; and the software underneath. One team.
+              </p>
+              <div className="hero-actions">
+                <Link className="btn btn--primary" href="/get-started">
+                  Get a free strategy call
+                </Link>
+                <Link className="btn btn--ghost" href="/work">
+                  See our work
+                </Link>
+              </div>
+              <div className="hero-figs">
+                <div>
+                  <b className="fig">{COURSES.length}</b>
+                  <span className="tag">Academy courses</span>
+                </div>
+                <div>
+                  <b className="fig">14</b>
+                  <span className="tag">Client sites live</span>
+                </div>
+                <div>
+                  <b className="fig">8</b>
+                  <span className="tag">Films in the reel</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="hero-films" aria-hidden>
+              {HERO_FILMS.map((col) => (
+                <div className="film-col" key={col.speed} data-hero-speed={col.speed}>
+                  {col.films.map((id, i) => (
+                    <video
+                      key={id}
+                      poster={`/videos/${id}-poster.jpg`}
+                      muted
+                      playsInline
+                      loop
+                      preload={i === 0 ? 'metadata' : 'none'}
+                    >
+                      <source src={`/videos/${id}.mp4`} type="video/mp4" />
+                    </video>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ CLIENT WALL ════════════════════════════════════════════ */}
+        <div className="wall" aria-label="Clients we work with">
+          {LOGO_ROWS.map((row, i) => (
+            <div className="mq" key={i} data-mq={i === 0 ? '1' : '-1'}>
+              {row.map((name) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={name} src={`/clients/${name}.png`} alt="" width={220} height={110} />
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* ═══ REEL WALL ══════════════════════════════════════════════ */}
+        <section className="sec" id="work">
+          <div className="wrap">
+            <div className="sec-head sec-head--split">
               <div>
-                <Label>Marketing &amp; digital partners</Label>
-                <Display level="display" className="mt-6">
-                  We do the work
-                  <br />
-                  that moves the number.
-                </Display>
-                <Text size="lead" muted className="mt-8 max-w-xl">
-                  Freaking Minds is a marketing and digital partner for brands that need
-                  campaigns run, sites built and results they can actually check. Radisson,
-                  Jio Studios and Dainik Bhaskar are on that list.
-                </Text>
-                <div className="mt-10 flex flex-wrap items-center gap-4">
-                  <Link
-                    href="/get-started"
-                    className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
-                    style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
-                  >
-                    Start a project
-                  </Link>
-                  <Link
-                    href="/work"
-                    className="font-site-sans text-site-body"
-                    style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
-                  >
-                    See the work first
-                  </Link>
+                <div className="eyebrow">
+                  <span className="tag">01 &mdash; The work</span>
                 </div>
+                <h2 className="d" data-mask>
+                  Film that runs where people actually watch.
+                </h2>
               </div>
+              <p className="lede" style={{ maxWidth: '38ch' }}>
+                Every campaign we make is built vertical first, for the feed it will live in. These
+                are real client films.
+              </p>
+            </div>
+          </div>
 
-              {/*
-                One mascot, large, and only here. The current site places nine
-                of them at thumbnail size across ten pages, which turns a brand
-                asset into decoration. At this scale it reads as a character.
-              */}
-              <div className="hidden justify-self-end lg:block">
-                <Image
-                  src="/3dasset/brain-rocket.webp"
-                  alt=""
-                  aria-hidden
-                  width={420}
-                  height={420}
-                  priority
-                  className="h-auto w-full"
-                  style={{
-                    maxWidth: '420px',
-                    /*
-                      In native colours this render is pink, purple and rainbow
-                      — it fights an ink-on-paper page and reads as clip art.
-                      Greyscale alone was worse: the render is pale, so it came
-                      out at almost exactly the value of bone paper and
-                      disappeared. Darkened and hardened it reads as a graphite
-                      figure — the character survives, and it belongs to the
-                      same world as the type and the films.
-                    */
-                    filter: 'grayscale(1) brightness(0.72) contrast(1.45)',
-                  }}
-                />
-              </div>
-            </div>
-          </Container>
-        </Section>
-
-        {/* ── Proof, immediately ───────────────────────────────────────── */}
-        <Section>
-          <Container>
-            <div className="flex flex-wrap items-baseline justify-between gap-4">
-              <Label>Brands we work with</Label>
-              <Text muted className="text-site-label">
-                {LOGOS.length} of {TOTAL_CLIENT_LOGOS}
-              </Text>
-            </div>
-            <div className="mt-8">
-              <LogoWall logos={LOGOS} />
-            </div>
-          </Container>
-        </Section>
-
-        {/* ── The work ─────────────────────────────────────────────────── */}
-        <Section tone="raised">
-          <Container>
-            <div className="max-w-2xl">
-              <Label>Recent work</Label>
-              <Display level="h2" className="mt-5">
-                Films we shot, cut and shipped.
-              </Display>
-              <Text muted className="mt-5">
-                Six of the eight client films in the studio&rsquo;s reel. Vertical, because
-                that is where they ran.
-              </Text>
-            </div>
-            <div className="mt-14">
-              <FilmWall films={FILMS} />
-            </div>
-            <div className="mt-14">
-              <Link
-                href="/work"
-                className="font-site-sans text-site-body"
-                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
-              >
-                Everything else we have shipped
-              </Link>
-            </div>
-          </Container>
-        </Section>
-
-        {/* ── What we do ───────────────────────────────────────────────── */}
-        <Section>
-          <Container>
-            <div className="max-w-2xl">
-              <Label>What we do</Label>
-              <Display level="h2" className="mt-5">
-                Six things, done properly.
-              </Display>
-            </div>
-
-            {/*
-              A table, not six cards. Cards give every service the same visual
-              weight and force a description length none of them want; a table
-              lets the eye scan the names and stop at the one that matters.
-            */}
-            <ul className="mt-14" style={{ listStyle: 'none', margin: '3.5rem 0 0', padding: 0 }}>
-              {SERVICES.map((service) => (
-                <li key={service.id} style={{ borderTop: '1px solid var(--site-line-soft)' }}>
-                  <Link
-                    href={serviceHref(service.id)}
-                    className="group grid gap-2 py-7 sm:grid-cols-[minmax(0,22ch)_1fr] sm:gap-10"
-                  >
-                    <span className="font-site-display text-site-h3 text-site-text">
-                      {service.name}
-                    </span>
-                    <span className="font-site-sans text-site-body text-site-muted">
-                      {service.description}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <Rule soft />
-          </Container>
-        </Section>
-
-        {/* ── Three doors ──────────────────────────────────────────────── */}
-        <Section tone="raised">
-          <Container>
-            <Label>Where to start</Label>
-            <div className="mt-12 grid gap-10 md:grid-cols-3">
-              {ENTRY_POINTS.map((entry) => (
-                <div key={entry.title}>
-                  <Rule />
-                  <Display level="h3" as="h3" className="mt-6">
-                    {entry.title}
-                  </Display>
-                  <Text muted className="mt-4">
-                    {entry.body}
-                  </Text>
-                  <Link
-                    href={entry.href}
-                    className="mt-6 inline-block font-site-sans text-site-body"
-                    style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
-                  >
-                    {entry.cta}
-                  </Link>
+          <div className="wrap">
+            <div className="reels">
+              {REELS.map((col) => (
+                <div className="rcol" key={col.speed} data-speed={col.speed}>
+                  {col.items.map(([id, client, note]) => (
+                    <figure className="reel" key={id}>
+                      <video poster={`/videos/${id}-poster.jpg`} muted playsInline loop preload="none">
+                        <source src={`/videos/${id}.mp4`} type="video/mp4" />
+                      </video>
+                      <figcaption>
+                        <b>{client}</b>
+                        <span className="tag">{note}</span>
+                      </figcaption>
+                    </figure>
+                  ))}
                 </div>
               ))}
             </div>
-          </Container>
-        </Section>
+          </div>
+        </section>
 
-        {/* ── Close ────────────────────────────────────────────────────── */}
-        <Section>
-          <Container width="narrow">
-            <Display level="h1">Tell us what you are trying to move.</Display>
-            <Text size="lead" muted className="mt-8">
-              A number, a launch, a problem you have been circling for months. We will tell
-              you whether we are the right people for it — and if we are not, who is.
-            </Text>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Link
-                href="/get-started"
-                className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
-                style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
-              >
-                Start a project
-              </Link>
-              <Link
-                href="/contact"
-                className="font-site-sans text-site-body"
-                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
-              >
-                Or just ask a question
+        <div className="wipe" aria-hidden>
+          <i />
+        </div>
+
+        {/* ═══ CAMPAIGN STRIP (pinned) ════════════════════════════════ */}
+        <section className="strip-sec" id="campaigns">
+          <div className="strip-stage">
+            <div className="strip-head">
+              <div className="eyebrow">
+                <span className="tag">02 &mdash; Campaigns</span>
+              </div>
+              <h2 className="d" data-mask style={{ fontSize: 'clamp(2rem, 4.4vw, 3.8rem)' }}>
+                The creative that ran with it.
+              </h2>
+            </div>
+            <div className="strip-track">
+              {CAMPAIGNS.map(([file, caption]) => (
+                <figure key={file}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/work/services/${file}.jpg`} alt={caption} width={620} height={775} />
+                  <figcaption className="tag">{caption}</figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ CAPABILITY ═════════════════════════════════════════════ */}
+        <section className="sec" id="capability">
+          <div className="wrap">
+            <div className="sec-head">
+              <div className="eyebrow">
+                <span className="tag">03 &mdash; Capability</span>
+              </div>
+              <h2 className="d" data-mask>
+                Six ways we grow a brand.
+              </h2>
+              <p className="lede">
+                Every engagement is custom-built around your goals &mdash; and every one of them
+                reports against a number you agreed to.
+              </p>
+            </div>
+
+            <div className="cap">
+              {CAPABILITY.map(([id, name, sub, desc, img], i) => (
+                <Link className="cap-row" key={id} href={serviceHref(id)} data-img={img}>
+                  <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
+                  <span>
+                    <span className="cap-name">{name}</span>
+                    <span className="cap-sub">{sub}</span>
+                  </span>
+                  <span className="cap-go" aria-hidden>
+                    &rarr;
+                  </span>
+                  <span className="cap-desc">{desc}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ EVIDENCE ═══════════════════════════════════════════════ */}
+        <section className="sec" id="evidence">
+          <div className="wrap">
+            <div className="sec-head">
+              <div className="eyebrow">
+                <span className="tag">04 &mdash; Evidence</span>
+              </div>
+              <h2 className="d" data-mask>
+                Why brands choose us.
+              </h2>
+              <p className="lede">
+                We don&rsquo;t chase rankings. We build growth that puts you in front of customers
+                already looking for you.
+              </p>
+            </div>
+
+            <div className="ev">
+              <div className="ev-figs">
+                <div className="ev-fig">
+                  <b className="fig">36</b>
+                  <span>Brands whose marks hang on our wall.</span>
+                </div>
+                <div className="ev-fig">
+                  <b className="fig">14</b>
+                  <span>Client sites we designed, built and still run.</span>
+                </div>
+              </div>
+
+              <div className="ev-pillars">
+                {PILLARS.map(([letter, title, body]) => (
+                  <div className="pillar" key={letter}>
+                    <span className="tag">{letter}</span>
+                    <h3 className="h3">{title}</h3>
+                    <p>{body}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="team">
+                {TEAM.map(([src, name]) => (
+                  <figure key={name}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt="" width={460} height={460} />
+                    <figcaption className="tag">{name}</figcaption>
+                  </figure>
+                ))}
+                <p className="lede" style={{ flex: '1 1 260px', fontSize: '1rem' }}>
+                  The people who make the work, not a stock photo of an office.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ SYSTEMS ════════════════════════════════════════════════ */}
+        <section className="sec" id="systems">
+          <div className="wrap">
+            <div className="sec-head">
+              <div className="eyebrow">
+                <span className="tag">05 &mdash; In-house software</span>
+              </div>
+              <h2 className="d" data-mask>
+                We build our own software. The same team builds yours.
+              </h2>
+              <p className="lede">
+                Most agencies buy their tools. These five run our business today &mdash; and the
+                sites beside them are ones we designed, built and still run.
+              </p>
+            </div>
+
+            <div className="sys">
+              <div className="sys-list">
+                {SYSTEMS.map(([name, body, href]) => (
+                  <div className="sys-row" key={name}>
+                    <i className="sys-dot" />
+                    <h3 className="h3">{href ? <Link href={href}>{name}</Link> : name}</h3>
+                    <p>{body}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="sys-proof">
+                {SYSTEM_PROOF.map(([file, name]) => (
+                  <figure key={file}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={`/work/websites/${file}`} alt={`${name} website`} width={880} height={605} />
+                    <figcaption className="tag">{name}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ ACADEMY ════════════════════════════════════════════════ */}
+        <section className="sec" id="academy">
+          <div className="wrap">
+            <div className="sec-head sec-head--split">
+              <div>
+                <div className="eyebrow">
+                  <span className="tag">06 &mdash; Academy</span>
+                </div>
+                <h2 className="d" data-mask style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)' }}>
+                  We also teach it.
+                </h2>
+              </div>
+              <span className="tag">
+                New batch every month &middot; {COURSES.length} courses
+              </span>
+            </div>
+
+            <div className="acad">
+              <div className="acad-grid">
+                {COURSES.map(([slug, title]) => (
+                  <Link className="acad-row" key={slug} href={`/academy/${slug}`}>
+                    <span>{title}</span>
+                    <span className="tag">{pricing?.courses[slug]?.current ?? 'See pricing'}</span>
+                  </Link>
+                ))}
+              </div>
+              {pricing?.bundle && (
+                <div className="acad-bundle">
+                  <p>
+                    Creator Program &mdash; all {COURSES.length}, {pricing.bundle.current}
+                    {pricing.earlyBirdActive && ' early-bird'}
+                  </p>
+                  <Link className="link-u" href="/academy">
+                    See the curriculum <span aria-hidden>&rarr;</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══ CLOSING ════════════════════════════════════════════════ */}
+        <section className="sec close" id="close">
+          <div className="wrap">
+            <h2 className="d" data-mask>
+              Ready to grow your brand?
+            </h2>
+            <div className="close-row">
+              <p className="lede" style={{ maxWidth: '32ch' }}>
+                Response within 24 hours. No obligations, just ideas.
+              </p>
+              <Link className="btn btn--primary" href="/get-started">
+                Book a strategy call
               </Link>
             </div>
-          </Container>
-        </Section>
+          </div>
+        </section>
       </main>
 
       <SiteFooter />

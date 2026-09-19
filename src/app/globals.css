@@ -2,6 +2,7 @@
 /* The redesign's token layer. Separate namespace (`site-`), separate file —
    see src/styles/site-tokens.css for why it cannot live in this one. */
 @import '../styles/site-tokens.css';
+@import '../styles/site-components.css';
 /* Import consolidated animations */
 @import '../styles/consolidated-animations.css';
 /* Note: performance-fixes.css is imported at the end to override component styles */

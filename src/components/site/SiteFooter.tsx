@@ -1,53 +1,43 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { SERVICES, serviceHref } from '@/lib/services-catalogue';
-import { Container, Label, Rule } from './primitives';
 
 /**
- * The public site's footer.
+ * The public site's footer, as approved: brand block plus three columns —
+ * Services, Systems, Company.
  *
- * Services come from the one catalogue, so the footer cannot drift from the
- * header and the services page the way the old one did — it listed four
- * services under names that existed nowhere else, pointing at anchor ids
- * `/services` had to plant hidden shim elements to catch.
+ * "Systems" is the in-house software. It is a column here rather than a
+ * footnote because building our own tools is part of the positioning, not a
+ * side project.
  *
- * No newsletter field. The old one had no form, no handler and no endpoint;
- * anything typed into it was discarded silently.
+ * Services come from the one catalogue, so this cannot drift from the header
+ * and `/services` the way the old footer did. No newsletter field: the old one
+ * had no form, no handler and no endpoint.
  */
 
-const COMPANY = [
-  { label: 'Work', href: '/work' },
-  { label: 'About', href: '/about' },
-  { label: 'Contact', href: '/contact' },
-  { label: 'CreativeMinds', href: '/creativeminds' },
-] as const;
-
-const MORE = [
-  { label: 'FM Academy', href: '/academy' },
+const SYSTEMS = [
   { label: 'Freakquency', href: '/freakquency' },
   { label: 'Growth Scorecard', href: '/scorecard' },
-  { label: 'Start a project', href: '/get-started' },
+  { label: 'CreativeMinds', href: '/creativeminds' },
+  { label: 'FM Academy', href: '/academy' },
 ] as const;
 
-const SOCIAL = [
-  { label: 'Instagram', href: 'https://www.instagram.com/freakingminds' },
-  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freaking-minds' },
+const COMPANY = [
+  { label: 'About', href: '/about' },
+  { label: 'Work', href: '/work' },
+  { label: 'Contact', href: '/contact' },
+  { label: 'Privacy', href: '/privacy' },
+  { label: 'Terms', href: '/terms' },
 ] as const;
 
 function Column({ title, links }: { title: string; links: readonly { label: string; href: string }[] }) {
   return (
-    <div>
-      <Label>{title}</Label>
-      <ul className="mt-5 space-y-3" style={{ listStyle: 'none', padding: 0, margin: '1.25rem 0 0' }}>
+    <div className="foot-col">
+      <h4 className="tag">{title}</h4>
+      <ul>
         {links.map((link) => (
           <li key={link.href}>
-            <Link
-              href={link.href}
-              className="font-site-sans text-site-body transition-opacity hover:opacity-100"
-              style={{ color: 'var(--site-text)', opacity: 0.68 }}
-              {...(link.href.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            >
-              {link.label}
-            </Link>
+            <Link href={link.href}>{link.label}</Link>
           </li>
         ))}
       </ul>
@@ -56,74 +46,34 @@ function Column({ title, links }: { title: string; links: readonly { label: stri
 }
 
 export function SiteFooter() {
-  const year = new Date().getFullYear();
-
   return (
-    <footer className="pb-12 pt-site-section">
-      <Container>
-        <Rule soft />
-        <div className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="foot">
+      <div className="wrap">
+        <div className="foot-grid">
+          <div className="foot-brand">
+            <span className="logo">
+              <Image className="on-light" src="/logo.png" alt="Freaking Minds" width={88} height={55} />
+              <Image className="on-dark" src="/logo-white.png" alt="" aria-hidden width={88} height={55} />
+            </span>
+            <p>
+              The marketing and digital partner for brands that intend to grow. India, and
+              worldwide.
+            </p>
+          </div>
+
           <Column
             title="Services"
             links={SERVICES.map((s) => ({ label: s.name, href: serviceHref(s.id) }))}
           />
+          <Column title="Systems" links={SYSTEMS} />
           <Column title="Company" links={COMPANY} />
-          <Column title="More" links={MORE} />
-          <div>
-            <Label>Get in touch</Label>
-            <ul className="mt-5 space-y-3" style={{ listStyle: 'none', padding: 0, margin: '1.25rem 0 0' }}>
-              <li>
-                <a
-                  href="mailto:freakingmindsdigital@gmail.com"
-                  className="font-site-sans text-site-body"
-                  style={{ color: 'var(--site-text)', opacity: 0.68 }}
-                >
-                  freakingmindsdigital@gmail.com
-                </a>
-              </li>
-              <li>
-                <a
-                  href="tel:+919833257659"
-                  className="font-site-sans text-site-body"
-                  style={{ color: 'var(--site-text)', opacity: 0.68 }}
-                >
-                  +91 98332 57659
-                </a>
-              </li>
-              {SOCIAL.map((s) => (
-                <li key={s.href}>
-                  <a
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-site-sans text-site-body"
-                    style={{ color: 'var(--site-text)', opacity: 0.68 }}
-                  >
-                    {s.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
 
-        <div className="mt-16 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <span className="font-site-sans text-site-label uppercase text-site-muted">
-            &copy; {year} Freaking Minds
-          </span>
-          <span className="flex gap-6">
-            <Link
-              href="/privacy"
-              className="font-site-sans text-site-label uppercase text-site-muted"
-            >
-              Privacy
-            </Link>
-            <Link href="/terms" className="font-site-sans text-site-label uppercase text-site-muted">
-              Terms
-            </Link>
-          </span>
+        <div className="foot-fine">
+          <span className="tag">&copy; {new Date().getFullYear()} Freaking Minds</span>
+          <span className="tag">Marketing &amp; digital partner</span>
         </div>
-      </Container>
+      </div>
     </footer>
   );
 }

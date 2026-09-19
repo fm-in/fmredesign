@@ -1,0 +1,194 @@
+'use client';
+
+import { useEffect } from 'react';
+import { loadGsap, observeReveal, playWhileVisible, prefersReducedMotion } from '@/lib/motion';
+
+/**
+ * The home page's motion, in one place.
+ *
+ * Ports the approved prototype's behaviour: word-mask headline reveals, hero
+ * and reel-column parallax, the two counter-running client marquees, the
+ * pinned campaign strip, the interference wipe, and the image that follows the
+ * cursor over the capability list.
+ *
+ * Renders nothing. Every effect targets markup the server already sent, so the
+ * page is complete and readable before this loads — and if it never loads, the
+ * page is still complete and readable. GSAP is imported dynamically and is not
+ * fetched at all for a visitor who prefers reduced motion.
+ */
+export function HomeMotion() {
+  useEffect(() => {
+    const cleanups: Array<() => void> = [];
+    let cancelled = false;
+
+    // Films: capped playback, and paused off-screen.
+    const videos = document.querySelectorAll<HTMLVideoElement>('.hero-films video, .reel video');
+    cleanups.push(playWhileVisible(videos, 4));
+
+    // Reveals need no timeline, so they never pull GSAP in.
+    cleanups.push(observeReveal(document.querySelectorAll('[data-reveal]')));
+
+    (async () => {
+      const gsap = await loadGsap();
+      if (!gsap || cancelled) return;
+      const { ScrollTrigger } = await import('gsap/ScrollTrigger');
+      if (cancelled) return;
+
+      const ctx = gsap.context(() => {
+        /* ---- headline word masks ---------------------------------------- */
+        document.querySelectorAll<HTMLElement>('[data-mask]').forEach((el) => {
+          const words = el.textContent?.split(/\s+/).filter(Boolean) ?? [];
+          if (!words.length) return;
+          // Rebuilt as spans only now that motion is confirmed available; the
+          // server-rendered text stays a plain readable string otherwise.
+          el.innerHTML = words
+            .map((w) => `<span class="m"><i>${w}</i></span>`)
+            .join(' ');
+          gsap.from(el.querySelectorAll('.m > i'), {
+            yPercent: 115,
+            duration: 0.9,
+            ease: 'expo.out',
+            stagger: 0.055,
+            scrollTrigger: { trigger: el, start: 'top 85%' },
+          });
+        });
+
+        /* ---- hero film parallax ----------------------------------------- */
+        gsap.utils.toArray<HTMLElement>('[data-hero-speed]').forEach((col) => {
+          const speed = parseFloat(col.dataset.heroSpeed ?? '0');
+          gsap.to(col, {
+            yPercent: speed * 100,
+            ease: 'none',
+            scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
+          });
+        });
+
+        /* ---- reel column parallax --------------------------------------- */
+        gsap.utils.toArray<HTMLElement>('[data-speed]').forEach((col) => {
+          const speed = parseFloat(col.dataset.speed ?? '0');
+          gsap.to(col, {
+            yPercent: speed * 100,
+            ease: 'none',
+            scrollTrigger: { trigger: col.closest('section'), start: 'top bottom', end: 'bottom top', scrub: true },
+          });
+        });
+
+        /* ---- client marquees, counter-running --------------------------- */
+        document.querySelectorAll<HTMLElement>('[data-mq]').forEach((row) => {
+          const dir = parseFloat(row.dataset.mq ?? '1');
+          /*
+            Duplicate until one cycle is at least as wide as the viewport.
+            A single duplication is enough at 1440px but not on a 2560px
+            display: the row would run out of content mid-scroll and leave a
+            visible gap at the trailing edge.
+          */
+          const original = row.innerHTML;
+          let copies = 1;
+          while (row.scrollWidth / (copies + 1) < window.innerWidth && copies < 8) {
+            row.innerHTML += original;
+            copies += 1;
+          }
+          if (copies === 1) {
+            row.innerHTML += original;
+            copies = 2;
+          }
+          const half = row.scrollWidth / copies;
+          gsap.set(row, { x: dir < 0 ? -half : 0 });
+          gsap.to(row, {
+            x: dir < 0 ? 0 : -half,
+            duration: 38,
+            ease: 'none',
+            repeat: -1,
+          });
+        });
+
+        /* ---- pinned campaign strip -------------------------------------- */
+        const stage = document.querySelector<HTMLElement>('.strip-stage');
+        const track = document.querySelector<HTMLElement>('.strip-track');
+        if (stage && track && window.innerWidth > 760) {
+          const distance = () => Math.max(0, track.scrollWidth - window.innerWidth + 64);
+          gsap.to(track, {
+            x: () => -distance(),
+            ease: 'none',
+            scrollTrigger: {
+              trigger: stage,
+              start: 'top top',
+              end: () => `+=${distance()}`,
+              pin: true,
+              scrub: 0.6,
+              invalidateOnRefresh: true,
+              anticipatePin: 1,
+            },
+          });
+        }
+
+        /* ---- interference wipe ------------------------------------------ */
+        document.querySelectorAll<HTMLElement>('.wipe i').forEach((bar) => {
+          gsap.fromTo(
+            bar,
+            { scaleY: 0 },
+            {
+              scaleY: 1,
+              ease: 'none',
+              scrollTrigger: { trigger: bar.parentElement, start: 'top bottom', end: 'bottom top', scrub: true },
+            },
+          );
+        });
+
+        /* ---- image that follows the cursor over the capability list ------ */
+        const hoverimg = document.querySelector<HTMLElement>('.hoverimg');
+        const img = hoverimg?.querySelector('img');
+        const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        if (hoverimg && img && fine) {
+          const x = gsap.quickTo(hoverimg, 'x', { duration: 0.5, ease: 'power3' });
+          const y = gsap.quickTo(hoverimg, 'y', { duration: 0.5, ease: 'power3' });
+          document.querySelectorAll<HTMLElement>('.cap-row').forEach((row) => {
+            row.addEventListener('mouseenter', () => {
+              if (row.dataset.img) img.setAttribute('src', row.dataset.img);
+              gsap.to(hoverimg, { opacity: 1, duration: 0.3 });
+            });
+            row.addEventListener('mouseleave', () => {
+              gsap.to(hoverimg, { opacity: 0, duration: 0.3 });
+            });
+          });
+          const move = (e: MouseEvent) => {
+            x(e.clientX - 140);
+            y(e.clientY - 150);
+          };
+          window.addEventListener('mousemove', move, { passive: true });
+          cleanups.push(() => window.removeEventListener('mousemove', move));
+        }
+
+        /* ---- header state ------------------------------------------------ */
+        const hdr = document.querySelector<HTMLElement>('.hdr');
+        if (hdr) {
+          ScrollTrigger.create({
+            start: 'top -20',
+            onToggle: (self) => hdr.classList.toggle('is-stuck', self.isActive),
+          });
+        }
+      });
+
+      cleanups.push(() => ctx.revert());
+    })();
+
+    return () => {
+      cancelled = true;
+      cleanups.forEach((fn) => fn());
+    };
+  }, []);
+
+  // The header needs its scrolled state even with motion off, so this one
+  // listener lives outside the GSAP branch.
+  useEffect(() => {
+    if (!prefersReducedMotion()) return;
+    const hdr = document.querySelector<HTMLElement>('.hdr');
+    if (!hdr) return;
+    const onScroll = () => hdr.classList.toggle('is-stuck', window.scrollY > 20);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return null;
+}

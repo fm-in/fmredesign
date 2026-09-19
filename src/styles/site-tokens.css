@@ -102,6 +102,9 @@
    * scrolls under it. A literal rgba per theme has none of those ways.
    */
   --site-scrim: rgba(247, 244, 239, 0.86);
+  /* The hero header sits over moving film and needs a gradient scrim, which
+     requires the ground as channels rather than as a colour. */
+  --site-ground-rgb: 247, 244, 239;
   --site-raised: #fffdfa;
   --site-text: #13110f;
   --site-muted: #6b635c;
@@ -121,7 +124,7 @@
   /* The creatives carry the colour; the chrome does not. */
   --site-logo-filter: grayscale(1);
   --site-logo-blend: multiply;
-  --site-logo-opacity: 0.88;
+  --site-logo-opacity: 0.72;
 
   --site-font-display: var(--font-instrument-serif), Georgia, 'Times New Roman', serif;
   --site-font-sans: var(--font-dm-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -135,6 +138,7 @@
 
   --site-ground: #0b0a0c;
   --site-scrim: rgba(11, 10, 12, 0.86);
+  --site-ground-rgb: 11, 10, 12;
   --site-raised: #151317;
   --site-text: #ede6de;
   --site-muted: #8e8189;
@@ -153,8 +157,8 @@
   /* Measured: every client logo is opaque dark artwork on white, so on a dark
      ground it must be inverted and lifted. On paper, multiply does it cleanly. */
   --site-logo-filter: grayscale(1) invert(1) contrast(1.15);
-  --site-logo-blend: normal;
-  --site-logo-opacity: 0.78;
+  --site-logo-blend: lighten;
+  --site-logo-opacity: 0.72;
 }
 
 @layer base {
