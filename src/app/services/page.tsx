@@ -213,7 +213,7 @@ export default function ServicesPage() {
 
         <Section tone="raised">
           <Container width="narrow">
-            <Display level="h1">Not sure which one you need?</Display>
+            <Display level="h1" as="h2">Not sure which one you need?</Display>
             <Text size="lead" muted className="mt-8">
               Most projects are two or three of these together. Tell us the outcome and we will
               tell you what it takes.

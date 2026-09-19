@@ -154,7 +154,7 @@ export default function WorkPage() {
 
         <Section>
           <Container width="narrow">
-            <Display level="h1">Ready to be our next one?</Display>
+            <Display level="h1" as="h2">Ready to be our next one?</Display>
             <Text size="lead" muted className="mt-8">
               Tell us what you are trying to move, and we will tell you whether we are the right people
               for it.

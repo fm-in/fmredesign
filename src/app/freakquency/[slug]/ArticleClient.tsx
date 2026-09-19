@@ -72,7 +72,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
                 <span
                   key={tag}
                   className="px-3 py-1 rounded-full text-xs font-medium text-site-muted"
-                  style={{ background: 'rgba(201, 50, 93, 0.08)' }}
+                  style={{ background: 'color-mix(in srgb, var(--site-accent) 0.0800%, transparent)' }}
                 >
                   #{tag}
                 </span>

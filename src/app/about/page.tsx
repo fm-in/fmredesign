@@ -172,7 +172,7 @@ export default function AboutPage() {
 
         <Section>
           <Container width="narrow">
-            <Display level="h1">Let&rsquo;s create something great together.</Display>
+            <Display level="h1" as="h2">Let&rsquo;s create something great together.</Display>
             <Text size="lead" muted className="mt-8">
               Tell us what you are trying to move and we will tell you whether we are the right people
               for it.

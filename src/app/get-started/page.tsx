@@ -74,11 +74,11 @@ const COMPANY_SIZES: { value: CompanySize; label: string; icon: string }[] = [
 // Modern input styling (inline to avoid Tailwind v4 cascade issues)
 const inputBase: React.CSSProperties = {
   padding: '14px 16px',
-  background: '#faf9f9',
-  border: '1.5px solid #e5e2e2',
+  background: 'var(--site-raised)',
+  border: '1.5px solid var(--site-line)',
   outline: 'none',
   fontSize: '16px',
-  color: '#0f0f0f',
+  color: 'var(--site-text)',
   width: '100%',
   borderRadius: '12px',
   transition: 'border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
@@ -97,27 +97,27 @@ const selectStyle: React.CSSProperties = {
 };
 
 const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-  e.target.style.border = '1.5px solid #c9325d';
-  e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)';
+  e.target.style.border = '1.5px solid var(--site-accent)';
+  e.target.style.boxShadow = '0 0 0 4px color-mix(in srgb, var(--site-accent) 0.0800%, transparent)';
   e.target.style.background = '#fff';
 };
 
 const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-  e.target.style.border = '1.5px solid #e5e2e2';
+  e.target.style.border = '1.5px solid var(--site-line)';
   e.target.style.boxShadow = 'none';
-  e.target.style.background = '#faf9f9';
+  e.target.style.background = 'var(--site-raised)';
 };
 
 const handleErrorFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-  e.target.style.border = '1.5px solid #c9325d';
-  e.target.style.boxShadow = '0 0 0 4px rgba(201,50,93,0.08)';
+  e.target.style.border = '1.5px solid var(--site-accent)';
+  e.target.style.boxShadow = '0 0 0 4px color-mix(in srgb, var(--site-accent) 0.0800%, transparent)';
   e.target.style.background = '#fff';
 };
 
 const handleErrorBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
   e.target.style.border = '1.5px solid #dc2626';
   e.target.style.boxShadow = 'none';
-  e.target.style.background = '#faf9f9';
+  e.target.style.background = 'var(--site-raised)';
 };
 
 export default function GetStartedPage() {

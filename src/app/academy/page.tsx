@@ -303,7 +303,7 @@ function CourseCard({ p }: { p: Program }) {
       ) : (
         <div className="relative h-44 w-full bg-gradient-to-br flex items-center justify-center overflow-hidden">
           <GraduationCap className="w-14 h-14 text-site-accent opacity-50" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(201,50,93,0.15),transparent_50%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,color-mix(in srgb, var(--site-accent) 0.1500%, transparent),transparent_50%)]" />
         </div>
       )}
 

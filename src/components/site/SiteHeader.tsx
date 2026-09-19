@@ -97,7 +97,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
             aria-expanded={menuOpen}
             aria-controls="site-menu"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full lg:hidden"
+            className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full max-[900px]:inline-flex min-[901px]:hidden"
             style={{ border: '1px solid var(--site-line)', color: 'var(--site-text)' }}
           >
             {menuOpen ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
@@ -108,7 +108,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
       <div
         id="site-menu"
         hidden={!menuOpen}
-        className="fixed inset-0 z-[79] lg:hidden"
+        className="fixed inset-0 z-[79] min-[901px]:hidden"
         style={{
           background: 'var(--site-ground)',
           paddingTop: 'calc(env(safe-area-inset-top, 0px) + 86px)',

@@ -288,7 +288,7 @@ export default function CreativeMindsPage() {
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
-                    background: 'radial-gradient(circle at 50% 50%, rgba(201, 50, 93, 0.2) 0%, transparent 65%)',
+                    background: 'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--site-accent) 0.200%, transparent) 0%, transparent 65%)',
                     transform: 'scale(1.5)',
                     filter: 'blur(25px)',
                     zIndex: -1,
@@ -302,7 +302,7 @@ export default function CreativeMindsPage() {
                   style={{
                     width: 'min(380px, 70vw)',
                     height: 'auto',
-                    filter: 'drop-shadow(0 30px 60px rgba(140,25,60,0.3))',
+                    filter: 'drop-shadow(0 30px 60px color-mix(in srgb, var(--site-accent) 0.300%, transparent))',
                     animation: 'v2HeroFloat 6s ease-in-out infinite',
                   }}
                 />
@@ -363,7 +363,7 @@ export default function CreativeMindsPage() {
           <div
             className="absolute -left-1/4 top-1/4 w-[500px] h-[500px] rounded-full opacity-25"
             style={{
-              background: 'radial-gradient(circle, rgba(201, 50, 93, 0.12) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, color-mix(in srgb, var(--site-accent) 0.1200%, transparent) 0%, transparent 70%)',
               filter: 'blur(30px)',
             }}
           />
@@ -443,8 +443,8 @@ export default function CreativeMindsPage() {
               </div>
 
               {/* Decorative circles */}
-              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none" style={{ border: '1px solid rgba(201, 50, 93, 0.08)' }} />
-              <div className="absolute -bottom-5 -left-5 w-20 h-20 rounded-full pointer-events-none" style={{ border: '1px solid rgba(201, 50, 93, 0.08)' }} />
+              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none" style={{ border: '1px solid color-mix(in srgb, var(--site-accent) 0.0800%, transparent)' }} />
+              <div className="absolute -bottom-5 -left-5 w-20 h-20 rounded-full pointer-events-none" style={{ border: '1px solid color-mix(in srgb, var(--site-accent) 0.0800%, transparent)' }} />
             </div>
           </div>
 
@@ -620,7 +620,7 @@ export default function CreativeMindsPage() {
               className="absolute pointer-events-none rounded-full"
               style={{
                 width: '350px', height: '350px', top: '-100px', right: '-80px',
-                background: 'radial-gradient(circle, rgba(201,50,93,0.06) 0%, transparent 70%)',
+                background: 'radial-gradient(circle, color-mix(in srgb, var(--site-accent) 0.0600%, transparent) 0%, transparent 70%)',
                 animation: 'ctaSmokeFloat1 8s ease-in-out infinite',
               }}
             />
@@ -656,11 +656,11 @@ export default function CreativeMindsPage() {
               <div
                 className="hidden md:block absolute left-1/2 top-6 bottom-6 w-px pointer-events-none"
                 style={{
-                  background: 'linear-gradient(180deg, transparent, rgba(201,50,93,0.15), transparent)',
+                  background: 'linear-gradient(180deg, transparent, color-mix(in srgb, var(--site-accent) 0.1500%, transparent), transparent)',
                   transform: 'translateX(-50%)',
                 }}
               />
-              <div className="md:hidden w-full h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(201,50,93,0.15), transparent)' }} />
+              <div className="md:hidden w-full h-px" style={{ background: 'linear-gradient(90deg, transparent, color-mix(in srgb, var(--site-accent) 0.1500%, transparent), transparent)' }} />
 
               {/* Right — Businesses (Secondary) */}
               <div className="md:pl-8 lg:pl-12">
