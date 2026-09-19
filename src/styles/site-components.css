@@ -282,6 +282,52 @@
     [data-site] .hero-films .film-col:nth-child(3) { display: none; }
   }
 
+  /* ---------- section layouts ----------
+   *
+   * The rule this enforces: a section is a grid that spans the measure, and
+   * text is a COLUMN within it — never a lone block floating in the container.
+   *
+   * Measured on /about at 1309px before this existed: the h1 occupied
+   * 52–968 and left 341px dead to its right; the lede left 585px; and the
+   * closing CTA was a 720px island centred with 295px dead on each side.
+   * Centred and left-aligned were both wrong for the same reason — neither
+   * was using the width, they were just wasting it in different places.
+   *
+   * A reading measure of ~66ch is still correct. It belongs to the text
+   * column, not to the section.
+   */
+
+  /* Narrow label rail + wide content. The default for any "heading plus body"
+     section: the heading becomes a sibling of the content rather than a hat
+     sitting on top of a half-empty row. */
+  [data-site] .lay-rail {
+    display: grid;
+    gap: clamp(20px, 3vw, 28px) clamp(32px, 5vw, 80px);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  @media (min-width: 860px) {
+    [data-site] .lay-rail { grid-template-columns: minmax(0, 24ch) minmax(0, 1fr); }
+  }
+
+  /* Text + object, asymmetric. What the home hero does. */
+  [data-site] .lay-split {
+    display: grid;
+    gap: clamp(24px, 4vw, 64px);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    [data-site] .lay-split { grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr); }
+  }
+  /* Flip the object to the left without reordering the markup, so the heading
+     still comes first for a screen reader. */
+  @media (min-width: 900px) {
+    [data-site] .lay-split--mirror > :first-child { order: 2; }
+  }
+
+  /* Body text keeps a reading measure inside its column. */
+  [data-site] .lay-measure { max-width: 66ch; }
+
   /* ---------- section chrome ---------- */
   [data-site] .sec { padding-block: var(--spacing-site-section); position: relative; }
   [data-site] .wrap {

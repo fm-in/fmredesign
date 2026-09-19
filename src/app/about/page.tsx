@@ -73,11 +73,16 @@ export default function AboutPage() {
       <main id="main-content">
         <Section as="div" className="pb-0">
           <Container>
+            {/* The hero pairs the headline with the people it is about. The
+                right half was empty while the portraits sat three sections
+                further down. */}
+            <div className="lay-split">
+              <div>
             <Label>Meet the minds behind the work</Label>
-            <Display level="display" className="mt-6 max-w-[16ch]">
+            <Display level="display" className="mt-6">
               Your growth is our mission.
             </Display>
-            <Text size="lead" muted className="mt-8 max-w-2xl">
+            <Text size="lead" muted className="mt-8 lay-measure">
               Freaking Minds is a full-service creative marketing agency that has been revolutionizing
               brand growth for over a decade. We combine strategic thinking with creative excellence to
               deliver campaigns that don&rsquo;t just look good&mdash;they drive real business results.
@@ -98,12 +103,35 @@ export default function AboutPage() {
                 View our work
               </Link>
             </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {TEAM.map((member) => (
+                  <figure key={member.name} className="m-0">
+                    <div
+                      className="relative overflow-hidden rounded-site-sm"
+                      style={{ aspectRatio: '4 / 5', background: 'var(--site-raised)', boxShadow: 'var(--site-film-shadow)' }}
+                    >
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0 rounded-site-sm"
+                        style={{ boxShadow: 'inset 0 0 0 1px var(--site-line)', zIndex: 1 }}
+                      />
+                      <Image src={member.image} alt={member.name} fill sizes="(min-width:900px) 24vw, 45vw" className="object-cover object-top" />
+                    </div>
+                    <figcaption className="tag mt-3">{member.name.split(' ')[0]}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
           </Container>
         </Section>
 
         <Section>
           <Container>
-            <Label>What drives our excellence</Label>
+            <div className="lay-rail">
+              <Label>What drives our excellence</Label>
+              <div>
             {/*
               Four numbered rows, not four icon cards. The icons were generic
               lucide glyphs that carried no meaning the heading did not already
@@ -125,13 +153,16 @@ export default function AboutPage() {
               ))}
             </ul>
             <Rule soft />
+              </div>
+            </div>
           </Container>
         </Section>
 
         <Section tone="raised">
           <Container>
-            <Label>The creative minds behind your success</Label>
-            <div className="mt-12 grid gap-12 sm:grid-cols-2">
+            <div className="lay-rail">
+              <Label>The creative minds behind your success</Label>
+              <div className="grid gap-12 sm:grid-cols-2">
               {TEAM.map((member) => (
                 <div key={member.name}>
                   <div
@@ -166,14 +197,20 @@ export default function AboutPage() {
                   <Label className="mt-4 block">{member.expertise}</Label>
                 </div>
               ))}
+              </div>
             </div>
           </Container>
         </Section>
 
+        {/* The closing CTA was a 720px block centred in a 1309px container —
+            295px dead on each side. Now a split: the ask on the left, the
+            routes to act on it on the right. */}
         <Section>
-          <Container width="narrow">
+          <Container>
+            <div className="lay-split">
+              <div>
             <Display level="h1" as="h2">Let&rsquo;s create something great together.</Display>
-            <Text size="lead" muted className="mt-8">
+            <Text size="lead" muted className="mt-8 lay-measure">
               Tell us what you are trying to move and we will tell you whether we are the right people
               for it.
             </Text>
@@ -192,6 +229,33 @@ export default function AboutPage() {
               >
                 Or just ask a question
               </Link>
+            </div>
+              </div>
+
+              {/* A split with an empty second column is the same dead space in
+                  a different place. The right column carries the direct routes,
+                  so someone who does not want a form still has somewhere to go. */}
+              <div>
+                <Rule />
+                <dl className="mt-6" style={{ margin: '1.5rem 0 0' }}>
+                  {[
+                    ['Email', 'freakingmindsdigital@gmail.com', 'mailto:freakingmindsdigital@gmail.com'],
+                    ['Phone', '+91 98332 57659', 'tel:+919833257659'],
+                    ['Reply', 'Within 24 hours, Mon\u2013Sat', null],
+                  ].map(([label, value, href]) => (
+                    <div key={label} className="flex items-baseline justify-between gap-6 py-3" style={{ borderBottom: '1px solid var(--site-line-soft)' }}>
+                      <dt className="tag">{label}</dt>
+                      <dd style={{ margin: 0, textAlign: 'right' }}>
+                        {href ? (
+                          <a href={href} style={{ color: 'var(--site-text)' }}>{value}</a>
+                        ) : (
+                          <span style={{ color: 'var(--site-muted)' }}>{value}</span>
+                        )}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
           </Container>
         </Section>
