@@ -1,9 +1,16 @@
 /**
- * Reached from a link in a sales email. Deliberately plain: no starfield, no
- * marketing background — `V2PageWrapper` is a marketing surface and this is a
- * transactional one.
+ * Reached from a link in a sales email.
+ *
+ * Gets the full site chrome like every other public page. It previously opted
+ * out — a bare `fm-neutral-50` div with no shell — which meant the one page a
+ * recipient sees after asking to be left alone was the only page that did not
+ * look like the company. It is a short page, not a different site.
  */
 import type { Metadata } from 'next';
+import { SiteShell } from '@/components/site/SiteShell';
+import { SiteHeader } from '@/components/site/SiteHeader';
+import { SiteFooter } from '@/components/site/SiteFooter';
+import { Container, Display, Eyebrow, Section, Text } from '@/components/site/primitives';
 import { UnsubscribeForm } from '@/components/sales/UnsubscribeForm';
 
 export const metadata: Metadata = {
@@ -18,16 +25,37 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
   const { t } = await searchParams;
 
   return (
-    <div className="bg-fm-neutral-50">
-      <section className="py-16 md:py-24">
-        <div className="site-measure site-measure--narrow">
-          <div className="bg-site-raised border border-fm-neutral-200 rounded-site-lg p-6 md:p-8">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4">Stop follow-up emails</h1>
-            <p className="text-fm-neutral-600 mb-8">Confirm below and we will not email you about your enquiry again.</p>
-            <UnsubscribeForm token={t ?? ''} />
-          </div>
-        </div>
-      </section>
-    </div>
+    <SiteShell>
+      <SiteHeader />
+      <main id="main-content">
+        <Section>
+          <Container>
+            <div className="lay-rail">
+              <div>
+                <Eyebrow>Email</Eyebrow>
+              </div>
+
+              <div className="lay-measure">
+                <Display level="h1">Stop follow-up emails.</Display>
+                <Text size="lead" muted className="mt-8">
+                  Confirm below and we will not email you about your enquiry again. It takes effect
+                  immediately &mdash; there is nothing else to do.
+                </Text>
+
+                <div className="mt-10">
+                  <UnsubscribeForm token={t ?? ''} />
+                </div>
+
+                <p className="mt-12 font-site-sans text-site-label text-site-muted">
+                  This only stops sales follow-ups. Anything you asked us to send &mdash; a
+                  receipt, a course confirmation &mdash; still reaches you.
+                </p>
+              </div>
+            </div>
+          </Container>
+        </Section>
+      </main>
+      <SiteFooter />
+    </SiteShell>
   );
 }

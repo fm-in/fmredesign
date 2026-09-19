@@ -93,7 +93,7 @@
     position: relative;
     transition: background 0.22s ease, color 0.22s ease, border-color 0.22s ease;
   }
-  [data-site] .btn--primary { background: var(--site-accent); color: #fff; }
+  [data-site] .btn--primary { background: var(--site-accent-solid); color: #fff; }
   [data-site] .btn--primary:hover { background: var(--site-text); color: var(--site-ground); }
   [data-site] .btn--ghost { border-color: var(--site-line); color: var(--site-text); }
   [data-site] .btn--ghost:hover { border-color: var(--site-text); background: var(--site-text); color: var(--site-ground); }
@@ -681,6 +681,50 @@
   }
   @media (max-width: 860px) { [data-site] .acad-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 520px) { [data-site] .acad-grid { grid-template-columns: minmax(0, 1fr); } }
+
+  /* The hero's fact list: a definition list, ruled like every other index on
+     the site rather than boxed into a card. */
+  [data-site] .acad-facts { margin: 0; }
+  [data-site] .acad-facts > div {
+    padding-block: 14px;
+    border-top: 1px solid var(--site-line-soft);
+  }
+  [data-site] .acad-facts > div:first-child { border-top-color: var(--site-line); }
+  [data-site] .acad-facts dd { margin: 4px 0 0; }
+
+  /* ---------- creativeminds ---------- */
+  /* A bordered chip and an accent tile, both built from tokens so they survive
+     the theme swap. What they replace did not: the chips were a hardcoded
+     white fill on a bone ground, and the tiles were `bg-site-raised` (#fffdfa)
+     behind a `text-white` glyph — a white icon on a white square. */
+  [data-site] .cm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 1px solid var(--site-line);
+    border-radius: 999px;
+    color: var(--site-muted);
+    font-family: var(--site-font-sans);
+    font-size: 0.875rem;
+    transition: color 0.25s ease, border-color 0.25s ease;
+  }
+  [data-site] .cm-chip:hover {
+    color: var(--site-text);
+    border-color: var(--site-text);
+  }
+  [data-site] .cm-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: var(--radius-site-md);
+    color: var(--site-accent);
+    background: color-mix(in srgb, var(--site-accent) 10%, transparent);
+  }
+  [data-site] .cm-tile--lg { width: 56px; height: 56px; }
 
   /* ---------- closing ---------- */
   [data-site] .close h2 { max-width: 16ch; }

@@ -244,7 +244,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
                   <div
                     className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
                       ${currentStep >= step.number
-                        ? 'bg-site-accent border-site-accent text-white shadow-lg'
+                        ? 'bg-site-accent-solid border-site-accent-solid text-white shadow-lg'
                         : 'border-site-line text-site-muted bg-site-raised'}`}
                   >
                     {currentStep > step.number ? (
@@ -311,7 +311,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
             ) : (
               <button
                 onClick={handleNext}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-site-accent text-white text-sm font-medium rounded-lg hover:bg-site-accent transition-colors min-h-[48px]"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-site-accent-solid text-white text-sm font-medium rounded-lg hover:bg-site-text transition-colors min-h-[48px]"
               >
                 Next Step
                 <ArrowRight className="h-4 w-4" />
@@ -768,7 +768,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
         {/* YouTube */}
         <div className="p-4 border border-site-line rounded-lg space-y-3">
           <h3 className="text-sm font-semibold text-site-text flex items-center gap-2">
-            <span className="w-5 h-5 bg-site-accent rounded inline-flex items-center justify-center text-white text-[10px] font-bold">
+            <span className="w-5 h-5 bg-site-accent-solid rounded inline-flex items-center justify-center text-white text-[10px] font-bold">
               &#9654;
             </span>
             YouTube

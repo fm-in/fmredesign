@@ -33,6 +33,7 @@
   --color-site-text: var(--site-text);
   --color-site-muted: var(--site-muted);
   --color-site-accent: var(--site-accent);
+  --color-site-accent-solid: var(--site-accent-solid);
   --color-site-line: var(--site-line);
   --color-site-line-soft: var(--site-line-soft);
 
@@ -109,6 +110,16 @@
   --site-text: #13110f;
   --site-muted: #6b635c;
   --site-accent: #c9325d;
+  /*
+   * The fill behind white text, kept apart from the text accent.
+   *
+   * They used to be one token, which meant dark mode's lighter accent became
+   * the button's background too: white on #e8336a measures 4.11:1, under AA,
+   * on the primary CTA of every page. This one does not lighten — white on
+   * #c9325d is 5.12:1 in both themes, and the fill still reads 3.86:1 against
+   * the ink ground, above the 3:1 a UI component needs.
+   */
+  --site-accent-solid: #c9325d;
   --site-line: rgba(19, 17, 15, 0.14);
   --site-line-soft: rgba(19, 17, 15, 0.07);
 
@@ -143,8 +154,12 @@
   --site-text: #ede6de;
   --site-muted: #8e8189;
   /* Magenta measures ~4.7:1 on bone but only ~3.1:1 on ink, so dark gets a
-     lighter, hotter accent rather than the same hex. */
-  --site-accent: #e8336a;
+     lighter, hotter accent rather than the same hex. #e8336a landed on
+     exactly 4.50:1 against the raised surface — the AA threshold itself, with
+     no headroom for antialiasing. #ee4276 measures 4.99:1 there. */
+  --site-accent: #ee4276;
+  /* Deliberately NOT lightened: see the light-theme note. */
+  --site-accent-solid: #c9325d;
   --site-line: rgba(237, 230, 222, 0.14);
   --site-line-soft: rgba(237, 230, 222, 0.07);
 

@@ -304,7 +304,7 @@ export default function GetStartedPage() {
                         <div
                           className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
                             ${currentStep >= step
-                              ? 'bg-site-accent border-site-accent text-white shadow-lg'
+                              ? 'bg-site-accent-solid border-site-accent-solid text-white shadow-lg'
                               : 'border-site-line text-site-muted bg-site-raised'}`}
                         >
                           {currentStep > step ? (
@@ -561,7 +561,7 @@ export default function GetStartedPage() {
                             >
                               <div className="font-semibold text-site-text">{budget.label}</div>
                               {budget.popular && (
-                                <span className="absolute top-3 right-3 bg-site-accent text-white text-xs px-3 py-1 rounded-full font-medium">
+                                <span className="absolute top-3 right-3 bg-site-accent-solid text-white text-xs px-3 py-1 rounded-full font-medium">
                                   Popular
                                 </span>
                               )}
@@ -817,7 +817,7 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
                   { step: 4, title:"Project Kickoff", desc:"Start building your amazing project with our expert team!" }
                 ].map((item) => (
                   <li key={item.step} className="flex items-start space-x-4">
-                    <div className="w-8 h-8 bg-site-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-8 h-8 bg-site-accent-solid rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                       <span className="text-white font-semibold text-sm">{item.step}</span>
                     </div>
                     <div>

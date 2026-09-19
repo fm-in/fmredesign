@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
@@ -184,8 +185,12 @@ export default async function Home() {
           {LOGO_ROWS.map((row, i) => (
             <div className="mq" key={i} data-mq={i === 0 ? '1' : '-1'}>
               {row.map((name) => (
+                // Small files, but 36 of them in two marquees. Left as plain
+                // <img>: the marquee duplicates its children until a cycle
+                // exceeds the viewport, and next/image's wrapper markup breaks
+                // the flex measurement that duplication depends on.
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={name} src={`/clients/${name}.png`} alt="" width={220} height={110} />
+                <img key={name} src={`/clients/${name}.png`} alt="" width={220} height={110} loading="lazy" decoding="async" />
               ))}
             </div>
           ))}
@@ -249,8 +254,17 @@ export default async function Home() {
             <div className="strip-track">
               {CAMPAIGNS.map(([file, caption]) => (
                 <figure key={file}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/work/services/${file}.jpg`} alt={caption} width={620} height={775} />
+                  {/* Measured: these render at 314px and the source files are
+                      1080–1440px wide, so the page was pulling 4.6x the pixels
+                      it could show. `sizes` is what makes next/image pick the
+                      narrow variant — without it, it serves 100vw. */}
+                  <Image
+                    src={`/work/services/${file}.jpg`}
+                    alt={caption}
+                    width={620}
+                    height={775}
+                    sizes="(max-width: 700px) 60vw, 340px"
+                  />
                   <figcaption className="tag">{caption}</figcaption>
                 </figure>
               ))}
@@ -333,8 +347,10 @@ export default async function Home() {
               <div className="team">
                 {TEAM.map(([src, name]) => (
                   <figure key={name}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt="" width={460} height={460} />
+                    {/* 142px on screen. `alii-palau.png` is 1348px wide and
+                        980KB — 9.5x oversampled, the single heaviest asset on
+                        the page. */}
+                    <Image src={src} alt="" width={460} height={460} sizes="160px" />
                     <figcaption className="tag">{name}</figcaption>
                   </figure>
                 ))}
@@ -376,8 +392,14 @@ export default async function Home() {
               <div className="sys-proof">
                 {SYSTEM_PROOF.map(([file, name]) => (
                   <figure key={file}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`/work/websites/${file}`} alt={`${name} website`} width={880} height={605} />
+                    {/* 295px rendered from 1280px sources. */}
+                    <Image
+                      src={`/work/websites/${file}`}
+                      alt={`${name} website`}
+                      width={880}
+                      height={605}
+                      sizes="(max-width: 700px) 70vw, 320px"
+                    />
                     <figcaption className="tag">{name}</figcaption>
                   </figure>
                 ))}

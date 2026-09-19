@@ -149,7 +149,7 @@ function Pill({
         'rounded-full text-sm font-medium border transition-colors whitespace-nowrap',
         subtle ? 'px-3 py-1.5' : 'px-4 py-2',
         active
-          ? 'bg-site-accent text-white border-site-accent'
+          ? 'bg-site-accent-solid text-white border-site-accent-solid'
           : dead
             ? 'bg-site-raised/40 text-site-muted border-site-line-soft cursor-not-allowed'
             : 'bg-site-raised text-site-text border-site-line-soft hover:border-site-line',
@@ -157,7 +157,7 @@ function Pill({
     >
       {label}
       {count !== undefined && (
-        <span className={active ? 'text-white/70 ml-1.5' : 'text-site-muted ml-1.5'}>{count}</span>
+        <span className={active ? 'text-white ml-1.5' : 'text-site-muted ml-1.5'}>{count}</span>
       )}
     </button>
   );
@@ -301,13 +301,13 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
               className={[
                 'inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium border transition-colors',
                 refineCount > 0
-                  ? 'bg-site-accent text-white border-site-accent'
+                  ? 'bg-site-accent-solid text-white border-site-accent-solid'
                   : 'bg-site-raised text-site-text border-site-line-soft hover:border-site-line',
               ].join(' ')}
             >
               <SlidersHorizontal className="w-4 h-4" />
               <span className="hidden sm:inline">Filters</span>
-              {refineCount > 0 && <span className="text-white/80">{refineCount}</span>}
+              {refineCount > 0 && <span className="text-white/90">{refineCount}</span>}
             </button>
           </div>
         </div>

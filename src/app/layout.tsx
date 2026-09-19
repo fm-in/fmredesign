@@ -223,8 +223,20 @@ export default function RootLayout({
     ],
   };
 
+  /*
+   * `suppressHydrationWarning` on <html> is required here, not optional: the
+   * theme script in <head> deliberately writes `data-theme` onto this element
+   * before React hydrates, so the server's HTML and the client's DOM differ
+   * by design. Without it, every dark-mode visitor got a hydration mismatch
+   * logged against the root element on every page load. It suppresses the
+   * warning for this element's own attributes only — children still checked.
+   */
   return (
-    <html lang="en" className={`${playfair.variable} ${jakarta.variable} ${instrument.variable} ${dmSans.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${playfair.variable} ${jakarta.variable} ${instrument.variable} ${dmSans.variable}`}
+    >
       <head>
         {/*
           Applies the stored theme before first paint. Without it the page
@@ -253,7 +265,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-site-raised focus:text-black focus:px-4 focus:py-2 focus:rounded"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-site-raised focus:text-site-text focus:px-4 focus:py-2 focus:rounded focus:outline focus:outline-2 focus:outline-site-accent"
         >
           Skip to content
         </a>

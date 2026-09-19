@@ -38,19 +38,24 @@ export function UnsubscribeForm({ token }: { token: string }) {
 
   if (state === 'done') {
     return (
-      <p className="text-fm-neutral-700 font-medium" role="status">
+      <p className="font-site-sans text-site-lead text-site-text" role="status">
         You are unsubscribed. We will not email you about this enquiry again.
       </p>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <button type="button" onClick={confirm} disabled={state === 'sending' || !token} className="v2-btn v2-btn-magenta disabled:opacity-50">
+    <div className="flex flex-col items-start gap-5">
+      <button
+        type="button"
+        onClick={confirm}
+        disabled={state === 'sending' || !token}
+        className="btn btn--primary disabled:opacity-50"
+      >
         {state === 'sending' ? 'Unsubscribing…' : 'Unsubscribe'}
       </button>
       {state === 'error' && (
-        <p className="text-sm text-fm-magenta-700" role="alert">
+        <p className="font-site-sans text-site-body" style={{ color: 'var(--site-accent)' }} role="alert">
           {message}
         </p>
       )}

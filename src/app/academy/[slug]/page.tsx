@@ -164,7 +164,9 @@ export default async function ProgramDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             <div className="lg:col-span-7 space-y-6">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="px-3 py-1 rounded-full bg-site-raised/10 backdrop-blur-sm text-white/90 font-medium">
+                {/* Was `bg-site-raised/10` behind `text-white/90`: a 10%-opacity
+                    near-white fill under white text, on a bone ground. */}
+                <span className="px-3 py-1 rounded-full border border-site-line text-site-accent font-medium">
                   {isBundle ? 'Creator Program — Full Bundle' : FORMAT_LABELS[p.format]}
                 </span>
                 <span className="text-site-muted inline-flex items-center gap-1.5">
@@ -172,7 +174,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   {schedule.isUpcoming ? `Starts ${schedule.long}` : BATCH_CADENCE}
                 </span>
                 {daysLeft != null && daysLeft > 0 && daysLeft <= 30 && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-site-accent/15 text-site-accent font-medium">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-site-line text-site-accent font-medium">
                     <Sparkles className="w-3.5 h-3.5" />
                     {daysLeft} {daysLeft === 1 ? 'day' : 'days'} to go
                   </span>
@@ -220,14 +222,17 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   />
                 </div>
               ) : (
-                <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden bg-gradient-to-br">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.4),transparent_50%)]" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
-                    <GraduationCap className="w-20 h-20 mb-4 opacity-90" />
-                    <div className="text-site-h3 font-site-display font-bold mb-2 leading-tight">
+                /* The fallback for a program with no hero image. It was
+                   `bg-gradient-to-br` with no colour stops — which Tailwind
+                   resolves to `background-image: none` — under `text-white`,
+                   so it rendered as white text on the page ground. */
+                <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden site-surface">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+                    <GraduationCap className="w-20 h-20 mb-4 text-site-accent" aria-hidden />
+                    <div className="text-site-h3 font-site-display text-site-text mb-2 leading-tight" style={{ textAlign: 'center' }}>
                       {isBundle ? 'All 6 Courses' : p.title}
                     </div>
-                    <div className="text-white/80 text-sm">FM Academy &middot; Creator Program</div>
+                    <span className="tag">FM Academy &middot; Creator Program</span>
                   </div>
                 </div>
               )}
@@ -379,58 +384,19 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                 </SubSection>
               )}
 
-              {/* ── Mobile inline reserve form ─────────────────
-                  Hidden on desktop (sticky aside covers it). On mobile this
-                  is where the bottom sticky bar scrolls to. */}
-              {!isSoldOut && (
-                <div id="reserve" className="lg:hidden site-surface rounded-site-lg p-6 space-y-5 scroll-mt-24">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-wider text-site-muted mb-1">
-                      {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
-                    </div>
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                      <span className="text-site-h3 font-bold text-site-accent">{price.current}</span>
-                      {price.earlyBirdActive && (
-                        <span className="text-sm text-site-muted line-through">{price.original}</span>
-                      )}
-                    </div>
-                    {price.earlyBirdActive && p.earlyBirdUntil && (
-                      <p className="text-xs text-site-text mt-1.5 inline-flex items-center gap-1">
-                        <Sparkles className="w-3 h-3" />
-                        Early-bird ends {new Date(p.earlyBirdUntil).toLocaleDateString('en-IN', {
-                          day: 'numeric', month: 'short',
-                        })}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-start gap-3 p-3 rounded-site-md bg-site-raised">
-                    <Calendar className="w-5 h-5 text-site-accent shrink-0 mt-0.5" />
-                    <div className="text-sm">
-                      <div className="font-semibold text-site-text">
-                        {schedule.isUpcoming ? 'Batch starts' : 'Intake'}
-                      </div>
-                      <div className="text-site-muted">
-                        {schedule.isUpcoming ? schedule.long : BATCH_CADENCE}
-                      </div>
-                    </div>
-                  </div>
-
-                  <ReserveSeatForm
-                    programId={p.id}
-                    programTitle={p.title}
-                    amountInr={buyerAmount}
-                  />
-
-                  <p className="text-xs text-site-muted">
-                    Indian GST applies. Razorpay receipt issued on payment.
-                  </p>
-                </div>
-              )}
             </div>
 
-            {/* ── Sticky CTA column (desktop only) ────────── */}
+            {/* ── Checkout ────────────────────────────────── */}
             {/*
+              ONE instance, not two. This page used to render the whole panel
+              twice — a `lg:hidden` copy at the end of the content column and a
+              `hidden lg:block` copy here — identical but for the seat count,
+              which only the desktop copy had. They had already drifted once.
+
+              A grid item that is static on mobile stacks after the column
+              beside it, which is exactly where the mobile copy sat, so the
+              duplicate bought nothing.
+
               A sticky block taller than the space it sticks in has its bottom
               permanently below the fold — you scroll, it stays put, and the
               submit button never arrives. Measured on a 1366x768 laptop
@@ -438,7 +404,10 @@ export default async function ProgramDetailPage({ params }: PageProps) {
               564px is available once stuck, so 77px of the checkout form was
               unreachable. It now scrolls its own overflow instead.
             */}
-            <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4 lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto">
+            <aside
+              id="reserve"
+              className="scroll-mt-24 lg:sticky lg:top-24 lg:self-start space-y-4 lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto"
+            >
               <div className="site-surface rounded-site-lg p-6 space-y-5">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-wider text-site-muted mb-1">
@@ -515,7 +484,6 @@ export default async function ProgramDetailPage({ params }: PageProps) {
           program={p}
           price={price.current}
           originalPrice={price.earlyBirdActive ? price.original : undefined}
-          amountInr={buyerAmount}
         />
       )}
     </main>
@@ -535,16 +503,15 @@ function SubSection({ title, children }: { title: string; children: React.ReactN
   );
 }
 
+/** The bar is an anchor to the checkout below, so it needs no amount itself. */
 function MobileStickyBar({
   program,
   price,
   originalPrice,
-  amountInr,
 }: {
   program: Program;
   price: string;
   originalPrice?: string;
-  amountInr: number;
 }) {
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-site-raised border-t border-site-line shadow-[0_-8px_24px_rgba(0,0,0,0.08)] p-3">

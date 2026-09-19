@@ -19,13 +19,14 @@ import {
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
+import { Rule } from '@/components/site/primitives';
 import {
   formatProgramPrice,
   type Program,
   transformProgramRow,
 } from '@/lib/admin/academy-types';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { batchSchedule, seatScarcity } from '@/lib/academy/schedule';
+import { BATCH_CADENCE, batchSchedule, seatScarcity, type BatchSchedule } from '@/lib/academy/schedule';
 
 export const revalidate = 60;
 export const metadata = {
@@ -107,23 +108,39 @@ export default async function AcademyPage() {
           with a pill above it was the V2 pattern; nothing else here uses it. */}
       <section className="sec" style={{ paddingBottom: 0 }}>
         <div className="wrap">
-          <div className="eyebrow">
-            <span className="tag tag--a">FM Academy &middot; Creator Program</span>
+          <div className="lay-split">
+            <div>
+              <div className="eyebrow">
+                <span className="tag tag--a">FM Academy &middot; Creator Program</span>
+              </div>
+              <h1 className="d" style={{ maxWidth: '20ch' }}>
+                Learn the skills that build careers, brands &amp; businesses.
+              </h1>
+              <p className="lede" style={{ marginTop: 'clamp(22px, 2.6vw, 34px)' }}>
+                Six in-person courses by the Freaking Minds team &mdash; digital marketing,
+                performance ads, design, video editing, AI filmmaking and web design. Taught in
+                our Bhopal studio.
+              </p>
+              <p className="tag" style={{ marginTop: 26 }}>
+                {schedule.label}
+                {schedule.isUpcoming && schedule.daysUntil != null && schedule.daysUntil <= 30 && (
+                  <span className="tag--a"> &middot; {schedule.daysUntil} days to go</span>
+                )}
+              </p>
+            </div>
+
+            {/* The facts a prospective student checks before reading anything
+                else. They were scattered down the page; the hero's right half
+                was empty at every width above 900px. */}
+            <dl className="acad-facts">
+              {heroFacts(programs, courses, schedule).map(([term, value]) => (
+                <div key={term}>
+                  <dt className="tag">{term}</dt>
+                  <dd className="font-site-sans text-site-body text-site-text">{value}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
-          <h1 className="d" style={{ maxWidth: '20ch' }}>
-            Learn the skills that build careers, brands &amp; businesses.
-          </h1>
-          <p className="lede" style={{ marginTop: 'clamp(22px, 2.6vw, 34px)' }}>
-            Six in-person courses by the Freaking Minds team &mdash; digital marketing,
-            performance ads, design, video editing, AI filmmaking and web design. Taught in our
-            Bhopal studio.
-          </p>
-          <p className="tag" style={{ marginTop: 26 }}>
-            {schedule.label}
-            {schedule.isUpcoming && schedule.daysUntil != null && schedule.daysUntil <= 30 && (
-              <span className="tag--a"> &middot; {schedule.daysUntil} days to go</span>
-            )}
-          </p>
         </div>
       </section>
 
@@ -211,6 +228,51 @@ function bundleSavingLabel(bundle: Program | undefined, courses: Program[]): str
   }).format(rounded);
 }
 
+/**
+ * The hero's right column.
+ *
+ * Every figure is derived from the rows that were just fetched — seat counts
+ * from `seats_total`, the cheapest course from its own price — so it cannot
+ * drift from what the cards below say. Terms with nothing real behind them are
+ * dropped rather than filled with a placeholder.
+ */
+function heroFacts(
+  programs: Program[],
+  courses: Program[],
+  schedule: BatchSchedule,
+): [string, string][] {
+  const facts: [string, string][] = [
+    ['Next batch', schedule.isUpcoming && schedule.long ? schedule.long : BATCH_CADENCE],
+    ['Format', 'In person, Bhopal studio'],
+    ['Courses', `${courses.length} individual, or the full program`],
+  ];
+
+  const seats = programs.map((p) => p.seatsTotal).filter((n): n is number => n != null);
+  if (seats.length) {
+    const low = Math.min(...seats);
+    const high = Math.max(...seats);
+    facts.push(['Seats per cohort', low === high ? String(low) : `${low}–${high}`]);
+  }
+
+  if (courses.length) {
+    const cheapest = courses.reduce((a, b) => (effectivePrice(a) <= effectivePrice(b) ? a : b));
+    facts.push(['From', formatProgramPrice(cheapest).current]);
+  }
+
+  return facts;
+}
+
+/**
+ * The featured bundle.
+ *
+ * Rebuilt because it was invisible. The card carried `bg-gradient-to-br` with
+ * no `from-`/`to-` stops, which resolves to `background-image: none` — so the
+ * whole panel was transparent — and every label inside it was `text-white` or
+ * `text-white/85`. Measured on the default theme: white text at 85% alpha on
+ * rgb(247,244,239). The highest-margin product on the page could not be read.
+ *
+ * It is a raised surface with ink text now, and the price carries the accent.
+ */
 function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
   const price = formatProgramPrice(p);
   const scarcity = seatScarcity(p.seatsTotal, p.seatsTaken);
@@ -218,61 +280,69 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
   return (
     <Link
       href={`/academy/${p.slug}`}
-      className="group block relative overflow-hidden rounded-site-lg bg-gradient-to-br p-6 md:p-8 transition-shadow"
+      className="group block site-surface rounded-site-lg p-6 md:p-10"
     >
-      {/* glow / pattern */}
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.5),transparent_50%)]" />
-
-      <div className="relative grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
-        <div className="lg:col-span-3 space-y-5 text-white">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-site-raised/15 backdrop-blur-sm text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" />
-            Most popular &middot; All 6 courses
+      <div className="lay-split">
+        <div>
+          <div className="eyebrow">
+            <span className="tag tag--a">
+              <Sparkles className="w-3.5 h-3.5 inline-block align-[-2px] mr-1.5" aria-hidden />
+              Most popular &middot; all six courses
+            </span>
           </div>
-          <h3 className="text-site-h2 font-site-display font-bold leading-tight">
+
+          <h3 className="d" style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.8rem)', marginTop: 16 }}>
             The full Creator Program
           </h3>
-          <p className="text-white/85 text-base md:text-lg leading-relaxed max-w-xl">
-            Everything in one batch — digital marketing, performance ads, design,
-            video editing, AI filmmaking and web design.
-            {saving && <> Save {saving} vs buying the courses individually.</>}
+
+          <p className="mt-6 font-site-sans text-site-lead text-site-muted lay-measure">
+            Everything in one batch &mdash; digital marketing, performance ads, design, video
+            editing, AI filmmaking and web design.
+            {saving && <> Save {saving} against buying the courses individually.</>}
           </p>
 
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/80 pt-2">
-            <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" /> All 6 modules
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" /> Single integrated certificate
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4" /> Small batch ({p.seatsTotal} seats)
-            </span>
-          </div>
+          <ul
+            className="mt-8 flex flex-wrap gap-x-7 gap-y-3"
+            style={{ listStyle: 'none', padding: 0, margin: '2rem 0 0' }}
+          >
+            {[
+              'All 6 modules',
+              'Single integrated certificate',
+              `Small batch (${p.seatsTotal} seats)`,
+            ].map((item) => (
+              <li key={item} className="inline-flex items-center gap-2 font-site-sans text-site-label text-site-muted">
+                <CheckCircle2 className="w-4 h-4 text-site-accent" aria-hidden />
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="lg:col-span-2 space-y-4 lg:text-right">
-          <div className="space-y-1">
-            <div className="text-white/70 text-xs uppercase tracking-wider font-semibold">
-              {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
-            </div>
-            <div className="flex items-baseline gap-3 lg:justify-end">
-              <span className="text-site-h2 font-bold text-white">{price.current}</span>
+        <div>
+          <Rule />
+          <div className="mt-6">
+            <span className="tag">{price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}</span>
+            <div className="mt-2 flex items-baseline gap-3 flex-wrap">
+              <span className="font-site-display text-site-h2 text-site-accent">{price.current}</span>
               {price.earlyBirdActive && (
-                <span className="text-white/60 line-through text-lg">{price.original}</span>
+                <span className="font-site-sans text-site-body text-site-muted line-through">
+                  {price.original}
+                </span>
               )}
             </div>
             {scarcity.show && (
-              <div className="text-site-accent text-sm font-medium inline-flex items-center gap-1 lg:justify-end">
-                <Users className="w-4 h-4" />
+              <p className="mt-3 inline-flex items-center gap-1.5 font-site-sans text-site-label text-site-muted">
+                <Users className="w-4 h-4 text-site-accent" aria-hidden />
                 {scarcity.remaining} of {p.seatsTotal} seats remaining
-              </div>
+              </p>
             )}
           </div>
 
-          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-site-raised text-site-accent font-semibold group-hover:translate-x-1 transition-transform">
-            See the full curriculum
-            <ArrowRight className="w-4 h-4" />
+          <div className="mt-8">
+            <span className="link-u">
+              See the full curriculum{' '}
+              <ArrowRight className="w-4 h-4 inline-block align-[-3px] transition-transform group-hover:translate-x-1" aria-hidden />
+            </span>
           </div>
         </div>
       </div>
