@@ -155,7 +155,7 @@ export default function CreativeMindsPage() {
         <section className="relative z-10 py-site-section">
           <div className="site-measure">
             {/* Page Header */}
-            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <div style={{ marginBottom: '48px' }}>
               <div className="site-chip" style={{ marginBottom: '24px' }}>
                 <Sparkles className="w-4 h-4 text-site-text" />
                 <span className="text-site-text">Join CreativeMinds</span>
@@ -187,9 +187,9 @@ export default function CreativeMindsPage() {
       <main id="main-content">
         <section className="relative z-10 min-h-screen flex items-center justify-center py-site-section">
           <div className="site-measure">
-            <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 text-center">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
-                <CheckCircle className="w-12 h-12 text-green-600" />
+            <div className="max-w-2xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 text-center">
+              <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mx-auto mb-8">
+                <CheckCircle className="w-12 h-12 text-site-text" />
               </div>
               <h1 className="text-site-h3 font-bold text-site-text mb-4">
                 Application Submitted Successfully!
@@ -315,7 +315,7 @@ export default function CreativeMindsPage() {
       {/* ── Section 2: How It Works — dashed circle process ──────────── */}
       <section className="relative z-10 py-site-section">
         <div className="site-measure">
-          <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
+          <div className="max-w-3xl" style={{ marginBottom: '64px' }}>
             <div className="site-chip mb-6">
               <Target className="w-4 h-4 text-site-text" />
               <span className="text-site-text">Your Journey</span>
@@ -328,135 +328,26 @@ export default function CreativeMindsPage() {
             </p>
           </div>
 
-          {/* Desktop: horizontal with dashed circles and curved connectors */}
-          <div className="hidden md:block max-w-4xl mx-auto">
-            <div className="relative">
-              {/* Curved dashed connector 1→2 */}
-              <svg
-                className="absolute pointer-events-none"
-                style={{ top: '56px', left: '23%', width: '20%', height: '40px', zIndex: 1 }}
-                viewBox="0 0 200 40"
-                fill="none"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                <path
-                  d="M 0 20 C 50 40, 150 0, 200 20"
-                  stroke="rgba(201, 50, 93, 0.35)"
-                  strokeWidth="2"
-                  strokeDasharray="8 6"
-                  fill="none"
-                />
-              </svg>
-              {/* Curved dashed connector 2→3 */}
-              <svg
-                className="absolute pointer-events-none"
-                style={{ top: '56px', right: '23%', width: '20%', height: '40px', zIndex: 1 }}
-                viewBox="0 0 200 40"
-                fill="none"
-                preserveAspectRatio="xMidYMid meet"
-              >
-                <path
-                  d="M 0 20 C 50 40, 150 0, 200 20"
-                  stroke="rgba(201, 50, 93, 0.35)"
-                  strokeWidth="2"
-                  strokeDasharray="8 6"
-                  fill="none"
-                />
-              </svg>
-
-              <div className="grid grid-cols-3 gap-8" style={{ position: 'relative', zIndex: 2 }}>
-                {processSteps.map((item, index) => {
-                  const icons = [PenTool, ShieldCheck, Zap];
-                  const StepIcon = icons[index];
-                  return (
-                    <div key={item.step} style={{ textAlign: 'center' }}>
-                      <div className="relative inline-block mb-8">
-                        {/* Step number badge */}
-                        <div
-                          className="absolute w-8 h-8 rounded-full bg-site-raised flex items-center justify-center text-white text-sm font-bold shadow-lg"
-                          style={{ top: '-4px', left: '-4px', zIndex: 3 }}
-                        >
-                          {index + 1}
-                        </div>
-                        {/* Dashed outer circle */}
-                        <div
-                          className="w-28 h-28 lg:w-32 lg:h-32 rounded-full flex items-center justify-center"
-                          style={{
-                            border: '2px dashed rgba(201, 50, 93, 0.3)',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                          }}
-                        >
-                          {/* Inner icon circle */}
-                          <div
-                            className="w-14 h-14 lg:w-16 lg:h-16 rounded-full flex items-center justify-center"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(201, 50, 93, 0.15), rgba(74, 25, 66, 0.12))',
-                            }}
-                          >
-                            <StepIcon className="w-7 h-7 text-site-accent" />
-                          </div>
-                        </div>
-                      </div>
-                      <h3 className="font-site-display text-xl font-bold text-site-text mb-3">{item.title}</h3>
-                      <p className="text-site-muted text-sm leading-relaxed max-w-[240px] mx-auto">{item.description}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile: vertical with dashed circles */}
-          <div className="md:hidden flex flex-col items-center">
-            {processSteps.map((item, index) => {
-              const icons = [PenTool, ShieldCheck, Zap];
-              const StepIcon = icons[index];
-              return (
-                <div key={item.step} className="flex flex-col items-center" style={{ textAlign: 'center' }}>
-                  <div className="relative inline-block mb-5">
-                    {/* Step number badge */}
-                    <div
-                      className="absolute w-7 h-7 rounded-full bg-site-raised flex items-center justify-center text-white text-xs font-bold shadow-lg"
-                      style={{ top: '-2px', left: '-2px', zIndex: 3 }}
-                    >
-                      {index + 1}
-                    </div>
-                    {/* Dashed circle */}
-                    <div
-                      className="w-24 h-24 rounded-full flex items-center justify-center"
-                      style={{
-                        border: '2px dashed rgba(201, 50, 93, 0.3)',
-                        background: 'rgba(255, 255, 255, 0.03)',
-                      }}
-                    >
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(201, 50, 93, 0.15), rgba(74, 25, 66, 0.12))',
-                        }}
-                      >
-                        <StepIcon className="w-6 h-6 text-site-accent" />
-                      </div>
-                    </div>
-                  </div>
-                  <h3 className="font-site-display text-lg font-bold text-site-text mb-2">{item.title}</h3>
-                  <p className="text-site-muted text-sm leading-relaxed max-w-[260px] mb-2">{item.description}</p>
-                  {/* Vertical dashed connector */}
-                  {index < processSteps.length - 1 && (
-                    <div
-                      className="my-4"
-                      style={{
-                        width: '2px',
-                        height: '40px',
-                        backgroundImage: 'linear-gradient(to bottom, rgba(201,50,93,0.3) 50%, transparent 50%)',
-                        backgroundSize: '2px 8px',
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {/*
+            One responsive block. This was two: a `hidden md:block` desktop
+            version with dashed circles and hand-drawn SVG connectors, and an
+            `md:hidden` mobile version — 129 lines rendering the same three
+            items from the same array. The dashed-circle treatment was V2's
+            decorative language; the site's language is numbered rows.
+          */}
+          <ul className="cap" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {processSteps.map((item) => (
+              <li key={item.step} className="cap-row" style={{ gridTemplateColumns: '54px 1fr' }}>
+                <span className="tag n">{item.step}</span>
+                <span>
+                  <span className="cap-name">{item.title}</span>
+                  <span className="cap-desc" style={{ gridColumn: 'auto', marginTop: 10, display: 'block' }}>
+                    {item.description}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -518,94 +409,34 @@ export default function CreativeMindsPage() {
             </div>
 
             {/* Right: Bento grid */}
-            <div className={`relative transition-[opacity,transform] duration-500 delay-100 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              {/* Mobile: 2-col flat grid */}
-              <div className="grid grid-cols-2 gap-3 lg:hidden">
-                {bentoCategories.map((cat, index) => {
+            <div
+              className={`relative transition-[opacity,transform] duration-500 delay-100 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+            >
+              {/*
+                One grid. This was two: a `lg:hidden` two-column version and a
+                `hidden lg:grid` bento with named template areas, both mapping
+                the same six categories. The bento's areas gave three tiles
+                double width for decoration only — the categories are peers.
+              */}
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                {bentoCategories.map((cat) => {
                   const Icon = cat.icon;
                   return (
                     <Link
                       key={cat.name}
-                      href="/get-started"
-                      className="group relative rounded-2xl p-4 overflow-hidden transition-[opacity,transform] duration-300"
-                      style={{
-                        opacity: bentoVisible ? 1 : 0,
-                        transform: bentoVisible ? 'translateY(0)' : 'translateY(10px)',
-                        transitionDelay: `${index * 40 + 100}ms`,
-                        background: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,248,0.92) 100%)',
-                        border: '1px solid rgba(201, 50, 93, 0.08)',
-                      }}
+                      href="#apply"
+                      className="site-surface group flex flex-col justify-between p-4 transition-colors"
+                      style={{ minHeight: 140 }}
                     >
-                      <div className={`absolute top-0 left-0 right-0 h-[3px] ${cat.gradient} opacity-70`} />
-                      <div className={`w-10 h-10 rounded-xl ${cat.gradient} flex items-center justify-center shadow-lg mb-3`}>
-                        <Icon className="w-5 h-5 text-white" />
-                      </div>
-                      <h3 className="text-site-text font-semibold text-sm mb-0.5 line-clamp-1">{cat.name}</h3>
-                      <p className="text-site-muted text-xs line-clamp-2">{cat.description}</p>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* Desktop: Bento grid with named areas */}
-              <div
-                className="hidden lg:grid gap-3"
-                style={{
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gridTemplateRows: '140px 140px 140px',
-                  gridTemplateAreas: `
-                    "design design dev"
-                    "video content dev"
-                    "marketing marketing influencer"
-                  `,
-                }}
-              >
-                {bentoCategories.map((cat, index) => {
-                  const Icon = cat.icon;
-                  const isLarge = cat.area === 'design' || cat.area === 'marketing' || cat.area === 'dev';
-
-                  return (
-                    <Link
-                      key={cat.name}
-                      href="/get-started"
-                      className="group relative rounded-2xl overflow-hidden transition-[opacity,transform] duration-300 hover:scale-[1.02]"
-                      style={{
-                        gridArea: cat.area,
-                        opacity: bentoVisible ? 1 : 0,
-                        transform: bentoVisible ? 'translateY(0)' : 'translateY(10px)',
-                        transitionDelay: `${index * 50 + 100}ms`,
-                        background: 'linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(245,243,248,0.92) 100%)',
-                        border: '1px solid rgba(201, 50, 93, 0.08)',
-                      }}
-                    >
-                      {/* Top accent line */}
-                      <div className={`absolute top-0 left-0 right-0 h-[3px] ${cat.gradient} opacity-70 group-hover:opacity-100 transition-opacity duration-500`} />
-
-                      <div className="relative h-full p-5 flex flex-col justify-between">
-                        <div className={`${isLarge ? 'w-12 h-12' : 'w-10 h-10'} rounded-xl ${cat.gradient} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110`}>
-                          <Icon className={`${isLarge ? 'w-6 h-6' : 'w-5 h-5'} text-white`} />
-                        </div>
-
-                        <div>
-                          <h3 className={`text-site-text font-semibold ${isLarge ? 'text-base' : 'text-sm'} mb-0.5 group-hover:text-site-accent transition-colors`}>
-                            {cat.name}
-                          </h3>
-                          {isLarge && (
-                            <p className="text-site-muted text-xs leading-relaxed">{cat.description}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Hover arrow */}
-                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-[opacity,transform] duration-300 translate-x-1 group-hover:translate-x-0">
-                        <ArrowRight className="w-4 h-4 text-site-muted" />
-                      </div>
-
-                      {/* Hover shadow */}
-                      <div
-                        className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                        style={{ boxShadow: '0 8px 30px rgba(201, 50, 93, 0.12), 0 2px 8px rgba(0,0,0,0.06)' }}
-                      />
+                      <Icon className="w-5 h-5 text-site-accent" aria-hidden />
+                      <span>
+                        <span className="block font-site-sans text-site-body text-site-text">
+                          {cat.name}
+                        </span>
+                        <span className="mt-1 block font-site-sans text-site-label uppercase text-site-muted">
+                          {cat.description}
+                        </span>
+                      </span>
                     </Link>
                   );
                 })}
@@ -652,7 +483,7 @@ export default function CreativeMindsPage() {
       {/* ── Section 4: Why Businesses Choose Us — varied grid ─────── */}
       <section className="relative z-10 py-site-section">
         <div className="site-measure">
-          <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '64px' }}>
+          <div className="max-w-3xl" style={{ marginBottom: '64px' }}>
             <div className="site-chip mb-6">
               <Award className="w-4 h-4 text-site-text" />
               <span className="text-site-text">Why Join</span>
@@ -738,7 +569,7 @@ export default function CreativeMindsPage() {
       {/* ── Section 5: For Creatives ────────────────────────────────── */}
       <section id="for-creatives" className="relative z-10 py-site-section">
         <div className="site-measure site-measure site-measure--narrow">
-          <div className="site-surface rounded-3xl p-8 md:p-12" style={{ textAlign: 'center' }}>
+          <div className="site-surface rounded-3xl p-8 md:p-12">
             <div className="site-chip site-chip mb-6">
               <Briefcase className="w-4 h-4" />
               <span>For Businesses</span>
@@ -804,7 +635,7 @@ export default function CreativeMindsPage() {
 
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0" style={{ zIndex: 2 }}>
               {/* Left — Creatives (Primary) */}
-              <div className="md:pr-8 lg:pr-12" style={{ textAlign: 'center' }}>
+              <div className="md:pr-8 lg:pr-12">
                 <h3 className="text-site-h3 font-site-display font-bold text-site-text mb-4 leading-tight">
                   Ready to do some{' '}
                   <span className="text-site-accent">freaking great</span> work?
@@ -832,7 +663,7 @@ export default function CreativeMindsPage() {
               <div className="md:hidden w-full h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(201,50,93,0.15), transparent)' }} />
 
               {/* Right — Businesses (Secondary) */}
-              <div className="md:pl-8 lg:pl-12" style={{ textAlign: 'center' }}>
+              <div className="md:pl-8 lg:pl-12">
                 <h3 className="text-site-h3 font-site-display font-bold text-site-text mb-4 leading-tight">
                   Looking to{' '}
                   <span className="text-site-accent">hire</span> instead?

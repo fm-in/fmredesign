@@ -172,7 +172,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   {schedule.isUpcoming ? `Starts ${schedule.long}` : BATCH_CADENCE}
                 </span>
                 {daysLeft != null && daysLeft > 0 && daysLeft <= 30 && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 font-medium">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-site-accent/15 text-site-accent font-medium">
                     <Sparkles className="w-3.5 h-3.5" />
                     {daysLeft} {daysLeft === 1 ? 'day' : 'days'} to go
                   </span>
@@ -222,7 +222,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
               ) : (
                 <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.4),transparent_50%)]" />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8" style={{ textAlign: 'center' }}>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
                     <GraduationCap className="w-20 h-20 mb-4 opacity-90" />
                     <div className="text-site-h3 font-site-display font-bold mb-2 leading-tight">
                       {isBundle ? 'All 6 Courses' : p.title}
@@ -395,7 +395,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                       )}
                     </div>
                     {price.earlyBirdActive && p.earlyBirdUntil && (
-                      <p className="text-xs text-amber-700 mt-1.5 inline-flex items-center gap-1">
+                      <p className="text-xs text-site-text mt-1.5 inline-flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
                         Early-bird ends {new Date(p.earlyBirdUntil).toLocaleDateString('en-IN', {
                           day: 'numeric', month: 'short',
@@ -422,7 +422,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     amountInr={buyerAmount}
                   />
 
-                  <p className="text-xs text-site-muted" style={{ textAlign: 'center' }}>
+                  <p className="text-xs text-site-muted">
                     Indian GST applies. Razorpay receipt issued on payment.
                   </p>
                 </div>
@@ -443,7 +443,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     )}
                   </div>
                   {price.earlyBirdActive && p.earlyBirdUntil && (
-                    <p className="text-xs text-amber-700 mt-1.5 inline-flex items-center gap-1">
+                    <p className="text-xs text-site-text mt-1.5 inline-flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
                       Early-bird ends {new Date(p.earlyBirdUntil).toLocaleDateString('en-IN', {
                         day: 'numeric', month: 'short',
@@ -467,7 +467,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                 {(isSoldOut || scarcity.show) && (
                   <div className="text-sm">
                     {isSoldOut ? (
-                      <p className="text-red-700 font-medium inline-flex items-center gap-1">
+                      <p className="text-site-accent font-medium inline-flex items-center gap-1">
                         <Users className="w-4 h-4" /> Sold out
                       </p>
                     ) : (
@@ -487,12 +487,12 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     amountInr={buyerAmount}
                   />
                 ) : (
-                  <Link href="/contact" className="site-button site-button--quiet w-full" style={{ textAlign: 'center' }}>
+                  <Link href="/contact" className="site-button site-button--quiet w-full">
                     Notify me of the next batch
                   </Link>
                 )}
 
-                <p className="text-xs text-site-muted" style={{ textAlign: 'center' }}>
+                <p className="text-xs text-site-muted">
                   Indian GST applies. Razorpay receipt issued on payment.
                 </p>
               </div>

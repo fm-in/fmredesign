@@ -217,8 +217,8 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
     return (
       <div className="max-w-lg mx-auto" style={{ textAlign: 'center' }}>
         <div className="bg-white rounded-2xl shadow-lg p-10">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+          <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-10 h-10 text-site-text" />
           </div>
           <h2 className="text-2xl font-bold text-site-text mb-3">Application Submitted!</h2>
           <p className="text-site-muted mb-6">
@@ -271,9 +271,9 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
 
           {/* Submit error banner */}
           {submitStatus === 'error' && submitError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-              <p className="text-sm text-red-700">{submitError}</p>
+            <div className="mb-6 p-4 bg-site-raised border border-site-accent rounded-lg flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-site-accent flex-shrink-0" />
+              <p className="text-sm text-site-accent">{submitError}</p>
             </div>
           )}
 
@@ -328,13 +328,13 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-red-600 text-xs mt-1">{message}</p>;
+  return <p className="text-site-accent text-xs mt-1">{message}</p>;
 }
 
 const inputClass =
   'w-full px-4 py-3 border border-site-line rounded-lg focus:ring-2 focus:ring-site-accent focus:border-site-accent text-base';
 const inputErrorClass =
-  'w-full px-4 py-3 border border-red-400 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 text-base';
+  'w-full px-4 py-3 border border-site-accent rounded-lg focus:ring-2 focus:ring-red-400 focus:border-site-accent text-base';
 
 interface StepInternalProps {
   formData: Partial<TalentApplication>;
@@ -642,7 +642,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
                 onClick={() => handleToolToggle(tool)}
                 className={`px-4 py-2 rounded-full text-sm border transition-colors min-h-[44px] ${
                   pd.tools?.includes(tool)
-                    ? 'bg-blue-100 border-blue-300 text-blue-800'
+                    ? 'bg-site-raised border-site-line text-site-text'
                     : 'bg-site-raised border-site-line text-site-text hover:bg-site-raised'
                 }`}
               >
@@ -768,7 +768,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
         {/* YouTube */}
         <div className="p-4 border border-site-line rounded-lg space-y-3">
           <h3 className="text-sm font-semibold text-site-text flex items-center gap-2">
-            <span className="w-5 h-5 bg-red-600 rounded inline-flex items-center justify-center text-white text-[10px] font-bold">
+            <span className="w-5 h-5 bg-site-accent rounded inline-flex items-center justify-center text-white text-[10px] font-bold">
               &#9654;
             </span>
             YouTube

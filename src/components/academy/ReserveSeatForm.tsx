@@ -236,7 +236,7 @@ export function ReserveSeatForm({
   if (phase === 'paid') {
     return (
       <div className="space-y-3" style={{ textAlign: 'center' }}>
-        <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
+        <CheckCircle2 className="w-10 h-10 text-site-text mx-auto" />
         <h4 className="font-semibold text-site-text">You&rsquo;re in!</h4>
         <p className="text-sm text-site-muted">
           Your seat in <strong>{programTitle}</strong> is confirmed.
@@ -250,13 +250,13 @@ export function ReserveSeatForm({
   if (phase === 'cancelled') {
     return (
       <div className="space-y-3" style={{ textAlign: 'center' }}>
-        <XCircle className="w-10 h-10 text-amber-600 mx-auto" />
+        <XCircle className="w-10 h-10 text-site-accent mx-auto" />
         <h4 className="font-semibold text-site-text">Payment not completed</h4>
         <p className="text-sm text-site-muted">
           You closed the payment window before finishing. Your seat in{' '}
           <strong>{programTitle}</strong> isn&rsquo;t confirmed yet.
         </p>
-        {err && <p className="text-xs text-red-700">{err}</p>}
+        {err && <p className="text-xs text-site-accent">{err}</p>}
         {pendingOrder && (
           <button
             type="button"
@@ -281,7 +281,7 @@ export function ReserveSeatForm({
   if (phase === 'checkout_unavailable') {
     return (
       <div className="space-y-3" style={{ textAlign: 'center' }}>
-        <AlertTriangle className="w-10 h-10 text-amber-600 mx-auto" />
+        <AlertTriangle className="w-10 h-10 text-site-accent mx-auto" />
         <h4 className="font-semibold text-site-text">Payment isn&rsquo;t available right now</h4>
         <p className="text-sm text-site-muted">
           We couldn&rsquo;t open the payment window. Please try again in a few minutes.
@@ -384,7 +384,7 @@ export function ReserveSeatForm({
         disabled={formDisabled}
       />
 
-      {err && <p className="text-xs text-red-700">{err}</p>}
+      {err && <p className="text-xs text-site-accent">{err}</p>}
 
       <button
         type="submit"

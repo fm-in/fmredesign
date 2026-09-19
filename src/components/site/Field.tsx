@@ -108,8 +108,9 @@ export function SelectField({
   label,
   error,
   options,
+  placeholder,
   ...props
-}: Common & { options: readonly string[] } & SelectHTMLAttributes<HTMLSelectElement>) {
+}: Common & { options: readonly string[]; placeholder?: string } & SelectHTMLAttributes<HTMLSelectElement>) {
   const id = useId();
   const errorId = `${id}-error`;
   return (
@@ -126,6 +127,9 @@ export function SelectField({
         className={CONTROL}
         style={controlStyle(Boolean(error))}
       >
+        {/* An empty value with a readable label, so the control never shows a
+            blank line and never submits the prompt text as an answer. */}
+        {placeholder && <option value="">{placeholder}</option>}
         {options.map((option) => (
           <option key={option} value={option}>
             {option}

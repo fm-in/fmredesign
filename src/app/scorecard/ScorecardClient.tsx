@@ -25,10 +25,10 @@ type Phase = 'intro' | 'quiz' | 'score' | 'report';
  * the brand colour reads as decoration instead of a warning.
  */
 const BAND_STYLE: Record<Band, { text: string; bar: string; ring: string }> = {
-  at_risk: { text: 'text-rose-600', bar: 'bg-rose-500', ring: 'text-rose-500' },
+  at_risk: { text: 'text-site-accent', bar: 'bg-rose-500', ring: 'text-rose-500' },
   patchy: { text: 'text-amber-600', bar: 'bg-amber-500', ring: 'text-amber-500' },
-  solid: { text: 'text-sky-600', bar: 'bg-sky-500', ring: 'text-sky-500' },
-  strong: { text: 'text-emerald-600', bar: 'bg-emerald-500', ring: 'text-emerald-500' },
+  solid: { text: 'text-site-text', bar: 'bg-sky-500', ring: 'text-sky-500' },
+  strong: { text: 'text-site-text', bar: 'bg-emerald-500', ring: 'text-emerald-500' },
 };
 
 const inputCls =
@@ -300,7 +300,7 @@ export default function ScorecardClient() {
               />
 
               {error && (
-                <p className="text-sm text-rose-600" role="alert">
+                <p className="text-sm text-site-accent" role="alert">
                   {error}
                 </p>
               )}

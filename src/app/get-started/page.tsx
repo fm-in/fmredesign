@@ -279,9 +279,9 @@ export default function GetStartedPage() {
             />
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl">
             {/* Page Header */}
-            <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+            <div style={{ marginBottom: '48px' }}>
               <div className="site-chip" style={{ marginBottom: '24px' }}>
                 <Sparkles className="w-4 h-4 text-site-text" />
                 <span className="text-site-text">Start Your Project</span>
@@ -338,7 +338,7 @@ export default function GetStartedPage() {
                   {/* Step 1: Contact Information */}
                   {currentStep === 1 && (
                     <div className="space-y-8">
-                      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                      <div style={{ marginBottom: '40px' }}>
                         <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <Users className="w-8 h-8 text-site-accent" />
                         </div>
@@ -364,7 +364,7 @@ export default function GetStartedPage() {
                             onBlur={errors.name ? handleErrorBlur : handleBlur}
                             placeholder="Enter your full name"
                           />
-                          {errors.name && <p className="text-red-500 text-sm mt-2 font-medium">{errors.name}</p>}
+                          {errors.name && <p className="text-site-accent text-sm mt-2 font-medium">{errors.name}</p>}
                         </div>
 
                         <div>
@@ -383,7 +383,7 @@ export default function GetStartedPage() {
                               placeholder="your@email.com"
                             />
                           </div>
-                          {errors.email && <p className="text-red-500 text-sm mt-2 font-medium">{errors.email}</p>}
+                          {errors.email && <p className="text-site-accent text-sm mt-2 font-medium">{errors.email}</p>}
                         </div>
 
                         <div>
@@ -402,7 +402,7 @@ export default function GetStartedPage() {
                               placeholder="Your company name"
                             />
                           </div>
-                          {errors.company && <p className="text-red-500 text-sm mt-2 font-medium">{errors.company}</p>}
+                          {errors.company && <p className="text-site-accent text-sm mt-2 font-medium">{errors.company}</p>}
                         </div>
 
                         <div>
@@ -447,7 +447,7 @@ export default function GetStartedPage() {
                   {/* Step 2: Project Details */}
                   {currentStep === 2 && (
                     <div className="space-y-8">
-                      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                      <div style={{ marginBottom: '40px' }}>
                         <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <Target className="w-8 h-8 text-site-accent" />
                         </div>
@@ -484,7 +484,7 @@ export default function GetStartedPage() {
                             </button>
                           ))}
                         </div>
-                        {errors.projectType && <p className="text-red-500 text-sm mt-3 font-medium">{errors.projectType}</p>}
+                        {errors.projectType && <p className="text-site-accent text-sm mt-3 font-medium">{errors.projectType}</p>}
                       </div>
 
                       <div>
@@ -501,7 +501,7 @@ export default function GetStartedPage() {
                           placeholder="Describe your project in detail. What are you looking to build or improve?"
                         />
                         <div className="flex justify-between text-sm mt-2">
-                          <span className={errors.projectDescription ? 'text-red-500 font-medium' : 'text-site-muted'}>
+                          <span className={errors.projectDescription ? 'text-site-accent font-medium' : 'text-site-muted'}>
                             {errors.projectDescription || 'Minimum 10 characters'}
                           </span>
                           <span className="text-site-muted">{formData.projectDescription?.length || 0} characters</span>
@@ -533,7 +533,7 @@ export default function GetStartedPage() {
                   {/* Step 3: Budget & Timeline */}
                   {currentStep === 3 && (
                     <div className="space-y-8">
-                      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                      <div style={{ marginBottom: '40px' }}>
                         <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <DollarSign className="w-8 h-8 text-site-accent" />
                         </div>
@@ -569,7 +569,7 @@ export default function GetStartedPage() {
                             </button>
                           ))}
                         </div>
-                        {errors.budgetRange && <p className="text-red-500 text-sm mt-3 font-medium">{errors.budgetRange}</p>}
+                        {errors.budgetRange && <p className="text-site-accent text-sm mt-3 font-medium">{errors.budgetRange}</p>}
                       </div>
 
                       <div>
@@ -599,7 +599,7 @@ export default function GetStartedPage() {
                             </button>
                           ))}
                         </div>
-                        {errors.timeline && <p className="text-red-500 text-sm mt-3 font-medium">{errors.timeline}</p>}
+                        {errors.timeline && <p className="text-site-accent text-sm mt-3 font-medium">{errors.timeline}</p>}
                       </div>
                     </div>
                   )}
@@ -607,7 +607,7 @@ export default function GetStartedPage() {
                   {/* Step 4: Challenges & Company Info */}
                   {currentStep === 4 && (
                     <div className="space-y-8">
-                      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                      <div style={{ marginBottom: '40px' }}>
                         <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
                           <AlertCircle className="w-8 h-8 text-site-accent" />
                         </div>
@@ -632,7 +632,7 @@ export default function GetStartedPage() {
                           onBlur={errors.primaryChallenge ? handleErrorBlur : handleBlur}
                           placeholder="What problem are you trying to solve?"
                         />
-                        {errors.primaryChallenge && <p className="text-red-500 text-sm mt-2 font-medium">{errors.primaryChallenge}</p>}
+                        {errors.primaryChallenge && <p className="text-site-accent text-sm mt-2 font-medium">{errors.primaryChallenge}</p>}
                       </div>
 
                       <div>
@@ -672,7 +672,7 @@ export default function GetStartedPage() {
                             </button>
                           ))}
                         </div>
-                        {errors.companySize && <p className="text-red-500 text-sm mt-3 font-medium">{errors.companySize}</p>}
+                        {errors.companySize && <p className="text-site-accent text-sm mt-3 font-medium">{errors.companySize}</p>}
                       </div>
 
                       <div>
@@ -791,10 +791,10 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
       <main id="main-content">
       <section className="relative z-10 min-h-screen flex items-center justify-center py-site-section">
         <div className="site-measure">
-          <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 lg:p-16 text-center">
+          <div className="max-w-3xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 lg:p-16 text-center">
             {/* Success Icon */}
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
-              <CheckCircle className="w-12 h-12 text-green-600" />
+            <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mx-auto mb-8">
+              <CheckCircle className="w-12 h-12 text-site-text" />
             </div>
 
             <h1 className="text-site-h2 font-bold text-site-text mb-6">

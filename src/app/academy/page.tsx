@@ -77,7 +77,7 @@ export default async function AcademyPage() {
       <main id="main-content">
         <section className="py-site-section">
           <div className="site-measure">
-            <div className="site-surface rounded-3xl p-12 max-w-2xl mx-auto" style={{ textAlign: 'center' }}>
+            <div className="site-surface rounded-3xl p-12 max-w-2xl mx-auto">
               <GraduationCap className="w-12 h-12 text-site-muted mx-auto mb-4" />
               <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-3">
                 New programs launching soon
@@ -103,39 +103,34 @@ export default async function AcademyPage() {
       <SiteHeader />
       <main id="main-content">
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="py-site-section pt-24">
-        <div className="site-measure">
-          <div className="max-w-4xl mx-auto" style={{ textAlign: 'center' }}>
-            <div className="site-chip mb-6 inline-flex">
-              <GraduationCap className="w-4 h-4 text-site-text" />
-              <span className="text-site-text">FM Academy &middot; Creator Program</span>
-            </div>
-            <h1 className="text-site-display font-site-display font-bold text-site-text mb-6 leading-[1.05]">
-              Learn the skills that build <span className="text-site-accent">careers, brands & businesses</span>.
-            </h1>
-            <p className="text-lg md:text-xl text-site-muted leading-relaxed max-w-2xl mx-auto mb-8">
-              Six in-person courses by the Freaking Minds team — digital marketing,
-              performance ads, design, video editing, AI filmmaking and web design.
-              Taught in our Bhopal studio.
-            </p>
-
-            <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-amber-50 border border-amber-200">
-              <Sparkles className="w-4 h-4 text-amber-700" />
-              <span className="text-sm font-semibold text-amber-900">
-                {schedule.label}
-                {schedule.isUpcoming && schedule.daysUntil != null && schedule.daysUntil <= 30 && (
-                  <span className="text-amber-700 font-normal"> &middot; {schedule.daysUntil} days to go</span>
-                )}
-              </span>
-            </div>
+      {/* Left-aligned like every other page on the site. The centred stack
+          with a pill above it was the V2 pattern; nothing else here uses it. */}
+      <section className="sec" style={{ paddingBottom: 0 }}>
+        <div className="wrap">
+          <div className="eyebrow">
+            <span className="tag tag--a">FM Academy &middot; Creator Program</span>
           </div>
+          <h1 className="d" style={{ maxWidth: '20ch' }}>
+            Learn the skills that build careers, brands &amp; businesses.
+          </h1>
+          <p className="lede" style={{ marginTop: 'clamp(22px, 2.6vw, 34px)' }}>
+            Six in-person courses by the Freaking Minds team &mdash; digital marketing,
+            performance ads, design, video editing, AI filmmaking and web design. Taught in our
+            Bhopal studio.
+          </p>
+          <p className="tag" style={{ marginTop: 26 }}>
+            {schedule.label}
+            {schedule.isUpcoming && schedule.daysUntil != null && schedule.daysUntil <= 30 && (
+              <span className="tag--a"> &middot; {schedule.daysUntil} days to go</span>
+            )}
+          </p>
         </div>
       </section>
 
       {/* ── Featured Bundle ──────────────────────────────────── */}
       {bundle && (
-        <section className="py-12">
-          <div className="site-measure">
+        <section className="sec" style={{ paddingBottom: 0 }}>
+          <div className="wrap">
             <BundleCard p={bundle} saving={bundleSaving} />
           </div>
         </section>
@@ -143,11 +138,11 @@ export default async function AcademyPage() {
 
       {/* ── Individual courses ──────────────────────────────── */}
       {courses.length > 0 && (
-        <section className="py-12">
-          <div className="site-measure">
-            <div className="max-w-3xl mx-auto mb-10" style={{ textAlign: 'center' }}>
-              <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-4">
-                Or pick a single course
+        <section className="sec">
+          <div className="wrap">
+            <div className="sec-head">
+              <h2 className="d" data-mask style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)' }}>
+                Or pick a single course.
               </h2>
               <p className="text-base md:text-lg text-site-muted leading-relaxed">
                 Want to go deep on just one craft? Each course runs as its own cohort
@@ -165,8 +160,8 @@ export default async function AcademyPage() {
       )}
 
       {/* ── Trust band ──────────────────────────────────────── */}
-      <section className="py-16">
-        <div className="site-measure">
+      <section className="sec">
+        <div className="wrap">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             <TrustItem
               icon={<Building2 className="w-6 h-6" />}
@@ -268,7 +263,7 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
               )}
             </div>
             {scarcity.show && (
-              <div className="text-amber-200 text-sm font-medium inline-flex items-center gap-1 lg:justify-end">
+              <div className="text-site-accent text-sm font-medium inline-flex items-center gap-1 lg:justify-end">
                 <Users className="w-4 h-4" />
                 {scarcity.remaining} of {p.seatsTotal} seats remaining
               </div>
@@ -319,7 +314,7 @@ function CourseCard({ p }: { p: Program }) {
             {cardSchedule.shortLabel}
           </span>
           {cardScarcity.show && cardScarcity.remaining != null && cardScarcity.remaining <= 10 && (
-            <span className="text-amber-700 inline-flex items-center gap-1 font-medium">
+            <span className="text-site-text inline-flex items-center gap-1 font-medium">
               <Users className="w-3 h-3" />
               {cardScarcity.remaining} seats left
             </span>
