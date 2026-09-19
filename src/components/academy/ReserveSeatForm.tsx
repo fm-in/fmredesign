@@ -261,7 +261,7 @@ export function ReserveSeatForm({
           <button
             type="button"
             onClick={retryPayment}
-            className="site-button w-full inline-flex items-center justify-center gap-2"
+            className="btn btn--primary w-full inline-flex items-center justify-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
             Retry payment
@@ -289,7 +289,7 @@ export function ReserveSeatForm({
         <button
           type="button"
           onClick={startCheckout}
-          className="site-button w-full inline-flex items-center justify-center gap-2"
+          className="btn btn--primary w-full inline-flex items-center justify-center gap-2"
         >
           <RotateCcw className="w-4 h-4" />
           Try again
@@ -389,7 +389,7 @@ export function ReserveSeatForm({
       <button
         type="submit"
         disabled={formDisabled}
-        className="site-button w-full inline-flex items-center justify-center gap-2"
+        className="btn btn--primary w-full inline-flex items-center justify-center gap-2"
       >
         {phase === 'submitting' && (
           <>

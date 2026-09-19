@@ -42,10 +42,9 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
             Back to Freakquency
           </Link>
 
-          <div className="site-chip mb-6">
-            <Tag className="w-4 h-4 text-site-text" />
-            <span className="text-site-text">{post.category}</span>
-          </div>
+          <div className="eyebrow">
+              <span className="tag">{post.category}</span>
+            </div>
 
           <h1 className="font-site-display text-3xl md:text-4xl lg:text-5xl font-bold text-site-text mb-6 leading-tight">
             {post.title}
@@ -157,7 +156,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
                   className="group site-surface rounded-site-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="site-chip site-chip">{r.category}</span>
+                    <span className="tag">{r.category}</span>
                     <span className="text-site-muted text-xs">{r.readTime}</span>
                   </div>
                   <h3 className="font-site-display text-lg font-bold text-site-text mb-2 group-hover:text-site-accent transition-colors line-clamp-2">
@@ -182,11 +181,11 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
               Turn these insights into action. Our team can help you implement proven strategies that drive real results.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/get-started" className="site-button">
+              <Link href="/get-started" className="btn btn--primary">
                 Get a Free Consultation
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link href="/contact" className="site-button site-button--quiet">
+              <Link href="/contact" className="btn btn--ghost">
                 Talk to Us
               </Link>
             </div>

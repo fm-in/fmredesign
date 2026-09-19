@@ -86,7 +86,7 @@ export default async function AcademyPage() {
                 We&apos;re putting the finishing touches on our upcoming batch.
                 Drop us a line if you&apos;d like early access.
               </p>
-              <Link href="/contact" className="site-button">
+              <Link href="/contact" className="btn btn--primary">
                 Get notified
               </Link>
             </div>

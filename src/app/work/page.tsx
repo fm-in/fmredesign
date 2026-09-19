@@ -5,7 +5,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { StillFrame } from '@/components/site/StillFrame';
 import { FilmWall, type Film } from '@/components/site/FilmWall';
-import { Container, Display, Label, Rule, Section, Text } from '@/components/site/primitives';
+import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
 import { PORTFOLIO, VIDEO_WORK, isUnnamedClient } from '@/lib/portfolio';
 
 /**
@@ -41,7 +41,7 @@ export default function WorkPage() {
           <Container>
             <div className="lay-split">
               <div>
-                <Label>Selected work</Label>
+                <Eyebrow>Selected work</Eyebrow>
                 <Display level="display" className="mt-6">
                   Real results for real brands.
                 </Display>
@@ -182,15 +182,13 @@ export default function WorkPage() {
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 href="/get-started"
-                className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
-                style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
+                className="btn btn--primary"
               >
                 Start a project
               </Link>
               <Link
                 href="/services"
-                className="font-site-sans text-site-body"
-                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
+                className="link-u"
               >
                 See what we do
               </Link>

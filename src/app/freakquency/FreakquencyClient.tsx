@@ -358,7 +358,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
             Every count is measured against your other choices, so widening any one of them
             brings results back.
           </p>
-          <button onClick={clearAll} className="site-button">Clear everything</button>
+          <button onClick={clearAll} className="btn btn--primary">Clear everything</button>
         </div>
       ) : (
         <>
@@ -368,7 +368,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
           </div>
           {rest.length + 1 < filtered.length && (
             <div style={{ textAlign: 'center', marginTop: '40px' }}>
-              <button onClick={() => setShown((n) => n + PAGE_SIZE)} className="site-button site-button--quiet">
+              <button onClick={() => setShown((n) => n + PAGE_SIZE)} className="btn btn--ghost">
                 Show more ({filtered.length - rest.length - 1} left)
               </button>
             </div>

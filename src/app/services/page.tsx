@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
-import { Container, Display, Label, Rule, Section, Text } from '@/components/site/primitives';
+import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
 import { SERVICES, serviceHref } from '@/lib/services-catalogue';
 import { serviceDeepDiveData } from '@/data/serviceDeepDiveData';
 
@@ -65,7 +65,7 @@ export default function ServicesPage() {
           <Container>
             <div className="lay-split">
               <div>
-                <Label>What we do</Label>
+                <Eyebrow>What we do</Eyebrow>
                 <Display level="display" className="mt-6">
                   Six things, done properly.
                 </Display>
@@ -171,16 +171,8 @@ export default function ServicesPage() {
                     )}
 
                     <div className="mt-12">
-                      <Link
-                        href="/get-started"
-                        className="font-site-sans text-site-body"
-                        style={{
-                          color: 'var(--site-text)',
-                          textDecoration: 'underline',
-                          textUnderlineOffset: '6px',
-                        }}
-                      >
-                        Talk to us about {service.name.toLowerCase()}
+                      <Link className="link-u" href="/get-started">
+                        Talk to us about {service.name.toLowerCase()} <span aria-hidden>&rarr;</span>
                       </Link>
                     </div>
                   </div>
@@ -192,7 +184,7 @@ export default function ServicesPage() {
 
         <Section id="process" className="scroll-mt-24">
           <Container>
-            <Label>How we work</Label>
+            <Eyebrow>How we work</Eyebrow>
             <Display level="h2" as="h2" className="mt-5 max-w-[18ch]">
               The same four steps, every time.
             </Display>
@@ -225,15 +217,13 @@ export default function ServicesPage() {
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 href="/get-started"
-                className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
-                style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
+                className="btn btn--primary"
               >
                 Start a project
               </Link>
               <Link
                 href="/scorecard"
-                className="font-site-sans text-site-body"
-                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
+                className="link-u"
               >
                 Or take the Growth Scorecard
               </Link>

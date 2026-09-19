@@ -122,9 +122,34 @@ export function Text({
  */
 export function Label({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <span className={`font-site-sans text-site-label uppercase text-site-muted ${className}`.trim()}>
-      {children}
-    </span>
+    <span className={`tag ${className}`.trim()}>{children}</span>
+  );
+}
+
+/**
+ * A section opener: the label plus its trailing rule.
+ *
+ * Distinct from `Label`, which captions a figure or annotates a count — a
+ * rule there would stretch into the surrounding layout. Renders exactly the
+ * same markup as the raw `.eyebrow` class the home page uses, so the two
+ * spellings cannot drift apart.
+ *
+ * Replaces a third treatment, the bordered `site-chip` pill, which made the
+ * same element look different on three pages.
+ */
+export function Eyebrow({
+  children,
+  accent = false,
+  className = '',
+}: {
+  children: ReactNode;
+  accent?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`eyebrow ${className}`.trim()}>
+      <span className={accent ? 'tag tag--a' : 'tag'}>{children}</span>
+    </div>
   );
 }
 

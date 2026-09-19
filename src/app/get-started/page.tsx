@@ -282,10 +282,9 @@ export default function GetStartedPage() {
           <div className="max-w-4xl">
             {/* Page Header */}
             <div style={{ marginBottom: '48px' }}>
-              <div className="site-chip" style={{ marginBottom: '24px' }}>
-                <Sparkles className="w-4 h-4 text-site-text" />
-                <span className="text-site-text">Start Your Project</span>
-              </div>
+              <div className="eyebrow">
+              <span className="tag">Start Your Project</span>
+            </div>
               <h1 className="text-site-h2 font-site-display font-bold text-site-text leading-tight" style={{ marginBottom: '16px' }}>
                 Let&apos;s Grow Your <span className="text-site-accent">Brand</span>
               </h1>
@@ -727,7 +726,7 @@ export default function GetStartedPage() {
                   {currentStep < 4 ? (
                     <button
                       onClick={nextStep}
-                      className="site-button"
+                      className="btn btn--primary"
                     >
                       Continue
                       <ChevronRight className="w-5 h-5" />
@@ -736,7 +735,7 @@ export default function GetStartedPage() {
                     <button
                       onClick={submitForm}
                       disabled={isSubmitting}
-                      className="site-button disabled:opacity-50"
+                      className="btn btn--primary disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <>
@@ -835,12 +834,12 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
               <CalButton
                 calLink={DEFAULT_BOOKING_LINK}
                 prefill={{ name: formData.name, email: formData.email }}
-                className="site-button"
+                className="btn btn--primary"
               >
                 Book your discovery call now
                 <ArrowRight className="w-5 h-5" />
               </CalButton>
-              <Link href="/" className="site-button site-button--quiet">
+              <Link href="/" className="btn btn--ghost">
                 Return to Homepage
               </Link>
 

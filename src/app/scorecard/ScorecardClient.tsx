@@ -329,7 +329,7 @@ export default function ScorecardClient() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="site-button w-full inline-flex items-center justify-center gap-2"
+                className="btn btn--primary w-full inline-flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
@@ -415,10 +415,10 @@ export default function ScorecardClient() {
               do — no obligation either way.
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Link href="/get-started" className="site-button">
+              <Link href="/get-started" className="btn btn--primary">
                 Talk to us
               </Link>
-              <button onClick={restart} className="site-button site-button--quiet inline-flex items-center gap-2">
+              <button onClick={restart} className="btn btn--ghost inline-flex items-center gap-2">
                 <RotateCcw className="w-4 h-4" /> Start again
               </button>
             </div>

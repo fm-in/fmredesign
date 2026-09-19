@@ -188,8 +188,7 @@ export function SubmitButton({
       {...props}
       type="submit"
       disabled={busy || props.disabled}
-      className="rounded-site-sm px-5 py-3 font-site-sans text-site-body disabled:opacity-60"
-      style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
+      className="btn btn--primary disabled:opacity-60"
     >
       {busy ? 'Sending…' : children}
     </button>

@@ -495,7 +495,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     amountInr={buyerAmount}
                   />
                 ) : (
-                  <Link href="/contact" className="site-button site-button--quiet w-full">
+                  <Link href="/contact" className="btn btn--ghost w-full">
                     Notify me of the next batch
                   </Link>
                 )}
@@ -562,7 +562,7 @@ function MobileStickyBar({
         </div>
         <a
           href="#reserve"
-          className="ml-auto site-button inline-flex items-center gap-2 flex-shrink-0"
+          className="ml-auto btn btn--primary inline-flex items-center gap-2 flex-shrink-0"
           aria-label={`Book a seat on ${program.title} for ${price}`}
         >
           Book now

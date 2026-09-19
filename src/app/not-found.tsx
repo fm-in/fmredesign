@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
-import { Container, Display, Label, Section, Text } from '@/components/site/primitives';
+import { Container, Display, Eyebrow, Label, Section, Text } from '@/components/site/primitives';
 
 /**
  * 404.
@@ -29,7 +29,7 @@ export default function NotFound() {
               className="h-auto"
               style={{ maxWidth: '180px', filter: 'grayscale(1) brightness(0.72) contrast(1.45)' }}
             />
-            <Label className="mt-10 block">Error 404</Label>
+            <Eyebrow className="mt-10 block">Error 404</Eyebrow>
             <Display level="h1" className="mt-5">
               This page does not exist.
             </Display>
@@ -40,15 +40,13 @@ export default function NotFound() {
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 href="/"
-                className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
-                style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
+                className="btn btn--primary"
               >
                 Back to the homepage
               </Link>
               <Link
                 href="/contact"
-                className="font-site-sans text-site-body"
-                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
+                className="link-u"
               >
                 Tell us what you were looking for
               </Link>

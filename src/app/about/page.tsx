@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
-import { Container, Display, Label, Rule, Section, Text } from '@/components/site/primitives';
+import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
 
 /**
  * About.
@@ -78,7 +78,7 @@ export default function AboutPage() {
                 further down. */}
             <div className="lay-split">
               <div>
-            <Label>Meet the minds behind the work</Label>
+            <Eyebrow>Meet the minds behind the work</Eyebrow>
             <Display level="display" className="mt-6">
               Your growth is our mission.
             </Display>
@@ -90,15 +90,13 @@ export default function AboutPage() {
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 href="/get-started"
-                className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
-                style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
+                className="btn btn--primary"
               >
                 Work with us
               </Link>
               <Link
                 href="/work"
-                className="font-site-sans text-site-body"
-                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
+                className="link-u"
               >
                 View our work
               </Link>
@@ -130,7 +128,7 @@ export default function AboutPage() {
         <Section>
           <Container>
             <div className="lay-rail">
-              <Label>What drives our excellence</Label>
+              <Eyebrow>What drives our excellence</Eyebrow>
               <div>
             {/*
               Four numbered rows, not four icon cards. The icons were generic
@@ -161,7 +159,7 @@ export default function AboutPage() {
         <Section tone="raised">
           <Container>
             <div className="lay-rail">
-              <Label>The creative minds behind your success</Label>
+              <Eyebrow>The creative minds behind your success</Eyebrow>
               <div className="grid gap-12 sm:grid-cols-2">
               {TEAM.map((member) => (
                 <div key={member.name}>
@@ -217,15 +215,13 @@ export default function AboutPage() {
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 href="/get-started"
-                className="rounded-site-sm px-5 py-3 font-site-sans text-site-body"
-                style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
+                className="btn btn--primary"
               >
                 Start a project
               </Link>
               <Link
                 href="/contact"
-                className="font-site-sans text-site-body"
-                style={{ color: 'var(--site-text)', textDecoration: 'underline', textUnderlineOffset: '6px' }}
+                className="link-u"
               >
                 Or just ask a question
               </Link>

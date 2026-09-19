@@ -156,10 +156,9 @@ export default function CreativeMindsPage() {
           <div className="wrap">
             {/* Page Header */}
             <div style={{ marginBottom: '48px' }}>
-              <div className="site-chip" style={{ marginBottom: '24px' }}>
-                <Sparkles className="w-4 h-4 text-site-text" />
-                <span className="text-site-text">Join CreativeMinds</span>
-              </div>
+              <div className="eyebrow">
+              <span className="tag">Join CreativeMinds</span>
+            </div>
               <h1 className="text-site-h2 font-site-display font-bold text-site-text leading-tight" style={{ marginBottom: '16px' }}>
                 Apply to the <span className="text-site-accent">Network</span>
               </h1>
@@ -215,7 +214,7 @@ export default function CreativeMindsPage() {
                   ))}
                 </div>
               </div>
-              <Link href="/" className="site-button">
+              <Link href="/" className="btn btn--primary">
                 Visit Freaking Minds
                 <ArrowRight className="w-4 h-4" />
               </Link>
@@ -242,10 +241,9 @@ export default function CreativeMindsPage() {
 
             {/* Left: Copy (7 cols) */}
             <div className="lg:col-span-7 flex flex-col items-start">
-              <div className="site-chip mb-8">
-                <Sparkles className="w-4 h-4 text-site-text" />
-                <span className="text-site-text">CreativeMinds by FreakingMinds</span>
-              </div>
+              <div className="eyebrow">
+              <span className="tag">CreativeMinds by FreakingMinds</span>
+            </div>
 
               <h1 className="text-site-display font-site-display font-bold text-site-text leading-[1.08] tracking-tight" style={{ marginBottom: '28px' }}>
                 Stop chasing gigs.{' '}
@@ -260,12 +258,12 @@ export default function CreativeMindsPage() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4 w-full sm:w-auto" style={{ marginBottom: '40px' }}>
                 <button
                   onClick={() => setShowApplicationForm(true)}
-                  className="group site-button"
+                  className="group btn btn--primary"
                 >
                   Apply to Join
                   <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
                 </button>
-                <Link href="/get-started" className="site-button site-button--quiet">
+                <Link href="/get-started" className="btn btn--ghost">
                   Hire Talent Instead
                 </Link>
               </div>
@@ -292,7 +290,7 @@ export default function CreativeMindsPage() {
                   style={{
                     width: 'min(380px, 70vw)',
                     height: 'auto',
-                    filter: 'drop-shadow(0 30px 60px color-mix(in srgb, var(--site-accent) 0.300%, transparent))',
+                    filter: 'grayscale(1) brightness(0.72) contrast(1.45)',
                     animation: 'v2HeroFloat 6s ease-in-out infinite',
                   }}
                 />
@@ -306,9 +304,8 @@ export default function CreativeMindsPage() {
       <section className="relative z-10 py-site-section">
         <div className="wrap">
           <div className="max-w-3xl" style={{ marginBottom: '64px' }}>
-            <div className="site-chip mb-6">
-              <Target className="w-4 h-4 text-site-text" />
-              <span className="text-site-text">Your Journey</span>
+            <div className="eyebrow">
+              <span className="tag">Your Journey</span>
             </div>
             <h2 className="text-site-h2 font-site-display font-bold text-site-text mb-8 leading-tight">
               From application to <span className="text-site-accent">earning.</span>
@@ -348,10 +345,9 @@ export default function CreativeMindsPage() {
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Copy */}
             <div className={`transition-[opacity,transform] duration-500 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <div className="site-chip mb-8">
-                <Sparkles className="w-4 h-4 text-site-text" />
-                <span className="text-site-text">We Need You</span>
-              </div>
+              <div className="eyebrow">
+              <span className="tag">We Need You</span>
+            </div>
 
               <h2 className="text-site-h2 font-site-display font-bold text-site-text mb-6 leading-[1.1]">
                 Whatever you do,{' '}
@@ -375,7 +371,7 @@ export default function CreativeMindsPage() {
               <div className="flex flex-col md:flex-row gap-4">
                 <button
                   onClick={() => setShowApplicationForm(true)}
-                  className="site-button"
+                  className="btn btn--primary"
                 >
                   Apply Now
                   <ArrowRight className="w-5 h-5" />
@@ -451,9 +447,8 @@ export default function CreativeMindsPage() {
       <section className="relative z-10 py-site-section">
         <div className="wrap">
           <div className="max-w-3xl" style={{ marginBottom: '64px' }}>
-            <div className="site-chip mb-6">
-              <Award className="w-4 h-4 text-site-text" />
-              <span className="text-site-text">Why Join</span>
+            <div className="eyebrow">
+              <span className="tag">Why Join</span>
             </div>
             <h2 className="text-site-h2 font-site-display font-bold text-site-text mb-8 leading-tight">
               This isn&apos;t another{' '}
@@ -514,9 +509,8 @@ export default function CreativeMindsPage() {
       <section id="for-creatives" className="relative z-10 py-site-section">
         <div className="wrap">
           <div className="site-surface rounded-site-lg p-6 md:p-8">
-            <div className="site-chip site-chip mb-6">
-              <Briefcase className="w-4 h-4" />
-              <span>For Businesses</span>
+            <div className="eyebrow">
+              <span className="tag">For Businesses</span>
             </div>
 
             <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-4 leading-tight">
@@ -546,7 +540,7 @@ export default function CreativeMindsPage() {
 
             <Link
               href="/get-started"
-              className="group site-button"
+              className="group btn btn--primary"
             >
               Hire Creative Talent
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -572,7 +566,7 @@ export default function CreativeMindsPage() {
                 </p>
                 <button
                   onClick={() => setShowApplicationForm(true)}
-                  className="group site-button"
+                  className="group btn btn--primary"
                 >
                   Apply to Join
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -598,7 +592,7 @@ export default function CreativeMindsPage() {
                 <p className="text-site-muted mb-6">
                   Tell us what you need — we&apos;ll match you with the right creative from our network.
                 </p>
-                <Link href="/get-started" className="group site-button site-button--quiet">
+                <Link href="/get-started" className="group btn btn--ghost">
                   Hire Talent
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>

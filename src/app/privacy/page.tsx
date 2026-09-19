@@ -3,7 +3,7 @@ import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { Prose } from '@/components/site/Prose';
-import { Container, Display, Label, Rule, Section, Text } from '@/components/site/primitives';
+import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
 
 /**
  * Legal copy, carried over verbatim. The markup changed; not one word did.
@@ -38,7 +38,7 @@ export default function PrivacyPolicyPage() {
       <main id="main-content">
         <Section as="div" className="pb-0">
           <Container width="narrow">
-            <Label>Your privacy matters</Label>
+            <Eyebrow>Your privacy matters</Eyebrow>
             <Display level="h1" className="mt-5">
               Privacy Policy
             </Display>

@@ -224,7 +224,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
           <p className="text-site-muted mb-6">
             Thank you for applying to join CreativeMinds. Our team will review your application within 24-48 hours.
           </p>
-          <button onClick={onCancel} className="site-button">
+          <button onClick={onCancel} className="btn btn--primary">
             Back to CreativeMinds
           </button>
         </div>
@@ -304,7 +304,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
               <button
                 onClick={handleSubmit}
                 disabled={submitStatus === 'submitting'}
-                className="site-button disabled:opacity-60 min-h-[48px]"
+                className="btn btn--primary disabled:opacity-60 min-h-[48px]"
               >
                 {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Application'}
               </button>

@@ -383,12 +383,25 @@ body {
 
 /* Restored original link styling */
 
-/* Button reset - Only for unstyled buttons */
-button:not([class*="bg-"]):not([class*="border-"]):not([class*="shadow-"]) {
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-family: inherit;
+/*
+ * Button reset — for unstyled buttons only.
+ *
+ * MOVED INTO `@layer base`. Unlayered, it outranked `@layer components`, so it
+ * stripped the background from every `<button class="btn btn--primary">` on
+ * the public site — the primary CTA rendered white-on-bone and was invisible.
+ * `<a>` buttons were unaffected, which is why the header's pill looked right
+ * and the page's did not.
+ *
+ * This is the exact cascade-layer hazard CLAUDE.md documents: element resets
+ * belong in `@layer base`.
+ */
+@layer base {
+  button:not([class*="bg-"]):not([class*="border-"]):not([class*="shadow-"]):not([class*="btn"]) {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
 }
 
 /* Animation utility classes */
