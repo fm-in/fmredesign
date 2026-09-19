@@ -84,7 +84,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
             <img
               src={post.coverImage}
               alt={post.title}
-              className="w-full aspect-[16/9] object-cover rounded-site-lg mt-2 mb-6 shadow-2xl"
+              className="w-full aspect-[16/9] object-cover rounded-site-lg mt-2 mb-6"
             />
           )}
         </div>
@@ -93,7 +93,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
       {/* Article body */}
       <section className="relative z-10 py-site-section pt-0">
         <div className="site-measure site-measure--narrow">
-          <div className="site-surface rounded-site-lg p-6 md:p-8 lg:p-16">
+          <div className="site-surface rounded-site-lg p-6 md:p-8">
             <div
               /* `prose prose-lg` were inert — @tailwindcss/typography is not
                  installed. `max-w-none` also beat the measure set by
@@ -153,7 +153,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
                 <Link
                   key={r.slug}
                   href={`/freakquency/${r.slug}`}
-                  className="group site-surface rounded-site-lg p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  className="group site-surface rounded-site-lg p-6 transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <span className="tag">{r.category}</span>
@@ -173,7 +173,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
       {/* CTA */}
       <section className="relative z-10 py-site-section pb-32">
         <div className="site-measure site-measure--narrow">
-          <div className="site-surface rounded-site-lg p-10 lg:p-6 md:p-8" style={{ textAlign: 'center' }}>
+          <div className="site-surface rounded-site-lg p-10 lg:p-6 md:p-8">
             <h2 className="font-site-display text-3xl md:text-4xl font-bold text-site-text mb-6 leading-tight">
               Ready to Grow Your <span className="text-site-accent">Business</span>?
             </h2>

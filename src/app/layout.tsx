@@ -89,10 +89,10 @@ export const metadata: Metadata = {
   publisher: "Freaking Minds",
   icons: {
     icon: [
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon.png", sizes: "192x192", type: "image/png" },
+      { url:"/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url:"/favicon.png", sizes: "192x192", type: "image/png" },
     ],
-    apple: "/apple-touch-icon.png",
+    apple:"/apple-touch-icon.png",
   },
   openGraph: {
     type: "website",
@@ -103,7 +103,7 @@ export const metadata: Metadata = {
     siteName: "Freaking Minds",
     images: [
       {
-        url: "/og-image.png",
+        url:"/og-image.png",
         width: 1200,
         height: 630,
         alt: "Freaking Minds - Creative Marketing Agency",
@@ -118,7 +118,7 @@ export const metadata: Metadata = {
     description: "Full-service creative marketing. Strategy, design, and performance under one roof.",
     images: [
       {
-        url: "/og-image.png",
+        url:"/og-image.png",
         width: 1200,
         height: 630,
         alt: "Freaking Minds - Creative Marketing Agency",
@@ -253,7 +253,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:text-black focus:px-4 focus:py-2 focus:rounded"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-site-raised focus:text-black focus:px-4 focus:py-2 focus:rounded"
         >
           Skip to content
         </a>

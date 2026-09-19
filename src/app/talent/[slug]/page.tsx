@@ -112,7 +112,7 @@ function ProfileAvatar({ name, src }: { name: string; src?: string }) {
 function ProfileShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-fm-neutral-50">
-      <div className="border-b border-fm-neutral-200 bg-white">
+      <div className="border-b border-fm-neutral-200 bg-site-raised">
         <div className="v2-container flex items-center justify-between py-4">
           <Link href="/" className="font-display text-lg font-bold text-fm-neutral-900">
             Freaking<span className="text-fm-magenta-600">Minds</span>
@@ -274,7 +274,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
       <ProfileShell>
         <section className="py-12 md:py-16">
           <div className="v2-container">
-            <div className="max-w-lg mx-auto bg-white rounded-site-lg shadow-2xl p-10" style={{ textAlign: 'center' }}>
+            <div className="max-w-lg mx-auto bg-site-raised rounded-site-lg p-10" style={{ textAlign: 'center' }}>
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <X className="w-8 h-8 text-red-600" />
               </div>
@@ -334,7 +334,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
         <div className="v2-container">
           {/* Header */}
           <div className="max-w-4xl mx-auto" style={{ marginBottom: '40px' }}>
-            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-white border border-fm-neutral-200 text-sm font-medium text-fm-neutral-700">
+            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-site-raised border border-fm-neutral-200 text-sm font-medium text-fm-neutral-700">
               <Sparkles className="w-4 h-4 text-fm-magenta-600" />
               <span>CreativeMinds Profile</span>
             </div>

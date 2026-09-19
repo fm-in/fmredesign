@@ -294,7 +294,7 @@ export default function GetStartedPage() {
             </div>
 
             {/* Form Card */}
-            <div className="bg-white rounded-site-lg sm:rounded-site-lg shadow-2xl" style={{ marginBottom: '48px' }}>
+            <div className="bg-site-raised rounded-site-lg sm:rounded-site-lg " style={{ marginBottom: '48px' }}>
               <div className="p-5 sm:p-6 md:p-8">
                 {/* Progress Bar */}
                 <div style={{ marginBottom: '40px' }}>
@@ -305,7 +305,7 @@ export default function GetStartedPage() {
                           className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
                             ${currentStep >= step
                               ? 'bg-site-accent border-site-accent text-white shadow-lg'
-                              : 'border-site-line text-site-muted bg-white'}`}
+                              : 'border-site-line text-site-muted bg-site-raised'}`}
                         >
                           {currentStep > step ? (
                             <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -790,7 +790,7 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
       <main id="main-content">
       <section className="relative z-10 min-h-screen flex items-center justify-center py-site-section">
         <div className="site-measure">
-          <div className="max-w-3xl bg-white rounded-site-lg shadow-2xl p-6 sm:p-6 md:p-8 lg:p-16 text-center">
+          <div className="max-w-3xl bg-site-raised rounded-site-lg p-6 md:p-8">
             {/* Success Icon */}
             <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mb-8">
               <CheckCircle className="w-12 h-12 text-site-text" />
@@ -807,8 +807,8 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
             </p>
 
             {/* What's Next Section */}
-            <div className="bg-site-raised rounded-site-lg p-8 mb-10 text-left">
-              <h3 className="font-bold text-site-text mb-6 text-xl text-center">What happens next?</h3>
+            <div className="bg-site-raised rounded-site-lg p-6 md:p-8 mb-10 text-left">
+              <h3 className="font-bold text-site-text mb-6 text-xl">What happens next?</h3>
               <ul className="space-y-4">
                 {[
                   { step: 1, title:"Expert Review", desc:"Our team will carefully analyze your requirements and challenges" },

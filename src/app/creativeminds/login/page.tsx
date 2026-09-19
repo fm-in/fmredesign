@@ -51,7 +51,7 @@ function TalentLoginForm() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-site-lg p-8 space-y-6"
+        className="bg-site-raised/10 backdrop-blur-sm border border-white/20 rounded-site-lg p-6 md:p-8 space-y-6"
       >
         {error && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-200 text-sm">
@@ -69,7 +69,7 @@ function TalentLoginForm() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fm-magenta-600 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 bg-site-raised/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fm-magenta-600 focus:border-transparent"
               placeholder="your@email.com"
             />
           </div>
@@ -84,7 +84,7 @@ function TalentLoginForm() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fm-magenta-600 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 bg-site-raised/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fm-magenta-600 focus:border-transparent"
               placeholder="Your password"
             />
           </div>

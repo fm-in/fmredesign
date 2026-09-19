@@ -21,7 +21,7 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
     <div className="bg-fm-neutral-50">
       <section className="py-16 md:py-24">
         <div className="site-measure site-measure--narrow">
-          <div className="bg-white border border-fm-neutral-200 rounded-site-lg p-6 md:p-8" style={{ textAlign: 'center' }}>
+          <div className="bg-site-raised border border-fm-neutral-200 rounded-site-lg p-6 md:p-8">
             <h1 className="font-display text-2xl md:text-3xl font-bold text-fm-neutral-900 mb-4">Stop follow-up emails</h1>
             <p className="text-fm-neutral-600 mb-8">Confirm below and we will not email you about your enquiry again.</p>
             <UnsubscribeForm token={t ?? ''} />

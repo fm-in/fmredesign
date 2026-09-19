@@ -186,7 +186,7 @@ export default function CreativeMindsPage() {
       <main id="main-content">
         <section className="relative z-10 min-h-screen flex items-center justify-center py-site-section">
           <div className="wrap">
-            <div className="max-w-2xl bg-white rounded-site-lg shadow-2xl p-6 sm:p-6 md:p-8 text-center">
+            <div className="max-w-2xl bg-site-raised rounded-site-lg p-6 md:p-8">
               <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mb-8">
                 <CheckCircle className="w-12 h-12 text-site-text" />
               </div>
@@ -463,7 +463,7 @@ export default function CreativeMindsPage() {
               return (
                 <div
                   key={benefit.title}
-                  className="site-surface rounded-site-lg p-8 hover:shadow-2xl transition-[box-shadow,transform] duration-300 hover:-translate-y-1 relative overflow-hidden group"
+                  className="site-surface rounded-site-lg p-6 md:p-8 transition-[box-shadow,transform] duration-300 hover:-translate-y-1 relative overflow-hidden group"
                 >
 
                   <div className="relative" style={{ zIndex: 2 }}>
@@ -552,7 +552,7 @@ export default function CreativeMindsPage() {
       {/* ── Section 6: Bottom CTA — Split Design ───────────────────── */}
       <section className="relative z-10 py-site-section">
         <div className="wrap">
-          <div className="site-surface rounded-site-lg p-6 md:p-8 lg:p-6 md:p-8 relative overflow-hidden">
+          <div className="site-surface rounded-site-lg p-6 md:p-8 relative overflow-hidden">
 
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0" style={{ zIndex: 2 }}>
               {/* Left — Creatives (Primary) */}

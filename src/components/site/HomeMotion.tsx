@@ -135,29 +135,6 @@ export function HomeMotion() {
           );
         });
 
-        /* ---- image that follows the cursor over the capability list ------ */
-        const hoverimg = document.querySelector<HTMLElement>('.hoverimg');
-        const img = hoverimg?.querySelector('img');
-        const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-        if (hoverimg && img && fine) {
-          const x = gsap.quickTo(hoverimg, 'x', { duration: 0.5, ease: 'power3' });
-          const y = gsap.quickTo(hoverimg, 'y', { duration: 0.5, ease: 'power3' });
-          document.querySelectorAll<HTMLElement>('.cap-row').forEach((row) => {
-            row.addEventListener('mouseenter', () => {
-              if (row.dataset.img) img.setAttribute('src', row.dataset.img);
-              gsap.to(hoverimg, { opacity: 1, duration: 0.3 });
-            });
-            row.addEventListener('mouseleave', () => {
-              gsap.to(hoverimg, { opacity: 0, duration: 0.3 });
-            });
-          });
-          const move = (e: MouseEvent) => {
-            x(e.clientX - 140);
-            y(e.clientY - 150);
-          };
-          window.addEventListener('mousemove', move, { passive: true });
-          cleanups.push(() => window.removeEventListener('mousemove', move));
-        }
 
         /* ---- header state ------------------------------------------------ */
         const hdr = document.querySelector<HTMLElement>('.hdr');

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description: "Learn how Freaking Minds collects, uses, and protects your personal information.",
   },
   alternates: {
-    canonical: "/privacy",
+    canonical:"/privacy",
   },
 };
 

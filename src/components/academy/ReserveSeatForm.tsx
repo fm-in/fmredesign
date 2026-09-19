@@ -235,7 +235,7 @@ export function ReserveSeatForm({
   // ── Phase: paid ───────────────────────────────────────────
   if (phase === 'paid') {
     return (
-      <div className="space-y-3" style={{ textAlign: 'center' }}>
+      <div className="space-y-3">
         <CheckCircle2 className="w-10 h-10 text-site-text mx-auto" />
         <h4 className="font-semibold text-site-text">You&rsquo;re in!</h4>
         <p className="text-sm text-site-muted">
@@ -249,7 +249,7 @@ export function ReserveSeatForm({
   // ── Phase: cancelled (modal dismissed) ────────────────────
   if (phase === 'cancelled') {
     return (
-      <div className="space-y-3" style={{ textAlign: 'center' }}>
+      <div className="space-y-3">
         <XCircle className="w-10 h-10 text-site-accent mx-auto" />
         <h4 className="font-semibold text-site-text">Payment not completed</h4>
         <p className="text-sm text-site-muted">
@@ -280,7 +280,7 @@ export function ReserveSeatForm({
   // ── Phase: checkout_unavailable (server couldn't open checkout) ──
   if (phase === 'checkout_unavailable') {
     return (
-      <div className="space-y-3" style={{ textAlign: 'center' }}>
+      <div className="space-y-3">
         <AlertTriangle className="w-10 h-10 text-site-accent mx-auto" />
         <h4 className="font-semibold text-site-text">Payment isn&rsquo;t available right now</h4>
         <p className="text-sm text-site-muted">
@@ -306,7 +306,7 @@ export function ReserveSeatForm({
 
   // ── Phase: idle / submitting / awaiting_payment (form visible) ──
   const inputCls =
-    'w-full px-3 py-2 rounded-lg border border-site-line bg-white text-site-text text-sm focus:ring-2 focus:ring-site-accent focus:border-transparent disabled:opacity-50';
+    'w-full px-3 py-2 rounded-site-sm border border-site-line bg-site-raised text-site-text text-sm focus:ring-2 focus:ring-site-accent focus:border-transparent disabled:opacity-50';
   const formDisabled = phase === 'submitting' || phase === 'awaiting_payment';
 
   return (
@@ -406,7 +406,7 @@ export function ReserveSeatForm({
         {(phase === 'idle') && <>Pay {formatInr(amountInr)} to book</>}
       </button>
 
-      <p className="text-[11px] text-site-muted" style={{ textAlign: 'center' }}>
+      <p className="text-[11px] text-site-muted">
         Secure payment by Razorpay — UPI, cards, netbanking & wallets accepted.
       </p>
     </form>

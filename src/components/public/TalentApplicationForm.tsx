@@ -215,8 +215,8 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
 
   if (submitStatus === 'success') {
     return (
-      <div className="max-w-lg mx-auto" style={{ textAlign: 'center' }}>
-        <div className="bg-white rounded-site-lg shadow-lg p-10">
+      <div className="max-w-lg mx-auto">
+        <div className="bg-site-raised rounded-site-lg shadow-lg p-10">
           <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-site-text" />
           </div>
@@ -234,7 +234,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-site-lg sm:rounded-site-lg shadow-2xl">
+      <div className="bg-site-raised rounded-site-lg sm:rounded-site-lg">
         <div className="p-5 sm:p-8 md:p-10">
           {/* Progress Circles */}
           <div style={{ marginBottom: '40px' }}>
@@ -245,7 +245,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
                     className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
                       ${currentStep >= step.number
                         ? 'bg-site-accent border-site-accent text-white shadow-lg'
-                        : 'border-site-line text-site-muted bg-white'}`}
+                        : 'border-site-line text-site-muted bg-site-raised'}`}
                   >
                     {currentStep > step.number ? (
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />

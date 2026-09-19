@@ -151,8 +151,8 @@ function Pill({
         active
           ? 'bg-site-accent text-white border-site-accent'
           : dead
-            ? 'bg-white/40 text-site-muted border-site-line-soft cursor-not-allowed'
-            : 'bg-white text-site-text border-site-line-soft hover:border-site-line',
+            ? 'bg-site-raised/40 text-site-muted border-site-line-soft cursor-not-allowed'
+            : 'bg-site-raised text-site-text border-site-line-soft hover:border-site-line',
       ].join(' ')}
     >
       {label}
@@ -247,7 +247,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
 
   return (
     <div className="site-measure site-measure py-site-section">
-      <div className="lay-measure" style={{ textAlign: 'center', marginBottom: '32px' }}>
+      <div className="lay-measure" style={{ marginBottom: '32px' }}>
         <h1 className="font-site-display text-4xl md:text-6xl font-bold text-site-text mb-4 leading-tight">
           Freak<span className="text-site-accent">quency</span>
         </h1>
@@ -284,13 +284,13 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
                   onChange={(e) => set('q', e.target.value)}
                   onBlur={() => { if (!f.q) setSearchOpen(false); }}
                   placeholder="Search…"
-                  className="w-40 md:w-56 pl-8 pr-2 py-2 rounded-full border border-site-line-soft bg-white text-site-text text-sm focus:ring-2 focus:ring-site-accent focus:border-transparent"
+                  className="w-40 md:w-56 pl-8 pr-2 py-2 rounded-full border border-site-line-soft bg-site-raised text-site-text text-sm focus:ring-2 focus:ring-site-accent focus:border-transparent"
                 />
                 <Search className="w-4 h-4 text-site-muted absolute left-2.5 top-1/2 -translate-y-1/2" />
               </div>
             ) : (
               <button onClick={() => setSearchOpen(true)} aria-label="Search the feed"
-                className="p-2 rounded-full border border-site-line-soft bg-white text-site-muted hover:border-site-line">
+                className="p-2 rounded-full border border-site-line-soft bg-site-raised text-site-muted hover:border-site-line">
                 <Search className="w-4 h-4" />
               </button>
             )}
@@ -302,7 +302,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
                 'inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium border transition-colors',
                 refineCount > 0
                   ? 'bg-site-accent text-white border-site-accent'
-                  : 'bg-white text-site-text border-site-line-soft hover:border-site-line',
+                  : 'bg-site-raised text-site-text border-site-line-soft hover:border-site-line',
               ].join(' ')}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -347,12 +347,12 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
         )}
       </div>
 
-      <p className="text-sm text-site-muted mt-4 mb-4" style={{ textAlign: 'center' }}>
+      <p className="text-sm text-site-muted mt-4 mb-4">
         {filtered.length} {filtered.length === 1 ? 'item' : 'items'}
       </p>
 
       {filtered.length === 0 ? (
-        <div className="site-surface rounded-site-lg p-12" style={{ textAlign: 'center' }}>
+        <div className="site-surface rounded-site-lg p-12">
           <p className="text-site-text font-medium mb-1">Nothing matches all of that.</p>
           <p className="text-sm text-site-muted mb-5">
             Every count is measured against your other choices, so widening any one of them
@@ -367,7 +367,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
             {rest.map((item) => <Card key={item.id} item={item} />)}
           </div>
           {rest.length + 1 < filtered.length && (
-            <div style={{ textAlign: 'center', marginTop: '40px' }}>
+            <div style={{ marginTop: '40px' }}>
               <button onClick={() => setShown((n) => n + PAGE_SIZE)} className="btn btn--ghost">
                 Show more ({filtered.length - rest.length - 1} left)
               </button>

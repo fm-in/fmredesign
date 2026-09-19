@@ -59,12 +59,12 @@ const CAMPAIGNS = [
 ] as const;
 
 const CAPABILITY = [
-  ['seo', 'Search engine optimization', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.', '/work/services/giovanni-service1.jpg'],
-  ['social', 'Social media marketing', 'Stop posting. Start connecting.', 'Thumb-stopping content that turns followers into customers.', '/work/services/elisa-service1.jpg'],
-  ['performance', 'Performance marketing', 'Every rupee. Maximum impact.', 'Focused paid campaigns that deliver qualified leads and protect your ROI.', '/work/services/skr-service1.jpg'],
-  ['branding', 'Brand identity design', 'Look unforgettable.', 'Visual identities that capture attention, build trust, and make competitors jealous.', '/work/services/harsh-service1.jpg'],
-  ['web', 'Website development', 'Fast. Beautiful. Converting.', 'Responsive, conversion-first websites that work as marketing tools.', '/work/websites/elisa_website.jpg'],
-  ['content', 'Content production', 'Stories that sell.', 'From scroll-stopping videos to blogs that rank: content that drives action.', '/work/services/giovanni-service5.jpg'],
+  ['seo', 'Search engine optimization', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.'],
+  ['social', 'Social media marketing', 'Stop posting. Start connecting.', 'Thumb-stopping content that turns followers into customers.'],
+  ['performance', 'Performance marketing', 'Every rupee. Maximum impact.', 'Focused paid campaigns that deliver qualified leads and protect your ROI.'],
+  ['branding', 'Brand identity design', 'Look unforgettable.', 'Visual identities that capture attention, build trust, and make competitors jealous.'],
+  ['web', 'Website development', 'Fast. Beautiful. Converting.', 'Responsive, conversion-first websites that work as marketing tools.'],
+  ['content', 'Content production', 'Stories that sell.', 'From scroll-stopping videos to blogs that rank: content that drives action.'],
 ] as const;
 
 const PILLARS = [
@@ -119,11 +119,6 @@ export default async function Home() {
       <SiteHeader floating />
       <HomeMotion />
 
-      {/* The image that trails the cursor across the capability list. */}
-      <div className="hoverimg" aria-hidden>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img alt="" src="/work/services/elisa-service1.jpg" width={620} height={775} />
-      </div>
 
       <main id="main-content">
         {/* ═══ HERO ═══════════════════════════════════════════════════ */}
@@ -280,8 +275,8 @@ export default async function Home() {
             </div>
 
             <div className="cap">
-              {CAPABILITY.map(([id, name, sub, desc, img], i) => (
-                <Link className="cap-row" key={id} href={serviceHref(id)} data-img={img}>
+              {CAPABILITY.map(([id, name, sub, desc], i) => (
+                <Link className="cap-row" key={id} href={serviceHref(id)}>
                   <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
                   <span>
                     <span className="cap-name">{name}</span>

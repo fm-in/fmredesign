@@ -218,14 +218,14 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
   return (
     <Link
       href={`/academy/${p.slug}`}
-      className="group block relative overflow-hidden rounded-site-lg bg-gradient-to-br p-10 md:p-6 md:p-8 hover:shadow-2xl transition-shadow"
+      className="group block relative overflow-hidden rounded-site-lg bg-gradient-to-br p-6 md:p-8 transition-shadow"
     >
       {/* glow / pattern */}
       <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.5),transparent_50%)]" />
 
       <div className="relative grid grid-cols-1 lg:grid-cols-5 gap-8 items-center">
         <div className="lg:col-span-3 space-y-5 text-white">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-semibold">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-site-raised/15 backdrop-blur-sm text-xs font-semibold">
             <Sparkles className="w-3.5 h-3.5" />
             Most popular &middot; All 6 courses
           </div>
@@ -270,7 +270,7 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
             )}
           </div>
 
-          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-site-accent font-semibold group-hover:translate-x-1 transition-transform">
+          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-site-raised text-site-accent font-semibold group-hover:translate-x-1 transition-transform">
             See the full curriculum
             <ArrowRight className="w-4 h-4" />
           </div>
@@ -288,7 +288,7 @@ function CourseCard({ p }: { p: Program }) {
   return (
     <Link
       href={`/academy/${p.slug}`}
-      className="group block site-surface rounded-site-lg overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all"
+      className="group block site-surface rounded-site-lg overflow-hidden hover:-translate-y-0.5 transition-all"
     >
       {p.coverImageUrl ? (
         <div className="relative h-44 w-full bg-site-raised">

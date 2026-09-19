@@ -164,7 +164,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             <div className="lg:col-span-7 space-y-6">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm text-white/90 font-medium">
+                <span className="px-3 py-1 rounded-full bg-site-raised/10 backdrop-blur-sm text-white/90 font-medium">
                   {isBundle ? 'Creator Program — Full Bundle' : FORMAT_LABELS[p.format]}
                 </span>
                 <span className="text-site-muted inline-flex items-center gap-1.5">
@@ -209,7 +209,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 
             <div className="lg:col-span-5">
               {p.coverImageUrl ? (
-                <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden shadow-2xl">
+                <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden">
                   <Image
                     src={p.coverImageUrl}
                     alt={p.title}
@@ -220,7 +220,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   />
                 </div>
               ) : (
-                <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden shadow-2xl bg-gradient-to-br">
+                <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden bg-gradient-to-br">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.4),transparent_50%)]" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
                     <GraduationCap className="w-20 h-20 mb-4 opacity-90" />
@@ -243,7 +243,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
             {/* ── Main column ─────────────────────────────── */}
             <div className="lg:col-span-2 space-y-10">
               {p.longDescription && (
-                <div className="site-surface rounded-site-lg p-8 md:p-10">
+                <div className="site-surface rounded-site-lg p-6 md:p-8">
                   <p className="text-site-text whitespace-pre-line leading-relaxed text-base md:text-lg">
                     {p.longDescription}
                   </p>
@@ -547,7 +547,7 @@ function MobileStickyBar({
   amountInr: number;
 }) {
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-site-line shadow-[0_-8px_24px_rgba(0,0,0,0.08)] p-3">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-site-raised border-t border-site-line shadow-[0_-8px_24px_rgba(0,0,0,0.08)] p-3">
       <div className="flex items-center gap-3 max-w-screen-sm">
         <div className="flex flex-col">
           <div className="flex items-baseline gap-1.5">

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description: "Read the Terms of Service for Freaking Minds.",
   },
   alternates: {
-    canonical: "/terms",
+    canonical:"/terms",
   },
 };
 

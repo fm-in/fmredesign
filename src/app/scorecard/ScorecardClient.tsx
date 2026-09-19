@@ -33,7 +33,7 @@ const BAND_STYLE: Record<Band, { text: string; bar: string; ring: string }> = {
 };
 
 const inputCls =
-  'w-full px-3 py-2.5 rounded-lg border border-site-line-soft bg-white text-site-text text-sm focus:ring-2 focus:ring-site-accent focus:border-transparent disabled:opacity-50';
+  'w-full px-3 py-2.5 rounded-site-sm border border-site-line-soft bg-site-raised text-site-text text-sm focus:ring-2 focus:ring-site-accent focus:border-transparent disabled:opacity-50';
 
 export default function ScorecardClient() {
   const [phase, setPhase] = useState<Phase>('intro');
@@ -222,7 +222,7 @@ export default function ScorecardClient() {
       {/* ------------------------------------------------------------ score */}
       {phase === 'score' && (
         <div className="space-y-6">
-          <div className="site-surface rounded-site-lg p-6 md:p-8" style={{ textAlign: 'center' }}>
+          <div className="site-surface rounded-site-lg p-6 md:p-8">
             <p className="text-xs uppercase tracking-widest text-site-muted mb-4">
               Your marketing health score
             </p>
@@ -341,7 +341,7 @@ export default function ScorecardClient() {
                   </>
                 )}
               </button>
-              <p className="text-xs text-site-muted" style={{ textAlign: 'center' }}>
+              <p className="text-xs text-site-muted">
                 No newsletter, no sales sequence. We will email the report and that is it.
               </p>
             </form>
@@ -352,7 +352,7 @@ export default function ScorecardClient() {
       {/* ----------------------------------------------------------- report */}
       {phase === 'report' && (
         <div className="space-y-6">
-          <div className="site-surface rounded-site-lg p-8 md:p-10" style={{ textAlign: 'center' }}>
+          <div className="site-surface rounded-site-lg p-6 md:p-8">
             <p className="text-xs uppercase tracking-widest text-site-muted mb-3">
               Your marketing health score
             </p>
@@ -406,7 +406,7 @@ export default function ScorecardClient() {
             );
           })}
 
-          <div className="site-surface rounded-site-lg p-8 md:p-10" style={{ textAlign: 'center' }}>
+          <div className="site-surface rounded-site-lg p-6 md:p-8">
             <h2 className="font-site-display text-2xl font-bold text-site-text mb-3">
               Want a hand with any of it?
             </h2>
