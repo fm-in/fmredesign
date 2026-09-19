@@ -109,7 +109,7 @@ export default function TalentProfilePage() {
       )}
 
       {/* Personal Info */}
-      <section className="rounded-xl border border-fm-neutral-200 bg-white p-6 space-y-4">
+      <section className="rounded-site-md border border-fm-neutral-200 bg-white p-6 space-y-4">
         <h2 className="text-lg font-semibold text-fm-neutral-900">Personal Information</h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -142,7 +142,7 @@ export default function TalentProfilePage() {
       </section>
 
       {/* Links */}
-      <section className="rounded-xl border border-fm-neutral-200 bg-white p-6 space-y-4">
+      <section className="rounded-site-md border border-fm-neutral-200 bg-white p-6 space-y-4">
         <h2 className="text-lg font-semibold text-fm-neutral-900">Links & Social</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -165,7 +165,7 @@ export default function TalentProfilePage() {
       </section>
 
       {/* Availability & Pricing */}
-      <section className="rounded-xl border border-fm-neutral-200 bg-white p-6 space-y-4">
+      <section className="rounded-site-md border border-fm-neutral-200 bg-white p-6 space-y-4">
         <h2 className="text-lg font-semibold text-fm-neutral-900">Availability & Pricing</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

@@ -57,7 +57,7 @@ export default function TalentDashboardPage() {
         {stats.map(stat => (
           <div
             key={stat.label}
-            className="rounded-xl border border-fm-neutral-200 bg-white p-5"
+            className="rounded-site-md border border-fm-neutral-200 bg-white p-5"
           >
             <div className="flex items-center gap-3 mb-2">
               {stat.icon}
@@ -69,7 +69,7 @@ export default function TalentDashboardPage() {
       </div>
 
       {skills.length > 0 && (
-        <div className="rounded-xl border border-fm-neutral-200 bg-white p-6">
+        <div className="rounded-site-md border border-fm-neutral-200 bg-white p-6">
           <h2 className="text-lg font-semibold text-fm-neutral-900 mb-4">Your Skills</h2>
           <div className="flex flex-wrap gap-2">
             {skills.map(skill => (
@@ -84,7 +84,7 @@ export default function TalentDashboardPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-fm-neutral-200 bg-white p-6">
+      <div className="rounded-site-md border border-fm-neutral-200 bg-white p-6">
         <h2 className="text-lg font-semibold text-fm-neutral-900 mb-2">Public Profile</h2>
         <p className="text-fm-neutral-600 text-sm mb-3">
           Your public profile is visible at the URL below.

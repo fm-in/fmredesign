@@ -51,7 +51,7 @@ function TalentLoginForm() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8 space-y-6"
+        className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-site-lg p-8 space-y-6"
       >
         {error && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-200 text-sm">

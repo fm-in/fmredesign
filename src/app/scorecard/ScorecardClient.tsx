@@ -16,6 +16,7 @@ import { QUESTIONS, DIMENSIONS } from '@/lib/scorecard/questions';
 import { scoreScorecard, BAND_LABELS } from '@/lib/scorecard/scoring';
 import type { AnswerMap, Band, ScorecardResult } from '@/lib/scorecard/types';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
+import { Rule } from '@/components/site/primitives';
 
 type Phase = 'intro' | 'quiz' | 'score' | 'report';
 
@@ -105,15 +106,16 @@ export default function ScorecardClient() {
   }
 
   return (
-    <div className="site-measure site-measure site-measure--narrow py-site-section">
+    <div className="wrap py-site-section">
       {/* ------------------------------------------------------------ intro */}
       {phase === 'intro' && (
-        <div className="site-surface rounded-3xl p-8 md:p-12" style={{ textAlign: 'center' }}>
-          <div className="site-chip mb-6 inline-flex">
-            <span className="text-site-accent">Free · 2 minutes · No sign-up to start</span>
+        <div className="lay-split">
+          <div>
+          <div className="eyebrow">
+            <span className="tag tag--a">Free &middot; 2 minutes &middot; No sign-up to start</span>
           </div>
-          <h1 className="font-site-display text-3xl md:text-5xl font-bold text-site-text mb-6 leading-tight">
-            How healthy is your <span className="text-site-accent">marketing</span>?
+          <h1 className="d">
+            How healthy is your marketing?
           </h1>
           <p className="text-site-muted text-base md:text-lg mb-4 lay-measure leading-relaxed">
             Eleven questions about how you actually run things — not what you wish you were
@@ -123,16 +125,35 @@ export default function ScorecardClient() {
           <p className="text-site-muted text-sm mb-8 lay-measure">
             Most of the advice you will get back is work you can do yourself.
           </p>
-          <button onClick={() => setPhase('quiz')} className="site-button">
+          <button onClick={() => setPhase('quiz')} className="btn btn--primary">
             Start the scorecard
             <ArrowRight className="w-4 h-4" />
           </button>
+          </div>
+
+          {/* The six areas the score covers. The opening screen asked for two
+              minutes without saying what it would look at. */}
+          <div>
+            <Rule />
+            <ol style={{ listStyle: 'none', margin: '1.5rem 0 0', padding: 0 }}>
+              {DIMENSIONS.map((d, i) => (
+                <li
+                  key={d.id}
+                  className="flex items-baseline justify-between gap-6 py-3"
+                  style={{ borderBottom: '1px solid var(--site-line-soft)' }}
+                >
+                  <span className="font-site-sans text-site-body text-site-text">{d.label}</span>
+                  <span className="tag">{String(i + 1).padStart(2, '0')}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       )}
 
       {/* ------------------------------------------------------------- quiz */}
       {phase === 'quiz' && question && (
-        <div className="site-surface rounded-3xl p-6 md:p-10">
+        <div className="site-surface rounded-site-lg p-6 md:p-10">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-site-muted">
               Question {index + 1} of {QUESTIONS.length}
@@ -179,7 +200,7 @@ export default function ScorecardClient() {
                     onClick={() => choose(option.value)}
                     aria-pressed={selected}
                     className={[
-                      'w-full text-left px-4 py-3.5 rounded-xl border transition-all duration-200',
+                      'w-full text-left px-4 py-3.5 rounded-site-md border transition-all duration-200',
                       'flex items-center justify-between gap-3',
                       selected
                         ? 'border-site-accent bg-site-raised text-site-text'
@@ -201,7 +222,7 @@ export default function ScorecardClient() {
       {/* ------------------------------------------------------------ score */}
       {phase === 'score' && (
         <div className="space-y-6">
-          <div className="site-surface rounded-3xl p-8 md:p-12" style={{ textAlign: 'center' }}>
+          <div className="site-surface rounded-site-lg p-6 md:p-8" style={{ textAlign: 'center' }}>
             <p className="text-xs uppercase tracking-widest text-site-muted mb-4">
               Your marketing health score
             </p>
@@ -233,7 +254,7 @@ export default function ScorecardClient() {
           </div>
 
           {/* ------------------------------------------------------- email */}
-          <div className="site-surface rounded-3xl p-6 md:p-10">
+          <div className="site-surface rounded-site-lg p-6 md:p-10">
             <h2 className="font-site-display text-xl md:text-2xl font-bold text-site-text mb-2">
               See all six areas
             </h2>
@@ -331,7 +352,7 @@ export default function ScorecardClient() {
       {/* ----------------------------------------------------------- report */}
       {phase === 'report' && (
         <div className="space-y-6">
-          <div className="site-surface rounded-3xl p-8 md:p-10" style={{ textAlign: 'center' }}>
+          <div className="site-surface rounded-site-lg p-8 md:p-10" style={{ textAlign: 'center' }}>
             <p className="text-xs uppercase tracking-widest text-site-muted mb-3">
               Your marketing health score
             </p>
@@ -352,7 +373,7 @@ export default function ScorecardClient() {
             const meta = DIMENSIONS.find((d) => d.id === dimension.id);
             const style = BAND_STYLE[dimension.band];
             return (
-              <div key={dimension.id} className="site-surface rounded-2xl p-6 md:p-8">
+              <div key={dimension.id} className="site-surface rounded-site-lg p-6 md:p-8">
                 <div className="flex items-center justify-between gap-4 mb-1">
                   <h3 className="font-site-display text-lg font-bold text-site-text">
                     {position === 0 && (
@@ -385,7 +406,7 @@ export default function ScorecardClient() {
             );
           })}
 
-          <div className="site-surface rounded-3xl p-8 md:p-10" style={{ textAlign: 'center' }}>
+          <div className="site-surface rounded-site-lg p-8 md:p-10" style={{ textAlign: 'center' }}>
             <h2 className="font-site-display text-2xl font-bold text-site-text mb-3">
               Want a hand with any of it?
             </h2>

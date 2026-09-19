@@ -209,7 +209,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 
             <div className="lg:col-span-5">
               {p.coverImageUrl ? (
-                <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden shadow-2xl">
+                <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden shadow-2xl">
                   <Image
                     src={p.coverImageUrl}
                     alt={p.title}
@@ -220,7 +220,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   />
                 </div>
               ) : (
-                <div className="relative aspect-[4/3] w-full rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-br">
+                <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden shadow-2xl bg-gradient-to-br">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.4),transparent_50%)]" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
                     <GraduationCap className="w-20 h-20 mb-4 opacity-90" />
@@ -243,7 +243,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
             {/* ── Main column ─────────────────────────────── */}
             <div className="lg:col-span-2 space-y-10">
               {p.longDescription && (
-                <div className="site-surface rounded-2xl p-8 md:p-10">
+                <div className="site-surface rounded-site-lg p-8 md:p-10">
                   <p className="text-site-text whitespace-pre-line leading-relaxed text-base md:text-lg">
                     {p.longDescription}
                   </p>
@@ -383,7 +383,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   Hidden on desktop (sticky aside covers it). On mobile this
                   is where the bottom sticky bar scrolls to. */}
               {!isSoldOut && (
-                <div id="reserve" className="lg:hidden site-surface rounded-2xl p-6 space-y-5 scroll-mt-24">
+                <div id="reserve" className="lg:hidden site-surface rounded-site-lg p-6 space-y-5 scroll-mt-24">
                   <div>
                     <div className="text-xs font-semibold uppercase tracking-wider text-site-muted mb-1">
                       {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
@@ -404,7 +404,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     )}
                   </div>
 
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-site-raised">
+                  <div className="flex items-start gap-3 p-3 rounded-site-md bg-site-raised">
                     <Calendar className="w-5 h-5 text-site-accent shrink-0 mt-0.5" />
                     <div className="text-sm">
                       <div className="font-semibold text-site-text">
@@ -431,7 +431,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 
             {/* ── Sticky CTA column (desktop only) ────────── */}
             <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4">
-              <div className="site-surface rounded-2xl p-6 space-y-5">
+              <div className="site-surface rounded-site-lg p-6 space-y-5">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-wider text-site-muted mb-1">
                     {price.earlyBirdActive ? 'Early-bird price' : 'Program fee'}
@@ -452,7 +452,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   )}
                 </div>
 
-                  <div className="flex items-start gap-3 p-3 rounded-xl bg-site-raised">
+                  <div className="flex items-start gap-3 p-3 rounded-site-md bg-site-raised">
                   <Calendar className="w-5 h-5 text-site-accent shrink-0 mt-0.5" />
                   <div className="text-sm">
                     <div className="font-semibold text-site-text">
@@ -522,7 +522,7 @@ function SubSection({ title, children }: { title: string; children: React.ReactN
       <h3 className="text-site-h3 font-site-display font-bold text-site-text mb-5">
         {title}
       </h3>
-      <div className="site-surface rounded-2xl p-6 md:p-8">{children}</div>
+      <div className="site-surface rounded-site-lg p-6 md:p-8">{children}</div>
     </div>
   );
 }

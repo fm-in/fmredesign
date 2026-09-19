@@ -274,7 +274,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
       <ProfileShell>
         <section className="py-12 md:py-16">
           <div className="v2-container">
-            <div className="max-w-lg mx-auto bg-white rounded-3xl shadow-2xl p-10" style={{ textAlign: 'center' }}>
+            <div className="max-w-lg mx-auto bg-white rounded-site-lg shadow-2xl p-10" style={{ textAlign: 'center' }}>
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <X className="w-8 h-8 text-red-600" />
               </div>
@@ -368,13 +368,13 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
             {/* LEFT COLUMN — 2/3 */}
             <div className="lg:col-span-2 space-y-6">
               {/* Bio */}
-              <div className="v2-paper rounded-2xl p-6 md:p-8">
+              <div className="v2-paper rounded-site-lg p-6 md:p-8">
                 <h2 className="text-lg font-bold text-fm-neutral-900 mb-3">About</h2>
                 <p className="text-fm-neutral-600 leading-relaxed">{pi.bio}</p>
               </div>
 
               {/* Skills & Tools (read-only, set by admin) */}
-              <div className="v2-paper rounded-2xl p-6 md:p-8">
+              <div className="v2-paper rounded-site-lg p-6 md:p-8">
                 <h2 className="text-lg font-bold text-fm-neutral-900 mb-4">Skills & Tools</h2>
                 {subcategories.length > 0 && (
                   <div className="mb-4">
@@ -415,7 +415,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               </div>
 
               {/* Portfolio Links — editable */}
-              <div className="v2-paper rounded-2xl p-6 md:p-8">
+              <div className="v2-paper rounded-site-lg p-6 md:p-8">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-bold text-fm-neutral-900">Portfolio</h2>
                   {isOwner && editing !== 'portfolio' && (
@@ -479,7 +479,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
             {/* RIGHT COLUMN — 1/3 sidebar */}
             <div className="space-y-6">
               {/* Contact Info — editable */}
-              <div className="v2-paper rounded-2xl p-6">
+              <div className="v2-paper rounded-site-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base font-bold text-fm-neutral-900">Contact</h2>
                   {isOwner && editing !== 'contact' && (
@@ -556,7 +556,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               </div>
 
               {/* Availability — editable */}
-              <div className="v2-paper rounded-2xl p-6">
+              <div className="v2-paper rounded-site-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base font-bold text-fm-neutral-900">Availability</h2>
                   {isOwner && editing !== 'availability' && (
@@ -625,7 +625,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
               </div>
 
               {/* Pricing — editable */}
-              <div className="v2-paper rounded-2xl p-6">
+              <div className="v2-paper rounded-site-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base font-bold text-fm-neutral-900">Rates</h2>
                   {isOwner && editing !== 'pricing' && (
@@ -699,7 +699,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
 
               {/* Ratings */}
               {(profile as any).ratings?.totalReviews > 0 && (
-                <div className="v2-paper rounded-2xl p-6">
+                <div className="v2-paper rounded-site-lg p-6">
                   <h2 className="text-base font-bold text-fm-neutral-900 mb-3">Ratings</h2>
                   <div className="flex items-center gap-2">
                     <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />

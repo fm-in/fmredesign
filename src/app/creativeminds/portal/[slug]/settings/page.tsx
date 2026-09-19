@@ -65,7 +65,7 @@ export default function TalentSettingsPage() {
         <p className="text-fm-neutral-600 mt-1">Manage your portal account.</p>
       </div>
 
-      <section className="rounded-xl border border-fm-neutral-200 bg-white p-6">
+      <section className="rounded-site-md border border-fm-neutral-200 bg-white p-6">
         <div className="flex items-center gap-2 mb-6">
           <Lock className="w-5 h-5 text-fm-magenta-600" />
           <h2 className="text-lg font-semibold text-fm-neutral-900">Change Password</h2>

@@ -260,7 +260,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
       {/* Sticks below the fixed site header (81px) so the one axis people
           actually browse by stays reachable deep into a long list. */}
       <div className="sticky z-30 -mx-2 px-2 py-2" style={{ top: '84px' }}>
-        <div className="site-surface rounded-2xl px-3 py-2.5 flex items-center gap-3">
+        <div className="site-surface rounded-site-lg px-3 py-2.5 flex items-center gap-3">
           <div
             ref={streamScroller.ref}
             className={`flex gap-2 overflow-x-auto no-scrollbar flex-1 ${streamScroller.fadeClass}`}
@@ -314,7 +314,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
 
         {/* Opt-in panel. Everything here is a refinement, not a browse axis. */}
         {panelOpen && (
-          <div className="site-surface rounded-2xl mt-2 p-4 md:p-5 space-y-4">
+          <div className="site-surface rounded-site-lg mt-2 p-4 md:p-5 space-y-4">
             <PanelRow label="Written for">
               {INTENTS.map((i) => (
                 <Pill key={i.key} subtle label={i.label} count={intentCounts[i.key]}
@@ -352,7 +352,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
       </p>
 
       {filtered.length === 0 ? (
-        <div className="site-surface rounded-3xl p-12" style={{ textAlign: 'center' }}>
+        <div className="site-surface rounded-site-lg p-12" style={{ textAlign: 'center' }}>
           <p className="text-site-text font-medium mb-1">Nothing matches all of that.</p>
           <p className="text-sm text-site-muted mb-5">
             Every count is measured against your other choices, so widening any one of them
@@ -485,7 +485,7 @@ function FeaturedCard({ item }: { item: FeedItem }) {
 
   return (
     <Wrapper {...props} className="block group">
-      <article className="site-surface rounded-3xl overflow-hidden md:flex">
+      <article className="site-surface rounded-site-lg overflow-hidden md:flex">
         <div className="md:w-2/5">
           <Thumb item={item} tall />
         </div>
@@ -512,7 +512,7 @@ function Card({ item }: { item: FeedItem }) {
 
   return (
     <Wrapper {...props} className="block group h-full">
-      <article className="site-surface rounded-2xl overflow-hidden h-full flex flex-col hover:-translate-y-0.5 transition-transform">
+      <article className="site-surface rounded-site-lg overflow-hidden h-full flex flex-col hover:-translate-y-0.5 transition-transform">
         <Thumb item={item} />
         <div className="p-5 flex flex-col flex-1">
         <Meta item={item} />

@@ -77,7 +77,7 @@ export default async function AcademyPage() {
       <main id="main-content">
         <section className="py-site-section">
           <div className="site-measure">
-            <div className="site-surface rounded-3xl p-12 lay-measure">
+            <div className="site-surface rounded-site-lg p-12 lay-measure">
               <GraduationCap className="w-12 h-12 text-site-muted mb-4" />
               <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-3">
                 New programs launching soon
@@ -218,7 +218,7 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
   return (
     <Link
       href={`/academy/${p.slug}`}
-      className="group block relative overflow-hidden rounded-3xl bg-gradient-to-br p-10 md:p-14 hover:shadow-2xl transition-shadow"
+      className="group block relative overflow-hidden rounded-site-lg bg-gradient-to-br p-10 md:p-6 md:p-8 hover:shadow-2xl transition-shadow"
     >
       {/* glow / pattern */}
       <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.5),transparent_50%)]" />
@@ -288,7 +288,7 @@ function CourseCard({ p }: { p: Program }) {
   return (
     <Link
       href={`/academy/${p.slug}`}
-      className="group block site-surface rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all"
+      className="group block site-surface rounded-site-lg overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all"
     >
       {p.coverImageUrl ? (
         <div className="relative h-44 w-full bg-site-raised">
@@ -347,8 +347,8 @@ function CourseCard({ p }: { p: Program }) {
 
 function TrustItem({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return (
-    <div className="site-surface rounded-2xl p-6 space-y-3">
-      <div className="w-12 h-12 rounded-xl bg-site-raised text-site-accent flex items-center justify-center">
+    <div className="site-surface rounded-site-lg p-6 space-y-3">
+      <div className="w-12 h-12 rounded-site-md bg-site-raised text-site-accent flex items-center justify-center">
         {icon}
       </div>
       <h3 className="font-semibold text-site-text text-lg">{title}</h3>

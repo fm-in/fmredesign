@@ -153,7 +153,7 @@ export default function CreativeMindsPage() {
       <SiteHeader />
       <main id="main-content">
         <section className="relative z-10 py-site-section">
-          <div className="site-measure">
+          <div className="wrap">
             {/* Page Header */}
             <div style={{ marginBottom: '48px' }}>
               <div className="site-chip" style={{ marginBottom: '24px' }}>
@@ -186,8 +186,8 @@ export default function CreativeMindsPage() {
       <SiteHeader />
       <main id="main-content">
         <section className="relative z-10 min-h-screen flex items-center justify-center py-site-section">
-          <div className="site-measure">
-            <div className="max-w-2xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 text-center">
+          <div className="wrap">
+            <div className="max-w-2xl bg-white rounded-site-lg shadow-2xl p-6 sm:p-6 md:p-8 text-center">
               <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mb-8">
                 <CheckCircle className="w-12 h-12 text-site-text" />
               </div>
@@ -198,7 +198,7 @@ export default function CreativeMindsPage() {
                 Thank you for joining the CreativeMinds network. Our team will review your application
                 and get back to you within 48 hours.
               </p>
-              <div className="bg-site-raised rounded-xl p-6 mb-8">
+              <div className="bg-site-raised rounded-site-md p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-4 text-site-text">What happens next?</h3>
                 <div className="space-y-3 text-left">
                   {[
@@ -237,7 +237,7 @@ export default function CreativeMindsPage() {
       <main id="main-content">
       {/* ── Section 1: Hero — Asymmetric 2-col ──────────────────────── */}
       <section className="relative z-10 py-site-section">
-        <div className="site-measure site-measure">
+        <div className="wrap">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
 
             {/* Left: Copy (7 cols) */}
@@ -284,16 +284,6 @@ export default function CreativeMindsPage() {
             {/* Right: Brain Mascot (5 cols) */}
             <div className="lg:col-span-5 flex justify-center lg:justify-end relative">
               <div className="relative">
-                {/* Glow behind mascot */}
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    background: 'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--site-accent) 0.200%, transparent) 0%, transparent 65%)',
-                    transform: 'scale(1.5)',
-                    filter: 'blur(25px)',
-                    zIndex: -1,
-                  }}
-                />
                 <img
                   src="/3dasset/brain-celebrating.webp"
                   alt="CreativeMinds Network"
@@ -314,7 +304,7 @@ export default function CreativeMindsPage() {
 
       {/* ── Section 2: How It Works — dashed circle process ──────────── */}
       <section className="relative z-10 py-site-section">
-        <div className="site-measure">
+        <div className="wrap">
           <div className="max-w-3xl" style={{ marginBottom: '64px' }}>
             <div className="site-chip mb-6">
               <Target className="w-4 h-4 text-site-text" />
@@ -351,23 +341,8 @@ export default function CreativeMindsPage() {
         </div>
       </section>
 
-      {/* Wave Divider */}
-      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
-        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block', transform: 'scaleX(-1)' }} />
-      </div>
-
       {/* ── Section 3: Categories — Asymmetric 2-col with bento ──── */}
       <section ref={bentoSectionRef} className="relative z-10 py-site-section overflow-hidden">
-        {/* Ambient background */}
-        <div className="absolute inset-0 pointer-events-none" style={{ contain: 'layout style paint' }}>
-          <div
-            className="absolute -left-1/4 top-1/4 w-[500px] h-[500px] rounded-full opacity-25"
-            style={{
-              background: 'radial-gradient(circle, color-mix(in srgb, var(--site-accent) 0.1200%, transparent) 0%, transparent 70%)',
-              filter: 'blur(30px)',
-            }}
-          />
-        </div>
 
         <div className="relative site-measure">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -442,9 +417,6 @@ export default function CreativeMindsPage() {
                 })}
               </div>
 
-              {/* Decorative circles */}
-              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full pointer-events-none" style={{ border: '1px solid color-mix(in srgb, var(--site-accent) 0.0800%, transparent)' }} />
-              <div className="absolute -bottom-5 -left-5 w-20 h-20 rounded-full pointer-events-none" style={{ border: '1px solid color-mix(in srgb, var(--site-accent) 0.0800%, transparent)' }} />
             </div>
           </div>
 
@@ -475,14 +447,9 @@ export default function CreativeMindsPage() {
         </div>
       </section>
 
-      {/* Wave Divider */}
-      <div className="relative" style={{ zIndex: 10, marginTop: '-1px' }}>
-        <img src="/textures/wave-divider.svg" alt="" className="w-full" style={{ height: '60px', display: 'block' }} />
-      </div>
-
       {/* ── Section 4: Why Businesses Choose Us — varied grid ─────── */}
       <section className="relative z-10 py-site-section">
-        <div className="site-measure">
+        <div className="wrap">
           <div className="max-w-3xl" style={{ marginBottom: '64px' }}>
             <div className="site-chip mb-6">
               <Award className="w-4 h-4 text-site-text" />
@@ -501,27 +468,12 @@ export default function CreativeMindsPage() {
               return (
                 <div
                   key={benefit.title}
-                  className="site-surface rounded-2xl p-8 hover:shadow-2xl transition-[box-shadow,transform] duration-300 hover:-translate-y-1 relative overflow-hidden group"
+                  className="site-surface rounded-site-lg p-8 hover:shadow-2xl transition-[box-shadow,transform] duration-300 hover:-translate-y-1 relative overflow-hidden group"
                 >
-                  {/* Corner glow */}
-                  <div
-                    className="absolute -top-10 -right-10 w-44 h-44 rounded-full pointer-events-none transition-opacity duration-500 group-hover:opacity-100"
-                    style={{
-                      background: `radial-gradient(circle, rgba(${benefit.wash}, 0.07) 0%, rgba(${benefit.wash}, 0.02) 40%, transparent 70%)`,
-                      opacity: 0.7,
-                    }}
-                  />
-                  {/* Watermark icon */}
-                  <div
-                    className="absolute -bottom-2 -right-2 pointer-events-none transition-opacity duration-500 group-hover:opacity-[0.12]"
-                    style={{ opacity: 0.08 }}
-                  >
-                    <Icon className="w-32 h-32" style={{ color: `rgb(${benefit.wash})` }} />
-                  </div>
 
                   <div className="relative" style={{ zIndex: 2 }}>
                     <div className="flex items-center gap-4 mb-4">
-                      <div className={`w-14 h-14 ${benefit.gradient} rounded-xl flex items-center justify-center`}>
+                      <div className={`w-14 h-14 ${benefit.gradient} rounded-site-md flex items-center justify-center`}>
                         <Icon className="w-7 h-7 text-white" />
                       </div>
                       <p className="text-site-accent font-semibold text-sm tracking-wide uppercase">{benefit.tagline}</p>
@@ -541,19 +493,11 @@ export default function CreativeMindsPage() {
               return (
                 <div
                   key={benefit.title}
-                  className="site-surface rounded-2xl p-6 relative overflow-hidden group hover:scale-[1.03] transition-transform duration-300"
+                  className="site-surface rounded-site-lg p-6 relative overflow-hidden group hover:scale-[1.03] transition-transform duration-300"
                 >
-                  {/* Corner glow */}
-                  <div
-                    className="absolute -top-10 -right-10 w-36 h-36 rounded-full pointer-events-none transition-opacity duration-500 group-hover:opacity-100"
-                    style={{
-                      background: `radial-gradient(circle, rgba(${benefit.wash}, 0.07) 0%, rgba(${benefit.wash}, 0.02) 40%, transparent 70%)`,
-                      opacity: 0.7,
-                    }}
-                  />
 
                   <div className="relative" style={{ zIndex: 2 }}>
-                    <div className={`w-12 h-12 ${benefit.gradient} rounded-xl flex items-center justify-center mb-4`}>
+                    <div className={`w-12 h-12 ${benefit.gradient} rounded-site-md flex items-center justify-center mb-4`}>
                       <Icon className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="font-site-display text-base font-bold text-site-text mb-2">{benefit.title}</h3>
@@ -568,8 +512,8 @@ export default function CreativeMindsPage() {
 
       {/* ── Section 5: For Creatives ────────────────────────────────── */}
       <section id="for-creatives" className="relative z-10 py-site-section">
-        <div className="site-measure site-measure site-measure--narrow">
-          <div className="site-surface rounded-3xl p-8 md:p-12">
+        <div className="wrap">
+          <div className="site-surface rounded-site-lg p-6 md:p-8">
             <div className="site-chip site-chip mb-6">
               <Briefcase className="w-4 h-4" />
               <span>For Businesses</span>
@@ -613,25 +557,8 @@ export default function CreativeMindsPage() {
 
       {/* ── Section 6: Bottom CTA — Split Design ───────────────────── */}
       <section className="relative z-10 py-site-section">
-        <div className="site-measure site-measure site-measure--narrow">
-          <div className="site-surface rounded-3xl p-8 md:p-12 lg:p-14 relative overflow-hidden">
-            {/* Ambient smoke blobs */}
-            <div
-              className="absolute pointer-events-none rounded-full"
-              style={{
-                width: '350px', height: '350px', top: '-100px', right: '-80px',
-                background: 'radial-gradient(circle, color-mix(in srgb, var(--site-accent) 0.0600%, transparent) 0%, transparent 70%)',
-                animation: 'ctaSmokeFloat1 8s ease-in-out infinite',
-              }}
-            />
-            <div
-              className="absolute pointer-events-none rounded-full"
-              style={{
-                width: '300px', height: '300px', bottom: '-80px', left: '-60px',
-                background: 'radial-gradient(circle, rgba(160,30,70,0.05) 0%, transparent 70%)',
-                animation: 'ctaSmokeFloat2 10s ease-in-out infinite',
-              }}
-            />
+        <div className="wrap">
+          <div className="site-surface rounded-site-lg p-6 md:p-8 lg:p-6 md:p-8 relative overflow-hidden">
 
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0" style={{ zIndex: 2 }}>
               {/* Left — Creatives (Primary) */}

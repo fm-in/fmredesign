@@ -216,7 +216,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
   if (submitStatus === 'success') {
     return (
       <div className="max-w-lg mx-auto" style={{ textAlign: 'center' }}>
-        <div className="bg-white rounded-2xl shadow-lg p-10">
+        <div className="bg-white rounded-site-lg shadow-lg p-10">
           <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-site-text" />
           </div>
@@ -234,7 +234,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl">
+      <div className="bg-white rounded-site-lg sm:rounded-site-lg shadow-2xl">
         <div className="p-5 sm:p-8 md:p-10">
           {/* Progress Circles */}
           <div style={{ marginBottom: '40px' }}>
@@ -1154,7 +1154,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
         </div>
 
         {/* Ready box */}
-        <div className="bg-site-raised border border-site-accent rounded-xl p-6 mt-4">
+        <div className="bg-site-raised border border-site-accent rounded-site-md p-6 mt-4">
           <div className="flex items-center gap-3 mb-3">
             <CheckCircle className="h-5 w-5 text-site-accent" />
             <h3 className="text-lg font-semibold text-site-accent">Ready to Submit!</h3>

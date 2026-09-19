@@ -295,8 +295,8 @@ export default function GetStartedPage() {
             </div>
 
             {/* Form Card */}
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl" style={{ marginBottom: '48px' }}>
-              <div className="p-5 sm:p-8 md:p-12">
+            <div className="bg-white rounded-site-lg sm:rounded-site-lg shadow-2xl" style={{ marginBottom: '48px' }}>
+              <div className="p-5 sm:p-6 md:p-8">
                 {/* Progress Bar */}
                 <div style={{ marginBottom: '40px' }}>
                   <div className="flex items-center justify-between" style={{ marginBottom: '20px' }}>
@@ -469,7 +469,7 @@ export default function GetStartedPage() {
                               key={type.value}
                               type="button"
                               onClick={() => updateFormData({ projectType: type.value })}
-                              className={`p-4 sm:p-6 border-2 rounded-xl text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300 group
+                              className={`p-4 sm:p-6 border-2 rounded-site-md text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300 group
                                 ${formData.projectType === type.value
                                   ? 'border-site-accent bg-site-raised shadow-lg'
                                   : 'border-site-line'}`}
@@ -555,7 +555,7 @@ export default function GetStartedPage() {
                               key={budget.value}
                               type="button"
                               onClick={() => updateFormData({ budgetRange: budget.value })}
-                              className={`p-6 border-2 rounded-xl text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300 relative
+                              className={`p-6 border-2 rounded-site-md text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300 relative
                                 ${formData.budgetRange === budget.value
                                   ? 'border-site-accent bg-site-raised shadow-lg'
                                   : 'border-site-line'}`}
@@ -582,7 +582,7 @@ export default function GetStartedPage() {
                               key={timeline.value}
                               type="button"
                               onClick={() => updateFormData({ timeline: timeline.value })}
-                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300
+                              className={`w-full p-6 border-2 rounded-site-md text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300
                                 ${formData.timeline === timeline.value
                                   ? 'border-site-accent bg-site-raised shadow-lg'
                                   : 'border-site-line'}`}
@@ -660,7 +660,7 @@ export default function GetStartedPage() {
                               key={size.value}
                               type="button"
                               onClick={() => updateFormData({ companySize: size.value })}
-                              className={`w-full p-6 border-2 rounded-xl text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300
+                              className={`w-full p-6 border-2 rounded-site-md text-left hover:bg-site-raised hover:border-site-accent transition-[background-color,border-color] duration-300
                                 ${formData.companySize === size.value
                                   ? 'border-site-accent bg-site-raised shadow-lg'
                                   : 'border-site-line'}`}
@@ -714,7 +714,7 @@ export default function GetStartedPage() {
                   <button
                     onClick={prevStep}
                     disabled={currentStep === 1}
-                    className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-[background-color,color] duration-300 ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-site-md font-semibold transition-[background-color,color] duration-300 ${
                       currentStep === 1
                         ? 'text-site-muted cursor-not-allowed'
                         : 'text-site-text hover:bg-site-raised'
@@ -756,7 +756,7 @@ export default function GetStartedPage() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="site-surface rounded-2xl p-6 md:p-8 lay-measure" style={{ marginBottom: '64px' }}>
+            <div className="site-surface rounded-site-lg p-6 md:p-8 lay-measure" style={{ marginBottom: '64px' }}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                 {[
                   { icon: Zap, label:"24hr Response" },
@@ -791,7 +791,7 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
       <main id="main-content">
       <section className="relative z-10 min-h-screen flex items-center justify-center py-site-section">
         <div className="site-measure">
-          <div className="max-w-3xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 lg:p-16 text-center">
+          <div className="max-w-3xl bg-white rounded-site-lg shadow-2xl p-6 sm:p-6 md:p-8 lg:p-16 text-center">
             {/* Success Icon */}
             <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mb-8">
               <CheckCircle className="w-12 h-12 text-site-text" />
@@ -808,7 +808,7 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
             </p>
 
             {/* What's Next Section */}
-            <div className="bg-site-raised rounded-2xl p-8 mb-10 text-left">
+            <div className="bg-site-raised rounded-site-lg p-8 mb-10 text-left">
               <h3 className="font-bold text-site-text mb-6 text-xl text-center">What happens next?</h3>
               <ul className="space-y-4">
                 {[

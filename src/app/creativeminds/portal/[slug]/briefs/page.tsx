@@ -75,7 +75,7 @@ export default function TalentBriefsPage() {
 
       <div className="space-y-4">
         {briefs.map(brief => (
-          <div key={brief.projectId} className="rounded-xl border border-fm-neutral-200 bg-white p-6">
+          <div key={brief.projectId} className="rounded-site-md border border-fm-neutral-200 bg-white p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="flex items-center gap-2">
