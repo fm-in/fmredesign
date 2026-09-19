@@ -430,7 +430,15 @@ export default async function ProgramDetailPage({ params }: PageProps) {
             </div>
 
             {/* ── Sticky CTA column (desktop only) ────────── */}
-            <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4">
+            {/*
+              A sticky block taller than the space it sticks in has its bottom
+              permanently below the fold — you scroll, it stays put, and the
+              submit button never arrives. Measured on a 1366x768 laptop
+              (~660px of real browser viewport): the aside is 641px and only
+              564px is available once stuck, so 77px of the checkout form was
+              unreachable. It now scrolls its own overflow instead.
+            */}
+            <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4 lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto">
               <div className="site-surface rounded-site-lg p-6 space-y-5">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-wider text-site-muted mb-1">
