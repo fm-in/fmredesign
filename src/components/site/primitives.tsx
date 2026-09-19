@@ -47,12 +47,18 @@ export function Container({
   width?: 'default' | 'narrow';
   className?: string;
 }) {
+  /*
+   * The container is ALWAYS the page measure, so every page starts at the same
+   * left edge. `width="narrow"` limits the content inside it rather than
+   * shrinking and re-centring the container — that was putting /privacy and
+   * /terms at 416px while the rest of the site started at 86px.
+   */
   return (
     <div
       className={`mx-auto w-full px-site-gutter ${className}`.trim()}
-      style={{ maxWidth: width === 'narrow' ? '720px' : 'var(--site-max-width)' }}
+      style={{ maxWidth: 'var(--site-max-width)' }}
     >
-      {children}
+      {width === 'narrow' ? <div style={{ maxWidth: '720px' }}>{children}</div> : children}
     </div>
   );
 }

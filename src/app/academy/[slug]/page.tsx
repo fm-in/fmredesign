@@ -8,7 +8,7 @@
  *   1. Hero band — eyebrow, title, lede, batch start callout, hero image
  *      (or gradient brand panel if no cover image).
  *   2. Two-column body: long-form content left, sticky pricing right.
- *   3. Mobile sticky bottom CTA bar so the price + "Book now" is always
+ *   3. Mobile sticky bottom CTA bar so the price +"Book now" is always
  *      one tap away on small screens.
  */
 
@@ -91,7 +91,7 @@ export async function generateMetadata({ params }: PageProps) {
   ).replace(/\s+/g, ' ').trim();
 
   /**
-   * Programme titles are author-entered and unbounded — "Freaking Minds
+   * Programme titles are author-entered and unbounded —"Freaking Minds
    * Creator Program — Full Bundle" plus the suffix plus the root template
    * rendered at 74 characters, well past where Google truncates. Drop the
    * suffix before truncating the name itself, since the name is the part a
@@ -109,7 +109,7 @@ export async function generateMetadata({ params }: PageProps) {
 
   return {
     // No '| Freaking Minds' here — the root layout's template appends it, and
-    // restating it produced "... | Freaking Minds | Freaking Minds".
+    // restating it produced"... | Freaking Minds | Freaking Minds".
     title: pageTitle,
     // Truncated on a word boundary; Google cuts around 160 characters and a
     // shortDescription set in the admin is not length-checked anywhere.
@@ -540,7 +540,7 @@ function MobileStickyBar({
 }) {
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-site-line shadow-[0_-8px_24px_rgba(0,0,0,0.08)] p-3">
-      <div className="flex items-center gap-3 max-w-screen-sm mx-auto">
+      <div className="flex items-center gap-3 max-w-screen-sm">
         <div className="flex flex-col">
           <div className="flex items-baseline gap-1.5">
             <span className="text-xl font-bold text-site-accent">{price}</span>

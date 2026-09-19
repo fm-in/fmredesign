@@ -100,7 +100,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
                  installed. `max-w-none` also beat the measure set by
                  .blog-body, since Tailwind utilities outrank @layer
                  components. Typography now lives entirely in the CSS. */
-              className="blog-body mx-auto"
+              className="blog-body"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
 
@@ -178,7 +178,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
             <h2 className="font-site-display text-3xl md:text-4xl font-bold text-site-text mb-6 leading-tight">
               Ready to Grow Your <span className="text-site-accent">Business</span>?
             </h2>
-            <p className="text-site-muted mb-8 max-w-xl mx-auto">
+            <p className="text-site-muted mb-8 lay-measure">
               Turn these insights into action. Our team can help you implement proven strategies that drive real results.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

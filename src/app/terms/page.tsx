@@ -17,6 +17,22 @@ export const metadata: Metadata = {
   alternates: { canonical: '/terms' },
 };
 
+/** Built from the body below, so it cannot fall out of step with it. */
+const CONTENTS = [
+  '1. Acceptance of Terms',
+  '2. Services',
+  '3. Client Obligations',
+  '4. Intellectual Property',
+  '5. Payment Terms',
+  '6. Confidentiality',
+  '7. Limitation of Liability',
+  '8. Disclaimer of Warranties',
+  '9. Termination',
+  '10. Governing Law',
+  '11. Changes to Terms',
+  '12. Contact Information',
+] as const;
+
 export default function TermsOfServicePage() {
   return (
     <SiteShell>
@@ -36,8 +52,22 @@ export default function TermsOfServicePage() {
         </Section>
 
         <Section>
-          <Container width="narrow">
-            <Prose>
+          <Container>
+            {/* A contents rail. Legal copy has a genuine reading measure, but
+                that is a reason to put something useful beside it — not to
+                leave half the page empty. */}
+            <div className="lay-rail">
+              <nav aria-label="On this page" className="lg:sticky lg:top-28 lg:self-start">
+                <span className="tag">On this page</span>
+                <ol style={{ listStyle: 'none', margin: '18px 0 0', padding: 0 }}>
+                  {CONTENTS.map((item) => (
+                    <li key={item} className="py-1.5 font-site-sans text-site-label text-site-muted">
+                      {item}
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            <Prose className="lay-measure">
 <section>
               <h2>1. Acceptance of Terms</h2>
               <p>
@@ -153,6 +183,7 @@ export default function TermsOfServicePage() {
               </div>
             </section>
             </Prose>
+            </div>
           </Container>
         </Section>
       </main>

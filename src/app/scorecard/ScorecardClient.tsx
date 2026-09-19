@@ -115,12 +115,12 @@ export default function ScorecardClient() {
           <h1 className="font-site-display text-3xl md:text-5xl font-bold text-site-text mb-6 leading-tight">
             How healthy is your <span className="text-site-accent">marketing</span>?
           </h1>
-          <p className="text-site-muted text-base md:text-lg mb-4 max-w-xl mx-auto leading-relaxed">
+          <p className="text-site-muted text-base md:text-lg mb-4 lay-measure leading-relaxed">
             Eleven questions about how you actually run things — not what you wish you were
             doing. You get a score out of 100, the area costing you the most, and what to do
             about it.
           </p>
-          <p className="text-site-muted text-sm mb-8 max-w-xl mx-auto">
+          <p className="text-site-muted text-sm mb-8 lay-measure">
             Most of the advice you will get back is work you can do yourself.
           </p>
           <button onClick={() => setPhase('quiz')} className="site-button">
@@ -218,7 +218,7 @@ export default function ScorecardClient() {
             </p>
 
             {result.dimensions[0] && (
-              <div className="border-t border-site-line-soft pt-6 max-w-lg mx-auto">
+              <div className="border-t border-site-line-soft pt-6 lay-measure">
                 <p className="text-xs uppercase tracking-widest text-site-muted mb-2">
                   Costing you the most
                 </p>
@@ -389,7 +389,7 @@ export default function ScorecardClient() {
             <h2 className="font-site-display text-2xl font-bold text-site-text mb-3">
               Want a hand with any of it?
             </h2>
-            <p className="text-site-muted text-sm mb-6 max-w-md mx-auto">
+            <p className="text-site-muted text-sm mb-6 lay-measure">
               Most of the above you can do yourself. If you would rather not, that is what we
               do — no obligation either way.
             </p>

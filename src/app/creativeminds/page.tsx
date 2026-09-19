@@ -76,7 +76,7 @@ const processSteps = [
 const creativeBenefits = [
   {
     icon: Briefcase, title: 'Real Brand Projects', tagline: 'No more cheap gigs.',
-    description: 'Work with actual businesses who have real budgets — not someone offering "exposure" as payment.',
+    description: 'Work with actual businesses who have real budgets — not someone offering"exposure" as payment.',
     gradient: 'bg-site-raised', wash: '201, 50, 93', featured: true,
   },
   {
@@ -163,7 +163,7 @@ export default function CreativeMindsPage() {
               <h1 className="text-site-h2 font-site-display font-bold text-site-text leading-tight" style={{ marginBottom: '16px' }}>
                 Apply to the <span className="text-site-accent">Network</span>
               </h1>
-              <p className="text-base md:text-lg text-site-muted leading-relaxed max-w-2xl mx-auto">
+              <p className="text-base md:text-lg text-site-muted leading-relaxed lay-measure">
                 Four quick steps. Our team reviews every application within 48 hours.
               </p>
             </div>
@@ -188,7 +188,7 @@ export default function CreativeMindsPage() {
         <section className="relative z-10 min-h-screen flex items-center justify-center py-site-section">
           <div className="site-measure">
             <div className="max-w-2xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 text-center">
-              <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mx-auto mb-8">
+              <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mb-8">
                 <CheckCircle className="w-12 h-12 text-site-text" />
               </div>
               <h1 className="text-site-h3 font-bold text-site-text mb-4">
@@ -202,9 +202,9 @@ export default function CreativeMindsPage() {
                 <h3 className="text-lg font-semibold mb-4 text-site-text">What happens next?</h3>
                 <div className="space-y-3 text-left">
                   {[
-                    { step: 1, text: "Application review (24-48 hours)" },
-                    { step: 2, text: "Portfolio verification" },
-                    { step: 3, text: "Welcome to the network & first project opportunities" }
+                    { step: 1, text:"Application review (24-48 hours)" },
+                    { step: 2, text:"Portfolio verification" },
+                    { step: 3, text:"Welcome to the network & first project opportunities" }
                   ].map((item) => (
                     <div key={item.step} className="flex items-center gap-3">
                       <div className="w-6 h-6 bg-site-raised rounded-full flex items-center justify-center">
@@ -323,7 +323,7 @@ export default function CreativeMindsPage() {
             <h2 className="text-site-h2 font-site-display font-bold text-site-text mb-8 leading-tight">
               From application to <span className="text-site-accent">earning.</span>
             </h2>
-            <p className="text-lg text-site-muted leading-relaxed max-w-2xl mx-auto">
+            <p className="text-lg text-site-muted leading-relaxed lay-measure">
               No endless interviews. No algorithm games. Three steps and you&apos;re in.
             </p>
           </div>
@@ -579,7 +579,7 @@ export default function CreativeMindsPage() {
               Need to <span className="text-site-accent">hire</span> instead?
             </h2>
 
-            <p className="text-site-muted mb-8 max-w-lg mx-auto">
+            <p className="text-site-muted mb-8 lay-measure">
               Tell us what you need — we&apos;ll match you with portfolio-reviewed creatives
               from our network. No endless sourcing, no bidding wars.
             </p>

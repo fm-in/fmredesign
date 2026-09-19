@@ -247,7 +247,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
 
   return (
     <div className="site-measure site-measure py-site-section">
-      <div className="max-w-3xl mx-auto" style={{ textAlign: 'center', marginBottom: '32px' }}>
+      <div className="lay-measure" style={{ textAlign: 'center', marginBottom: '32px' }}>
         <h1 className="font-site-display text-4xl md:text-6xl font-bold text-site-text mb-4 leading-tight">
           Freak<span className="text-site-accent">quency</span>
         </h1>

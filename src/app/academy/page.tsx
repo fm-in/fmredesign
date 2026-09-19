@@ -2,9 +2,9 @@
  * FM Academy — public listing.
  *
  * Server-rendered with 60s revalidation. Layout strategy:
- *   1. Hero with "Creator Program" framing and batch-start urgency.
+ *   1. Hero with"Creator Program" framing and batch-start urgency.
  *   2. Featured Bundle card — the highest-margin product up top, with a
- *      bold "save vs individual" callout.
+ *      bold"save vs individual" callout.
  *   3. Six individual course cards in a clean 3-column grid.
  *   4. Trust band reinforcing why an agency-run program > a YouTube
  *      course or an online cert.
@@ -30,7 +30,7 @@ import { batchSchedule, seatScarcity } from '@/lib/academy/schedule';
 export const revalidate = 60;
 export const metadata = {
   // The root layout applies the template '%s | Freaking Minds' — restating it
-  // here produced "... | Freaking Minds | Freaking Minds".
+  // here produced"... | Freaking Minds | Freaking Minds".
   title: 'FM Academy — Marketing, Design & Video',
   // Without this the page inherits the root's canonical of '/' and declares
   // itself a duplicate of the home page.
@@ -66,7 +66,7 @@ export default async function AcademyPage() {
   const courses = programs.filter((p) => p.slug !== BUNDLE_SLUG);
   const batchStart = bundle?.startsAt || courses[0]?.startsAt;
   const schedule = batchSchedule(batchStart);
-  // Derived, not hardcoded. The old copy said "Save ₹30,000" as literal text,
+  // Derived, not hardcoded. The old copy said"Save ₹30,000" as literal text,
   // so it would have kept saying so through any price change.
   const bundleSaving = bundleSavingLabel(bundle, courses);
 
@@ -77,8 +77,8 @@ export default async function AcademyPage() {
       <main id="main-content">
         <section className="py-site-section">
           <div className="site-measure">
-            <div className="site-surface rounded-3xl p-12 max-w-2xl mx-auto">
-              <GraduationCap className="w-12 h-12 text-site-muted mx-auto mb-4" />
+            <div className="site-surface rounded-3xl p-12 lay-measure">
+              <GraduationCap className="w-12 h-12 text-site-muted mb-4" />
               <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-3">
                 New programs launching soon
               </h2>
@@ -162,7 +162,7 @@ export default async function AcademyPage() {
       {/* ── Trust band ──────────────────────────────────────── */}
       <section className="sec">
         <div className="wrap">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <TrustItem
               icon={<Building2 className="w-6 h-6" />}
               title="Agency-led"

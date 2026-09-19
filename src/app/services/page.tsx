@@ -63,36 +63,38 @@ export default function ServicesPage() {
       <main id="main-content">
         <Section as="div" className="pb-0">
           <Container>
-            <Label>What we do</Label>
-            <Display level="display" className="mt-6 max-w-[14ch]">
-              Six things, done properly.
-            </Display>
-            <Text size="lead" muted className="mt-8 max-w-2xl">
-              Strategy, creative and performance under one roof. Each one below says what it
-              actually involves and who it tends to be right for.
-            </Text>
+            <div className="lay-split">
+              <div>
+                <Label>What we do</Label>
+                <Display level="display" className="mt-6">
+                  Six things, done properly.
+                </Display>
+                <Text size="lead" muted className="mt-8 lay-measure">
+                  Strategy, creative and performance under one roof. Each one below says what it
+                  actually involves and who it tends to be right for.
+                </Text>
+              </div>
 
-            {/* An index, so the page is navigable without scrolling six sections. */}
-            <ul
-              className="mt-12 flex flex-wrap gap-x-6 gap-y-3"
-              style={{ listStyle: 'none', margin: '3rem 0 0', padding: 0 }}
-            >
-              {SERVICES.map((service) => (
-                <li key={service.id}>
-                  <Link
-                    href={serviceHref(service.id)}
-                    className="font-site-sans text-site-body"
-                    style={{
-                      color: 'var(--site-text)',
-                      textDecoration: 'underline',
-                      textUnderlineOffset: '6px',
-                    }}
-                  >
-                    {service.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+              {/* The index belongs beside the headline, not stacked under the
+                  lede as a wrapped row with an empty half-page to its right. */}
+              <nav aria-label="Services on this page">
+                <Rule />
+                <ul style={{ listStyle: 'none', margin: '1.5rem 0 0', padding: 0 }}>
+                  {SERVICES.map((service, i) => (
+                    <li key={service.id} style={{ borderBottom: '1px solid var(--site-line-soft)' }}>
+                      <Link
+                        href={serviceHref(service.id)}
+                        className="flex items-baseline justify-between gap-6 py-3"
+                        style={{ color: 'var(--site-text)' }}
+                      >
+                        <span className="font-site-sans text-site-body">{service.name}</span>
+                        <span className="tag">{String(i + 1).padStart(2, '0')}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
           </Container>
         </Section>
 
@@ -212,9 +214,11 @@ export default function ServicesPage() {
         </Section>
 
         <Section tone="raised">
-          <Container width="narrow">
+          <Container>
+            <div className="lay-split">
+              <div>
             <Display level="h1" as="h2">Not sure which one you need?</Display>
-            <Text size="lead" muted className="mt-8">
+            <Text size="lead" muted className="mt-8 lay-measure">
               Most projects are two or three of these together. Tell us the outcome and we will
               tell you what it takes.
             </Text>
@@ -233,6 +237,20 @@ export default function ServicesPage() {
               >
                 Or take the Growth Scorecard
               </Link>
+            </div>
+              </div>
+
+              <div>
+                <Rule />
+                <ol style={{ listStyle: 'none', margin: '1.5rem 0 0', padding: 0 }}>
+                  {PROCESS.map((item) => (
+                    <li key={item.step} className="flex items-baseline gap-5 py-3" style={{ borderBottom: '1px solid var(--site-line-soft)' }}>
+                      <span className="tag">{item.step}</span>
+                      <span className="font-site-sans text-site-body text-site-text">{item.title}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
             </div>
           </Container>
         </Section>

@@ -39,14 +39,32 @@ export default function WorkPage() {
       <main id="main-content">
         <Section as="div" className="pb-0">
           <Container>
-            <Label>Selected work</Label>
-            <Display level="display" className="mt-6 max-w-[15ch]">
-              Real results for real brands.
-            </Display>
-            <Text size="lead" muted className="mt-8 max-w-2xl">
-              {PORTFOLIO.websites.length} live sites, {VIDEO_WORK.length} films, and the campaign and
-              identity work behind them.
-            </Text>
+            <div className="lay-split">
+              <div>
+                <Label>Selected work</Label>
+                <Display level="display" className="mt-6">
+                  Real results for real brands.
+                </Display>
+                <Text size="lead" muted className="mt-8 lay-measure">
+                  {PORTFOLIO.websites.length} live sites, {VIDEO_WORK.length} films, and the campaign
+                  and identity work behind them.
+                </Text>
+              </div>
+              {/* Two sites, in the hero. This page's job is to show the work;
+                  it should start doing that above the fold. */}
+              <div className="grid grid-cols-2 gap-4">
+                {PORTFOLIO.websites.slice(0, 2).map((site) => (
+                  <StillFrame
+                    key={site.src}
+                    src={site.src}
+                    alt={`${site.client} website`}
+                    ratio="4 / 5"
+                    caption={site.client}
+                    sizes="(min-width: 900px) 22vw, 45vw"
+                  />
+                ))}
+              </div>
+            </div>
           </Container>
         </Section>
 
@@ -153,9 +171,11 @@ export default function WorkPage() {
         </Section>
 
         <Section>
-          <Container width="narrow">
+          <Container>
+            <div className="lay-split">
+              <div>
             <Display level="h1" as="h2">Ready to be our next one?</Display>
-            <Text size="lead" muted className="mt-8">
+            <Text size="lead" muted className="mt-8 lay-measure">
               Tell us what you are trying to move, and we will tell you whether we are the right people
               for it.
             </Text>
@@ -174,6 +194,25 @@ export default function WorkPage() {
               >
                 See what we do
               </Link>
+            </div>
+              </div>
+
+              <div>
+                <Rule />
+                <dl className="mt-6" style={{ margin: '1.5rem 0 0' }}>
+                  {[
+                    ['Sites live', String(PORTFOLIO.websites.length)],
+                    ['Films shipped', String(VIDEO_WORK.length)],
+                    ['Campaign pieces', String(PORTFOLIO.graphicDesign.length)],
+                    ['Identities drawn', String(PORTFOLIO.logos.length)],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex items-baseline justify-between gap-6 py-3" style={{ borderBottom: '1px solid var(--site-line-soft)' }}>
+                      <dt className="tag">{label}</dt>
+                      <dd className="fig" style={{ margin: 0, fontSize: 'clamp(1.6rem, 2.6vw, 2.4rem)', color: 'var(--site-accent)' }}>{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
             </div>
           </Container>
         </Section>

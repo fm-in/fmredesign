@@ -17,6 +17,20 @@ export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
 };
 
+/** Built from the body below, so it cannot fall out of step with it. */
+const CONTENTS = [
+  '1. Information We Collect',
+  '2. How We Use Your Information',
+  '3. Cookies & Tracking Technologies',
+  '4. Third-Party Services',
+  '5. Data Security',
+  '6. Data Retention',
+  '7. Your Rights',
+  '8. Children&apos;s Privacy',
+  '9. Changes to This Policy',
+  '10. Contact Us',
+] as const;
+
 export default function PrivacyPolicyPage() {
   return (
     <SiteShell>
@@ -36,8 +50,22 @@ export default function PrivacyPolicyPage() {
         </Section>
 
         <Section>
-          <Container width="narrow">
-            <Prose>
+          <Container>
+            {/* A contents rail. Legal copy has a genuine reading measure, but
+                that is a reason to put something useful beside it — not to
+                leave half the page empty. */}
+            <div className="lay-rail">
+              <nav aria-label="On this page" className="lg:sticky lg:top-28 lg:self-start">
+                <span className="tag">On this page</span>
+                <ol style={{ listStyle: 'none', margin: '18px 0 0', padding: 0 }}>
+                  {CONTENTS.map((item) => (
+                    <li key={item} className="py-1.5 font-site-sans text-site-label text-site-muted">
+                      {item}
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+            <Prose className="lay-measure">
 <section>
               <h2>1. Information We Collect</h2>
               <p>
@@ -149,6 +177,7 @@ export default function PrivacyPolicyPage() {
               </div>
             </section>
             </Prose>
+            </div>
           </Container>
         </Section>
       </main>

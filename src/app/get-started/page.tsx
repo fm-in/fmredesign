@@ -23,7 +23,7 @@ import {
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
-import { CalButton } from "@/components/ui/CalButton";
+import { CalButton } from"@/components/ui/CalButton";
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
 import { DEFAULT_BOOKING_LINK } from '@/lib/sales/links';
@@ -289,7 +289,7 @@ export default function GetStartedPage() {
               <h1 className="text-site-h2 font-site-display font-bold text-site-text leading-tight" style={{ marginBottom: '16px' }}>
                 Let&apos;s Grow Your <span className="text-site-accent">Brand</span>
               </h1>
-              <p className="text-base md:text-lg text-site-muted leading-relaxed max-w-2xl mx-auto">
+              <p className="text-base md:text-lg text-site-muted leading-relaxed lay-measure">
                 Tell us about your project. We&apos;ll get back within 24 hours with a customized proposal.
               </p>
             </div>
@@ -339,7 +339,7 @@ export default function GetStartedPage() {
                   {currentStep === 1 && (
                     <div className="space-y-8">
                       <div style={{ marginBottom: '40px' }}>
-                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center" style={{ marginBottom: '24px' }}>
                           <Users className="w-8 h-8 text-site-accent" />
                         </div>
                         <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
@@ -448,7 +448,7 @@ export default function GetStartedPage() {
                   {currentStep === 2 && (
                     <div className="space-y-8">
                       <div style={{ marginBottom: '40px' }}>
-                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center" style={{ marginBottom: '24px' }}>
                           <Target className="w-8 h-8 text-site-accent" />
                         </div>
                         <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
@@ -534,7 +534,7 @@ export default function GetStartedPage() {
                   {currentStep === 3 && (
                     <div className="space-y-8">
                       <div style={{ marginBottom: '40px' }}>
-                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center" style={{ marginBottom: '24px' }}>
                           <DollarSign className="w-8 h-8 text-site-accent" />
                         </div>
                         <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
@@ -608,7 +608,7 @@ export default function GetStartedPage() {
                   {currentStep === 4 && (
                     <div className="space-y-8">
                       <div style={{ marginBottom: '40px' }}>
-                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto" style={{ marginBottom: '24px' }}>
+                        <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center" style={{ marginBottom: '24px' }}>
                           <AlertCircle className="w-8 h-8 text-site-accent" />
                         </div>
                         <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
@@ -756,13 +756,13 @@ export default function GetStartedPage() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="site-surface rounded-2xl p-6 md:p-8 max-w-3xl mx-auto" style={{ marginBottom: '64px' }}>
+            <div className="site-surface rounded-2xl p-6 md:p-8 lay-measure" style={{ marginBottom: '64px' }}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                 {[
-                  { icon: Zap, label: "24hr Response" },
-                  { icon: Target, label: "Custom Strategy" },
-                  { icon: BarChart3, label: "Data-Driven" },
-                  { icon: Gift, label: "Free Consultation" }
+                  { icon: Zap, label:"24hr Response" },
+                  { icon: Target, label:"Custom Strategy" },
+                  { icon: BarChart3, label:"Data-Driven" },
+                  { icon: Gift, label:"Free Consultation" }
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
@@ -793,7 +793,7 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
         <div className="site-measure">
           <div className="max-w-3xl bg-white rounded-3xl shadow-2xl p-6 sm:p-8 md:p-12 lg:p-16 text-center">
             {/* Success Icon */}
-            <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mx-auto mb-8">
+            <div className="w-20 h-20 bg-site-raised rounded-full flex items-center justify-center mb-8">
               <CheckCircle className="w-12 h-12 text-site-text" />
             </div>
 
@@ -812,10 +812,10 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
               <h3 className="font-bold text-site-text mb-6 text-xl text-center">What happens next?</h3>
               <ul className="space-y-4">
                 {[
-                  { step: 1, title: "Expert Review", desc: "Our team will carefully analyze your requirements and challenges" },
-                  { step: 2, title: "Custom Proposal", desc: "We'll create a detailed proposal with timeline, strategy, and transparent pricing" },
-                  { step: 3, title: "Discovery Call", desc: "Schedule a call to discuss your project in detail and answer any questions" },
-                  { step: 4, title: "Project Kickoff", desc: "Start building your amazing project with our expert team!" }
+                  { step: 1, title:"Expert Review", desc:"Our team will carefully analyze your requirements and challenges" },
+                  { step: 2, title:"Custom Proposal", desc:"We'll create a detailed proposal with timeline, strategy, and transparent pricing" },
+                  { step: 3, title:"Discovery Call", desc:"Schedule a call to discuss your project in detail and answer any questions" },
+                  { step: 4, title:"Project Kickoff", desc:"Start building your amazing project with our expert team!" }
                 ].map((item) => (
                   <li key={item.step} className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-site-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">

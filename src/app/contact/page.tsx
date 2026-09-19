@@ -33,15 +33,13 @@ const DETAILS = [
 
 const FAQ = [
   [
-    'How long does it take to see results from digital marketing?',
-    "Results vary by service, but typically you'll see initial improvements in 3-6 months for SEO, immediate results for PPC, and 1-3 months for social media marketing.",
+    'How long does it take to see results from digital marketing?',"Results vary by service, but typically you'll see initial improvements in 3-6 months for SEO, immediate results for PPC, and 1-3 months for social media marketing.",
   ],
   [
     'Do you work with businesses outside of India?',
     'Yes! We work with clients across India and internationally. Our team collaborates seamlessly across time zones through digital tools.',
   ],
-  [
-    "What's included in your monthly reporting?",
+  ["What's included in your monthly reporting?",
     'Our reports include key metrics, campaign performance, ROI analysis, competitor insights, and strategic recommendations for the next month.',
   ],
   [
