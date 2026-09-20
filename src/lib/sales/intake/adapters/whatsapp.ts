@@ -3,9 +3,8 @@
  *
  * GET answers Meta's subscription handshake; POST is signed with the app
  * secret. Inbound messages and delivery statuses arrive on the same field
- * (`messages`), so this adapter only parses and verifies them — attaching a
- * message to a lead's timeline lands with the send path, once a real number
- * is registered.
+ * (`messages`), so this adapter parses and verifies them, then hands both to
+ * `src/lib/whatsapp/inbound.ts`, which owns what they mean.
  *
  * Payload shape:
  * https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview
@@ -154,10 +153,10 @@ export const whatsappAdapter: SalesWebhookAdapter = {
   },
 
   async handle(payload) {
-    // Verification and parsing only for now: the pilot number is not live yet,
-    // so there is no lead to attach a message to. Recording inbound messages on
-    // the timeline, stopping sequences on a reply and handling opt-outs arrive
-    // with the send path.
-    extractWhatsAppEvents(payload);
+    // The import is dynamic so the adapter registry — which the settings screen
+    // loads to list webhook URLs — does not pull Supabase and the notification
+    // stack into every caller.
+    const { handleWhatsAppEvents } = await import('@/lib/whatsapp/inbound');
+    await handleWhatsAppEvents(extractWhatsAppEvents(payload));
   },
 };

@@ -30,7 +30,9 @@ export type LeadSource =
   | 'google_lead_form'
   | 'connector'
   | 'cal_booking'
-  | 'scorecard';
+  | 'scorecard'
+  /** Messaged the business WhatsApp number without filling anything in. */
+  | 'whatsapp';
 
 // Project Types for Lead Classification
 export type ProjectType = 

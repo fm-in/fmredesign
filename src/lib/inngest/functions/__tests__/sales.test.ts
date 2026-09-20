@@ -33,7 +33,13 @@ const mocks = vi.hoisted(() => ({
   evaluateContinue: vi.fn<() => Promise<ContinueDecision>>(async () => ({ ok: true })),
   runSequenceStep: vi.fn<(leadId: string, step: SequenceStep) => Promise<StepResult>>(async () => ({ done: true })),
   recordStepProgress: vi.fn(async () => undefined),
+  sendTemplateToLead: vi.fn<() => Promise<{ sent: boolean; reason?: string }>>(async () => ({ sent: true })),
 }));
+
+vi.mock('@/lib/whatsapp/send', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/whatsapp/send')>('@/lib/whatsapp/send');
+  return { ...actual, sendTemplateToLead: mocks.sendTemplateToLead };
+});
 
 // Capture each function's config and handler instead of registering it with Inngest.
 vi.mock('@/lib/inngest/client', () => ({
@@ -106,7 +112,42 @@ describe('sales-lead-created', () => {
       expect.objectContaining({ title: 'First touch within the hour', draftBody: 'Hi Priya, could we talk today?' })
     );
     expect(sendEvent).not.toHaveBeenCalled();
-    expect(result).toEqual({ written: true });
+    expect(result).toEqual({ written: true, whatsapp: { sent: true } });
+  });
+
+  it('sends the WhatsApp first touch, waiving only the sending-hours rule', async () => {
+    const { step } = fakeStep();
+    await registered('sales-lead-created').handler({ event: { data: { leadId: 'lead_1' } }, step });
+
+    expect(mocks.sendTemplateToLead).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'marketing',
+        // Someone who filled the form at 02:00 is awake and waiting; every
+        // other gate still applies inside sendTemplateToLead.
+        respondingToAction: true,
+        template: expect.objectContaining({ name: 'enquiry_first_touch', language: 'en' }),
+      })
+    );
+  });
+
+  it('sends nothing when the lead left no phone number', async () => {
+    mocks.loadLead.mockResolvedValue(leadRow({ phone_e164: null }));
+    const { step } = fakeStep();
+    const result = await registered('sales-lead-created').handler({ event: { data: { leadId: 'lead_1' } }, step });
+
+    expect(mocks.sendTemplateToLead).not.toHaveBeenCalled();
+    expect(result).toEqual({ written: true, whatsapp: { sent: false, reason: 'no_phone' } });
+  });
+
+  it('keeps the refusal reason but no lead content in the step result', async () => {
+    // Inngest keeps step results in its run history, so a customer's name or
+    // message must never be part of one.
+    mocks.sendTemplateToLead.mockResolvedValue({ sent: false, reason: 'suppressed' });
+    const { step } = fakeStep();
+    const result = await registered('sales-lead-created').handler({ event: { data: { leadId: 'lead_1' } }, step });
+
+    expect(result).toEqual({ written: true, whatsapp: { sent: false, reason: 'suppressed' } });
+    expect(JSON.stringify(result)).not.toContain('Priya');
   });
 
   it('never sends sales/sequence.start — a lead no longer enrols itself, for a normal lead or a test-tagged one', async () => {

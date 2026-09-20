@@ -83,6 +83,39 @@ describe('isSuppressed', () => {
   });
 });
 
+describe('isSuppressed, scoped to a channel', () => {
+  /**
+   * The reason this scoping exists: `sendSalesEmail` asks about the email
+   * address AND the phone number, so before channels a WhatsApp "STOP" —
+   * stored against the phone — silently stopped that person's email too.
+   */
+  it('asks only for rows that apply to the channel', async () => {
+    const calls: FakeCall[] = [];
+    fake.respond((call) => {
+      calls.push(call);
+      return { data: [], error: null };
+    });
+
+    await isSuppressed({ email: 'p@x.com', phoneE164: '+919833257659' }, 'email');
+
+    const scoped = calls.filter((call) => call.filters.some((f) => f.method === 'or'));
+    expect(scoped).toHaveLength(2);
+    expect(scoped[0].filters.find((f) => f.method === 'or')?.args[0]).toBe('channel.is.null,channel.eq.email');
+  });
+
+  it('asks about every row when no channel is given', async () => {
+    const calls: FakeCall[] = [];
+    fake.respond((call) => {
+      calls.push(call);
+      return { data: [], error: null };
+    });
+
+    await isSuppressed({ email: 'p@x.com' });
+
+    expect(calls.every((call) => !call.filters.some((f) => f.method === 'or'))).toBe(true);
+  });
+});
+
 describe('blocksReceipts', () => {
   const BLOCKING = ['bounced', 'complaint', 'manual', 'deletion_request'] as const;
 
@@ -210,6 +243,32 @@ describe('addSuppression', () => {
     const rows = suppressionTable([stored(null, 'unsubscribed', '+919833257659')]);
     await addSuppression({ phoneE164: '+919833257659', reason: 'manual' });
     expect(rows[0]?.reason).toBe('manual');
+  });
+});
+
+describe('addSuppression, per channel', () => {
+  it('stores the channel so an opt-out here does not silence everywhere', async () => {
+    const inserts: Record<string, unknown>[] = [];
+    fake.respond((call) => {
+      if (call.op === 'insert') inserts.push(payloadOf(call));
+      return { data: null, error: null };
+    });
+
+    await addSuppression({ phoneE164: '+919833257659', reason: 'unsubscribed', channel: 'whatsapp' });
+
+    expect(inserts[0]).toMatchObject({ phone_e164: '+919833257659', channel: 'whatsapp' });
+  });
+
+  it('stores null for an unsubscribe that means every channel', async () => {
+    const inserts: Record<string, unknown>[] = [];
+    fake.respond((call) => {
+      if (call.op === 'insert') inserts.push(payloadOf(call));
+      return { data: null, error: null };
+    });
+
+    await addSuppression({ email: 'p@x.com', reason: 'unsubscribed' });
+
+    expect(inserts[0]).toMatchObject({ channel: null });
   });
 });
 
