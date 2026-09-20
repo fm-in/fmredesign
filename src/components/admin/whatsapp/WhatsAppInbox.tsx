@@ -39,6 +39,14 @@ interface WindowState {
   lastInboundAt: string | null;
 }
 
+interface ApprovedTemplate {
+  name: string;
+  language: string;
+  category: string;
+  body: string;
+  variables: number;
+}
+
 interface Summary {
   leadId: string;
   name: string;
@@ -71,6 +79,8 @@ export function WhatsAppInbox() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [templates, setTemplates] = useState<ApprovedTemplate[]>([]);
+  const [chosenTemplate, setChosenTemplate] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
 
   const loadList = useCallback(async () => {
@@ -95,6 +105,16 @@ export function WhatsAppInbox() {
   useEffect(() => {
     void loadList();
   }, [loadList]);
+
+  // Only needed once the window has shut, but fetched up front so the choice
+  // is instant at the moment someone discovers they cannot type.
+  useEffect(() => {
+    void (async () => {
+      const res = await fetch('/api/admin/whatsapp/templates');
+      const json = await res.json();
+      if (json.success) setTemplates(json.data.templates as ApprovedTemplate[]);
+    })();
+  }, []);
 
   useEffect(() => {
     if (activeId) void loadThread(activeId);
@@ -129,7 +149,33 @@ export function WhatsAppInbox() {
     }
   };
 
+  const sendTemplate = async () => {
+    if (!activeId || !chosenTemplate) return;
+    setSending(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/whatsapp/conversations/${activeId}/template`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: chosenTemplate }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        setError(json.error ?? 'Could not send');
+        return;
+      }
+      setChosenTemplate('');
+      await loadThread(activeId);
+      await loadList();
+    } catch {
+      setError('Could not reach the server');
+    } finally {
+      setSending(false);
+    }
+  };
+
   const active = conversations.find((c) => c.leadId === activeId) ?? null;
+  const chosen = templates.find((t) => t.name === chosenTemplate) ?? null;
 
   return (
     <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -218,28 +264,59 @@ export function WhatsAppInbox() {
                   {window_?.open ? <Clock className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />}
                   {window_ ? windowLabel(window_) : ''}
                 </p>
-                <div className="flex gap-2">
-                  <textarea
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void send();
-                    }}
-                    disabled={!window_?.open || sending}
-                    rows={2}
-                    placeholder={window_?.open ? 'Reply as Freaking Minds…' : 'Cannot reply in free text right now'}
-                    className="flex-1 resize-none rounded-md border border-fm-neutral-300 p-2 text-sm disabled:bg-fm-neutral-50 disabled:text-fm-neutral-400"
-                  />
-                  <DashboardButton
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => void send()}
-                    disabled={!window_?.open || sending || !draft.trim()}
-                  >
-                    <Send className="h-4 w-4" />
-                    {sending ? 'Sending…' : 'Send'}
-                  </DashboardButton>
-                </div>
+                {window_?.open ? (
+                  <div className="flex gap-2">
+                    <textarea
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void send();
+                      }}
+                      disabled={sending}
+                      rows={2}
+                      placeholder="Reply as Freaking Minds…"
+                      className="flex-1 resize-none rounded-md border border-fm-neutral-300 p-2 text-sm"
+                    />
+                    <DashboardButton variant="secondary" size="sm" onClick={() => void send()} disabled={sending || !draft.trim()}>
+                      <Send className="h-4 w-4" />
+                      {sending ? 'Sending…' : 'Send'}
+                    </DashboardButton>
+                  </div>
+                ) : (
+                  /*
+                   * A shut window is not a dead end. Free text is refused from
+                   * here on, but an approved template still sends — and sending
+                   * one re-opens the window if they answer it.
+                   */
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <select
+                        value={chosenTemplate}
+                        onChange={(e) => setChosenTemplate(e.target.value)}
+                        disabled={sending || templates.length === 0}
+                        className="flex-1 rounded-md border border-fm-neutral-300 p-2 text-sm"
+                      >
+                        <option value="">
+                          {templates.length === 0 ? 'No approved templates available' : 'Pick an approved template…'}
+                        </option>
+                        {templates.map((t) => (
+                          <option key={`${t.name}:${t.language}`} value={t.name}>
+                            {t.name} ({t.category.toLowerCase()})
+                          </option>
+                        ))}
+                      </select>
+                      <DashboardButton variant="secondary" size="sm" onClick={() => void sendTemplate()} disabled={sending || !chosenTemplate}>
+                        <Send className="h-4 w-4" />
+                        {sending ? 'Sending…' : 'Send template'}
+                      </DashboardButton>
+                    </div>
+                    {chosen && (
+                      <p className="whitespace-pre-wrap rounded-md bg-fm-neutral-50 p-2 text-xs text-fm-neutral-600">
+                        {chosen.body}
+                      </p>
+                    )}
+                  </div>
+                )}
                 {error && <p className="mt-2 text-xs text-red-700">{error}</p>}
               </div>
             </>
