@@ -2,7 +2,7 @@
  * Normalise a phone number to E.164 (`+<country><number>`).
  *
  * Numbers arrive from forms, ad platforms and booking tools in every shape:
- * "98332 57659", "+91-98332-57659", "0091 9833257659", "09833257659".
+ * "98765 43210", "+91-98765-43210", "0091 9876543210", "09876543210".
  * Numbers without a country code are treated as Indian. Anything that cannot
  * be a real number returns null, so callers never store a guess.
  */

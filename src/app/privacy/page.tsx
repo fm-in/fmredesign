@@ -1,5 +1,6 @@
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import { Shield } from "lucide-react";
+import { COMPANY_PHONE_DISPLAY } from '@/lib/company';
 
 export default function PrivacyPolicyPage() {
   return (
@@ -140,7 +141,7 @@ export default function PrivacyPolicyPage() {
               <div className="mt-4 p-6 bg-fm-neutral-50 rounded-xl">
                 <p className="text-fm-neutral-800 font-semibold">Freaking Minds</p>
                 <p className="text-fm-neutral-600">Email: freakingmindsdigital@gmail.com</p>
-                <p className="text-fm-neutral-600">Phone: +91 98332 57659</p>
+                <p className="text-fm-neutral-600">WhatsApp: {COMPANY_PHONE_DISPLAY}</p>
                 <p className="text-fm-neutral-600">Address: India</p>
               </div>
             </section>

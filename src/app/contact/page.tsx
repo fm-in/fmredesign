@@ -8,6 +8,7 @@ import { CalButton } from "@/components/ui/CalButton";
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
 import { readFirstTouchSafely } from '@/lib/attribution';
+import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 const contactInfo = [
   {
@@ -16,9 +17,9 @@ const contactInfo = [
     details: ["India-based, serving brands worldwide"]
   },
   {
-    icon: Phone,
-    title: "Call Us",
-    details: ["+91 98332 57659", "Available Mon-Sat 9AM-7PM"]
+    icon: MessageCircle,
+    title: "WhatsApp Us",
+    details: [COMPANY_PHONE_DISPLAY, "Available Mon-Sat 9AM-7PM"]
   },
   {
     icon: Mail,
@@ -448,13 +449,6 @@ export default function ContactPage() {
                 <h3 className="font-display text-xl font-bold text-fm-neutral-900 mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <a
-                    href="tel:+919833257659"
-                    className="v2-btn v2-btn-magenta v2-btn-full"
-                  >
-                    <Phone className="w-5 h-5" />
-                    Call Now
-                  </a>
-                  <a
                     href="mailto:freakingmindsdigital@gmail.com"
                     className="v2-btn v2-btn-outline v2-btn-full"
                   >
@@ -462,7 +456,7 @@ export default function ContactPage() {
                     Send Email
                   </a>
                   <a
-                    href="https://wa.me/919833257659"
+                    href={COMPANY_WHATSAPP_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="v2-btn v2-btn-outline v2-btn-full"

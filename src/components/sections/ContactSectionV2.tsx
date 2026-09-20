@@ -3,11 +3,12 @@
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Mail, Phone, MapPin, Sparkles, Zap, Heart } from 'lucide-react';
+import { ArrowRight, Mail, MessageCircle, MapPin, Sparkles, Zap, Heart } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { MagneticButton } from '@/components/animations/Card3D';
 import { GradientOrb, FloatingElement } from '@/components/animations/ParallaxLayer';
+import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -213,12 +214,12 @@ export function ContactSectionV2() {
 
                 <MagneticButton
                   as="a"
-                  href="tel:+919833257659"
+                  href={COMPANY_WHATSAPP_URL}
                   strength={0.25}
                   className="cta-btn v2-btn v2-btn-outline"
                 >
-                  <Phone className="w-5 h-5" />
-                  Call Us Now
+                  <MessageCircle className="w-5 h-5" />
+                  Message Us
                 </MagneticButton>
               </div>
 
@@ -292,12 +293,12 @@ export function ContactSectionV2() {
               {/* Phone */}
               <div className="contact-item flex items-center justify-center md:justify-start gap-3 group">
                 <div className="contact-icon w-10 h-10 rounded-full v2-chip flex items-center justify-center transition-[transform,background-color] duration-300 group-hover:scale-110 group-hover:v2-chip">
-                  <Phone className="w-5 h-5 v2-text-accent" />
+                  <MessageCircle className="w-5 h-5 v2-text-accent" />
                 </div>
                 <div>
-                  <div className="v2-text-muted text-xs uppercase tracking-wide">Phone</div>
-                  <a href="tel:+919833257659" className="v2-text-primary font-medium hover:v2-text-accent transition-colors">
-                    +91 98332 57659
+                  <div className="v2-text-muted text-xs uppercase tracking-wide">WhatsApp</div>
+                  <a href={COMPANY_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="v2-text-primary font-medium hover:v2-text-accent transition-colors">
+                    {COMPANY_PHONE_DISPLAY}
                   </a>
                 </div>
               </div>

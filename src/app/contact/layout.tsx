@@ -4,7 +4,7 @@ import { OG_DEFAULTS } from '@/lib/seo';
 export const metadata: Metadata = {
   title: 'Contact Us — Get a Free Consultation',
   description:
-    'Ready to grow your brand? Get a free marketing consultation. Call +91 98332 57659 or send us a message. Based in Bhopal, serving India.',
+    'Ready to grow your brand? Get a free marketing consultation. Message us on WhatsApp or send us a note. India-based, serving brands worldwide.',
   alternates: { canonical: '/contact' },
   openGraph: {
     ...OG_DEFAULTS,

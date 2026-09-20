@@ -1,4 +1,5 @@
 import { SITE_URL } from '@/lib/site-url';
+import { COMPANY_PHONE_DISPLAY } from '@/lib/company';
 /**
  * Admin Dashboard Types
  */
@@ -119,7 +120,7 @@ export const DEFAULT_COMPANY_INFO: CompanyInfo = {
   city: "Bhopal",
   state: "Madhya Pradesh",
   zipCode: "462002",
-  phone: "+91 98332 57659",
+  phone: COMPANY_PHONE_DISPLAY,
   email: "freakingmindsdigital@gmail.com",
   website: SITE_URL,
   taxId: "23BQNPM3447F1ZT",

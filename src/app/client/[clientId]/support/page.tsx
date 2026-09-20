@@ -27,6 +27,7 @@ import { useClientPortal } from '@/lib/client-portal/context';
 import { getStatusColor, getPriorityColor } from '@/lib/client-portal/status-colors';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { EmptyState } from '@/components/ui/empty-state';
+import { COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 interface SupportTicket {
   id: string;
@@ -216,11 +217,11 @@ export default function ClientSupportPage() {
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fm-magenta-500 to-fm-magenta-600 flex items-center justify-center mx-auto mb-4">
               <Phone className="w-6 h-6 text-white" />
             </div>
-            <h3 className="font-semibold text-fm-neutral-900 mb-2">Phone Support</h3>
-            <p className="text-sm text-fm-neutral-600 mb-4">Speak directly with your account manager</p>
-            <a href="tel:+918888886321" className="w-full">
+            <h3 className="font-semibold text-fm-neutral-900 mb-2">WhatsApp</h3>
+            <p className="text-sm text-fm-neutral-600 mb-4">Message your account manager directly</p>
+            <a href={COMPANY_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="w-full">
               <Button variant="ghost" size="sm" className="w-full text-fm-magenta-600">
-                Call Now
+                Open WhatsApp
               </Button>
             </a>
           </CardContent>

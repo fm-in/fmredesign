@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowUpRight, Facebook, Instagram, Linkedin, Twitter, Sparkles, Send, Mail, Phone, MapPin } from 'lucide-react';
+import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 const navigation = {
   services: [
@@ -205,10 +206,10 @@ export function FooterV2() {
                 onMouseLeave={(e) => (e.currentTarget.style.color = '')}>
                 freakingmindsdigital@gmail.com
               </a>
-              <a href="tel:+919833257659" className="block transition-colors"
+              <a href={COMPANY_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="block transition-colors"
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#8c1d4a')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = '')}>
-                +91 98332 57659
+                {COMPANY_PHONE_DISPLAY}
               </a>
               <p className="v2-text-tertiary">India & Worldwide</p>
             </div>

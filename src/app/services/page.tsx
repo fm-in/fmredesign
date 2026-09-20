@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 import { ServiceDeepDiveModal } from "@/components/services/ServiceDeepDiveModal";
+import { COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 const services = [
   {
@@ -320,9 +321,9 @@ export default function ServicesPage() {
                 Start Your Project Today
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link href="tel:+919833257659" className="v2-btn v2-btn-outline">
-                Call +91 98332 57659
-              </Link>
+              <a href={COMPANY_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="v2-btn v2-btn-outline">
+                Message us on WhatsApp
+              </a>
             </div>
           </div>
         </div>

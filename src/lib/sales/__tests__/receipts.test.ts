@@ -11,6 +11,7 @@ import { createLeadSchema } from '@/lib/validations/schemas';
 import { contactPageBody as contactPagePost, getStartedBody as getStartedPost } from '@/test-utils/public-form-bodies';
 import type { RenderedEmail } from '../emails';
 import { CONTACT_SERVICE_PHRASES, renderEnquiryReceipt } from '../receipts';
+import { COMPANY_WHATSAPP_NUMBER } from '@/lib/company';
 
 vi.mock('@/lib/supabase', async () => {
   const m = await import('@/test-utils/fake-supabase');
@@ -19,7 +20,7 @@ vi.mock('@/lib/supabase', async () => {
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 
-const WHATSAPP_PREFIX = 'https://wa.me/919833257659?text=';
+const WHATSAPP_PREFIX = `https://wa.me/${COMPANY_WHATSAPP_NUMBER}?text=`;
 
 /** A posted body as `POST /api/leads` hands it on: parsed by the route's own schema. */
 function accepted(body: unknown) {
