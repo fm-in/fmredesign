@@ -156,3 +156,59 @@ describe('whatsappAdapter.redact', () => {
     expect(redacted).toContain('1265592716642975');
   });
 });
+
+/**
+ * Until this landed the adapter read `text.body` and nothing else, so every
+ * tap arrived with no content at all — which is why no menu could be built:
+ * the reply was invisible the moment it came back.
+ */
+describe('a tapped reply', () => {
+  const envelope = (message: Record<string, unknown>) => ({
+    object: 'whatsapp_business_account',
+    entry: [{ changes: [{ field: 'messages', value: { metadata: { phone_number_id: '1' }, messages: [message] } }] }],
+  });
+
+  const base = { id: 'wamid.T', from: '916268112515', timestamp: '1700000000' };
+
+  it('reads a button tap from an interactive menu', () => {
+    const { messages } = extractWhatsAppEvents(envelope({
+      ...base, type: 'interactive',
+      interactive: { type: 'button_reply', button_reply: { id: 'academy_fees', title: 'Fees & dates' } },
+    }));
+    expect(messages[0]).toMatchObject({ replyId: 'academy_fees', text: 'Fees & dates' });
+  });
+
+  it('reads a row tap from a list', () => {
+    const { messages } = extractWhatsAppEvents(envelope({
+      ...base, type: 'interactive',
+      interactive: { type: 'list_reply', list_reply: { id: 'svc_seo', title: 'SEO', description: 'Organic growth' } },
+    }));
+    expect(messages[0]).toMatchObject({ replyId: 'svc_seo', text: 'SEO' });
+  });
+
+  it('reads a quick-reply button on a template, which is a different envelope', () => {
+    // Not `interactive` — a template button comes back as type "button" with
+    // a `payload`. This is how an opt-out tap arrives.
+    const { messages } = extractWhatsAppEvents(envelope({
+      ...base, type: 'button', button: { payload: 'STOP', text: 'Stop promotions' },
+    }));
+    expect(messages[0]).toMatchObject({ replyId: 'STOP', text: 'Stop promotions' });
+  });
+
+  it('leaves replyId unset for a typed message, so routing can tell them apart', () => {
+    const { messages } = extractWhatsAppEvents(envelope({
+      ...base, type: 'text', text: { body: 'Fees & dates' },
+    }));
+    expect(messages[0].replyId).toBeUndefined();
+    expect(messages[0].text).toBe('Fees & dates');
+  });
+
+  it('keeps a tap out of the webhook log, the same as a typed message', () => {
+    const redacted = JSON.stringify(whatsappAdapter.redact?.(envelope({
+      ...base, type: 'interactive',
+      interactive: { type: 'button_reply', button_reply: { id: 'academy_fees', title: 'Fees & dates' } },
+    })));
+    expect(redacted).not.toContain('Fees & dates');
+    expect(redacted).toContain('[redacted]');
+  });
+});

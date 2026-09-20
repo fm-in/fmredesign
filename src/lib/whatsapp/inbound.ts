@@ -28,6 +28,26 @@ import type { WhatsAppEvents, WhatsAppInboundMessage, WhatsAppStatusUpdate } fro
  */
 const OPT_OUT = new Set(['stop', 'unsubscribe', 'cancel', 'end', 'quit', 'stop promotions']);
 
+/**
+ * Exact match, on the typed text or on the id behind a tapped button.
+ *
+ * Meta requires an opt-out button on a marketing template, and a tap on it
+ * arrives with no text at all — so matching only on what someone types would
+ * have ignored the one route Meta itself puts in front of them. Matching the
+ * button id rather than its label also means the label can be reworded, or
+ * localised, without quietly turning the opt-out off.
+ */
+function isOptOut(text: string | null, replyId: string | undefined): boolean {
+  // A tap is judged on its id alone. Its visible label is our own display
+  // copy — matching that too would opt someone out of a menu row we happened
+  // to word "Stop", while adding nothing: we choose the ids, so a button that
+  // should opt out is simply given one that is in this set. Meta's own
+  // marketing opt-out button sends its label as the payload, so the common
+  // case lands here anyway.
+  const signal = replyId ?? text;
+  return typeof signal === 'string' && OPT_OUT.has(signal.trim().toLowerCase());
+}
+
 const FIRST_TOUCH_TITLE = 'Reply on WhatsApp';
 const MAX_BODY = 4_000;
 
@@ -119,7 +139,7 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
   if (!phoneE164) return;
 
   const body = message.text ? message.text.slice(0, MAX_BODY) : null;
-  const isOptOut = Boolean(body && OPT_OUT.has(body.trim().toLowerCase()));
+  const optedOut = isOptOut(body, message.replyId);
 
   let lead = await findLeadByPhone(phoneE164);
   const isNewLead = !lead;
@@ -143,11 +163,11 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
     direction: 'in',
     body,
     providerMessageId: message.id,
-    metadata: { messageType: message.type },
+    metadata: { messageType: message.type, ...(message.replyId ? { replyId: message.replyId } : {}) },
     actor: { id: 'lead', name: lead.name },
   });
 
-  if (isOptOut) {
+  if (optedOut) {
     // Scoped to WhatsApp: they asked us to stop here, not everywhere.
     await addSuppression({ phoneE164, reason: 'unsubscribed', leadId: lead.id, channel: 'whatsapp' });
     await stopSequence(lead.id, 'unsubscribed');
@@ -155,7 +175,7 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
       leadId: lead.id,
       type: 'unsubscribed',
       channel: 'whatsapp',
-      metadata: { via: 'keyword' },
+      metadata: { via: message.replyId ? 'button' : 'keyword' },
     });
     return;
   }

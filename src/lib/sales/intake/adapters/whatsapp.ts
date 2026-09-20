@@ -18,8 +18,45 @@ export interface WhatsAppInboundMessage {
   from: string;
   type: string;
   timestamp: string | undefined;
-  /** Body text for a plain text message. Never logged. */
+  /**
+   * What the person said, as text. For a tap this is the button or row
+   * *title* — the words they actually saw and chose. Never logged.
+   */
   text: string | undefined;
+  /**
+   * The machine id behind a tap, and nothing for a typed message.
+   *
+   * Routing reads this rather than `text`, because the title is display copy:
+   * it gets reworded, translated and truncated, and a menu that matched on it
+   * would break the next time someone improved the wording.
+   */
+  replyId: string | undefined;
+}
+
+/**
+ * A tap arrives in one of two unrelated shapes, and neither carries `text`.
+ *
+ * An interactive menu we sent in-session comes back under `interactive`, as
+ * `button_reply` (up to three buttons) or `list_reply` (a menu of rows). A
+ * quick-reply button on an approved *template* comes back as
+ * `type: "button"` with `button.payload` — a different envelope entirely,
+ * and the one an opt-out button on a marketing template arrives in.
+ *
+ * https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview
+ */
+function readReply(message: Record<string, unknown>): { id?: string; title?: string } {
+  if (isRecord(message.interactive)) {
+    const inner = message.interactive;
+    for (const key of ['button_reply', 'list_reply'] as const) {
+      if (isRecord(inner[key])) {
+        return { id: readString(inner[key], 'id'), title: readString(inner[key], 'title') };
+      }
+    }
+  }
+  if (isRecord(message.button)) {
+    return { id: readString(message.button, 'payload'), title: readString(message.button, 'text') };
+  }
+  return {};
 }
 
 export interface WhatsAppStatusUpdate {
@@ -62,12 +99,17 @@ export function extractWhatsAppEvents(payload: unknown): WhatsAppEvents {
       const from = readString(message, 'from');
       if (!id || !from) continue;
       const body = isRecord(message.text) ? readString(message.text, 'body') : undefined;
+      const reply = readReply(message);
       events.messages.push({
         id,
         from,
         type: readString(message, 'type') ?? 'unknown',
         timestamp: readString(message, 'timestamp'),
-        text: body,
+        // A tap has no text of its own, so the title stands in as what they
+        // said. Everything downstream — the timeline entry, the notification
+        // preview, the 24h window — then treats a tap like any other message.
+        text: body ?? reply.title,
+        replyId: reply.id,
       });
     }
 
@@ -90,9 +132,11 @@ function redactValue(value: Record<string, unknown>): Record<string, unknown> {
   if (Array.isArray(copy.messages)) {
     copy.messages = copy.messages.map((message) => {
       if (!isRecord(message)) return message;
-      const { text, image, video, audio, document: doc, ...rest } = message;
-      const carried = [text && 'text', image && 'image', video && 'video', audio && 'audio', doc && 'document']
-        .filter((part): part is string => typeof part === 'string');
+      const { text, image, video, audio, document: doc, interactive, button, ...rest } = message;
+      const carried = [
+        text && 'text', image && 'image', video && 'video', audio && 'audio', doc && 'document',
+        interactive && 'interactive', button && 'button',
+      ].filter((part): part is string => typeof part === 'string');
       return carried.length > 0 ? { ...rest, content: '[redacted]' } : rest;
     });
   }

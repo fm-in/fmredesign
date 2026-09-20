@@ -51,7 +51,12 @@ const CLOSED_HOURS = new Date('2026-09-27T21:30:00Z');
 const LEAD = { id: 'lead_1', name: 'Priya Shah', phone_e164: '+919833257659', owner_id: null, status: 'new' };
 
 function message(text: string | undefined, id = 'wamid.IN') {
-  return { id, from: '919833257659', type: 'text', timestamp: '1700000000', text };
+  return { id, from: '919833257659', type: 'text', timestamp: '1700000000', text, replyId: undefined };
+}
+
+/** A tap on a button or list row: the title stands in as the text, plus an id. */
+function tap(replyId: string, title: string, id = 'wamid.IN') {
+  return { id, from: '919833257659', type: 'interactive', timestamp: '1700000000', text: title, replyId };
 }
 
 /** A leads table holding `lead`, and a lead_activities table holding `outbound` prior sends. */
@@ -161,6 +166,37 @@ describe('the automatic reply tells the truth about when we will answer', () => 
 });
 
 describe('opt-out', () => {
+  it('honours a tap on a template’s opt-out button, which carries no text', async () => {
+    // Meta requires this button on a marketing template, and a tap arrives
+    // as a payload with no message body at all. Matching only typed words
+    // would have ignored the one route Meta puts in front of people.
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [tap('STOP', 'Stop promotions')],
+      statuses: [],
+    });
+
+    expect(addSuppression).toHaveBeenCalledWith(
+      expect.objectContaining({ phoneE164: '+919833257659', channel: 'whatsapp', reason: 'unsubscribed' }),
+    );
+    expect(recordActivity).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'unsubscribed', metadata: { via: 'button' } }),
+    );
+  });
+
+  it('does not opt someone out because a button was merely labelled "Stop"', async () => {
+    // The id is what carries the meaning; the label is display copy that can
+    // be reworded or translated at any time.
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [tap('academy_fees', 'Stop')],
+      statuses: [],
+    });
+    expect(addSuppression).not.toHaveBeenCalled();
+  });
+
   it('suppresses WhatsApp only — not the person’s email', async () => {
     tables();
     await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('STOP')], statuses: [] });

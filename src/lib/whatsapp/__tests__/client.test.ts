@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { isWhatsAppConfigured, sendWhatsAppTemplate, sendWhatsAppText, templateParam } from '../client';
+import {
+  isWhatsAppConfigured, sendWhatsAppInteractive, sendWhatsAppTemplate, sendWhatsAppText, templateParam,
+} from '../client';
 
 const OK = { messages: [{ id: 'wamid.ABC' }] };
 
@@ -166,5 +168,117 @@ describe('sendWhatsAppTemplate', () => {
     const spy = mockFetch(OK);
     await sendWhatsAppTemplate('+916268112515', { name: 'hello_world', language: 'en_US' });
     expect(bodyOf(spy).template).not.toHaveProperty('components');
+  });
+});
+
+/**
+ * Meta rejects an over-long button rather than trimming it, so these limits
+ * are the difference between a working menu and a 400 in someone's chat.
+ * Failing here means failing in a test instead.
+ */
+describe('interactive messages', () => {
+  const buttons = [
+    { id: 'academy_fees', title: 'Fees & dates' },
+    { id: 'academy_covers', title: "What's covered" },
+    { id: 'academy_human', title: 'Talk to someone' },
+  ];
+
+  it('sends reply buttons with the ids that will come back on the webhook', async () => {
+    const spy = mockFetch(OK);
+    const result = await sendWhatsAppInteractive('+916268112515', {
+      body: 'What would you like to know?',
+      buttons,
+    });
+
+    expect(result).toEqual({ ok: true, wamid: 'wamid.ABC' });
+    const body = bodyOf(spy) as never as { to: string; interactive: Record<string, never> };
+    expect(body.to).toBe('916268112515');
+    expect(body.interactive).toMatchObject({
+      type: 'button',
+      body: { text: 'What would you like to know?' },
+      action: {
+        buttons: [
+          { type: 'reply', reply: { id: 'academy_fees', title: 'Fees & dates' } },
+          { type: 'reply', reply: { id: 'academy_covers', title: "What's covered" } },
+          { type: 'reply', reply: { id: 'academy_human', title: 'Talk to someone' } },
+        ],
+      },
+    });
+  });
+
+  it('sends a list, flattening sections but keeping their titles', async () => {
+    const spy = mockFetch(OK);
+    await sendWhatsAppInteractive('+916268112515', {
+      body: 'Pick a service.',
+      list: {
+        label: 'See services',
+        sections: [{ title: 'Growth', rows: [{ id: 'svc_seo', title: 'SEO', description: 'Organic' }] }],
+      },
+    });
+
+    const body = bodyOf(spy) as never as { interactive: Record<string, never> };
+    expect(body.interactive).toMatchObject({
+      type: 'list',
+      action: {
+        button: 'See services',
+        sections: [{ title: 'Growth', rows: [{ id: 'svc_seo', title: 'SEO', description: 'Organic' }] }],
+      },
+    });
+  });
+
+  it('refuses a fourth button before sending anything', async () => {
+    const spy = mockFetch(OK);
+    const result = await sendWhatsAppInteractive('+916268112515', {
+      body: 'Pick one.',
+      buttons: [...buttons, { id: 'academy_more', title: 'More' }],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain('the limit is 3');
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('refuses a button title over twenty characters, naming the offender', async () => {
+    const result = await sendWhatsAppInteractive('+916268112515', {
+      body: 'Pick one.',
+      buttons: [{ id: 'pricing', title: 'Talk to someone about pricing' }],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain('the limit is 20');
+  });
+
+  it('refuses an eleventh list row', async () => {
+    const rows = Array.from({ length: 11 }, (_, i) => ({ id: `r${i}`, title: `Row ${i}` }));
+    const result = await sendWhatsAppInteractive('+916268112515', {
+      body: 'Pick one.',
+      list: { label: 'Open', sections: [{ rows }] },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain('the limit is 10');
+  });
+
+  it('refuses duplicate ids, which would make a tap ambiguous', async () => {
+    const result = await sendWhatsAppInteractive('+916268112515', {
+      body: 'Pick one.',
+      buttons: [{ id: 'same', title: 'One' }, { id: 'same', title: 'Two' }],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain('share the id');
+  });
+
+  it('refuses buttons and a list in the same message', async () => {
+    const result = await sendWhatsAppInteractive('+916268112515', {
+      body: 'Pick one.',
+      buttons,
+      list: { label: 'Open', sections: [{ rows: [{ id: 'r', title: 'R' }] }] },
+    });
+    expect(result.ok).toBe(false);
+    expect(result.error).toContain('never both');
+  });
+
+  it('refuses an unusable number without calling Meta', async () => {
+    const spy = mockFetch(OK);
+    const result = await sendWhatsAppInteractive('nope', { body: 'Hi', buttons });
+    expect(result.ok).toBe(false);
+    expect(spy).not.toHaveBeenCalled();
   });
 });
