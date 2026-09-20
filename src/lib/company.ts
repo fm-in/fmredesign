@@ -22,7 +22,13 @@ export const COMPANY_PHONE_DISPLAY = '+91 62681 12515';
 /** `wa.me` takes digits with no punctuation. */
 export const COMPANY_WHATSAPP_NUMBER = COMPANY_PHONE_E164.replace(/\D/g, '');
 
-/** For an `href`. */
-export const COMPANY_PHONE_HREF = `tel:${COMPANY_PHONE_E164}`;
+/*
+ * Deliberately NO `tel:` export. We do not take inbound calls — every
+ * "get in touch" path goes to WhatsApp or the booking page. A `tel:` link
+ * here would invite a call to a Cloud API number that cannot answer one.
+ */
+
+/** Opens a chat with us. */
+export const COMPANY_WHATSAPP_URL = `https://wa.me/${COMPANY_WHATSAPP_NUMBER}`;
 
 export const COMPANY_EMAIL = 'freakingmindsdigital@gmail.com';

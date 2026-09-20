@@ -6,7 +6,7 @@ import { SERVICE_ENQUIRY_OPTIONS } from '@/lib/services-catalogue';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
 import { readFirstTouchSafely } from '@/lib/attribution';
-import { COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF } from '@/lib/company';
+import { COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 /**
  * The contact enquiry form.
@@ -94,9 +94,9 @@ export function ContactForm() {
           Thanks — we have it.
         </p>
         <p className="lede mt-4">
-          Someone from the team will reply within 24 hours. If it is urgent, call{' '}
-          <a href={COMPANY_PHONE_HREF} style={{ color: 'var(--site-accent)' }}>
-            {COMPANY_PHONE_DISPLAY}
+          Someone from the team will reply within 24 hours. If it is urgent,{' '}
+          <a href={COMPANY_WHATSAPP_URL} style={{ color: 'var(--site-accent)' }}>
+            message us on WhatsApp
           </a>
           .
         </p>

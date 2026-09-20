@@ -44,6 +44,7 @@ import type { SimplePDFGenerator } from '@/lib/admin/pdf-simple';
 import { ClientService } from '@/lib/admin/client-service';
 import { InvoiceNumbering } from '@/lib/admin/invoice-numbering';
 import { DIGITAL_MARKETING_PACKAGES } from '@/lib/admin/proposal-types';
+import { COMPANY_PHONE_DISPLAY } from '@/lib/company';
 import {
   AGENCY_SERVICES,
   SERVICE_CATEGORIES,
@@ -1383,7 +1384,7 @@ function InvoicePreview({
         </div>
         <div className="text-right text-[7px] text-fm-neutral-500 space-y-0.5">
           <p>freakingmindsdigital@gmail.com</p>
-          <p>+91 98332 57659</p>
+          <p>{COMPANY_PHONE_DISPLAY}</p>
           <p>www.freakingminds.in</p>
         </div>
       </div>

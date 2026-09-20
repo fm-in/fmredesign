@@ -30,7 +30,7 @@ import { DEFAULT_BOOKING_LINK } from '@/lib/sales/links';
 import { readFirstTouchSafely } from '@/lib/attribution';
 import type { LeadInput, ProjectType, BudgetRange, Timeline, CompanySize, Industry } from '@/lib/admin/lead-types';
 import { INDUSTRIES } from '@/lib/admin/lead-types';
-import { COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF } from '@/lib/company';
+import { COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 const PROJECT_TYPES: { value: ProjectType; label: string; description: string; icon: string }[] = [
   { value: 'website_design', label: 'Website Design', description: 'Custom website or redesign', icon: '🌐' },
@@ -849,9 +849,9 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
                 <a href="mailto:freakingmindsdigital@gmail.com" className="text-site-accent hover:underline font-medium">
                   freakingmindsdigital@gmail.com
                 </a>{' '}
-                or call us at{' '}
-                <a href={COMPANY_PHONE_HREF} className="text-site-accent hover:underline font-medium">
-                  {COMPANY_PHONE_DISPLAY}
+                or message us on{' '}
+                <a href={COMPANY_WHATSAPP_URL} className="text-site-accent hover:underline font-medium">
+                  WhatsApp
                 </a>
               </p>
             </div>

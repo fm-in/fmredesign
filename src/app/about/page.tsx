@@ -5,7 +5,7 @@ import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
-import { COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF } from '@/lib/company';
+import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 /**
  * About.
@@ -237,7 +237,7 @@ export default function AboutPage() {
                 <dl className="mt-6" style={{ margin: '1.5rem 0 0' }}>
                   {[
                     ['Email', 'freakingmindsdigital@gmail.com', 'mailto:freakingmindsdigital@gmail.com'],
-                    ['Phone', COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF],
+                    ['WhatsApp', COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL],
                     ['Reply', 'Within 24 hours, Mon\u2013Sat', null],
                   ].map(([label, value, href]) => (
                     <div key={label} className="flex items-baseline justify-between gap-6 py-3" style={{ borderBottom: '1px solid var(--site-line-soft)' }}>

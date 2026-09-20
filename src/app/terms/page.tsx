@@ -179,7 +179,7 @@ export default function TermsOfServicePage() {
               <div>
                 <p>Freaking Minds</p>
                 <p>Email: freakingmindsdigital@gmail.com</p>
-                <p>Phone: {COMPANY_PHONE_DISPLAY}</p>
+                <p>WhatsApp: {COMPANY_PHONE_DISPLAY}</p>
                 <p>Address: India</p>
               </div>
             </section>

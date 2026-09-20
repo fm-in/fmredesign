@@ -4,7 +4,7 @@ import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { ContactForm } from './ContactForm';
-import { COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF } from '@/lib/company';
+import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 /**
  * Contact.
@@ -21,13 +21,13 @@ import { COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF } from '@/lib/company';
 export const metadata: Metadata = {
   title: 'Contact',
   description:
-    `Tell us what you are trying to move. We reply within 24 hours — or call ${COMPANY_PHONE_DISPLAY}.`,
+    'Tell us what you are trying to move. We reply within 24 hours — or message us on WhatsApp.',
   alternates: { canonical: '/contact' },
 };
 
 const DETAILS = [
   ['Email', 'freakingmindsdigital@gmail.com', 'mailto:freakingmindsdigital@gmail.com'],
-  ['Phone', COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF],
+  ['WhatsApp', COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL],
   ['Hours', 'Mon–Fri 9:00–19:00 · Sat 10:00–17:00', null],
   ['Where', 'India-based, serving brands worldwide', null],
 ] as const;
