@@ -10,8 +10,8 @@ import { newLeadEmail, talentApplicationReceivedEmail, scorecardReportEmail } fr
 const samples = () => [
   newLeadEmail({ name: 'Rohit', email: 'r@acme.in', company: 'Acme' }).html,
   talentApplicationReceivedEmail({
-    fullName: 'Priya', email: 'p@example.com', category: 'Photographer', location: 'Indore',
-  } as never).html,
+    fullName: 'Priya', email: 'p@example.com', category: 'Photographer',
+  }).html,
   scorecardReportEmail({
     name: 'Rohit', overall: 62, bandLabel: 'Patchy',
     dimensions: [{ label: 'Paid', score: 48, band: 'patchy', recommendation: 'Cut the losers.' }],
@@ -19,13 +19,14 @@ const samples = () => [
 ];
 
 describe('the transactional email shell', () => {
-  it('paints the site ground and card, not the old pink-grey', () => {
+  it('paints every surface white, not the old pink-grey and not the site bone', () => {
+    // Bone works on the site because it fills the viewport. In a 600px
+    // column inside a client's white chrome it reads as a grey panel.
     for (const html of samples()) {
-      expect(html).toContain('#f7f4ef'); // --site-ground
-      expect(html).toContain('#fffdfa'); // --site-raised
-      expect(html).not.toContain('#f4f1f2');
-      // No pure-white *surface* — white stays legal as button and badge text.
-      expect(html).not.toMatch(/background(-color)?:#(fff|ffffff)\b/i);
+      expect(html).not.toContain('#f4f1f2'); // the old V2 ground
+      expect(html).not.toContain('#f7f4ef'); // --site-ground
+      expect(html).not.toContain('#fffdfa'); // --site-raised
+      expect(html).toMatch(/<body[^>]*background-color:#ffffff/);
     }
   });
 
@@ -45,11 +46,11 @@ describe('the transactional email shell', () => {
     for (const html of samples()) expect(html).toMatch(/<h1[^>]*font-family:Georgia/);
   });
 
-  it('names the city the company is actually in', () => {
-    // It said Mumbai for as long as the shell existed.
+  it('describes the company the way the WhatsApp profile does, and names no city', () => {
     for (const html of samples()) {
-      expect(html).toContain('Bhopal, India');
-      expect(html).not.toContain('Mumbai');
+      expect(html).toContain('The marketing and digital partner for brands that intend to grow.');
+      expect(html).not.toMatch(/Digital Marketing Agency/i);
+      expect(html).not.toMatch(/Bhopal|Mumbai/);
     }
   });
 

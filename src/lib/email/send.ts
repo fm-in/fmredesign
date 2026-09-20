@@ -65,8 +65,9 @@ export { FROM };
 
 /*
  * These mirror the public site's `--site-*` tokens (src/styles/site-tokens.css)
- * so an email reads as the same brand as the page it links into: warm bone
- * paper, warm-black ink, one magenta, hairlines instead of shadows.
+ * so an email reads as the same brand as the page it links into: warm-black
+ * ink, one magenta, hairlines instead of shadows. The site's bone ground is
+ * the one token deliberately not carried over — see LIGHT_BG below.
  *
  * Three things the site does that an inbox cannot, and what replaces them:
  *
@@ -91,14 +92,31 @@ const HEADING_COLOR = '#13110f'; // --site-text
 const TEXT_COLOR = '#2e2926';
 const MUTED_COLOR = '#6b635c'; // --site-muted
 const FAINT_COLOR = '#9a938c'; // below AA on purpose — decorative lines only
-const LIGHT_BG = '#f7f4ef'; // --site-ground
-const CARD_BG = '#fffdfa'; // --site-raised
-const PANEL_BG = '#f6f2ec';
-const BORDER_COLOR = '#dedcd9'; // --site-line over the card
-const HAIRLINE = '#eeecea'; // --site-line-soft over the card
+/*
+ * White, not the site's bone ground.
+ *
+ * The site's paper works because the whole viewport is that colour. An email
+ * is a 600px column inside the client's own white chrome, so the same bone
+ * stops reading as warm paper and starts reading as a grey panel that does
+ * not line up with anything around it. Structure comes from the hairlines
+ * and the accent rule instead, and every surface is the same white — so
+ * nothing needs to be aligned to anything.
+ */
+const LIGHT_BG = '#ffffff';
+const CARD_BG = '#ffffff';
+const PANEL_BG = '#ffffff';
+const BORDER_COLOR = '#dedcd9'; // --site-line, composited
+const HAIRLINE = '#eeecea'; // --site-line-soft, composited
 const SERIF = "Georgia,'Times New Roman',Times,serif";
 const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 const LOGO_URL = `${SITE_URL}/logo.png`;
+
+/**
+ * The same sentence as the WhatsApp Business profile's "about". A reader who
+ * meets us in both places should meet the same description.
+ */
+const COMPANY_ABOUT =
+  "The marketing and digital partner for brands that intend to grow. India, and worldwide.";
 
 /**
  * The shell every transactional email renders into.
@@ -107,19 +125,19 @@ const LOGO_URL = `${SITE_URL}/logo.png`;
  * than as HTML comments, which would be shipped to every recipient and shown
  * to anyone who views the source:
  *
- * - **Masthead.** The logo is deep magenta on transparency, so it sits
- *   straight on the paper. The white rounded pill it used to sit in was
- *   contrast scaffolding for a surface that no longer exists.
- * - **Card edge.** The 1px hairline is the edge. The shadow is a bonus for
- *   clients that render it, so Outlook dropping it costs nothing.
- * - **Accent rule.** Rounds its own top corners instead of trusting the card
- *   to clip it: `overflow:hidden` on a `display:table` element is not
- *   honoured everywhere, and where it is not, a square bar juts out of a
- *   rounded card and simply looks broken.
+ * - **One left edge.** Logo, headline, body and footer all start at the same
+ *   x. The logo is deep magenta on transparency so it needs no backing, and
+ *   it is indented to the text column rather than the border, because a few
+ *   px of disagreement between the two is exactly what reads as misaligned.
+ * - **Square corners, no shadow.** A rounded card cannot hold a full-bleed
+ *   accent rule: `overflow:hidden` on a `display:table` element is not
+ *   honoured everywhere, so the rule either leaves white notches in the
+ *   corners or juts out of them. Square sidesteps it and reads more
+ *   editorial anyway. A shadow under a white card on a white ground reads
+ *   as dirt rather than depth, so the 1px hairline is the only edge.
  * - **`color-scheme: light only`.** Gmail and Outlook.com auto-invert an
- *   email they judge to be light-themed, which would turn warm bone paper
- *   into a muddy near-black and leave the hairlines invisible. This is the
- *   only reliable way to ask them not to.
+ *   email they judge to be light-themed, which would leave every hairline
+ *   invisible. This is the only reliable way to ask them not to.
  */
 function emailWrapper(title: string, body: string): string {
   return `<!DOCTYPE html>
@@ -130,16 +148,16 @@ function emailWrapper(title: string, body: string): string {
 <tr><td align="center">
 
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px">
-  <tr><td style="padding:0 4px 22px">
+  <tr><td style="padding:0 0 18px 40px">
     <a href="${SITE_URL}" style="text-decoration:none">
       <img src="${LOGO_URL}" alt="FreakingMinds" width="132" style="display:block;width:132px;max-width:132px;height:auto;border:0;outline:none" />
     </a>
   </td></tr>
 </table>
 
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="width:600px;max-width:600px;background-color:${CARD_BG};border:1px solid ${BORDER_COLOR};border-radius:18px;overflow:hidden;box-shadow:0 18px 38px -28px rgba(19,17,15,0.34)">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="width:600px;max-width:600px;background-color:${CARD_BG};border:1px solid ${BORDER_COLOR}">
 
-  <tr><td bgcolor="${BRAND_MAGENTA}" style="background-color:${BRAND_MAGENTA};height:3px;line-height:3px;font-size:0;border-radius:17px 17px 0 0">&nbsp;</td></tr>
+  <tr><td bgcolor="${BRAND_MAGENTA}" style="background-color:${BRAND_MAGENTA};height:3px;line-height:3px;font-size:0">&nbsp;</td></tr>
 
   <tr><td style="padding:34px 40px 0">
     <h1 style="margin:0;color:${HEADING_COLOR};font-family:${SERIF};font-size:27px;font-weight:400;line-height:1.2;letter-spacing:-0.01em">${title}</h1>
@@ -153,19 +171,14 @@ function emailWrapper(title: string, body: string): string {
     ${body}
   </td></tr>
 
-  <tr><td bgcolor="${PANEL_BG}" style="background-color:${PANEL_BG};padding:22px 40px 24px;border-top:1px solid ${HAIRLINE};font-family:${SANS}">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td style="color:${MUTED_COLOR};font-size:12px;line-height:19px">
-          <strong style="color:${HEADING_COLOR};font-weight:600">FreakingMinds</strong> &mdash; Digital Marketing Agency<br>
-          <a href="${SITE_URL}" style="color:${BRAND_MAGENTA};text-decoration:none">freakingminds.in</a>
-        </td>
-        <td align="right" style="color:${MUTED_COLOR};font-size:12px;line-height:19px">
-          Bhopal, India<br>
-          <a href="mailto:hello@freakingminds.in" style="color:${MUTED_COLOR};text-decoration:none">hello@freakingminds.in</a>
-        </td>
-      </tr>
-    </table>
+  <tr><td bgcolor="${PANEL_BG}" style="background-color:${PANEL_BG};padding:22px 40px 26px;border-top:1px solid ${HAIRLINE};font-family:${SANS}">
+    <div style="color:${HEADING_COLOR};font-size:12px;font-weight:600;line-height:19px">FreakingMinds</div>
+    <div style="color:${MUTED_COLOR};font-size:12px;line-height:19px;margin:1px 0 7px">${COMPANY_ABOUT}</div>
+    <div style="color:${MUTED_COLOR};font-size:12px;line-height:19px">
+      <a href="${SITE_URL}" style="color:${BRAND_MAGENTA};text-decoration:none">freakingminds.in</a>
+      &nbsp;&middot;&nbsp;
+      <a href="mailto:hello@freakingminds.in" style="color:${MUTED_COLOR};text-decoration:none">hello@freakingminds.in</a>
+    </div>
   </td></tr>
 
 </table>
@@ -316,7 +329,7 @@ export function talentApplicationReceivedEmail(data: TalentApplicationData): { s
     <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Hi ${data.fullName},</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Thank you for applying to <strong style="color:${BRAND_MAGENTA}">CreativeMinds</strong> &mdash; FreakingMinds' curated network of creative professionals.</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">We've received your application and our team will review it within 2&ndash;3 business days. You'll receive an email once a decision has been made.</p>
-    <div style="margin:20px 0;padding:16px 20px;background-color:${PANEL_BG};border:1px solid ${HAIRLINE};border-radius:10px;border-left:3px solid ${BRAND_MAGENTA}">
+    <div style="margin:20px 0;padding:15px 19px;border:1px solid ${HAIRLINE};border-radius:10px;border-left:3px solid ${BRAND_MAGENTA}">
       <p style="margin:0;color:${TEXT_COLOR};font-size:13px;line-height:1.5"><strong>What happens next?</strong><br>Our team reviews every application personally. If approved, you'll get a public profile on our talent network and access to project opportunities.</p>
     </div>
     <p style="margin:0;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Best,<br><strong>The FreakingMinds Team</strong></p>
@@ -379,7 +392,7 @@ export function talentApprovedEmail(data: TalentApprovedData): { subject: string
   const body = `
     <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Congratulations, ${data.fullName}!</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Your <strong style="color:${BRAND_MAGENTA}">CreativeMinds</strong> application has been approved. Your public talent profile is now live on our network.</p>
-    <div style="margin:20px 0;padding:16px 20px;background-color:${PANEL_BG};border:1px solid ${HAIRLINE};border-radius:10px;border-left:3px solid #22c55e">
+    <div style="margin:20px 0;padding:15px 19px;border:1px solid ${HAIRLINE};border-radius:10px;border-left:3px solid #22c55e">
       <p style="margin:0;color:${TEXT_COLOR};font-size:13px;line-height:1.5"><strong>What this means:</strong><br>Clients and brands browsing our talent network can now discover your profile. You may be contacted for project opportunities that match your skills.</p>
     </div>
     ${credentialsSection}
@@ -799,7 +812,7 @@ export function scorecardReportEmail(data: ScorecardReportData): { subject: stri
               <td align="right" style="color:${color};font-size:18px;font-weight:600">${d.score}</td>
             </tr>
           </table>
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 12px;background-color:#e7e2da;border-radius:3px">
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 12px;background-color:#ece8e2;border-radius:3px">
             <tr>
               <td style="height:6px;font-size:0;line-height:0">
                 <table width="${filled}%" cellpadding="0" cellspacing="0" style="background:${color};border-radius:3px">
@@ -820,7 +833,7 @@ export function scorecardReportEmail(data: ScorecardReportData): { subject: stri
       kept here so you have it to hand.
     </p>
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;background-color:${PANEL_BG};border:1px solid ${HAIRLINE};border-radius:14px">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;border:1px solid ${HAIRLINE};border-radius:14px">
       <tr><td align="center" style="padding:26px 20px">
         <div style="color:${MUTED_COLOR};font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px">Your score</div>
         <div style="color:${overallColor};font-family:${SERIF};font-size:50px;font-weight:400;line-height:1">${data.overall}<span style="color:${MUTED_COLOR};font-size:20px;font-weight:500">/100</span></div>
