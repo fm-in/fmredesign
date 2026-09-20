@@ -25,7 +25,7 @@ interface TemplateRow {
 interface Status {
   configured: boolean;
   missingEnv: string[];
-  webhook: { url: string; lastReceivedAt: string | null; lastError: string | null };
+  webhook: { url: string; lastReceivedAt: string | null; lastError: string | null; legacyPath?: boolean };
   number: { displayPhoneNumber: string | null; verifiedName: string | null; qualityRating: string | null; verified: boolean } | null;
   templates: TemplateRow[];
   subscribedApps: number | null;
@@ -160,6 +160,13 @@ export function WhatsAppSettingsPanel() {
           <Row label="Last webhook received">
             {status.webhook.lastReceivedAt ? new Date(status.webhook.lastReceivedAt).toLocaleString('en-IN') : 'Never'}
           </Row>
+          {status.webhook.legacyPath && (
+            <Row label="Note">
+              <span className="text-amber-800">
+                Last delivery arrived on the older /sales/whatsapp path — still supported, but the URL above is the one to use.
+              </span>
+            </Row>
+          )}
           {status.webhook.lastError && (
             <Row label="Last webhook error">
               <span className="text-red-700">{status.webhook.lastError}</span>

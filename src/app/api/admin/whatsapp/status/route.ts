@@ -93,18 +93,22 @@ export async function GET(request: NextRequest) {
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const wabaId = process.env.WHATSAPP_WABA_ID;
 
+  // Both paths, because `sales:whatsapp` is still accepted for anything
+  // already pointed at the old URL.
   const { data: lastDelivery } = await getSupabaseAdmin()
     .from('webhook_logs')
-    .select('created_at, error, processed')
-    .eq('provider', 'sales:whatsapp')
+    .select('created_at, error, processed, provider')
+    .in('provider', ['whatsapp', 'sales:whatsapp'])
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
   const webhook = {
-    url: `${SITE_URL}/api/webhooks/sales/whatsapp`,
+    url: `${SITE_URL}/api/webhooks/whatsapp`,
     lastReceivedAt: lastDelivery?.created_at ?? null,
     lastError: lastDelivery?.error ?? null,
+    /** Set when the most recent delivery still came in on the old sales path. */
+    legacyPath: lastDelivery?.provider === 'sales:whatsapp',
   };
 
   // Without credentials there is nothing to ask Meta, but the checklist above
