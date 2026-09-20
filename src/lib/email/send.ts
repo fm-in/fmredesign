@@ -1,5 +1,10 @@
 import { getResend } from './resend';
 import { SITE_URL } from '@/lib/site-url';
+import {
+  BRAND_MAGENTA, HEADING_COLOR, TEXT_COLOR, MUTED_COLOR, FAINT_COLOR,
+  LIGHT_BG, CARD_BG, PANEL_BG, BORDER_COLOR, HAIRLINE,
+  SERIF, SANS, COMPANY_ABOUT, LIGHT_ONLY_HEAD, LOGO_URL,
+} from './brand';
 
 const FROM = 'FreakingMinds <notifications@freakingminds.in>';
 const FALLBACK_EMAIL = 'freakingmindsdigital@gmail.com';
@@ -63,76 +68,89 @@ export { FROM };
 // Shared styles
 // ---------------------------------------------------------------------------
 
-const BRAND_MAGENTA = '#c9325d';
-const HEADING_COLOR = '#0f0f0f';
-const TEXT_COLOR = '#404040';
-const MUTED_COLOR = '#888888';
-const LIGHT_BG = '#f4f1f2';
-const CARD_BG = '#ffffff';
-const BORDER_COLOR = '#f0e8eb';
-const LOGO_URL = `${SITE_URL}/logo.png`;
-
+/**
+ * The shell every transactional email renders into.
+ *
+ * Notes on the parts that are not obvious from the markup — kept here rather
+ * than as HTML comments, which would be shipped to every recipient and shown
+ * to anyone who views the source:
+ *
+ * - **One left edge.** Logo, headline, body and footer all start at the same
+ *   x. The logo is deep magenta on transparency so it needs no backing, and
+ *   it is indented to the text column rather than the border, because a few
+ *   px of disagreement between the two is exactly what reads as misaligned.
+ * - **Square corners, no shadow.** A rounded card cannot hold a full-bleed
+ *   accent rule: `overflow:hidden` on a `display:table` element is not
+ *   honoured everywhere, so the rule either leaves white notches in the
+ *   corners or juts out of them. Square sidesteps it and reads more
+ *   editorial anyway. A shadow under a white card on a white ground reads
+ *   as dirt rather than depth, so the 1px hairline is the only edge.
+ * - **Forcing light.** This is what makes the mail go black on a phone, and
+ *   it is not transparency — `<body>` and the full-width wrapper have always
+ *   painted themselves, and the mail renders white even with `<html>`,
+ *   `<head>` and `<body>` stripped and the rest dropped into a dark page,
+ *   which is precisely what Gmail does to it. The black comes from a client
+ *   deciding to rewrite the colours.
+ *
+ *   `supported-color-schemes` takes scheme *names*. It had been given
+ *   `light only`, and `only` is not a scheme name, so the value was
+ *   malformed and the opt-out it was supposed to carry did nothing. It now
+ *   reads `light`, `color-scheme` uses the canonical `only light` order, and
+ *   the same instruction is repeated as a real CSS declaration on `:root`
+ *   because some clients keep `<style>` and drop the meta.
+ *
+ *   That covers Apple Mail. It does not cover the Gmail app or Outlook,
+ *   which invert regardless and offer no opt-out. The defence there is that
+ *   every element paints itself — `bgcolor` for Outlook's Word engine and
+ *   `background-color` for everything else — so a client that inverts
+ *   inverts the whole thing evenly instead of leaving it patchy.
+ */
 function emailWrapper(title: string, body: string): string {
   return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:${LIGHT_BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:${LIGHT_BG};padding:40px 16px">
-<tr><td align="center">
+<html bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${LIGHT_ONLY_HEAD}</head>
+<body style="margin:0;padding:0;background-color:${LIGHT_BG};font-family:${SANS};-webkit-font-smoothing:antialiased" bgcolor="${LIGHT_BG}">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:44px 16px">
+<tr><td align="center" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG}">
 
-<!-- Logo -->
-<table width="600" cellpadding="0" cellspacing="0">
-  <tr><td align="center" style="padding:0 0 24px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="width:600px;max-width:600px;background-color:${LIGHT_BG}">
+  <tr><td bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:0 0 18px 40px">
     <a href="${SITE_URL}" style="text-decoration:none">
-      <div style="display:inline-block;background:#ffffff;padding:12px 24px;border-radius:12px">
-        <img src="${LOGO_URL}" alt="FreakingMinds" width="140" style="display:block;height:auto;border:0" />
-      </div>
+      <img src="${LOGO_URL}" alt="FreakingMinds" width="132" style="display:block;width:132px;max-width:132px;height:auto;border:0;outline:none" />
     </a>
   </td></tr>
 </table>
 
-<!-- Main card -->
-<table width="600" cellpadding="0" cellspacing="0" style="background:${CARD_BG};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(201,50,93,0.08),0 1px 4px rgba(0,0,0,0.04)">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="width:600px;max-width:600px;background-color:${CARD_BG};border:1px solid ${BORDER_COLOR}">
 
-  <!-- Magenta accent bar -->
-  <tr><td style="background:linear-gradient(135deg,${BRAND_MAGENTA},#a82548);height:4px;font-size:0;line-height:0">&nbsp;</td></tr>
+  <tr><td bgcolor="${BRAND_MAGENTA}" style="background-color:${BRAND_MAGENTA};height:3px;line-height:3px;font-size:0">&nbsp;</td></tr>
 
-  <!-- Title row -->
-  <tr><td style="padding:28px 36px 0">
-    <h1 style="margin:0;color:${HEADING_COLOR};font-size:20px;font-weight:700;letter-spacing:-0.3px">${title}</h1>
+  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:34px 40px 0">
+    <h1 style="margin:0;color:${HEADING_COLOR};font-family:${SERIF};font-size:27px;font-weight:400;line-height:1.2;letter-spacing:-0.01em">${title}</h1>
   </td></tr>
 
-  <!-- Divider -->
-  <tr><td style="padding:16px 36px 0">
-    <div style="height:1px;background:${BORDER_COLOR}"></div>
+  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:22px 40px 0">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${HAIRLINE}" style="background-color:${HAIRLINE};height:1px;line-height:1px;font-size:0">&nbsp;</td></tr></table>
   </td></tr>
 
-  <!-- Body -->
-  <tr><td style="padding:24px 36px 32px">
+  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:26px 40px 36px;font-family:${SANS};font-size:15px;line-height:1.6;color:${TEXT_COLOR}">
     ${body}
   </td></tr>
 
-  <!-- Footer -->
-  <tr><td style="padding:20px 36px 24px;background:#faf8f9;border-top:1px solid ${BORDER_COLOR}">
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <tr>
-        <td style="color:${MUTED_COLOR};font-size:12px;line-height:18px">
-          <strong style="color:${TEXT_COLOR}">FreakingMinds</strong> &mdash; Digital Marketing Agency<br>
-          <a href="${SITE_URL}" style="color:${BRAND_MAGENTA};text-decoration:none">freakingminds.in</a>
-        </td>
-        <td align="right" style="color:${MUTED_COLOR};font-size:11px;line-height:16px">
-          Mumbai, India<br>
-          <a href="mailto:hello@freakingminds.in" style="color:${MUTED_COLOR};text-decoration:none">hello@freakingminds.in</a>
-        </td>
-      </tr>
-    </table>
+  <tr><td bgcolor="${PANEL_BG}" style="background-color:${PANEL_BG};padding:22px 40px 26px;border-top:1px solid ${HAIRLINE};font-family:${SANS}">
+    <div style="color:${HEADING_COLOR};font-size:12px;font-weight:600;line-height:19px">FreakingMinds</div>
+    <div style="color:${MUTED_COLOR};font-size:12px;line-height:19px;margin:1px 0 7px">${COMPANY_ABOUT}</div>
+    <div style="color:${MUTED_COLOR};font-size:12px;line-height:19px">
+      <a href="${SITE_URL}" style="color:${BRAND_MAGENTA};text-decoration:none">freakingminds.in</a>
+      &nbsp;&middot;&nbsp;
+      <a href="mailto:hello@freakingminds.in" style="color:${MUTED_COLOR};text-decoration:none">hello@freakingminds.in</a>
+    </div>
   </td></tr>
 
 </table>
 
-<!-- Sub-footer -->
-<table width="600" cellpadding="0" cellspacing="0">
-  <tr><td align="center" style="padding:20px 0 0;color:#b0a0a6;font-size:11px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="width:600px;max-width:600px;background-color:${LIGHT_BG}">
+  <tr><td align="center" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:20px 0 0;color:${FAINT_COLOR};font-family:${SANS};font-size:11px;line-height:16px">
     &copy; ${new Date().getFullYear()} FreakingMinds Digital. All rights reserved.
   </td></tr>
 </table>
@@ -145,23 +163,27 @@ function emailWrapper(title: string, body: string): string {
 
 function row(label: string, value: string): string {
   return `<tr>
-    <td style="padding:8px 16px 8px 0;color:${MUTED_COLOR};font-size:13px;font-weight:500;vertical-align:top;white-space:nowrap;text-transform:uppercase;letter-spacing:0.4px">${label}</td>
-    <td style="padding:8px 0;color:${HEADING_COLOR};font-size:14px;font-weight:500">${value}</td>
+    <td style="padding:9px 18px 9px 0;border-bottom:1px solid ${HAIRLINE};color:${MUTED_COLOR};font-family:${SANS};font-size:11px;font-weight:600;vertical-align:top;white-space:nowrap;text-transform:uppercase;letter-spacing:0.09em;line-height:20px">${label}</td>
+    <td style="padding:9px 0;border-bottom:1px solid ${HAIRLINE};color:${HEADING_COLOR};font-family:${SANS};font-size:14px;line-height:20px">${value}</td>
   </tr>`;
 }
 
 function dataTable(rows: string): string {
-  return `<table cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;border-collapse:collapse">${rows}</table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:20px 0;border-collapse:collapse">${rows}</table>`;
 }
 
 function badge(text: string, color: string = BRAND_MAGENTA): string {
-  return `<span style="display:inline-block;background:${color};color:#fff;padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:0.3px;text-transform:uppercase">${text}</span>`;
+  return `<span style="display:inline-block;background-color:${color};color:#ffffff;padding:4px 11px;border-radius:999px;font-family:${SANS};font-size:10px;font-weight:600;letter-spacing:0.09em;line-height:15px;text-transform:uppercase">${text}</span>`;
 }
 
+/** A pill, like `.btn--primary` on the site. Outlook squares the corners and
+ *  still fills, because the colour is on the `<td>` rather than the `<a>`. */
 function ctaButton(text: string, href: string, color: string = BRAND_MAGENTA): string {
-  return `<table cellpadding="0" cellspacing="0" style="margin:24px 0 8px"><tr><td>
-    <a href="${href}" style="display:inline-block;background:${color};color:#ffffff;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;letter-spacing:0.2px">${text}</a>
-  </td></tr></table>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 8px"><tr>
+    <td align="center" bgcolor="${color}" style="background-color:${color};border-radius:999px;padding:15px 30px">
+      <a href="${href}" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:14px;font-weight:600;line-height:1;letter-spacing:0.02em;text-decoration:none">${text}</a>
+    </td>
+  </tr></table>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -245,7 +267,7 @@ export function ticketStatusUpdateEmail(data: TicketStatusUpdateData): { subject
   const statusLabel = data.newStatus.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
   const body = `
-    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.clientName},</p>
+    <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Hi ${data.clientName},</p>
     <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Your support ticket has been updated.</p>
     ${dataTable(
       row('Ticket', data.title) +
@@ -270,10 +292,10 @@ interface TalentApplicationData {
 
 export function talentApplicationReceivedEmail(data: TalentApplicationData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.fullName},</p>
+    <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Hi ${data.fullName},</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Thank you for applying to <strong style="color:${BRAND_MAGENTA}">CreativeMinds</strong> &mdash; FreakingMinds' curated network of creative professionals.</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">We've received your application and our team will review it within 2&ndash;3 business days. You'll receive an email once a decision has been made.</p>
-    <div style="margin:20px 0;padding:16px 20px;background:#faf8f9;border-radius:10px;border-left:3px solid ${BRAND_MAGENTA}">
+    <div style="margin:20px 0;padding:15px 19px;border:1px solid ${HAIRLINE};border-radius:10px;border-left:3px solid ${BRAND_MAGENTA}">
       <p style="margin:0;color:${TEXT_COLOR};font-size:13px;line-height:1.5"><strong>What happens next?</strong><br>Our team reviews every application personally. If approved, you'll get a public profile on our talent network and access to project opportunities.</p>
     </div>
     <p style="margin:0;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Best,<br><strong>The FreakingMinds Team</strong></p>
@@ -317,7 +339,7 @@ export function talentApprovedEmail(data: TalentApprovedData): { subject: string
   // Login credentials section (only if tempPassword is provided)
   const credentialsSection = data.tempPassword && data.portalEmail ? `
     <div style="margin:20px 0;padding:20px 24px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0">
-      <p style="margin:0 0 12px;color:${HEADING_COLOR};font-size:14px;font-weight:700">Your Portal Login Credentials</p>
+      <p style="margin:0 0 12px;color:${HEADING_COLOR};font-size:13px;font-weight:600;letter-spacing:0.01em">Your Portal Login Credentials</p>
       <table cellpadding="0" cellspacing="0" style="width:100%">
         <tr>
           <td style="padding:4px 0;color:${MUTED_COLOR};font-size:13px;width:80px">Email</td>
@@ -334,9 +356,9 @@ export function talentApprovedEmail(data: TalentApprovedData): { subject: string
   ` : '';
 
   const body = `
-    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:18px;font-weight:700">Congratulations, ${data.fullName}!</p>
+    <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Congratulations, ${data.fullName}!</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Your <strong style="color:${BRAND_MAGENTA}">CreativeMinds</strong> application has been approved. Your public talent profile is now live on our network.</p>
-    <div style="margin:20px 0;padding:16px 20px;background:#faf8f9;border-radius:10px;border-left:3px solid #22c55e">
+    <div style="margin:20px 0;padding:15px 19px;border:1px solid ${HAIRLINE};border-radius:10px;border-left:3px solid #22c55e">
       <p style="margin:0;color:${TEXT_COLOR};font-size:13px;line-height:1.5"><strong>What this means:</strong><br>Clients and brands browsing our talent network can now discover your profile. You may be contacted for project opportunities that match your skills.</p>
     </div>
     ${credentialsSection}
@@ -356,7 +378,7 @@ interface TalentRejectedData {
 
 export function talentRejectedEmail(data: TalentRejectedData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${data.fullName},</p>
+    <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Hi ${data.fullName},</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">Thank you for your interest in joining <strong style="color:${BRAND_MAGENTA}">CreativeMinds</strong>. After carefully reviewing your application, we've decided not to move forward at this time.</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">This doesn't reflect on your talent &mdash; we may have specific needs that didn't align with your profile right now. You're welcome to reapply in the future as our requirements evolve.</p>
     <p style="margin:0 0 16px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">If you have questions, feel free to reach out at <a href="mailto:hello@freakingminds.in" style="color:${BRAND_MAGENTA};text-decoration:none">hello@freakingminds.in</a>.</p>
@@ -556,7 +578,7 @@ interface ProposalSentToClientData {
 /** Client-facing email when proposal is sent */
 export function proposalSentToClientEmail(data: ProposalSentToClientData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${escHtml(data.clientName)},</p>
+    <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Hi ${escHtml(data.clientName)},</p>
     <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new proposal is ready for your review.</p>
     ${dataTable(
       row('Proposal', `<strong>${escHtml(data.title)}</strong>`) +
@@ -604,7 +626,7 @@ export function invoiceStatusEmail(data: InvoiceStatusEmailData): { subject: str
   };
 
   const body = `
-    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${escHtml(data.clientName)},</p>
+    <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Hi ${escHtml(data.clientName)},</p>
     <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">${messages[data.status]}</p>
     ${dataTable(
       row('Invoice #', `<strong>${escHtml(data.invoiceNumber)}</strong>`) +
@@ -634,7 +656,7 @@ interface DocumentSharedEmailData {
 /** Client-facing email when a document is shared */
 export function documentSharedEmail(data: DocumentSharedEmailData): { subject: string; html: string } {
   const body = `
-    <p style="margin:0 0 8px;color:${HEADING_COLOR};font-size:16px;font-weight:700">Hi ${escHtml(data.clientName)},</p>
+    <p style="margin:0 0 14px;color:${HEADING_COLOR};font-size:15px;font-weight:600;line-height:1.6">Hi ${escHtml(data.clientName)},</p>
     <p style="margin:0 0 20px;color:${TEXT_COLOR};font-size:15px;line-height:1.6">A new document has been shared with you.</p>
     ${dataTable(
       row('File', `<strong>${escHtml(data.fileName)}</strong>`)
@@ -752,11 +774,11 @@ export function scorecardReportEmail(data: ScorecardReportData): { subject: stri
           ${i === 0 ? `<div style="margin:0 0 6px">${badge('Fix this first', BRAND_MAGENTA)}</div>` : ''}
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="color:${HEADING_COLOR};font-size:15px;font-weight:700">${d.label}</td>
-              <td align="right" style="color:${color};font-size:18px;font-weight:700">${d.score}</td>
+              <td style="color:${HEADING_COLOR};font-size:15px;font-weight:600">${d.label}</td>
+              <td align="right" style="color:${color};font-size:18px;font-weight:600">${d.score}</td>
             </tr>
           </table>
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 12px;background:#f1eef0;border-radius:3px">
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:10px 0 12px;background-color:#ece8e2;border-radius:3px">
             <tr>
               <td style="height:6px;font-size:0;line-height:0">
                 <table width="${filled}%" cellpadding="0" cellspacing="0" style="background:${color};border-radius:3px">
@@ -777,10 +799,10 @@ export function scorecardReportEmail(data: ScorecardReportData): { subject: stri
       kept here so you have it to hand.
     </p>
 
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;background:#faf8f9;border-radius:12px">
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;border:1px solid ${HAIRLINE};border-radius:14px">
       <tr><td align="center" style="padding:26px 20px">
         <div style="color:${MUTED_COLOR};font-size:11px;letter-spacing:1px;text-transform:uppercase;margin:0 0 8px">Your score</div>
-        <div style="color:${overallColor};font-size:44px;font-weight:700;line-height:1">${data.overall}<span style="color:${MUTED_COLOR};font-size:20px;font-weight:500">/100</span></div>
+        <div style="color:${overallColor};font-family:${SERIF};font-size:50px;font-weight:400;line-height:1">${data.overall}<span style="color:${MUTED_COLOR};font-size:20px;font-weight:500">/100</span></div>
         <div style="color:${overallColor};font-size:15px;font-weight:600;margin:6px 0 0">${data.bandLabel}</div>
       </td></tr>
     </table>
