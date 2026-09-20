@@ -1,36 +1,45 @@
-/**
- * Talent Application Form
- * Multi-step form for joining CreativeMinds network
- * 4 steps: About You, Your Expertise, Online Presence, Availability & Pricing
- */
-
 'use client';
 
-import { useState } from 'react';
-import {
-  TalentApplication,
-  TalentCategory,
-  TALENT_CATEGORIES,
-  EXPERIENCE_LEVELS,
-  POPULAR_SKILLS,
-  POPULAR_TOOLS,
-  LANGUAGES,
-  CURRENCIES,
-  PROJECT_COMMITMENT_OPTIONS,
-  PricingInfo,
-  PortfolioLinks,
-} from '@/lib/admin/talent-types';
+/**
+ * The CreativeMinds application.
+ *
+ * Was four steps and thirty-five fields, of which a portfolio link was not
+ * one — on a marketplace whose entire pitch is "portfolio-reviewed talent".
+ * It required a rate card instead: a min AND a max across hourly, project and
+ * retainer, at step four of four.
+ *
+ * That form selected for patience rather than talent. Someone good, with a
+ * full pipeline, reaches a demand to name an hourly rate for a company they
+ * have never worked with and closes the tab. Naming your price before you
+ * know the work is what you do when you need the work.
+ *
+ * So: two steps, and the portfolio is the one thing that is mandatory beyond
+ * being contactable. Pricing stays — the pool is shared with other businesses
+ * and a profile nobody can filter by budget is a profile nobody browses — but
+ * it is asked as a band, in two taps, after they have shown their work.
+ *
+ * Everything cut from here (city, state, languages, tools, subcategories,
+ * per-model rates, notice period) is onboarding for someone who is in, not a
+ * gate for someone applying. It belongs in the portal, where completeness
+ * earns better placement in the pool.
+ */
+
+import { useEffect, useState } from 'react';
+import { ArrowLeft, ArrowRight, CheckCircle, Loader2 } from 'lucide-react';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import {
-  ArrowLeft,
-  ArrowRight,
-  User,
-  Briefcase,
-  Globe,
-  DollarSign,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react';
+  TALENT_CATEGORIES,
+  type TalentApplication,
+  type TalentCategory,
+} from '@/lib/admin/talent-types';
+import { COUNTRIES, DEFAULT_COUNTRY, localeFor } from '@/lib/talent/locale';
+import {
+  bandsFor,
+  findBand,
+  PRICING_MODELS,
+  toPricingInfo,
+  type PricingModel,
+} from '@/lib/talent/pricing-bands';
 
 interface TalentApplicationFormProps {
   /**
@@ -43,1167 +52,362 @@ interface TalentApplicationFormProps {
 
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error';
 
-interface FormErrors {
-  [key: string]: string;
+const CATEGORY_IDS = Object.keys(TALENT_CATEGORIES) as TalentCategory[];
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+/** Accepts a bare domain too: people paste "behance.net/priya" as often as a full URL. */
+function isUsableLink(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  try {
+    const url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+    return url.hostname.includes('.');
+  } catch {
+    return false;
+  }
+}
+
+function normaliseLink(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
 }
 
 export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationFormProps) {
+  const [step, setStep] = useState<1 | 2>(1);
+  const [status, setStatus] = useState<SubmitStatus>('idle');
+  const [submitError, setSubmitError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   /*
-   * The decoy. `POST /api/talent` has always checked for it, but this form
-   * never rendered one, so the check read `undefined` and could never fire —
-   * the cheapest bot filter was switched off on the one public form we hand
-   * to strangers. A person never sees this; a bot fills everything it finds.
+   * The decoy. `POST /api/talent` has always checked for it; this form never
+   * rendered one, so the check read `undefined` and could never fire.
    */
   const [honeypot, setHoneypot] = useState('');
-  const [currentStep, setCurrentStep] = useState(1);
-  const [submitStatus, setSubmitStatus] = useState<SubmitStatus>('idle');
-  const [submitError, setSubmitError] = useState('');
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [formData, setFormData] = useState<Partial<TalentApplication>>({
-    personalInfo: {
-      fullName: '',
-      email: '',
-      phone: '',
-      location: { city: '', state: '', country: 'India' },
-      bio: '',
-      languages: ['English'],
-    },
-    professionalDetails: {
-      category: 'creative_design',
-      subcategories: [],
-      experienceLevel: 'intermediate',
-      yearsOfExperience: 0,
-      skills: [],
-      tools: [],
-      certifications: [],
-      education: [],
-      workExperience: [],
-    },
-    portfolioLinks: {
-      websiteUrl: '',
-      workSampleUrls: ['', '', ''],
-    },
-    portfolio: [],
-    socialMedia: {},
-    availability: {
-      currentStatus: 'available',
-      hoursPerWeek: 40,
-      preferredWorkingHours: {
-        timezone: 'Asia/Kolkata',
-        startTime: '09:00',
-        endTime: '18:00',
-      },
-      unavailableDates: [],
-      projectCommitment: 'both',
-      remoteWork: true,
-      travelWillingness: false,
-    },
-    preferences: {
-      projectTypes: [],
-      industries: [],
-      clientTypes: [],
-      communicationStyle: 'mixed',
-      paymentTerms: [],
-      minimumProjectValue: 10000,
-      currency: 'INR',
-    },
-    pricing: {
-      hourlyRate: { min: 0, max: 0 },
-      projectRate: { min: 0, max: 0 },
-      retainerRate: { min: 0, max: 0 },
-      openToNegotiation: true,
-    },
-  });
 
-  const updateData = (updates: Partial<TalentApplication>) => {
-    setFormData((prev) => ({ ...prev, ...updates }));
-  };
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [country, setCountry] = useState(DEFAULT_COUNTRY);
+  const [category, setCategory] = useState<TalentCategory | ''>('');
+  const [portfolio, setPortfolio] = useState('');
+  const [bio, setBio] = useState('');
 
-  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isValidUrl = (url: string) => {
-    if (!url) return true; // empty is OK for optional fields
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  const [model, setModel] = useState<PricingModel | ''>('');
+  const [bandId, setBandId] = useState('');
+  const [hoursPerWeek, setHoursPerWeek] = useState('');
 
-  const validateStep = (step: number): boolean => {
-    const newErrors: FormErrors = {};
-    const pi = formData.personalInfo!;
-    const pd = formData.professionalDetails!;
-    const pl = formData.portfolioLinks!;
-    const avail = formData.availability!;
-    const pricing = formData.pricing!;
+  const locale = localeFor(country);
 
-    if (step === 1) {
-      if (!pi.fullName.trim()) newErrors.fullName = 'Name is required';
-      if (!pi.email.trim()) newErrors.email = 'Email is required';
-      else if (!isValidEmail(pi.email)) newErrors.email = 'Enter a valid email';
-      if (!pi.phone.trim()) newErrors.phone = 'Phone is required';
-      if (!pi.location.city.trim()) newErrors.city = 'City is required';
-      if (!pi.location.state.trim()) newErrors.state = 'State is required';
-      if (!pi.bio.trim()) newErrors.bio = 'Bio is required';
-      else if (pi.bio.trim().length < 20) newErrors.bio = 'Bio must be at least 20 characters';
-    }
+  // A guess, shown in an editable field. Failure leaves the default in place.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch('/api/geo');
+        const json = await res.json();
+        if (!cancelled && typeof json?.country === 'string') setCountry(json.country);
+      } catch {
+        // Keep the default.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-    if (step === 2) {
-      if (pd.subcategories.length === 0) newErrors.subcategories = 'Select at least one subcategory';
-      if (!pd.skills || pd.skills.length === 0) newErrors.skills = 'Select at least one skill';
-      if (pd.yearsOfExperience <= 0) newErrors.yearsOfExperience = 'Enter your years of experience';
-      if (pl.websiteUrl && !isValidUrl(pl.websiteUrl)) newErrors.portfolioWebsite = 'Enter a valid URL';
-      pl.workSampleUrls?.forEach((url, i) => {
-        if (url && !isValidUrl(url)) newErrors[`workSample${i}`] = 'Enter a valid URL';
-      });
-    }
+  // The bands differ per currency, so a country change invalidates the choice.
+  useEffect(() => {
+    setBandId('');
+  }, [country, model]);
 
-    if (step === 3) {
-      const sm = formData.socialMedia || {};
-      if (sm.linkedin?.profileUrl && !sm.linkedin.profileUrl.includes('linkedin.com'))
-        newErrors.linkedin = 'Must be a LinkedIn URL';
-      if (sm.behance?.profileUrl && !sm.behance.profileUrl.includes('behance.net'))
-        newErrors.behance = 'Must be a Behance URL';
-      if (sm.dribbble?.profileUrl && !sm.dribbble.profileUrl.includes('dribbble.com'))
-        newErrors.dribbble = 'Must be a Dribbble URL';
-    }
+  function validateStep1(): boolean {
+    const next: Record<string, string> = {};
+    if (!fullName.trim()) next.fullName = 'Your name, please';
+    if (!email.trim()) next.email = 'We reply by email';
+    else if (!isValidEmail(email)) next.email = 'That does not look like an email';
+    if (!phone.trim()) next.phone = 'A number we can reach you on';
+    if (!category) next.category = 'Pick the closest one';
+    if (!portfolio.trim()) next.portfolio = 'A link to your work — this is what we review';
+    else if (!isUsableLink(portfolio)) next.portfolio = 'That does not look like a link';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
-    if (step === 4) {
-      if (!avail.hoursPerWeek || avail.hoursPerWeek <= 0)
-        newErrors.hoursPerWeek = 'Enter hours per week';
-      const hasAnyRate =
-        (pricing.hourlyRate.min > 0 || pricing.hourlyRate.max > 0) ||
-        (pricing.projectRate.min > 0 || pricing.projectRate.max > 0) ||
-        (pricing.retainerRate.min > 0 || pricing.retainerRate.max > 0);
-      if (!hasAnyRate) newErrors.pricing = 'Fill at least one pricing rate';
-      if (pricing.hourlyRate.min > 0 && pricing.hourlyRate.max > 0 && pricing.hourlyRate.min > pricing.hourlyRate.max)
-        newErrors.hourlyRate = 'Min must be less than max';
-      if (pricing.projectRate.min > 0 && pricing.projectRate.max > 0 && pricing.projectRate.min > pricing.projectRate.max)
-        newErrors.projectRate = 'Min must be less than max';
-      if (pricing.retainerRate.min > 0 && pricing.retainerRate.max > 0 && pricing.retainerRate.min > pricing.retainerRate.max)
-        newErrors.retainerRate = 'Min must be less than max';
-    }
+  function validateStep2(): boolean {
+    const next: Record<string, string> = {};
+    if (!model) next.model = 'How do you usually charge?';
+    if (!bandId) next.band = 'Pick the range you usually work in';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  async function handleSubmit() {
+    if (!validateStep2()) return;
+    const band = model ? findBand(model, locale.currency, bandId) : null;
+    if (!model || !band) return;
 
-  const handleNext = () => {
-    if (validateStep(currentStep) && currentStep < 4) {
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    if (currentStep > 1) {
-      setErrors({});
-      setCurrentStep((prev) => prev - 1);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!validateStep(4)) return;
-    setSubmitStatus('submitting');
+    setStatus('submitting');
     setSubmitError('');
+
+    /*
+     * The stored shape is unchanged, so the admin grid and the public profile
+     * need no edits — they already read every field defensively. What this
+     * form no longer collects is written as empty rather than omitted, so
+     * nothing downstream meets an undefined where it expected an object.
+     */
+    const application = {
+      personalInfo: {
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        phone: `${locale.dialCode} ${phone.trim()}`.trim(),
+        location: { city: '', state: '', country: locale.name },
+        bio: bio.trim(),
+        languages: [],
+      },
+      professionalDetails: {
+        category,
+        subcategories: [],
+        skills: [],
+        tools: [],
+        certifications: [],
+        education: [],
+        workExperience: [],
+      },
+      portfolioLinks: { websiteUrl: normaliseLink(portfolio), workSampleUrls: [] },
+      socialMedia: {},
+      availability: { hoursPerWeek: Number(hoursPerWeek) || 0 },
+      preferences: {},
+      pricing: { ...toPricingInfo(model, band), currency: locale.currency },
+    } as unknown as TalentApplication;
+
     try {
-      await onSubmit(formData as TalentApplication, honeypot);
-      setSubmitStatus('success');
-    } catch (error) {
-      console.error('Error submitting application:', error);
-      setSubmitStatus('error');
-      setSubmitError('Failed to submit application. Please try again.');
+      await onSubmit(application, honeypot);
+      setStatus('success');
+    } catch (err) {
+      console.error('Error submitting application:', err);
+      setStatus('error');
+      setSubmitError('Could not send that. Please try again.');
     }
-  };
+  }
 
-  const steps = [
-    { number: 1, title: 'About You', icon: User },
-    { number: 2, title: 'Your Expertise', icon: Briefcase },
-    { number: 3, title: 'Online Presence', icon: Globe },
-    { number: 4, title: 'Availability & Pricing', icon: DollarSign },
-  ];
-
-  const totalSteps = steps.length;
-
-  if (submitStatus === 'success') {
+  if (status === 'success') {
     return (
-      <div className="max-w-lg mx-auto" style={{ textAlign: 'center' }}>
-        <div className="bg-white rounded-2xl shadow-lg p-10">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-green-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-fm-neutral-900 mb-3">Application Submitted!</h2>
-          <p className="text-fm-neutral-600 mb-6">
-            Thank you for applying to join CreativeMinds. Our team will review your application within 24-48 hours.
-          </p>
-          <button onClick={onCancel} className="v2-btn v2-btn-magenta">
-            Back to CreativeMinds
-          </button>
+      <div className="mx-auto max-w-lg rounded-2xl border border-fm-neutral-200 bg-white p-10">
+        <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+          <CheckCircle className="h-8 w-8 text-green-600" />
         </div>
+        <h2 className="mb-3 text-2xl font-bold text-fm-neutral-900">That&rsquo;s in.</h2>
+        <p className="text-fm-neutral-600">
+          We read every portfolio ourselves, and you&rsquo;ll hear from us within 48 hours &mdash;
+          either way. Check your email for a confirmation.
+        </p>
       </div>
     );
   }
 
+  const inputClass =
+    'w-full rounded-lg border border-fm-neutral-300 px-4 py-3 text-base text-fm-neutral-900 placeholder:text-fm-neutral-400 focus:border-fm-magenta-500 focus:outline-none focus:ring-2 focus:ring-fm-magenta-100';
+  const errorClass = 'mt-1.5 text-sm text-fm-magenta-700';
+
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl">
-        <div className="p-5 sm:p-8 md:p-10">
-          {/* Progress Circles */}
-          <div style={{ marginBottom: '40px' }}>
-            <div className="flex items-center justify-between" style={{ marginBottom: '20px' }}>
-              {steps.map((step) => (
-                <div key={step.number} className="flex flex-col items-center">
-                  <div
-                    className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-[background-color,border-color,color,box-shadow] duration-300 font-semibold
-                      ${currentStep >= step.number
-                        ? 'bg-fm-magenta-700 border-fm-magenta-700 text-white shadow-lg'
-                        : 'border-fm-neutral-300 text-fm-neutral-500 bg-white'}`}
-                  >
-                    {currentStep > step.number ? (
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                    ) : (
-                      <span className="text-xs sm:text-sm">{step.number}</span>
-                    )}
-                  </div>
-                  <span className={`text-[11px] sm:text-xs mt-1 sm:mt-2 font-medium ${
-                    currentStep >= step.number ? 'text-fm-magenta-700' : 'text-fm-neutral-500'
-                  }`}>
-                    {step.title}
-                  </span>
+    <div className="mx-auto max-w-2xl">
+      <div className="mb-8 flex items-center gap-3">
+        <div className="h-1.5 flex-grow rounded-full bg-fm-magenta-600" />
+        <div className={`h-1.5 flex-grow rounded-full ${step === 2 ? 'bg-fm-magenta-600' : 'bg-fm-neutral-200'}`} />
+        <span className="shrink-0 text-sm text-fm-neutral-500">Step {step} of 2</span>
+      </div>
+
+      <div className="rounded-2xl border border-fm-neutral-200 bg-white p-6 sm:p-8">
+        {step === 1 ? (
+          <>
+            <h2 className="mb-1 text-2xl font-bold text-fm-neutral-900">You, and your work</h2>
+            <p className="mb-7 text-fm-neutral-600">Your portfolio is what we actually review.</p>
+
+            <div className="space-y-5">
+              <div>
+                <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-fm-neutral-700">Name</label>
+                <input id="fullName" className={inputClass} value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
+                {errors.fullName && <p className={errorClass}>{errors.fullName}</p>}
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-fm-neutral-700">Email</label>
+                  <input id="email" type="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+                  {errors.email && <p className={errorClass}>{errors.email}</p>}
                 </div>
-              ))}
-            </div>
-            <div className="w-full bg-fm-neutral-200 rounded-full" style={{ height: '6px' }}>
-              <div
-                className="bg-gradient-to-r from-fm-magenta-700 to-fm-magenta-400 rounded-full transition-[width] duration-500 ease-out"
-                style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%`, height: '6px' }}
-              />
-            </div>
-          </div>
+                <div>
+                  <label htmlFor="country" className="mb-1.5 block text-sm font-medium text-fm-neutral-700">Country</label>
+                  <select id="country" className={inputClass} value={country} onChange={(e) => setCountry(e.target.value)}>
+                    {COUNTRIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
 
-          {/* Submit error banner */}
-          {submitStatus === 'error' && submitError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-              <p className="text-sm text-red-700">{submitError}</p>
-            </div>
-          )}
+              <div>
+                <label htmlFor="phone" className="mb-1.5 block text-sm font-medium text-fm-neutral-700">Phone</label>
+                <div className="flex gap-2">
+                  <span className="flex items-center rounded-lg border border-fm-neutral-300 bg-fm-neutral-50 px-3 text-base text-fm-neutral-600">{locale.dialCode}</span>
+                  <input id="phone" type="tel" className={inputClass} value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel-national" />
+                </div>
+                {errors.phone && <p className={errorClass}>{errors.phone}</p>}
+              </div>
 
-          {currentStep === 1 && (
-            <PersonalInfoStep formData={formData} updateData={updateData} errors={errors} />
-          )}
-          {currentStep === 2 && (
-            <ExpertiseStep formData={formData} updateData={updateData} errors={errors} />
-          )}
-          {currentStep === 3 && (
-            <OnlinePresenceStep formData={formData} updateData={updateData} errors={errors} />
-          )}
-          {currentStep === 4 && (
-            <AvailabilityPricingStep formData={formData} updateData={updateData} errors={errors} />
-          )}
+              <fieldset>
+                <legend className="mb-2 block text-sm font-medium text-fm-neutral-700">What do you do?</legend>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORY_IDS.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setCategory(id)}
+                      className={`min-h-[44px] rounded-full border px-4 py-2 text-sm transition-colors ${
+                        category === id
+                          ? 'border-fm-magenta-600 bg-fm-magenta-600 text-white'
+                          : 'border-fm-neutral-300 text-fm-neutral-700 hover:border-fm-neutral-400'
+                      }`}
+                    >
+                      {TALENT_CATEGORIES[id].label}
+                    </button>
+                  ))}
+                </div>
+                {errors.category && <p className={errorClass}>{errors.category}</p>}
+              </fieldset>
 
-          {/*
-            The decoy. Clipped rather than `display:none` or `hidden`, because
-            a bot that parses styles skips anything obviously hidden but fills
-            a field it can still see in the DOM. `tabIndex={-1}` and
-            `aria-hidden` keep it away from keyboard users and screen readers;
-            `autoComplete="off"` stops a browser helpfully filling it in and
-            failing a real person's submission.
-          */}
-          <div aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>
-            <label htmlFor={HONEYPOT_FIELD}>Company website</label>
-            <input
-              id={HONEYPOT_FIELD}
-              name={HONEYPOT_FIELD}
-              type="text"
-              value={honeypot}
-              onChange={(e) => setHoneypot(e.target.value)}
-              tabIndex={-1}
-              autoComplete="off"
-            />
-          </div>
+              <div>
+                <label htmlFor="portfolio" className="mb-1.5 block text-sm font-medium text-fm-neutral-700">Portfolio link</label>
+                <input id="portfolio" className={inputClass} value={portfolio} onChange={(e) => setPortfolio(e.target.value)} placeholder="behance.net/you, your site, a Drive folder" />
+                {errors.portfolio && <p className={errorClass}>{errors.portfolio}</p>}
+              </div>
 
-          {/* Navigation */}
-          <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-8 pt-8 border-t border-fm-neutral-200 gap-3">
-            <button
-              onClick={currentStep === 1 ? onCancel : handlePrev}
-              className="flex items-center justify-center gap-2 px-6 py-3 text-sm border border-fm-neutral-300 rounded-lg hover:bg-fm-neutral-50 transition-colors min-h-[48px]"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {currentStep === 1 ? 'Cancel' : 'Previous'}
-            </button>
-
-            {currentStep === totalSteps ? (
-              <button
-                onClick={handleSubmit}
-                disabled={submitStatus === 'submitting'}
-                className="v2-btn v2-btn-magenta disabled:opacity-60 min-h-[48px]"
-              >
-                {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Application'}
-              </button>
-            ) : (
-              <button
-                onClick={handleNext}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-fm-magenta-600 text-white text-sm font-medium rounded-lg hover:bg-fm-magenta-700 transition-colors min-h-[48px]"
-              >
-                Next Step
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Shared helpers ─── */
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-red-600 text-xs mt-1">{message}</p>;
-}
-
-const inputClass =
-  'w-full px-4 py-3 border border-fm-neutral-300 rounded-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-base';
-const inputErrorClass =
-  'w-full px-4 py-3 border border-red-400 rounded-lg focus:ring-2 focus:ring-red-400 focus:border-red-400 text-base';
-
-interface StepInternalProps {
-  formData: Partial<TalentApplication>;
-  updateData: (updates: Partial<TalentApplication>) => void;
-  errors: FormErrors;
-}
-
-/* ─── Step 1: About You ─── */
-
-function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
-  const pi = formData.personalInfo!;
-
-  const handleChange = (field: string, value: any) => {
-    updateData({ personalInfo: { ...pi, [field]: value } });
-  };
-
-  const handleLocationChange = (field: string, value: string) => {
-    updateData({
-      personalInfo: { ...pi, location: { ...pi.location, [field]: value } },
-    });
-  };
-
-  return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">About You</h2>
-        <p className="text-fm-neutral-600">Tell us about yourself</p>
-      </div>
-
-      <div className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Full Name *</label>
-          <input
-            type="text"
-            value={pi.fullName}
-            onChange={(e) => handleChange('fullName', e.target.value)}
-            className={errors.fullName ? inputErrorClass : inputClass}
-            placeholder="Enter your full name"
-          />
-          <FieldError message={errors.fullName} />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Email *</label>
-            <input
-              type="email"
-              value={pi.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              className={errors.email ? inputErrorClass : inputClass}
-              placeholder="your@email.com"
-            />
-            <FieldError message={errors.email} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Phone *</label>
-            <input
-              type="tel"
-              value={pi.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
-              className={errors.phone ? inputErrorClass : inputClass}
-              placeholder="+91 98765 43210"
-            />
-            <FieldError message={errors.phone} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">City *</label>
-            <input
-              type="text"
-              value={pi.location.city}
-              onChange={(e) => handleLocationChange('city', e.target.value)}
-              className={errors.city ? inputErrorClass : inputClass}
-              placeholder="Mumbai"
-            />
-            <FieldError message={errors.city} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">State *</label>
-            <input
-              type="text"
-              value={pi.location.state}
-              onChange={(e) => handleLocationChange('state', e.target.value)}
-              className={errors.state ? inputErrorClass : inputClass}
-              placeholder="Maharashtra"
-            />
-            <FieldError message={errors.state} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Country</label>
-            <select
-              value={pi.location.country}
-              onChange={(e) => handleLocationChange('country', e.target.value)}
-              className={inputClass}
-            >
-              <option value="India">India</option>
-              <option value="USA">USA</option>
-              <option value="UK">UK</option>
-              <option value="Canada">Canada</option>
-              <option value="Australia">Australia</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            Professional Bio * <span className="text-fm-neutral-400 font-normal">(min 20 characters)</span>
-          </label>
-          <textarea
-            value={pi.bio}
-            onChange={(e) => handleChange('bio', e.target.value)}
-            rows={4}
-            className={errors.bio ? inputErrorClass : inputClass}
-            placeholder="Tell us about your experience, skills, and what makes you unique..."
-          />
-          <FieldError message={errors.bio} />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Languages</label>
-          <div className="flex flex-wrap gap-2">
-            {LANGUAGES.map((lang) => (
-              <label key={lang} className="flex items-center gap-1.5 text-sm">
-                <input
-                  type="checkbox"
-                  checked={pi.languages.includes(lang)}
-                  onChange={(e) => {
-                    const languages = e.target.checked
-                      ? [...pi.languages, lang]
-                      : pi.languages.filter((l) => l !== lang);
-                    handleChange('languages', languages);
-                  }}
-                  className="rounded"
-                />
-                {lang}
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Step 2: Your Expertise ─── */
-
-function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
-  const pd = formData.professionalDetails!;
-  const pl = formData.portfolioLinks || { websiteUrl: '', workSampleUrls: ['', '', ''] };
-
-  const handleCategoryChange = (category: TalentCategory) => {
-    updateData({
-      professionalDetails: { ...pd, category, subcategories: [] },
-    });
-  };
-
-  const handleSkillToggle = (skill: string) => {
-    const currentSkills = pd.skills || [];
-    const skillExists = currentSkills.find((s) => s.name === skill);
-    const updatedSkills = skillExists
-      ? currentSkills.filter((s) => s.name !== skill)
-      : [
-          ...currentSkills,
-          { name: skill, proficiency: 'intermediate' as const, yearsOfExperience: 1, verified: false },
-        ];
-    updateData({ professionalDetails: { ...pd, skills: updatedSkills } });
-  };
-
-  const handleToolToggle = (tool: string) => {
-    const currentTools = pd.tools || [];
-    const updatedTools = currentTools.includes(tool)
-      ? currentTools.filter((t) => t !== tool)
-      : [...currentTools, tool];
-    updateData({ professionalDetails: { ...pd, tools: updatedTools } });
-  };
-
-  const updateWorkSample = (index: number, value: string) => {
-    const urls = [...(pl.workSampleUrls || ['', '', ''])];
-    urls[index] = value;
-    updateData({ portfolioLinks: { ...pl, workSampleUrls: urls } });
-  };
-
-  return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Your Expertise</h2>
-        <p className="text-fm-neutral-600">Share your skills, tools, and portfolio</p>
-      </div>
-
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            Primary Category *
-          </label>
-          <select
-            value={pd.category}
-            onChange={(e) => handleCategoryChange(e.target.value as TalentCategory)}
-            className={inputClass}
-          >
-            {Object.entries(TALENT_CATEGORIES).map(([key, category]) => (
-              <option key={key} value={key}>
-                {category.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            Subcategories *
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 sm:max-h-40 overflow-y-auto border border-fm-neutral-200 rounded-lg p-4">
-            {TALENT_CATEGORIES[pd.category].subcategories.map((sub) => (
-              <label key={sub} className="flex items-center text-sm gap-2.5 min-h-[44px] px-1">
-                <input
-                  type="checkbox"
-                  checked={pd.subcategories.includes(sub)}
-                  onChange={(e) => {
-                    const subcategories = e.target.checked
-                      ? [...pd.subcategories, sub]
-                      : pd.subcategories.filter((s) => s !== sub);
-                    updateData({ professionalDetails: { ...pd, subcategories } });
-                  }}
-                  className="rounded"
-                />
-                {sub}
-              </label>
-            ))}
-          </div>
-          <FieldError message={errors.subcategories} />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-              Experience Level *
-            </label>
-            <select
-              value={pd.experienceLevel}
-              onChange={(e) =>
-                updateData({
-                  professionalDetails: { ...pd, experienceLevel: e.target.value as any },
-                })
-              }
-              className={inputClass}
-            >
-              {EXPERIENCE_LEVELS.map((level) => (
-                <option key={level.value} value={level.value}>
-                  {level.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-              Years of Experience *
-            </label>
-            <input
-              type="number"
-              value={pd.yearsOfExperience || ''}
-              onChange={(e) =>
-                updateData({
-                  professionalDetails: { ...pd, yearsOfExperience: parseInt(e.target.value) || 0 },
-                })
-              }
-              min="0"
-              max="50"
-              className={errors.yearsOfExperience ? inputErrorClass : inputClass}
-            />
-            <FieldError message={errors.yearsOfExperience} />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Core Skills *</label>
-          <div className="flex flex-wrap gap-2">
-            {POPULAR_SKILLS.map((skill) => (
-              <button
-                key={skill}
-                type="button"
-                onClick={() => handleSkillToggle(skill)}
-                className={`px-4 py-2 rounded-full text-sm border transition-colors min-h-[44px] ${
-                  pd.skills?.find((s) => s.name === skill)
-                    ? 'bg-fm-magenta-100 border-fm-magenta-300 text-fm-magenta-800'
-                    : 'bg-fm-neutral-100 border-fm-neutral-300 text-fm-neutral-700 hover:bg-fm-neutral-200'
-                }`}
-              >
-                {skill}
-              </button>
-            ))}
-          </div>
-          <FieldError message={errors.skills} />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Tools</label>
-          <div className="flex flex-wrap gap-2">
-            {POPULAR_TOOLS.map((tool) => (
-              <button
-                key={tool}
-                type="button"
-                onClick={() => handleToolToggle(tool)}
-                className={`px-4 py-2 rounded-full text-sm border transition-colors min-h-[44px] ${
-                  pd.tools?.includes(tool)
-                    ? 'bg-blue-100 border-blue-300 text-blue-800'
-                    : 'bg-fm-neutral-100 border-fm-neutral-300 text-fm-neutral-700 hover:bg-fm-neutral-200'
-                }`}
-              >
-                {tool}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="border-t border-fm-neutral-200 pt-6">
-          <h3 className="text-sm font-semibold text-fm-neutral-900 mb-3">Portfolio Links</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-                Portfolio Website URL
-              </label>
-              <input
-                type="url"
-                value={pl.websiteUrl}
-                onChange={(e) =>
-                  updateData({ portfolioLinks: { ...pl, websiteUrl: e.target.value } })
-                }
-                className={errors.portfolioWebsite ? inputErrorClass : inputClass}
-                placeholder="https://yourportfolio.com"
-              />
-              <FieldError message={errors.portfolioWebsite} />
-            </div>
-
-            {[0, 1, 2].map((i) => (
-              <div key={i}>
-                <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-                  Work Sample URL {i + 1}
+              <div>
+                <label htmlFor="bio" className="mb-1.5 block text-sm font-medium text-fm-neutral-700">
+                  One line about your work <span className="font-normal text-fm-neutral-400">(optional)</span>
                 </label>
-                <input
-                  type="url"
-                  value={pl.workSampleUrls?.[i] || ''}
-                  onChange={(e) => updateWorkSample(i, e.target.value)}
-                  className={errors[`workSample${i}`] ? inputErrorClass : inputClass}
-                  placeholder="https://example.com/project"
-                />
-                <FieldError message={errors[`workSample${i}`]} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Step 3: Online Presence ─── */
-
-function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps) {
-  const sm = formData.socialMedia || {};
-
-  const updateSocial = (updates: Partial<typeof sm>) => {
-    updateData({ socialMedia: { ...sm, ...updates } });
-  };
-
-  return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Online Presence</h2>
-        <p className="text-fm-neutral-600">Help us understand your online reach (all optional)</p>
-      </div>
-
-      <div className="space-y-5">
-        {/* Instagram */}
-        <div className="p-4 border border-fm-neutral-200 rounded-lg space-y-3">
-          <h3 className="text-sm font-semibold text-fm-neutral-900 flex items-center gap-2">
-            <span className="w-5 h-5 bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 rounded inline-block"></span>
-            Instagram
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-fm-neutral-600 mb-1">Handle</label>
-              <div className="flex">
-                <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-fm-neutral-300 bg-fm-neutral-50 text-sm">
-                  @
-                </span>
-                <input
-                  type="text"
-                  value={sm.instagram?.handle || ''}
-                  onChange={(e) =>
-                    updateSocial({
-                      instagram: {
-                        handle: e.target.value,
-                        followers: sm.instagram?.followers || 0,
-                        engagementRate: 0,
-                        lastUpdated: '',
-                        verified: false,
-                      },
-                    })
-                  }
-                  className="flex-1 px-3 py-2 border border-fm-neutral-300 rounded-r-lg focus:ring-2 focus:ring-fm-magenta-500 focus:border-fm-magenta-500 text-sm"
-                  placeholder="your_handle"
-                />
+                <input id="bio" className={inputClass} value={bio} onChange={(e) => setBio(e.target.value)} placeholder="I shoot food and interiors." />
               </div>
             </div>
-            <div>
-              <label className="block text-xs text-fm-neutral-600 mb-1">Followers (approx)</label>
-              <input
-                type="number"
-                value={sm.instagram?.followers || ''}
-                onChange={(e) =>
-                  updateSocial({
-                    instagram: {
-                      handle: sm.instagram?.handle || '',
-                      followers: parseInt(e.target.value) || 0,
-                      engagementRate: 0,
-                      lastUpdated: '',
-                      verified: false,
-                    },
-                  })
-                }
-                className={inputClass}
-                placeholder="1000"
-              />
+          </>
+        ) : (
+          <>
+            <h2 className="mb-1 text-2xl font-bold text-fm-neutral-900">How you work</h2>
+            <p className="mb-7 text-fm-neutral-600">
+              A guide so clients can find you &mdash; not a quote. You price every job yourself.
+            </p>
+
+            <div className="space-y-7">
+              <fieldset>
+                <legend className="mb-2 block text-sm font-medium text-fm-neutral-700">How do you usually charge?</legend>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {PRICING_MODELS.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setModel(m.id)}
+                      className={`min-h-[44px] rounded-lg border px-4 py-3 text-left transition-colors ${
+                        model === m.id
+                          ? 'border-fm-magenta-600 bg-fm-magenta-50'
+                          : 'border-fm-neutral-300 hover:border-fm-neutral-400'
+                      }`}
+                    >
+                      <span className="block text-sm font-medium text-fm-neutral-900">{m.label}</span>
+                      <span className="block text-xs text-fm-neutral-500">{m.hint}</span>
+                    </button>
+                  ))}
+                </div>
+                {errors.model && <p className={errorClass}>{errors.model}</p>}
+              </fieldset>
+
+              {model && (
+                <fieldset>
+                  <legend className="mb-2 block text-sm font-medium text-fm-neutral-700">What range do you usually work in?</legend>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {bandsFor(model, locale.currency).map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setBandId(b.id)}
+                        className={`min-h-[44px] rounded-lg border px-4 py-3 text-left text-sm transition-colors ${
+                          bandId === b.id
+                            ? 'border-fm-magenta-600 bg-fm-magenta-50 font-medium text-fm-neutral-900'
+                            : 'border-fm-neutral-300 text-fm-neutral-700 hover:border-fm-neutral-400'
+                        }`}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                  {errors.band && <p className={errorClass}>{errors.band}</p>}
+                </fieldset>
+              )}
+
+              <div>
+                <label htmlFor="hours" className="mb-1.5 block text-sm font-medium text-fm-neutral-700">
+                  Hours a week you have spare <span className="font-normal text-fm-neutral-400">(optional)</span>
+                </label>
+                <input id="hours" type="number" min={0} max={80} className={inputClass} value={hoursPerWeek} onChange={(e) => setHoursPerWeek(e.target.value)} placeholder="10" />
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
 
-        {/* YouTube */}
-        <div className="p-4 border border-fm-neutral-200 rounded-lg space-y-3">
-          <h3 className="text-sm font-semibold text-fm-neutral-900 flex items-center gap-2">
-            <span className="w-5 h-5 bg-red-600 rounded inline-flex items-center justify-center text-white text-[10px] font-bold">
-              &#9654;
-            </span>
-            YouTube
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-fm-neutral-600 mb-1">Channel URL</label>
-              <input
-                type="url"
-                value={sm.youtube?.channel || ''}
-                onChange={(e) =>
-                  updateSocial({
-                    youtube: {
-                      channel: e.target.value,
-                      subscribers: sm.youtube?.subscribers || 0,
-                      totalViews: 0,
-                      averageViews: 0,
-                      lastUpdated: '',
-                      verified: false,
-                    },
-                  })
-                }
-                className={inputClass}
-                placeholder="https://youtube.com/@channel"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-fm-neutral-600 mb-1">Subscribers (approx)</label>
-              <input
-                type="number"
-                value={sm.youtube?.subscribers || ''}
-                onChange={(e) =>
-                  updateSocial({
-                    youtube: {
-                      channel: sm.youtube?.channel || '',
-                      subscribers: parseInt(e.target.value) || 0,
-                      totalViews: 0,
-                      averageViews: 0,
-                      lastUpdated: '',
-                      verified: false,
-                    },
-                  })
-                }
-                className={inputClass}
-                placeholder="5000"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* LinkedIn */}
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            LinkedIn Profile URL
-          </label>
+        {/*
+          The decoy. Clipped rather than `display:none`: a bot that parses
+          styles skips anything obviously hidden but fills a field it can still
+          see in the DOM. `tabIndex={-1}` and `aria-hidden` keep it off the
+          keyboard path and out of screen readers; `autoComplete="off"` stops a
+          browser filling it in and failing a real person's submission.
+        */}
+        <div aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>
+          <label htmlFor={HONEYPOT_FIELD}>Company website</label>
           <input
-            type="url"
-            value={sm.linkedin?.profileUrl || ''}
-            onChange={(e) =>
-              updateSocial({
-                linkedin: { profileUrl: e.target.value, connections: 0, lastUpdated: '', verified: false },
-              })
-            }
-            className={errors.linkedin ? inputErrorClass : inputClass}
-            placeholder="https://linkedin.com/in/yourprofile"
+            id={HONEYPOT_FIELD}
+            name={HONEYPOT_FIELD}
+            type="text"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
           />
-          <FieldError message={errors.linkedin} />
         </div>
 
-        {/* Behance */}
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            Behance Profile URL
-          </label>
-          <input
-            type="url"
-            value={sm.behance?.profileUrl || ''}
-            onChange={(e) =>
-              updateSocial({
-                behance: {
-                  profileUrl: e.target.value,
-                  followers: 0,
-                  projects: 0,
-                  views: 0,
-                  lastUpdated: '',
-                  verified: false,
-                },
-              })
-            }
-            className={errors.behance ? inputErrorClass : inputClass}
-            placeholder="https://behance.net/yourprofile"
-          />
-          <FieldError message={errors.behance} />
-        </div>
+        {submitError && <p className="mt-6 text-sm text-fm-magenta-700">{submitError}</p>}
 
-        {/* Dribbble */}
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            Dribbble Profile URL
-          </label>
-          <input
-            type="url"
-            value={sm.dribbble?.profileUrl || ''}
-            onChange={(e) =>
-              updateSocial({
-                dribbble: {
-                  profileUrl: e.target.value,
-                  followers: 0,
-                  likes: 0,
-                  shots: 0,
-                  lastUpdated: '',
-                  verified: false,
-                },
-              })
-            }
-            className={errors.dribbble ? inputErrorClass : inputClass}
-            placeholder="https://dribbble.com/yourprofile"
-          />
-          <FieldError message={errors.dribbble} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Step 4: Availability & Pricing ─── */
-
-function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalProps) {
-  const avail = formData.availability!;
-  const prefs = formData.preferences!;
-  const pricing = formData.pricing!;
-
-  const updatePricingField = (
-    rateType: 'hourlyRate' | 'projectRate' | 'retainerRate',
-    field: 'min' | 'max',
-    value: number
-  ) => {
-    updateData({
-      pricing: {
-        ...pricing,
-        [rateType]: { ...pricing[rateType], [field]: value },
-      },
-    });
-  };
-
-  const currencySymbol = CURRENCIES.find((c) => c.code === prefs.currency)?.symbol || '₹';
-
-  return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-fm-neutral-900 mb-2">Availability & Pricing</h2>
-        <p className="text-fm-neutral-600">Set your availability and rate ranges</p>
-      </div>
-
-      <div className="space-y-6">
-        {/* Availability section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-              Current Status
-            </label>
-            <select
-              value={avail.currentStatus}
-              onChange={(e) =>
-                updateData({ availability: { ...avail, currentStatus: e.target.value as any } })
-              }
-              className={inputClass}
-            >
-              <option value="available">Available</option>
-              <option value="partially_available">Partially Available</option>
-              <option value="busy">Busy</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-              Hours per Week *
-            </label>
-            <input
-              type="number"
-              value={avail.hoursPerWeek || ''}
-              onChange={(e) =>
-                updateData({
-                  availability: { ...avail, hoursPerWeek: parseInt(e.target.value) || 0 },
-                })
-              }
-              min="1"
-              max="80"
-              className={errors.hoursPerWeek ? inputErrorClass : inputClass}
-            />
-            <FieldError message={errors.hoursPerWeek} />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="remoteWork"
-            checked={avail.remoteWork}
-            onChange={(e) =>
-              updateData({ availability: { ...avail, remoteWork: e.target.checked } })
-            }
-            className="rounded"
-          />
-          <label htmlFor="remoteWork" className="text-sm font-medium text-fm-neutral-700">
-            Available for remote work
-          </label>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            Project Commitment
-          </label>
-          <select
-            value={avail.projectCommitment}
-            onChange={(e) =>
-              updateData({
-                availability: { ...avail, projectCommitment: e.target.value as any },
-              })
-            }
-            className={inputClass}
+        <div className="mt-8 flex flex-col-reverse gap-3 border-t border-fm-neutral-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <button
+            type="button"
+            onClick={step === 1 ? onCancel : () => setStep(1)}
+            className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-fm-neutral-300 px-6 py-3 text-sm text-fm-neutral-700 transition-colors hover:bg-fm-neutral-50"
           >
-            {PROJECT_COMMITMENT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            <ArrowLeft className="h-4 w-4" />
+            {step === 1 ? 'Cancel' : 'Back'}
+          </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-              Minimum Project Value
-            </label>
-            <input
-              type="number"
-              value={prefs.minimumProjectValue || ''}
-              onChange={(e) =>
-                updateData({
-                  preferences: { ...prefs, minimumProjectValue: parseInt(e.target.value) || 0 },
-                })
-              }
-              className={inputClass}
-              placeholder="10000"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">Currency</label>
-            <select
-              value={prefs.currency}
-              onChange={(e) =>
-                updateData({ preferences: { ...prefs, currency: e.target.value } })
-              }
-              className={inputClass}
+          {step === 1 ? (
+            <button
+              type="button"
+              onClick={() => { if (validateStep1()) { setErrors({}); setStep(2); } }}
+              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-fm-magenta-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-fm-magenta-700"
             >
-              {CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.symbol} {c.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-            Communication Style
-          </label>
-          <select
-            value={prefs.communicationStyle}
-            onChange={(e) =>
-              updateData({
-                preferences: { ...prefs, communicationStyle: e.target.value as any },
-              })
-            }
-            className={inputClass}
-          >
-            <option value="formal">Formal</option>
-            <option value="casual">Casual</option>
-            <option value="mixed">Mixed</option>
-          </select>
-        </div>
-
-        {/* Pricing section */}
-        <div className="border-t border-fm-neutral-200 pt-6">
-          <h3 className="text-sm font-semibold text-fm-neutral-900 mb-1">
-            Pricing Rates *
-          </h3>
-          <p className="text-xs text-fm-neutral-500 mb-4">
-            Fill at least one rate range ({currencySymbol})
-          </p>
-          {errors.pricing && <FieldError message={errors.pricing} />}
-
-          <div className="space-y-4">
-            {/* Hourly */}
-            <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-                Hourly Rate ({currencySymbol})
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="number"
-                  value={pricing.hourlyRate.min || ''}
-                  onChange={(e) => updatePricingField('hourlyRate', 'min', parseInt(e.target.value) || 0)}
-                  className={errors.hourlyRate ? inputErrorClass : inputClass}
-                  placeholder="Min"
-                />
-                <input
-                  type="number"
-                  value={pricing.hourlyRate.max || ''}
-                  onChange={(e) => updatePricingField('hourlyRate', 'max', parseInt(e.target.value) || 0)}
-                  className={errors.hourlyRate ? inputErrorClass : inputClass}
-                  placeholder="Max"
-                />
-              </div>
-              <FieldError message={errors.hourlyRate} />
-            </div>
-
-            {/* Per-project */}
-            <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-                Per-project Rate ({currencySymbol})
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="number"
-                  value={pricing.projectRate.min || ''}
-                  onChange={(e) => updatePricingField('projectRate', 'min', parseInt(e.target.value) || 0)}
-                  className={errors.projectRate ? inputErrorClass : inputClass}
-                  placeholder="Min"
-                />
-                <input
-                  type="number"
-                  value={pricing.projectRate.max || ''}
-                  onChange={(e) => updatePricingField('projectRate', 'max', parseInt(e.target.value) || 0)}
-                  className={errors.projectRate ? inputErrorClass : inputClass}
-                  placeholder="Max"
-                />
-              </div>
-              <FieldError message={errors.projectRate} />
-            </div>
-
-            {/* Monthly retainer */}
-            <div>
-              <label className="block text-sm font-medium text-fm-neutral-700 mb-1.5">
-                Monthly Retainer ({currencySymbol})
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="number"
-                  value={pricing.retainerRate.min || ''}
-                  onChange={(e) => updatePricingField('retainerRate', 'min', parseInt(e.target.value) || 0)}
-                  className={errors.retainerRate ? inputErrorClass : inputClass}
-                  placeholder="Min"
-                />
-                <input
-                  type="number"
-                  value={pricing.retainerRate.max || ''}
-                  onChange={(e) => updatePricingField('retainerRate', 'max', parseInt(e.target.value) || 0)}
-                  className={errors.retainerRate ? inputErrorClass : inputClass}
-                  placeholder="Max"
-                />
-              </div>
-              <FieldError message={errors.retainerRate} />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 mt-4">
-            <input
-              type="checkbox"
-              id="negotiation"
-              checked={pricing.openToNegotiation}
-              onChange={(e) =>
-                updateData({ pricing: { ...pricing, openToNegotiation: e.target.checked } })
-              }
-              className="rounded"
-            />
-            <label htmlFor="negotiation" className="text-sm text-fm-neutral-700">
-              Open to negotiation on rates
-            </label>
-          </div>
-        </div>
-
-        {/* Ready box */}
-        <div className="bg-fm-magenta-50 border border-fm-magenta-200 rounded-xl p-6 mt-4">
-          <div className="flex items-center gap-3 mb-3">
-            <CheckCircle className="h-5 w-5 text-fm-magenta-600" />
-            <h3 className="text-lg font-semibold text-fm-magenta-900">Ready to Submit!</h3>
-          </div>
-          <p className="text-fm-magenta-700 mb-4">
-            Review your information and submit your application.
-          </p>
-          <div className="text-sm text-fm-magenta-600">
-            <strong>What happens next:</strong>
-            <ul className="list-disc list-inside mt-2 space-y-1">
-              <li>Application review (24-48 hours)</li>
-              <li>Portfolio verification call</li>
-              <li>Welcome to CreativeMinds network</li>
-              <li>Start receiving project opportunities</li>
-            </ul>
-          </div>
+              Continue
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={status === 'submitting'}
+              className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-lg bg-fm-magenta-600 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-fm-magenta-700 disabled:opacity-60"
+            >
+              {status === 'submitting' && <Loader2 className="h-4 w-4 animate-spin" />}
+              {status === 'submitting' ? 'Sending…' : 'Send application'}
+            </button>
+          )}
         </div>
       </div>
     </div>
