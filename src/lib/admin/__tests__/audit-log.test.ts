@@ -1,6 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getAuditUser, getClientIP } from '../audit-log';
 
+/*
+ * `logAuditEvent` tries Inngest first and falls back to a direct insert when
+ * it is unreachable. Without this mock the SDK attempts a real HTTP call, so
+ * the two tests below passed or timed out depending on how fast the network
+ * refused it — intermittently blowing past vitest's 5s limit on a busy
+ * machine. Rejecting immediately is what "Inngest unreachable" means, and it
+ * is the fallback these tests are actually about.
+ */
+vi.mock('@/lib/inngest/client', () => ({
+  inngest: { send: vi.fn(() => Promise.reject(new Error('Inngest unreachable'))) },
+}));
+
 // Mock Supabase — logAuditEvent depends on it
 vi.mock('@/lib/supabase', () => ({
   getSupabaseAdmin: vi.fn(() => ({
