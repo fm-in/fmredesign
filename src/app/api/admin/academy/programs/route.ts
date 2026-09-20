@@ -146,7 +146,6 @@ export async function POST(request: NextRequest) {
     instructor_name: (body.instructorName as string) || null,
     instructor_bio: (body.instructorBio as string) || null,
     instructor_image_url: (body.instructorImageUrl as string) || null,
-    payment_link_url: (body.paymentLinkUrl as string) || null,
     created_by: auth.user.id,
   };
 
@@ -231,7 +230,6 @@ export async function PUT(request: NextRequest) {
     instructorName: 'instructor_name',
     instructorBio: 'instructor_bio',
     instructorImageUrl: 'instructor_image_url',
-    paymentLinkUrl: 'payment_link_url',
   };
   for (const [camel, snake] of Object.entries(map)) {
     if (body[camel] !== undefined) {

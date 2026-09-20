@@ -106,9 +106,11 @@ export type ActivityType =
   | 'meeting_completed'
   | 'stage_changed'
   | 'owner_changed'
+  | 'sequence_started'
   | 'sequence_stopped'
   | 'ai_brief'
-  | 'unsubscribed';
+  | 'unsubscribed'
+  | 'confirmation_sent';
 
 export type TaskType = 'call' | 'whatsapp' | 'linkedin' | 'instagram' | 'email' | 'follow_up' | 'custom';
 export type TaskStatus = 'open' | 'done' | 'skipped';
@@ -131,6 +133,8 @@ export interface SalesSettings {
   automationEnabled: boolean;
   /** Cal.com event path, e.g. "fm-in/15min". */
   bookingLink: string;
+  /** Cal.com event path for the longer scoping call, e.g. "fm-in/30min". */
+  bookingLinkLong: string;
 }
 
 export interface Actor {
@@ -162,6 +166,8 @@ export type LeadRow = {
   source: string | null;
   source_detail: string | null;
   external_source_id: string | null;
+  utm_source: string | null;
+  utm_campaign: string | null;
   lead_score: number | null;
   owner_id: string | null;
   assigned_to: string | null;

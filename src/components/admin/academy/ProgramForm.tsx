@@ -3,7 +3,8 @@
  *
  * Designed for an admin who wants to ship a workshop in 5 minutes:
  *   - Top section is "what's minimally required to publish" (title, format,
- *     status, price, dates, payment link).
+ *     status, price, dates). Payment is Razorpay Checkout — there is no
+ *     payment link to configure.
  *   - Lower collapsible sections cover the rich marketing surface
  *     (outcomes, syllabus, FAQ, testimonials, delivery URLs, instructor).
  *
@@ -22,7 +23,6 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
-  AlertCircle,
 } from 'lucide-react';
 import {
   DashboardCard as Card,
@@ -80,8 +80,6 @@ interface FormState {
   instructorName: string;
   instructorBio: string;
   instructorImageUrl: string;
-
-  paymentLinkUrl: string;
 }
 
 const EMPTY: FormState = {
@@ -109,7 +107,6 @@ const EMPTY: FormState = {
   instructorName: '',
   instructorBio: '',
   instructorImageUrl: '',
-  paymentLinkUrl: '',
 };
 
 function slugify(s: string): string {
@@ -174,7 +171,6 @@ export function ProgramForm({ initial }: ProgramFormProps) {
       instructorName: initial.instructorName || '',
       instructorBio: initial.instructorBio || '',
       instructorImageUrl: initial.instructorImageUrl || '',
-      paymentLinkUrl: initial.paymentLinkUrl || '',
     });
   }, [initial]);
 
@@ -199,11 +195,6 @@ export function ProgramForm({ initial }: ProgramFormProps) {
     if (!form.format) {
       adminToast.error('Format is required');
       setOpenSection('basics');
-      return;
-    }
-    if (form.status === 'open' && !form.paymentLinkUrl.trim()) {
-      adminToast.error('Status "Open" needs a Razorpay payment link');
-      setOpenSection('payment');
       return;
     }
 
@@ -235,7 +226,6 @@ export function ProgramForm({ initial }: ProgramFormProps) {
         instructorName: form.instructorName || null,
         instructorBio: form.instructorBio || null,
         instructorImageUrl: form.instructorImageUrl || null,
-        paymentLinkUrl: form.paymentLinkUrl || null,
       };
 
       const res = await fetch('/api/admin/academy/programs', {
@@ -590,27 +580,6 @@ export function ProgramForm({ initial }: ProgramFormProps) {
               onChange={(e) => set('instructorBio', e.target.value)}
             />
           </div>
-        </div>
-      </Section>
-
-      {/* ── Payment ─────────────────────────────────────────────────── */}
-      <Section id="payment" title="Payment">
-        <div className="flex items-start gap-2 p-3 rounded-md bg-amber-50 border border-amber-200">
-          <AlertCircle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
-          <p className="text-xs text-amber-900">
-            Create a Razorpay <strong>Payment Link</strong> in your dashboard for
-            this program, then paste the URL here. The public &quot;Reserve seat&quot;
-            CTA will open it; you&apos;ll mark the enrollment as paid in
-            /admin/academy/enrollments once Razorpay shows the payment received.
-          </p>
-        </div>
-        <div>
-          <label className={labelCls}>Razorpay payment link</label>
-          <Input
-            value={form.paymentLinkUrl}
-            onChange={(e) => set('paymentLinkUrl', e.target.value)}
-            placeholder="https://rzp.io/l/..."
-          />
         </div>
       </Section>
     </div>

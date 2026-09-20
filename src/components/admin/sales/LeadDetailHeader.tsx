@@ -6,7 +6,7 @@ import { CardContent, DashboardButton, DashboardCard } from '@/design-system';
 import { Select } from '@/components/ui/select-native';
 import { StatusBadge } from '@/components/ui/status-badge';
 import type { LeadStatus } from '@/lib/admin/lead-types';
-import { STAGE_LABELS, type OwnerOption, type SalesLead } from '@/lib/sales/api-types';
+import { SEQUENCE_LABELS, STAGE_LABELS, type OwnerOption, type SalesLead, type SequenceStartInfo } from '@/lib/sales/api-types';
 import { isLeadStatus, LEAD_STATUSES } from '@/lib/sales/types';
 
 interface LeadDetailHeaderProps {
@@ -15,9 +15,11 @@ interface LeadDetailHeaderProps {
   canAssign: boolean;
   userId: string;
   suppressed: boolean;
+  sequences: SequenceStartInfo;
   onStageChange: (status: LeadStatus, lostReason?: string) => Promise<boolean>;
   onOwnerChange: (ownerId: string | null) => Promise<boolean>;
   onStopSequence: () => Promise<boolean>;
+  onStartSequence: (sequenceKey: string) => Promise<boolean>;
 }
 
 const SEQUENCE_TEXT: Record<string, string> = {
@@ -26,15 +28,80 @@ const SEQUENCE_TEXT: Record<string, string> = {
   stopped: 'Follow-ups stopped',
 };
 
+/** "Ad lead follow-ups running", or plain "Follow-ups running" for a key with no label (e.g. a retired set). */
+function sequenceStatusText(status: string, sequenceKey: string | null): string {
+  const text = SEQUENCE_TEXT[status] ?? 'Follow-ups';
+  if (!sequenceKey || !Object.hasOwn(SEQUENCE_LABELS, sequenceKey)) return text;
+  return `${SEQUENCE_LABELS[sequenceKey]} ${text.charAt(0).toLowerCase()}${text.slice(1)}`;
+}
+
+/** Shown on the lead page only until the lead's one-and-only sequence has been started. */
+function StartSequencePanel({ sequences, onStart }: { sequences: SequenceStartInfo; onStart: (sequenceKey: string) => Promise<boolean> }) {
+  const keys = Object.keys(SEQUENCE_LABELS);
+  // No recommendation means no preselected set: a person has to choose one deliberately.
+  const [selected, setSelected] = useState(sequences.recommended ?? '');
+  const [starting, setStarting] = useState(false);
+
+  if (sequences.starting) {
+    return <p className="text-sm text-fm-neutral-700">Starting follow-ups…</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {/* Only when Start is on offer: a blocked lead shows its reason instead of an invitation to retry. */}
+      {sequences.lastStartFailed && sequences.canStart && (
+        <p className="text-xs text-amber-700">The last start didn&apos;t go through, so you can try again.</p>
+      )}
+      <label htmlFor="sequence-key" className="block text-xs font-medium text-fm-neutral-700">
+        Follow-up set
+      </label>
+      <Select id="sequence-key" value={selected} onChange={(e) => setSelected(e.target.value)} disabled={starting}>
+        {!sequences.recommended && (
+          <option value="" disabled>
+            Choose a set
+          </option>
+        )}
+        {keys.map((key) => (
+          <option key={key} value={key}>
+            {SEQUENCE_LABELS[key]}
+          </option>
+        ))}
+      </Select>
+      {sequences.canStart ? (
+        <DashboardButton
+          variant="secondary"
+          size="sm"
+          disabled={starting || !selected}
+          onClick={async () => {
+            if (!selected) return;
+            setStarting(true);
+            try {
+              await onStart(selected);
+            } finally {
+              setStarting(false);
+            }
+          }}
+        >
+          {starting ? 'Starting…' : 'Start follow-ups'}
+        </DashboardButton>
+      ) : (
+        <p className="text-xs text-fm-neutral-600">{sequences.blockedReason}</p>
+      )}
+    </div>
+  );
+}
+
 export function LeadDetailHeader({
   lead,
   owners,
   canAssign,
   userId,
   suppressed,
+  sequences,
   onStageChange,
   onOwnerChange,
   onStopSequence,
+  onStartSequence,
 }: LeadDetailHeaderProps) {
   const [losing, setLosing] = useState(false);
   const [lostReason, setLostReason] = useState('');
@@ -172,14 +239,20 @@ export function LeadDetailHeader({
 
           <div className="space-y-2">
             <p className="text-sm font-medium text-fm-neutral-800">Follow-ups</p>
-            <p className="text-sm text-fm-neutral-700">
-              {lead.sequenceStatus ? SEQUENCE_TEXT[lead.sequenceStatus] : 'Not started'}
-              {lead.sequenceStopReason ? ` (${lead.sequenceStopReason.replace(/_/g, ' ')})` : ''}
-            </p>
-            {lead.sequenceStatus === 'active' && (
-              <DashboardButton variant="secondary" size="sm" onClick={onStopSequence}>
-                Stop follow-ups
-              </DashboardButton>
+            {lead.sequenceStatus ? (
+              <>
+                <p className="text-sm text-fm-neutral-700">
+                  {sequenceStatusText(lead.sequenceStatus, lead.sequenceKey)}
+                  {lead.sequenceStopReason ? ` (${lead.sequenceStopReason.replace(/_/g, ' ')})` : ''}
+                </p>
+                {lead.sequenceStatus === 'active' && (
+                  <DashboardButton variant="secondary" size="sm" onClick={onStopSequence}>
+                    Stop follow-ups
+                  </DashboardButton>
+                )}
+              </>
+            ) : (
+              <StartSequencePanel sequences={sequences} onStart={onStartSequence} />
             )}
             {suppressed && <p className="text-xs font-medium text-red-600">On the do-not-contact list</p>}
           </div>

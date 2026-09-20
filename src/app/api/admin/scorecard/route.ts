@@ -15,6 +15,7 @@ import { requirePermission } from '@/lib/admin-auth-middleware';
 import type { DimensionResult } from '@/lib/scorecard/types';
 import { ingestLead } from '@/lib/sales/intake/ingest';
 import { IntakeError } from '@/lib/sales/errors';
+import { safeErrorLog } from '@/lib/safe-log';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
     .limit(limit);
 
   if (error) {
-    console.error('[admin/scorecard] list failed:', error);
+    console.error('[admin/scorecard] list failed:', safeErrorLog(error));
     return ApiResponse.error('Could not load submissions');
   }
 
@@ -101,6 +102,10 @@ export async function POST(request: NextRequest) {
   }
 
   const weakest = row.dimension_scores?.[0];
+  // dimension_scores is stored worst-first and each entry carries the advice the
+  // person was shown for that dimension at its band (scoreScorecard). The
+  // scorecard_fix email quotes the weakest one.
+  const weakestFix = typeof weakest?.recommendation === 'string' ? weakest.recommendation.trim() : '';
   const summary = (row.dimension_scores || []).map((d) => `${d.label}: ${d.score}/100`).join(' · ');
 
   let leadId: string;
@@ -115,14 +120,20 @@ export async function POST(request: NextRequest) {
       source: 'scorecard',
       sourceDetail: `Scorecard (${row.band})`,
       consent: { basis: 'inbound_request', evidence: { scorecardId: row.id }, capturedAt: row.created_at },
-      customFields: { scorecardId: row.id, scorecardBand: row.band, scorecardScore: row.overall_score },
+      customFields: {
+        scorecardId: row.id,
+        scorecardBand: row.band,
+        scorecardScore: row.overall_score,
+        ...(weakestFix ? { scorecardFix: weakestFix } : {}),
+      },
       tags: ['scorecard'],
       ipAddress: row.ip_address,
       userAgent: row.user_agent,
     }));
   } catch (err) {
     if (err instanceof IntakeError) return ApiResponse.validationError(err.message);
-    console.error('[admin/scorecard] lead intake failed:', err);
+    // Never the raw error: a Postgres error's details quote the row (email, phone).
+    console.error('[admin/scorecard] lead intake failed:', safeErrorLog(err));
     return ApiResponse.error('Could not create the lead');
   }
 
@@ -134,7 +145,7 @@ export async function POST(request: NextRequest) {
   if (linkErr) {
     // The lead exists; only the backlink failed. Surface it rather than
     // pretending the whole thing worked, or the two can silently diverge.
-    console.error('[admin/scorecard] backlink failed:', linkErr);
+    console.error('[admin/scorecard] backlink failed:', safeErrorLog(linkErr));
     return ApiResponse.error('Lead created, but linking it back to the submission failed');
   }
 

@@ -2,14 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fake, payloadOf } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
 import type { LeadRow } from '@/lib/sales/types';
+import { SEQUENCES, type SequenceStep } from '@/lib/sales/sequence';
+import type { ContinueDecision } from '@/lib/sales/sequence';
+import type { StepResult } from '@/lib/sales/sequence-runner';
 
 interface FakeStep {
   run: <T>(...args: [string, () => Promise<T> | T]) => Promise<T>;
   sendEvent: (...args: [string, unknown]) => Promise<void>;
+  sleep: (...args: [string, string]) => Promise<void>;
+  sleepUntil: (...args: [string, string]) => Promise<void>;
 }
 type CapturedHandler = (ctx: { event: { data: Record<string, unknown> }; step: FakeStep }) => Promise<unknown>;
 interface CapturedFunction {
-  config: { id: string; onFailure?: unknown };
+  config: { id: string; onFailure?: unknown; cancelOn?: unknown };
   handler: CapturedHandler;
 }
 
@@ -23,6 +28,11 @@ const mocks = vi.hoisted(() => ({
   createTask: vi.fn(async () => 'task_1'),
   hasOpenTask: vi.fn(async () => false),
   notifyAdmins: vi.fn(async () => undefined),
+  markSequenceActive: vi.fn<(leadId: string, key: string) => Promise<boolean>>(async () => true),
+  markSequenceCompleted: vi.fn(async () => undefined),
+  evaluateContinue: vi.fn<() => Promise<ContinueDecision>>(async () => ({ ok: true })),
+  runSequenceStep: vi.fn<(leadId: string, step: SequenceStep) => Promise<StepResult>>(async () => ({ done: true })),
+  recordStepProgress: vi.fn(async () => undefined),
 }));
 
 // Capture each function's config and handler instead of registering it with Inngest.
@@ -46,6 +56,13 @@ vi.mock('@/lib/sales/brief', () => ({ generateLeadBrief: mocks.generateLeadBrief
 vi.mock('@/lib/sales/activity', () => ({ recordActivity: mocks.recordActivity }));
 vi.mock('@/lib/sales/tasks', () => ({ createTask: mocks.createTask, hasOpenTask: mocks.hasOpenTask }));
 vi.mock('@/lib/notifications', () => ({ notifyAdmins: mocks.notifyAdmins }));
+vi.mock('@/lib/sales/sequence-runner', () => ({
+  markSequenceActive: mocks.markSequenceActive,
+  markSequenceCompleted: mocks.markSequenceCompleted,
+  evaluateContinue: mocks.evaluateContinue,
+  runSequenceStep: mocks.runSequenceStep,
+  recordStepProgress: mocks.recordStepProgress,
+}));
 
 import { reportMetaLeadgenFailure } from '../sales';
 
@@ -65,6 +82,8 @@ function fakeStep() {
       return result;
     },
     sendEvent,
+    sleep: vi.fn(async () => undefined),
+    sleepUntil: vi.fn(async () => undefined),
   };
   return { step, results, sendEvent };
 }
@@ -76,8 +95,7 @@ beforeEach(() => {
 });
 
 describe('sales-lead-created', () => {
-  it('assigns, briefs and creates the first-touch task, but starts no sequence for a test lead', async () => {
-    mocks.loadLead.mockResolvedValue(leadRow({ tags: ['test'] }));
+  it('assigns an owner, writes the brief and creates the first-touch task', async () => {
     const { step, sendEvent } = fakeStep();
 
     const result = await registered('sales-lead-created').handler({ event: { data: { leadId: 'lead_1' } }, step });
@@ -88,16 +106,19 @@ describe('sales-lead-created', () => {
       expect.objectContaining({ title: 'First touch within the hour', draftBody: 'Hi Priya, could we talk today?' })
     );
     expect(sendEvent).not.toHaveBeenCalled();
-    expect(result).toEqual({ sequence: false });
+    expect(result).toEqual({ written: true });
   });
 
-  it('starts the follow-up sequence for a lead with an email', async () => {
-    const { step, sendEvent } = fakeStep();
+  it('never sends sales/sequence.start — a lead no longer enrols itself, for a normal lead or a test-tagged one', async () => {
+    const overridesList: Partial<LeadRow>[] = [{}, { tags: ['test'] }, { email: null }];
+    for (const overrides of overridesList) {
+      mocks.loadLead.mockResolvedValue(leadRow(overrides));
+      const { step, sendEvent } = fakeStep();
 
-    const result = await registered('sales-lead-created').handler({ event: { data: { leadId: 'lead_1' } }, step });
+      await registered('sales-lead-created').handler({ event: { data: { leadId: 'lead_1' } }, step });
 
-    expect(sendEvent).toHaveBeenCalledWith('start-sequence', { name: 'sales/sequence.start', data: { leadId: 'lead_1' } });
-    expect(result).toEqual({ sequence: true });
+      expect(sendEvent).not.toHaveBeenCalled();
+    }
   });
 
   it('keeps the brief and draft out of step results', async () => {
@@ -118,6 +139,73 @@ describe('sales-lead-created', () => {
     ).rejects.toThrow('task insert failed');
 
     expect(mocks.recordActivity).not.toHaveBeenCalled();
+  });
+});
+
+describe('sales-sequence', () => {
+  it('is registered as sales-sequence, cancelled on sales/sequence.stop matching data.leadId', () => {
+    expect(registered('sales-sequence').config).toMatchObject({
+      id: 'sales-sequence',
+      cancelOn: [{ event: 'sales/sequence.stop', match: 'data.leadId' }],
+    });
+  });
+
+  it.each(Object.keys(SEQUENCES))('runs the %s steps, in order, and passes the key to markSequenceActive', async (key) => {
+    const { step } = fakeStep();
+    const seen: SequenceStep[] = [];
+    mocks.runSequenceStep.mockImplementation(async (_leadId, sequenceStep) => {
+      seen.push(sequenceStep);
+      return { done: true };
+    });
+
+    const result = await registered('sales-sequence').handler({ event: { data: { leadId: 'lead_1', sequenceKey: key } }, step });
+
+    expect(mocks.markSequenceActive).toHaveBeenCalledWith('lead_1', key);
+    expect(seen).toEqual([...SEQUENCES[key]]);
+    expect(mocks.markSequenceCompleted).toHaveBeenCalledWith('lead_1');
+    expect(result).toEqual({ completed: true });
+  });
+
+  it('stops cleanly on an unknown key: no enrolment, no step run, and no throw', async () => {
+    const { step } = fakeStep();
+
+    const result = await registered('sales-sequence').handler({
+      event: { data: { leadId: 'lead_1', sequenceKey: 'not-a-real-key' } },
+      step,
+    });
+
+    expect(mocks.markSequenceActive).not.toHaveBeenCalled();
+    expect(mocks.runSequenceStep).not.toHaveBeenCalled();
+    expect(mocks.evaluateContinue).not.toHaveBeenCalled();
+    expect(result).toEqual({ skipped: 'unknown_sequence' });
+  });
+
+  it('does not enrol twice: when markSequenceActive returns false, it runs no steps', async () => {
+    mocks.markSequenceActive.mockResolvedValueOnce(false);
+    const { step } = fakeStep();
+
+    const result = await registered('sales-sequence').handler({
+      event: { data: { leadId: 'lead_1', sequenceKey: 'enquiry-v1' } },
+      step,
+    });
+
+    expect(mocks.runSequenceStep).not.toHaveBeenCalled();
+    expect(result).toEqual({ skipped: 'already_enrolled' });
+  });
+
+  it('stops at the step where evaluateContinue refuses, without completing', async () => {
+    mocks.evaluateContinue
+      .mockResolvedValueOnce({ ok: true })
+      .mockResolvedValueOnce({ ok: false, reason: 'booked' });
+    const { step } = fakeStep();
+
+    const result = await registered('sales-sequence').handler({
+      event: { data: { leadId: 'lead_1', sequenceKey: 'enquiry-v1' } },
+      step,
+    });
+
+    expect(result).toEqual({ stopped: 'booked', atStep: 1 });
+    expect(mocks.markSequenceCompleted).not.toHaveBeenCalled();
   });
 });
 

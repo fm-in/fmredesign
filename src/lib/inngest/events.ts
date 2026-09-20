@@ -114,6 +114,7 @@ export interface SalesLeadEventData {
 
 export interface SalesSequenceStartData {
   leadId: string;
+  sequenceKey: string;
 }
 
 export interface SalesSequenceStopData {
@@ -131,6 +132,10 @@ export interface SalesMetaLeadgenData {
 export interface SalesMeetingEventData {
   meetingId: string;
   leadId: string;
+}
+
+export interface AcademyCheckoutStartedData {
+  enrollmentId: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -155,4 +160,5 @@ export type InngestEvents = {
   'sales/meta.leadgen': { data: SalesMetaLeadgenData };
   'sales/meeting.booked': { data: SalesMeetingEventData };
   'sales/meeting.cancelled': { data: SalesMeetingEventData };
+  'academy/checkout.started': { data: AcademyCheckoutStartedData };
 };

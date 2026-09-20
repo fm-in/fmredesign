@@ -17,3 +17,15 @@ export function escapeSearchTerm(raw: string): string {
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+/**
+ * `value` as a LIKE/ILIKE pattern that matches only itself: the wildcards `%`
+ * and `_` and the escape character `\` are escaped. Use it for an exact,
+ * case-insensitive match such as `.ilike('email', likeLiteral(address))`.
+ * PostgREST also reads `*` as `%` and offers no escape for it, so an address
+ * containing `*` can match a little more than itself; that only ever widens a
+ * do-not-contact match, never narrows it.
+ */
+export function likeLiteral(value: string): string {
+  return value.replace(/[\\%_]/g, (char) => `\\${char}`);
+}

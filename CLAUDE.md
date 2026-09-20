@@ -10,7 +10,10 @@ FreakingMinds is a digital marketing agency platform built with Next.js 15 and T
 - **Blog** — Supabase-backed CMS. Admin editor (TipTap) at `/admin/blog`, public pages read
   `blog_posts_public` via `src/lib/blog-data-public.ts`. The old hardcoded `blog-data.ts` is gone.
 - **FM Academy** — Public course listing + detail (`/academy`), paid enrollment via Razorpay.
-  Tables: `programs`, `enrollments`, `payment_events`; public view `programs_public`.
+  Tables: `programs`, `enrollments`, `payment_events`; public view `programs_public`. Direct payment
+  only — no manual payment links anywhere. A seat counts only once payment succeeds; an unpaid
+  checkout stays `reserved` (shown as "Payment pending") and never auto-cancels, and gets one
+  reminder email an hour after checkout started (Inngest `academy-checkout-reminder`).
 
 ## Tech Stack
 
@@ -246,7 +249,9 @@ Async APIs (`social/publish`, `content/generate`) return `{ status: 'queued' }` 
 
 ## Sales Automation
 
-Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`. Setup: `docs/SALES-SETUP.md`.
+Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`, amended by
+`docs/superpowers/specs/2026-09-16-manual-start-and-sequences-design.md`. Setup:
+`docs/SALES-SETUP.md`.
 
 - Apply `migrations/2026-09-15-sales-foundation.sql` before deploying
 - **Leads enter only through `ingestLead()`** (`src/lib/sales/intake/ingest.ts`). It normalises,
@@ -256,12 +261,30 @@ Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`. Setup: `doc
   sales columns.
 - **Stage changes go only through `changeStage()`** (`src/lib/sales/activity.ts`) so history,
   sequence stopping and `lead.status_changed` cannot be skipped.
+- **No automatic enrolment.** `salesLeadCreatedFn` only assigns an owner, writes the AI brief
+  and creates the first-touch task — it never starts a sequence. A person starts one via
+  `POST /api/admin/sales/leads/[id]/sequence` with `{ action: 'start', sequenceKey }`, which
+  is what sends `sales/sequence.start`.
+- **`src/lib/sales/sequence.ts`** is the single source of truth for the four sets: `SEQUENCES`
+  (keyed `brief-v1`, `enquiry-v1`, `ad-lead-v1`, `scorecard-v1`) and `getSequence(key)`.
+  `recommendSequence(lead)` maps a lead's source (and, for `website_form`, its form name) to
+  the recommended key, or `null`. `sequenceStartState(lead, check)` is the one place the seven
+  reasons Start can be refused live, checked in order: no email address, an ad-platform test
+  lead (tagged `test`), a lead that booked a call directly (`cal_booking`), the do-not-contact
+  list, no consent, a sequence already run, automation off. The start route and the lead
+  detail payload both call it, so the panel can never offer a button the route then rejects.
 - **Sales email goes only through `sendSalesEmail()`**: it checks consent, the do-not-contact
-  list and configuration at send time. Resend is never used for cold email.
+  list and configuration at send time. Resend is never used for cold email. Every sales email
+  renders through `renderShell()` in `src/lib/sales/email-shell.ts` (branded header/footer,
+  plain-text alternative kept).
 - **Webhooks** live at `/api/webhooks/sales/[source]` with one adapter per source in
   `src/lib/sales/intake/adapters/`. Verify first, log with the delivery id, then handle.
   Throw `WebhookRejection` for payloads that will never succeed (400, no retry).
-- Nothing is sent to a lead unless `admin_settings.sales.automationEnabled` is true.
+- No sales email is sent to a lead unless `admin_settings.sales.automationEnabled` is true.
+- **Confirmation receipts** (contact and get-started forms) go only through
+  `sendTransactionalEmail()` (`src/lib/sales/transactional-email.ts`, copy in `receipts.ts`),
+  scheduled with `afterResponse()` so they never delay or fail the form. They are not
+  sequences, bypass `automationEnabled`, and carry no unsubscribe link.
 - Admin sales routes use `sales.read` / `sales.write`; managers see their own and unassigned
   leads (`canAccessLead`).
 - Tables: `lead_activities`, `sales_tasks`, `meetings`, `suppression_list` (+ sales columns on

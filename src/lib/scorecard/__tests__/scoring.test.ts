@@ -179,3 +179,18 @@ describe('isComplete', () => {
     expect(isComplete(missingOne)).toBe(false);
   });
 });
+
+describe('RECOMMENDATIONS wording', () => {
+  const texts = Object.entries(RECOMMENDATIONS).flatMap(([dimension, byBand]) =>
+    Object.entries(byBand).map(([band, text]) => [`${dimension}.${band}`, text] as const)
+  );
+
+  it('covers every dimension at every band', () => {
+    expect(texts).toHaveLength(24);
+  });
+
+  // The same advice is quoted in the scorecard_fix email, where "this page" means nothing.
+  it.each(texts)('%s reads correctly outside the results page', (_key, text) => {
+    expect(text).not.toMatch(/this page/i);
+  });
+});

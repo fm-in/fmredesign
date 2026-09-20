@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { fake, payloadOf } from '@/test-utils/fake-supabase';
 import { leadRow } from '@/test-utils/lead-row';
@@ -106,6 +106,120 @@ describe('/api/admin/sales/leads/[id]', () => {
     expect(json.data.lead.phoneE164).toBe('+919833257659');
     expect(json.data.activities[0]).toMatchObject({ leadId: 'lead_1', occurredAt: '2026-09-15T04:00:00.000Z' });
     expect(json.data.activities[0].metadata).toEqual({ customFields: { team_size: '10' }, source_detail: 'Get started' });
+  });
+
+  it('includes the recommended sequence and start state when it can start', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') {
+        return { data: leadRow({ owner_id: null, source: 'website_form', custom_fields: { formName: 'Get started' } }), error: null };
+      }
+      if (call.table === 'admin_settings') return { data: { sales: { automationEnabled: true } }, error: null };
+      if (call.table === 'suppression_list') return { data: [], error: null };
+      if (call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context);
+    const json = await res.json();
+    expect(json.data.sequences).toEqual({
+      recommended: 'brief-v1',
+      canStart: true,
+      blockedReason: null,
+      starting: false,
+      lastStartFailed: false,
+    });
+  });
+
+  describe('start in flight or failed', () => {
+    const NOW = new Date('2026-09-17T06:00:00.000Z');
+    const minutesAgo = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(NOW);
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function respondWithActivities(sequenceStatus: 'active' | null, activities: Array<{ type: string; occurred_at: string }>) {
+      fake.respond((call) => {
+        if (call.table === 'leads' && call.op === 'select') {
+          return { data: leadRow({ owner_id: null, sequence_status: sequenceStatus, sequence_key: sequenceStatus ? 'enquiry-v1' : null }), error: null };
+        }
+        if (call.table === 'lead_activities') {
+          return { data: activities.map((a, i) => ({ id: `act_${i}`, lead_id: 'lead_1', metadata: {}, ...a })), error: null };
+        }
+        if (call.table === 'admin_settings') return { data: { sales: { automationEnabled: true } }, error: null };
+        if (call.op === 'select') return { data: [], error: null };
+        return { data: null, error: null };
+      });
+    }
+
+    async function sequencesPayload() {
+      const json = await (await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context)).json();
+      return json.data.sequences as { starting: boolean; lastStartFailed: boolean; canStart: boolean };
+    }
+
+    it('is starting inside the window when nothing has enrolled yet', async () => {
+      respondWithActivities(null, [{ type: 'sequence_started', occurred_at: minutesAgo(3) }]);
+      expect(await sequencesPayload()).toMatchObject({ starting: true, lastStartFailed: false });
+    });
+
+    it('uses the newest sequence_started even when a later activity landed on top of it', async () => {
+      respondWithActivities(null, [
+        { type: 'note', occurred_at: minutesAgo(1) },
+        { type: 'sequence_started', occurred_at: minutesAgo(4) },
+      ]);
+      expect(await sequencesPayload()).toMatchObject({ starting: true, lastStartFailed: false });
+    });
+
+    it('stops reporting starting once the window passes, and reports the start as failed', async () => {
+      respondWithActivities(null, [{ type: 'sequence_started', occurred_at: minutesAgo(11) }]);
+      expect(await sequencesPayload()).toMatchObject({ starting: false, lastStartFailed: true, canStart: true });
+    });
+
+    it('moves from starting to failed as the clock passes ten minutes', async () => {
+      respondWithActivities(null, [{ type: 'sequence_started', occurred_at: NOW.toISOString() }]);
+      vi.setSystemTime(new Date(NOW.getTime() + 9 * 60_000));
+      expect(await sequencesPayload()).toMatchObject({ starting: true, lastStartFailed: false });
+      vi.setSystemTime(new Date(NOW.getTime() + 10 * 60_000));
+      expect(await sequencesPayload()).toMatchObject({ starting: false, lastStartFailed: true });
+    });
+
+    it('is neither starting nor failed once the sequence has enrolled', async () => {
+      respondWithActivities('active', [{ type: 'sequence_started', occurred_at: minutesAgo(3) }]);
+      expect(await sequencesPayload()).toMatchObject({ starting: false, lastStartFailed: false });
+
+      respondWithActivities('active', [{ type: 'sequence_started', occurred_at: minutesAgo(30) }]);
+      expect(await sequencesPayload()).toMatchObject({ starting: false, lastStartFailed: false });
+    });
+
+    it('is neither starting nor failed when no start was ever recorded', async () => {
+      respondWithActivities(null, [{ type: 'note', occurred_at: minutesAgo(1) }]);
+      expect(await sequencesPayload()).toMatchObject({ starting: false, lastStartFailed: false });
+    });
+
+    it('carries the sequence key on the lead', async () => {
+      respondWithActivities('active', []);
+      const json = await (await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context)).json();
+      expect(json.data.lead.sequenceKey).toBe('enquiry-v1');
+    });
+  });
+
+  it('reports the blocked reason in the sequences payload when automation is off', async () => {
+    fake.respond((call) => {
+      if (call.table === 'leads' && call.op === 'select') return { data: leadRow({ owner_id: null }), error: null };
+      if (call.table === 'admin_settings') return { data: { sales: { automationEnabled: false } }, error: null };
+      if (call.table === 'suppression_list') return { data: [], error: null };
+      if (call.op === 'select') return { data: [], error: null };
+      return { data: null, error: null };
+    });
+
+    const res = await GET(new NextRequest('http://localhost/api/admin/sales/leads/lead_1'), context);
+    const json = await res.json();
+    expect(json.data.sequences.canStart).toBe(false);
+    expect(json.data.sequences.blockedReason).toMatch(/automation is switched off/i);
   });
 
   it('refuses to mark a lead lost without a reason', async () => {

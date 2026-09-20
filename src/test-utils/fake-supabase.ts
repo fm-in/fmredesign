@@ -20,6 +20,8 @@ export interface FakeCall {
   payload: unknown;
   filters: Array<{ method: string; args: unknown[] }>;
   single: boolean;
+  /** The column list given to `.select('a, b')`, when one was — so a responder can return only those columns. */
+  columns?: string;
 }
 
 export interface FakeResult {
@@ -39,7 +41,8 @@ class FakeQuery implements PromiseLike<FakeResult> {
     this.call = { table, op: 'select', payload: undefined, filters: [], single: false };
   }
 
-  select(..._args: unknown[]): this {
+  select(...args: unknown[]): this {
+    if (typeof args[0] === 'string' && this.call.op === 'select') this.call.columns = args[0];
     return this;
   }
   insert(payload: unknown, ..._args: unknown[]): this {
@@ -139,4 +142,39 @@ export function payloadOf(call: FakeCall): Record<string, unknown> {
   return typeof payload === 'object' && payload !== null && !Array.isArray(payload)
     ? Object.fromEntries(Object.entries(payload))
     : {};
+}
+
+/** `row` limited to the columns a call selected, as PostgREST returns it (the whole row for `*` or no list). */
+export function selectedColumns(call: FakeCall, row: Record<string, unknown>): Record<string, unknown> {
+  const columns = call.columns?.split(',').map((column) => column.trim()).filter(Boolean);
+  if (!columns || columns.includes('*')) return row;
+  return Object.fromEntries(columns.filter((column) => column in row).map((column) => [column, row[column]]));
+}
+
+/** Value passed to the first `.ilike(column, pattern)` on a call. */
+export function ilikeValue(call: FakeCall, column: string): unknown {
+  return call.filters.find((f) => f.method === 'ilike' && f.args[0] === column)?.args[1];
+}
+
+/**
+ * Whether `value` matches `pattern` the way PostgREST's `ilike` does: case-
+ * insensitive Postgres LIKE (`%` any run, `_` one character, `\` escapes the
+ * next character) with PostgREST's `*` also meaning `%`.
+ */
+export function likeMatches(pattern: string, value: string): boolean {
+  let source = '';
+  for (let i = 0; i < pattern.length; i += 1) {
+    const char = pattern[i] ?? '';
+    if (char === '\\' && i + 1 < pattern.length) {
+      i += 1;
+      source += (pattern[i] ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    } else if (char === '%' || char === '*') {
+      source += '[\\s\\S]*';
+    } else if (char === '_') {
+      source += '[\\s\\S]';
+    } else {
+      source += char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+  }
+  return new RegExp(`^${source}$`, 'i').test(value);
 }

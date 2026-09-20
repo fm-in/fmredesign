@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { escapeSearchTerm, MAX_SEARCH_LENGTH } from '../postgrest';
+import { escapeSearchTerm, likeLiteral, MAX_SEARCH_LENGTH } from '../postgrest';
 
 describe('escapeSearchTerm', () => {
   it('leaves ordinary terms alone', () => {
@@ -18,5 +18,17 @@ describe('escapeSearchTerm', () => {
   it('caps length and trims', () => {
     expect(escapeSearchTerm('x'.repeat(500))).toHaveLength(MAX_SEARCH_LENGTH);
     expect(escapeSearchTerm('   ')).toBe('');
+  });
+});
+
+describe('likeLiteral', () => {
+  it('escapes the LIKE wildcards and the escape character, so the pattern matches only the value', () => {
+    expect(likeLiteral('priya_shah@example.com')).toBe('priya\\_shah@example.com');
+    expect(likeLiteral('100%real@example.com')).toBe('100\\%real@example.com');
+    expect(likeLiteral('back\\slash@example.com')).toBe('back\\\\slash@example.com');
+  });
+
+  it('leaves every other character alone', () => {
+    expect(likeLiteral('Priya.Shah+leads@mehta-foods.co.in')).toBe('Priya.Shah+leads@mehta-foods.co.in');
   });
 });

@@ -19,7 +19,7 @@ import { fetchMetaLead, mapMetaLead } from '@/lib/sales/intake/meta-graph';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
 import { createPostMeetingTask, loadMeeting, sendMeetingBrief } from '@/lib/sales/meetings';
 import { nextSendTime } from '@/lib/sales/send-window';
-import { INBOUND_V1, INBOUND_V1_KEY } from '@/lib/sales/sequence';
+import { getSequence } from '@/lib/sales/sequence';
 import {
   evaluateContinue,
   markSequenceActive,
@@ -30,7 +30,6 @@ import {
 import { createTask, hasOpenTask } from '@/lib/sales/tasks';
 
 const FIRST_TOUCH_TITLE = 'First touch within the hour';
-const TEST_LEAD_TAG = 'test';
 const UNIQUE_VIOLATION = '23505';
 
 export const salesLeadCreatedFn = inngest.createFunction(
@@ -67,36 +66,31 @@ export const salesLeadCreatedFn = inngest.createFunction(
     });
     if (!brief.written) return { skipped: 'lead_missing' };
 
-    const startSequence = await step.run('check-sequence', async () => {
-      const lead = await loadLead(leadId);
-      if (!lead) return false;
-      // Bookings already have a confirmation from Cal.com; they get no sequence.
-      // A lead tagged `test` (end-to-end setup checks) is never emailed.
-      const isTestLead = (lead.tags ?? []).includes(TEST_LEAD_TAG);
-      return Boolean(lead.email) && lead.source !== 'cal_booking' && !isTestLead;
-    });
-
-    if (startSequence) {
-      await step.sendEvent('start-sequence', { name: 'sales/sequence.start', data: { leadId } });
-    }
-    return { sequence: startSequence };
+    // No automatic enrolment: nothing is emailed until a person starts a
+    // sequence from the lead page (POST .../sequence with { action: 'start' }).
+    return { written: true };
   }
 );
 
-export const salesSequenceInboundFn = inngest.createFunction(
+export const salesSequenceFn = inngest.createFunction(
   {
-    id: 'sales-sequence-inbound-v1',
+    id: 'sales-sequence',
     retries: 3,
     cancelOn: [{ event: 'sales/sequence.stop', match: 'data.leadId' }],
   },
   { event: 'sales/sequence.start' },
   async ({ event, step }) => {
-    const { leadId } = event.data;
+    const { leadId, sequenceKey } = event.data;
 
-    const enrolled = await step.run('enrol', () => markSequenceActive(leadId, INBOUND_V1_KEY));
+    // An unknown key can never become valid on retry, so this stops without
+    // throwing rather than failing the run.
+    const steps = getSequence(sequenceKey);
+    if (!steps) return { skipped: 'unknown_sequence' };
+
+    const enrolled = await step.run('enrol', () => markSequenceActive(leadId, sequenceKey));
     if (!enrolled) return { skipped: 'already_enrolled' };
 
-    for (const [index, sequenceStep] of INBOUND_V1.entries()) {
+    for (const [index, sequenceStep] of steps.entries()) {
       if (sequenceStep.waitBefore !== '0s') {
         await step.sleep(`wait-${index}`, sequenceStep.waitBefore);
       }

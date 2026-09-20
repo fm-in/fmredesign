@@ -1,7 +1,7 @@
 /** Sales settings live in `admin_settings.sales` (row id "global"). */
 
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { DEFAULT_BOOKING_LINK } from '@/lib/sales/links';
+import { DEFAULT_BOOKING_LINK, DEFAULT_BOOKING_LINK_LONG } from '@/lib/sales/links';
 import type { SalesSettings } from '@/lib/sales/types';
 
 const SETTINGS_ID = 'global';
@@ -9,6 +9,7 @@ const SETTINGS_ID = 'global';
 export const DEFAULT_SALES_SETTINGS: SalesSettings = {
   automationEnabled: false,
   bookingLink: DEFAULT_BOOKING_LINK,
+  bookingLinkLong: DEFAULT_BOOKING_LINK_LONG,
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -19,9 +20,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export function parseSalesSettings(raw: unknown): SalesSettings {
   if (!isRecord(raw)) return { ...DEFAULT_SALES_SETTINGS };
   const bookingLink = typeof raw.bookingLink === 'string' ? raw.bookingLink.trim() : '';
+  const bookingLinkLong = typeof raw.bookingLinkLong === 'string' ? raw.bookingLinkLong.trim() : '';
   return {
     automationEnabled: raw.automationEnabled === true,
     bookingLink: bookingLink || DEFAULT_SALES_SETTINGS.bookingLink,
+    bookingLinkLong: bookingLinkLong || DEFAULT_SALES_SETTINGS.bookingLinkLong,
   };
 }
 

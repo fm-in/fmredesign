@@ -10,6 +10,9 @@ import { toCamelCaseKeys } from '@/lib/supabase-utils';
 import { canAccessLead, canAssignOwner, isSalesAdmin } from '@/lib/sales/access';
 import { changeStage, recordActivity } from '@/lib/sales/activity';
 import { loadLead, loadOwner } from '@/lib/sales/lead-store';
+import { recommendSequence, sequenceStartAttempt, sequenceStartState } from '@/lib/sales/sequence';
+import { getSalesSettings } from '@/lib/sales/settings';
+import type { SequenceStartInfo } from '@/lib/sales/api-types';
 import type { LeadRow } from '@/lib/sales/types';
 import { firstIssue, leadPatchSchema } from '@/lib/sales/schemas';
 import { isSuppressed } from '@/lib/sales/suppression';
@@ -17,6 +20,15 @@ import { isSuppressed } from '@/lib/sales/suppression';
 export const dynamic = 'force-dynamic';
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+/** `occurred_at` of the newest `sequence_started` in a newest-first activity list, or null. */
+function latestSequenceStartAt(activities: readonly unknown[]): string | null {
+  for (const row of activities) {
+    if (typeof row !== 'object' || row === null || !('type' in row) || row.type !== 'sequence_started') continue;
+    return 'occurred_at' in row && typeof row.occurred_at === 'string' ? row.occurred_at : null;
+  }
+  return null;
+}
 
 /**
  * camelCase for the API, except form answers and activity metadata: their keys are
@@ -36,13 +48,25 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
     if (!lead || !canAccessLead(auth.user, lead)) return ApiResponse.notFound('Lead not found');
 
     const supabase = getSupabaseAdmin();
-    const [activities, tasks, meetings, owners, suppressed] = await Promise.all([
+    const [activities, tasks, meetings, owners, suppressed, settings] = await Promise.all([
       supabase.from('lead_activities').select('*').eq('lead_id', id).order('occurred_at', { ascending: false }).limit(200),
       supabase.from('sales_tasks').select('*').eq('lead_id', id).order('due_at', { ascending: true }),
       supabase.from('meetings').select('*').eq('lead_id', id).order('starts_at', { ascending: false }),
       supabase.from('authorized_users').select('id, name').eq('status', 'active').order('name', { ascending: true }),
       isSuppressed({ email: lead.email, phoneE164: lead.phone_e164 }),
+      getSalesSettings(),
     ]);
+
+    // Reuses the same refusal and in-flight logic the start route enforces, so
+    // the panel never offers a set the endpoint would then refuse. The activity
+    // list is newest first, so a start inside the in-flight window is always in it.
+    const attempt = sequenceStartAttempt(lead, latestSequenceStartAt(activities.data ?? []));
+    const sequences: SequenceStartInfo = {
+      recommended: recommendSequence(lead),
+      ...sequenceStartState(lead, { suppressed, automationEnabled: settings.automationEnabled }),
+      starting: attempt.inFlight,
+      lastStartFailed: attempt.lastStartFailed,
+    };
 
     return ApiResponse.success({
       lead: leadPayload(lead),
@@ -51,6 +75,7 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
       meetings: (meetings.data ?? []).map((row: Record<string, unknown>) => toCamelCaseKeys(row)),
       owners: (owners.data ?? []).map((row: { id: string; name: string }) => ({ id: row.id, name: row.name })),
       suppressed,
+      sequences,
       permissions: { canAssign: isSalesAdmin(auth.user), userId: auth.user.id },
     });
   } catch (error) {

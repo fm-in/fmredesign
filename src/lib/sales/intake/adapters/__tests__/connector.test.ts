@@ -35,6 +35,19 @@ describe('mapConnectorLead', () => {
     expect(connectorAdapter.describe({ platform: 'LinkedIn', externalId: 'abc' }).externalId).toBe('linkedin:abc');
   });
 
+  it('stores the posted campaign under custom_fields.connectorCampaign', () => {
+    const lead = mapConnectorLead({ platform: 'quora', email: 'p@x.com', campaign: '  Growth   audit ' });
+    expect(lead.customFields).toEqual({ platform: 'quora', connectorCampaign: 'Growth audit' });
+  });
+
+  it('always sets connectorCampaign, as null when no campaign was posted, so a merge can never fill it', () => {
+    expect(mapConnectorLead({ platform: 'quora', email: 'p@x.com' }).customFields).toEqual({ platform: 'quora', connectorCampaign: null });
+    expect(mapConnectorLead({ platform: 'quora', email: 'p@x.com', campaign: '   ' }).customFields).toEqual({
+      platform: 'quora',
+      connectorCampaign: null,
+    });
+  });
+
   it('rejects a payload without a platform', () => {
     expect(() => mapConnectorLead({ email: 'p@x.com' })).toThrow(WebhookRejection);
   });

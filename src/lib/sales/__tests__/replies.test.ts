@@ -75,7 +75,7 @@ describe('email.received', () => {
 
   it('records the reply, stops the sequence, forwards to the owner and notifies them', async () => {
     respond({ leadFound: true });
-    await handleResendEvent(received('Re: Got your message, Priya'));
+    await handleResendEvent(received('Re: A quick call about your enquiry, Priya'));
 
     const activity = fake.callsTo('lead_activities', 'insert').map(payloadOf).find((p) => p.type === 'email_received');
     expect(activity).toMatchObject({ direction: 'in', body: 'Yes, Tuesday works for a call.' });
@@ -105,7 +105,7 @@ describe('email.received', () => {
     respond({ leadFound: true });
     mocks.forward.mockResolvedValueOnce({ data: null, error: { message: 'boom' } });
 
-    await expect(handleResendEvent(received('Re: Got your message, Priya'))).resolves.toBeUndefined();
+    await expect(handleResendEvent(received('Re: A quick call about your enquiry, Priya'))).resolves.toBeUndefined();
 
     const activity = fake.callsTo('lead_activities', 'insert').map(payloadOf).find((p) => p.type === 'email_received');
     expect(activity).toMatchObject({ direction: 'in' });
@@ -121,7 +121,7 @@ describe('email.bounced', () => {
     await handleResendEvent({
       type: 'email.bounced',
       created_at: '2026-09-15T06:00:00.000Z',
-      data: { email_id: 'em_2', to: ['priya@example.com'], subject: 'Got your message, Priya' },
+      data: { email_id: 'em_2', to: ['priya@example.com'], subject: 'A quick call about your enquiry, Priya' },
     });
 
     expect(fake.callsTo('suppression_list', 'insert').map(payloadOf)[0]).toMatchObject({ reason: 'bounced' });
@@ -147,7 +147,7 @@ describe('email.bounced', () => {
     const event = {
       type: 'email.bounced',
       created_at: '2026-09-15T06:00:00.000Z',
-      data: { email_id: 'em_2', to: ['priya@example.com'], subject: 'Got your message, Priya' },
+      data: { email_id: 'em_2', to: ['priya@example.com'], subject: 'A quick call about your enquiry, Priya' },
     };
 
     await handleResendEvent(event);
@@ -163,7 +163,7 @@ describe('email.complained', () => {
     await handleResendEvent({
       type: 'email.complained',
       created_at: '2026-09-15T06:00:00.000Z',
-      data: { email_id: 'em_3', to: ['priya@example.com'], subject: 'Got your message, Priya' },
+      data: { email_id: 'em_3', to: ['priya@example.com'], subject: 'A quick call about your enquiry, Priya' },
     });
 
     expect(fake.callsTo('suppression_list', 'insert').map(payloadOf)[0]).toMatchObject({ reason: 'complaint' });

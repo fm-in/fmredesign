@@ -23,6 +23,9 @@ import { generateSalesId } from '@/lib/sales/types';
 import { IntakeError } from '@/lib/sales/errors';
 import { ApiResponse } from '@/lib/api-response';
 import { canAccessLead } from '@/lib/sales/access';
+import { sendEnquiryReceipt } from '@/lib/sales/receipts';
+import { afterResponse } from '@/lib/sales/transactional-email';
+import { safeErrorLog, safeErrorMessage } from '@/lib/safe-log';
 
 // GET /api/leads - Fetch leads with optional filtering and sorting
 export async function GET(request: NextRequest) {
@@ -196,7 +199,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseBody);
   } catch (error) {
-    console.error('Error fetching leads:', error);
+    // Never the raw error: PostgREST can echo a search term, Postgres can quote a row.
+    console.error('Error fetching leads:', safeErrorLog(error));
     return NextResponse.json(
       { success: false, error: 'Failed to fetch leads' },
       { status: 500 }
@@ -334,6 +338,9 @@ export async function POST(request: NextRequest) {
       });
       notifyTeam(emailData.subject, emailData.html);
 
+      // No lead_activities table before the migration, so no lead to note the receipt on.
+      if (fromPublicForm) afterResponse('enquiry receipt', () => sendEnquiryReceipt(body, null));
+
       return ApiResponse.success({ received: true }, undefined, 201);
     }
     const { leadId, created } = ingested;
@@ -341,6 +348,11 @@ export async function POST(request: NextRequest) {
     if (created) {
       await announceNewLead(leadId);
     }
+
+    // The person's own confirmation, on every accepted path. Transactional, so
+    // automationEnabled does not apply; sent after the response so it can never
+    // delay or change it. A lead typed in by staff (no consent text) gets none.
+    if (fromPublicForm) afterResponse('enquiry receipt', () => sendEnquiryReceipt(body, leadId));
 
     // Every outcome (created, merged into an existing lead, or saved via the
     // pre-migration fallback above) answers the same generic body: a public form
@@ -350,7 +362,9 @@ export async function POST(request: NextRequest) {
     if (error instanceof IntakeError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
-    console.error('Error creating lead:', error);
+    // Covers intake, merge and pre-migration fallback failures. Never the raw error:
+    // a Postgres error's details quote the failing row (email, phone).
+    console.error('Error creating lead:', safeErrorLog(error));
     return NextResponse.json({ success: false, error: 'Failed to create lead' }, { status: 500 });
   }
 }
@@ -391,7 +405,7 @@ async function saveBeforeMigration(record: Record<string, unknown>, meta: Captur
 async function announceNewLead(leadId: string): Promise<void> {
   const { data: row, error } = await getSupabaseAdmin().from('leads').select('*').eq('id', leadId).single();
   if (error || !row) {
-    console.error('[leads] could not load the new lead to notify the team:', error?.message);
+    console.error('[leads] could not load the new lead to notify the team:', error ? safeErrorMessage(error) : 'no row');
     return;
   }
 
@@ -451,7 +465,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: 'Lead deleted' });
   } catch (error) {
-    console.error('Error deleting lead:', error);
+    console.error('Error deleting lead:', safeErrorLog(error));
     return NextResponse.json(
       { success: false, error: 'Failed to delete lead' },
       { status: 500 }
@@ -533,7 +547,7 @@ export async function PUT(request: NextRequest) {
       message: 'Lead updated successfully',
     });
   } catch (error) {
-    console.error('Error updating lead:', error);
+    console.error('Error updating lead:', safeErrorLog(error));
     return NextResponse.json(
       { success: false, error: 'Failed to update lead' },
       { status: 500 }

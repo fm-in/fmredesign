@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { adminToast } from '@/lib/admin/toast';
 import type { LeadStatus } from '@/lib/admin/lead-types';
-import type { LeadDetailPayload } from '@/lib/sales/api-types';
+import { SEQUENCE_LABELS, type LeadDetailPayload } from '@/lib/sales/api-types';
 
 async function send(url: string, method: 'POST' | 'PATCH', body: unknown): Promise<void> {
   const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -76,6 +76,11 @@ export function useLeadDetail(leadId: string) {
       run(() => send(base, 'PATCH', { ownerId }), ownerId ? 'Owner updated' : 'Lead released'),
     addNote: (body: string) => run(() => send(`${base}/notes`, 'POST', { body }), 'Note added'),
     stopSequence: () => run(() => send(`${base}/sequence`, 'POST', { action: 'stop' }), 'Follow-ups stopped'),
+    startSequence: (sequenceKey: string) =>
+      run(
+        () => send(`${base}/sequence`, 'POST', { action: 'start', sequenceKey }),
+        `Follow-ups started: ${SEQUENCE_LABELS[sequenceKey] ?? sequenceKey}`
+      ),
     completeTask: (taskId: string, status: 'done' | 'skipped') =>
       run(
         () => send(`/api/admin/sales/tasks/${encodeURIComponent(taskId)}`, 'PATCH', { status }),

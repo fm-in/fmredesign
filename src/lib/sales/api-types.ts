@@ -3,6 +3,14 @@
 import type { LeadPriority, LeadStatus } from '@/lib/admin/lead-types';
 import type { ActivityType, MeetingStatus, SequenceStatus, TaskStatus, TaskType } from '@/lib/sales/types';
 
+/** Human names for the follow-up sequence keys in `src/lib/sales/sequence.ts`'s SEQUENCES registry. */
+export const SEQUENCE_LABELS: Record<string, string> = {
+  'brief-v1': 'Project brief',
+  'enquiry-v1': 'Enquiry',
+  'ad-lead-v1': 'Ad lead',
+  'scorecard-v1': 'Scorecard',
+};
+
 export const STAGE_LABELS: Record<LeadStatus, string> = {
   new: 'New',
   contacted: 'Contacted',
@@ -38,6 +46,7 @@ export interface SalesLead {
   utmSource: string | null;
   utmMedium: string | null;
   utmCampaign: string | null;
+  sequenceKey: string | null;
   sequenceStatus: SequenceStatus | null;
   sequenceStopReason: string | null;
   firstResponseAt: string | null;
@@ -90,6 +99,16 @@ export interface OwnerOption {
   name: string;
 }
 
+export interface SequenceStartInfo {
+  recommended: string | null;
+  canStart: boolean;
+  blockedReason: string | null;
+  /** A start was recorded in the last ten minutes and the lead has not enrolled yet. */
+  starting: boolean;
+  /** A start was recorded, ten minutes have passed, and the lead never enrolled: Start may be retried. */
+  lastStartFailed: boolean;
+}
+
 export interface LeadDetailPayload {
   lead: SalesLead;
   activities: SalesActivity[];
@@ -97,6 +116,7 @@ export interface LeadDetailPayload {
   meetings: SalesMeeting[];
   owners: OwnerOption[];
   suppressed: boolean;
+  sequences: SequenceStartInfo;
   permissions: { canAssign: boolean; userId: string };
 }
 
