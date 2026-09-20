@@ -44,6 +44,10 @@ vi.mock('@/lib/sales/lead-store', () => ({ loadOwner: vi.fn().mockResolvedValue(
 
 import { handleWhatsAppEvents } from '../inbound';
 
+/** Wednesday 14:00 IST (open) and Sunday 03:00 IST (very much not). */
+const OPEN_HOURS = new Date('2026-09-23T08:30:00Z');
+const CLOSED_HOURS = new Date('2026-09-27T21:30:00Z');
+
 const LEAD = { id: 'lead_1', name: 'Priya Shah', phone_e164: '+919833257659', owner_id: null, status: 'new' };
 
 function message(text: string | undefined, id = 'wamid.IN') {
@@ -130,6 +134,29 @@ describe('an ordinary message from a known lead', () => {
     isSuppressed.mockResolvedValue(true);
     await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
     expect(sendWhatsAppText).not.toHaveBeenCalled();
+  });
+});
+
+describe('the automatic reply tells the truth about when we will answer', () => {
+  it('promises "shortly" during business hours', async () => {
+    vi.useFakeTimers().setSystemTime(OPEN_HOURS);
+    tables();
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+
+    expect(sendWhatsAppText.mock.calls[0][1]).toContain('shortly');
+    vi.useRealTimers();
+  });
+
+  it('does not promise "shortly" in the middle of the night', async () => {
+    // A promise that breaks by morning reads worse than an honest wait.
+    vi.useFakeTimers().setSystemTime(CLOSED_HOURS);
+    tables();
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+
+    const body = sendWhatsAppText.mock.calls[0][1] as string;
+    expect(body).not.toContain('shortly');
+    expect(body).toContain('offline');
+    vi.useRealTimers();
   });
 });
 

@@ -18,6 +18,7 @@ import { createTask, hasOpenTask } from '@/lib/sales/tasks';
 import type { LeadRow } from '@/lib/sales/types';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendWhatsAppText } from '@/lib/whatsapp/client';
+import { businessHours } from '@/lib/whatsapp/hours';
 import type { WhatsAppEvents, WhatsAppInboundMessage, WhatsAppStatusUpdate } from '@/lib/sales/intake/adapters/whatsapp';
 
 /**
@@ -34,10 +35,22 @@ const MAX_BODY = 4_000;
  * The automatic answer. Plain text, which is only legal because their message
  * just opened the 24-hour customer service window — no template, no approval,
  * no marketing category.
+ *
+ * What it promises depends on the clock. "Someone will reply shortly" at 03:00
+ * on a Sunday is a promise that breaks by morning, and a broken promise reads
+ * worse than an honest wait.
  */
-const AUTO_REPLY =
-  'Thanks for messaging Freaking Minds. We have this and someone from the team will reply shortly.\n\n' +
-  'If it helps, tell us what you are trying to move — a number, a launch, a problem you have been circling — and we will come back with something specific.';
+function autoReply(now: Date): string {
+  const { open, phrase } = businessHours(now);
+  const opening = open
+    ? `Thanks for messaging Freaking Minds. We have this and someone from the team will reply ${phrase}.`
+    : `Thanks for messaging Freaking Minds. We have this — the team is offline right now and will come back to you ${phrase}.`;
+
+  return (
+    `${opening}\n\n` +
+    'If it helps, tell us what you are trying to move — a number, a launch, a problem you have been circling — and we will come back with something specific.'
+  );
+}
 
 /** Auto-reply once per conversation, not once per message. */
 const AUTO_REPLY_QUIET_HOURS = 24;
@@ -178,14 +191,15 @@ async function maybeAutoReply(lead: LeadRow, phoneE164: string): Promise<void> {
   if (await repliedRecently(lead.id)) return;
   if (await isSuppressed({ phoneE164 }, 'whatsapp')) return;
 
-  const result = await sendWhatsAppText(phoneE164, AUTO_REPLY);
+  const message = autoReply(new Date());
+  const result = await sendWhatsAppText(phoneE164, message);
 
   await recordActivity({
     leadId: lead.id,
     type: result.ok ? 'message_sent' : 'message_failed',
     channel: 'whatsapp',
     direction: 'out',
-    body: result.ok ? AUTO_REPLY : null,
+    body: result.ok ? message : null,
     providerMessageId: result.wamid ?? null,
     metadata: result.ok ? { automatic: true } : { automatic: true, error: result.error },
   });
