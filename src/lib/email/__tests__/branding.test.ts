@@ -54,6 +54,40 @@ describe('the transactional email shell', () => {
     }
   });
 
+
+  it('paints all the chrome that sits on the client canvas', () => {
+    // Not what turned the mail black on a phone — that was a client
+    // rewriting the colours, and the mail renders white even with <html>,
+    // <head> and <body> stripped. This is the cheaper insurance: a client
+    // that does invert inverts an evenly-painted email evenly, rather than
+    // leaving patches. Cells inside the card sit on paint already.
+    for (const html of samples()) {
+      expect(html).toMatch(/<html\b[^>]*bgcolor=/);
+      expect(html).toMatch(/<body\b[^>]*bgcolor=/);
+
+      // The masthead, the card and the copyright line.
+      const columns = html.match(/<table\b[^>]*width="600"[^>]*>/g) ?? [];
+      expect(columns).toHaveLength(3);
+      for (const t of columns) expect(t).toMatch(/bgcolor=/);
+
+      // Both spellings everywhere: Outlook's Word engine reads the
+      // attribute, everything modern reads the CSS, and clients drop one or
+      // the other.
+      for (const t of columns) expect(t).toMatch(/background-color:#/);
+    }
+  });
+
+  it('asks for light only, in the spelling each mechanism actually takes', () => {
+    // `supported-color-schemes` takes scheme names; `only` is not one, and
+    // an unknown token there is how the directive silently stopped working.
+    for (const html of samples()) {
+      expect(html).toContain('<meta name="color-scheme" content="only light">');
+      expect(html).toContain('<meta name="supported-color-schemes" content="light">');
+      // Some clients keep <style> and drop the meta, so say it both ways.
+      expect(html).toMatch(/:root\{color-scheme:only light/);
+    }
+  });
+
   it('keeps the button fill at the accent that never lightens', () => {
     // --site-accent-solid. White on #c9325d is 5.12:1; the dark-mode text
     // accent would drop the CTA under AA.

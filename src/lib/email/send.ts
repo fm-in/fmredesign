@@ -1,5 +1,10 @@
 import { getResend } from './resend';
 import { SITE_URL } from '@/lib/site-url';
+import {
+  BRAND_MAGENTA, HEADING_COLOR, TEXT_COLOR, MUTED_COLOR, FAINT_COLOR,
+  LIGHT_BG, CARD_BG, PANEL_BG, BORDER_COLOR, HAIRLINE,
+  SERIF, SANS, COMPANY_ABOUT, LIGHT_ONLY_HEAD, LOGO_URL,
+} from './brand';
 
 const FROM = 'FreakingMinds <notifications@freakingminds.in>';
 const FALLBACK_EMAIL = 'freakingmindsdigital@gmail.com';
@@ -63,61 +68,6 @@ export { FROM };
 // Shared styles
 // ---------------------------------------------------------------------------
 
-/*
- * These mirror the public site's `--site-*` tokens (src/styles/site-tokens.css)
- * so an email reads as the same brand as the page it links into: warm-black
- * ink, one magenta, hairlines instead of shadows. The site's bone ground is
- * the one token deliberately not carried over — see LIGHT_BG below.
- *
- * Three things the site does that an inbox cannot, and what replaces them:
- *
- * 1. Webfonts. Instrument Serif and DM Sans are stripped by every major
- *    client, so headings take the site's own declared fallback (Georgia) and
- *    body takes a system sans. Georgia is the one serif installed
- *    everywhere, and it is genuinely close in colour to Instrument Serif.
- * 2. `rgba()` hairlines. Old Outlook drops alpha, so each line is the
- *    composite pre-computed against the surface it sits on —
- *    `--site-line` (14%) over the card is #dedcd9, `--site-line-soft` (7%)
- *    is #eeecea.
- * 3. CSS variables and filters. Everything below is a literal, inline.
- *
- * Body ink is one step off `--site-text` rather than exactly it. The site
- * sets body copy to full ink, but it does so in DM Sans, which is lighter in
- * colour than the system sans we fall back to here — at the same value a
- * 600px column would read heavier in an inbox than the page does. #2e2926
- * holds the site's *apparent* weight and still measures 13.7:1 on the card.
- */
-const BRAND_MAGENTA = '#c9325d'; // --site-accent-solid: the fill, which never lightens
-const HEADING_COLOR = '#13110f'; // --site-text
-const TEXT_COLOR = '#2e2926';
-const MUTED_COLOR = '#6b635c'; // --site-muted
-const FAINT_COLOR = '#9a938c'; // below AA on purpose — decorative lines only
-/*
- * White, not the site's bone ground.
- *
- * The site's paper works because the whole viewport is that colour. An email
- * is a 600px column inside the client's own white chrome, so the same bone
- * stops reading as warm paper and starts reading as a grey panel that does
- * not line up with anything around it. Structure comes from the hairlines
- * and the accent rule instead, and every surface is the same white — so
- * nothing needs to be aligned to anything.
- */
-const LIGHT_BG = '#ffffff';
-const CARD_BG = '#ffffff';
-const PANEL_BG = '#ffffff';
-const BORDER_COLOR = '#dedcd9'; // --site-line, composited
-const HAIRLINE = '#eeecea'; // --site-line-soft, composited
-const SERIF = "Georgia,'Times New Roman',Times,serif";
-const SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
-const LOGO_URL = `${SITE_URL}/logo.png`;
-
-/**
- * The same sentence as the WhatsApp Business profile's "about". A reader who
- * meets us in both places should meet the same description.
- */
-const COMPANY_ABOUT =
-  "The marketing and digital partner for brands that intend to grow. India, and worldwide.";
-
 /**
  * The shell every transactional email renders into.
  *
@@ -135,20 +85,36 @@ const COMPANY_ABOUT =
  *   corners or juts out of them. Square sidesteps it and reads more
  *   editorial anyway. A shadow under a white card on a white ground reads
  *   as dirt rather than depth, so the 1px hairline is the only edge.
- * - **`color-scheme: light only`.** Gmail and Outlook.com auto-invert an
- *   email they judge to be light-themed, which would leave every hairline
- *   invisible. This is the only reliable way to ask them not to.
+ * - **Forcing light.** This is what makes the mail go black on a phone, and
+ *   it is not transparency — `<body>` and the full-width wrapper have always
+ *   painted themselves, and the mail renders white even with `<html>`,
+ *   `<head>` and `<body>` stripped and the rest dropped into a dark page,
+ *   which is precisely what Gmail does to it. The black comes from a client
+ *   deciding to rewrite the colours.
+ *
+ *   `supported-color-schemes` takes scheme *names*. It had been given
+ *   `light only`, and `only` is not a scheme name, so the value was
+ *   malformed and the opt-out it was supposed to carry did nothing. It now
+ *   reads `light`, `color-scheme` uses the canonical `only light` order, and
+ *   the same instruction is repeated as a real CSS declaration on `:root`
+ *   because some clients keep `<style>` and drop the meta.
+ *
+ *   That covers Apple Mail. It does not cover the Gmail app or Outlook,
+ *   which invert regardless and offer no opt-out. The defence there is that
+ *   every element paints itself — `bgcolor` for Outlook's Word engine and
+ *   `background-color` for everything else — so a client that inverts
+ *   inverts the whole thing evenly instead of leaving it patchy.
  */
 function emailWrapper(title: string, body: string): string {
   return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only"></head>
+<html bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${LIGHT_ONLY_HEAD}</head>
 <body style="margin:0;padding:0;background-color:${LIGHT_BG};font-family:${SANS};-webkit-font-smoothing:antialiased" bgcolor="${LIGHT_BG}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:44px 16px">
-<tr><td align="center">
+<tr><td align="center" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG}">
 
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px">
-  <tr><td style="padding:0 0 18px 40px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="width:600px;max-width:600px;background-color:${LIGHT_BG}">
+  <tr><td bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:0 0 18px 40px">
     <a href="${SITE_URL}" style="text-decoration:none">
       <img src="${LOGO_URL}" alt="FreakingMinds" width="132" style="display:block;width:132px;max-width:132px;height:auto;border:0;outline:none" />
     </a>
@@ -159,15 +125,15 @@ function emailWrapper(title: string, body: string): string {
 
   <tr><td bgcolor="${BRAND_MAGENTA}" style="background-color:${BRAND_MAGENTA};height:3px;line-height:3px;font-size:0">&nbsp;</td></tr>
 
-  <tr><td style="padding:34px 40px 0">
+  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:34px 40px 0">
     <h1 style="margin:0;color:${HEADING_COLOR};font-family:${SERIF};font-size:27px;font-weight:400;line-height:1.2;letter-spacing:-0.01em">${title}</h1>
   </td></tr>
 
-  <tr><td style="padding:22px 40px 0">
+  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:22px 40px 0">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${HAIRLINE}" style="background-color:${HAIRLINE};height:1px;line-height:1px;font-size:0">&nbsp;</td></tr></table>
   </td></tr>
 
-  <tr><td style="padding:26px 40px 36px;font-family:${SANS};font-size:15px;line-height:1.6;color:${TEXT_COLOR}">
+  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:26px 40px 36px;font-family:${SANS};font-size:15px;line-height:1.6;color:${TEXT_COLOR}">
     ${body}
   </td></tr>
 
@@ -183,8 +149,8 @@ function emailWrapper(title: string, body: string): string {
 
 </table>
 
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px">
-  <tr><td align="center" style="padding:20px 0 0;color:${FAINT_COLOR};font-family:${SANS};font-size:11px;line-height:16px">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="width:600px;max-width:600px;background-color:${LIGHT_BG}">
+  <tr><td align="center" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:20px 0 0;color:${FAINT_COLOR};font-family:${SANS};font-size:11px;line-height:16px">
     &copy; ${new Date().getFullYear()} FreakingMinds Digital. All rights reserved.
   </td></tr>
 </table>
