@@ -26,6 +26,6 @@ describe('whatsappUrl', () => {
   });
 
   it('links to the company number', () => {
-    expect(companyWhatsappUrl('Hello')).toBe('https://wa.me/919833257659?text=Hello');
+    expect(companyWhatsappUrl('Hello')).toBe('https://wa.me/916268112515?text=Hello');
   });
 });

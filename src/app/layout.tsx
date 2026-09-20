@@ -10,6 +10,7 @@ import { AttributionCapture } from "@/components/AttributionCapture";
 import Script from "next/script";
 import { SITE_URL } from '@/lib/site-url';
 import { THEME_INIT_SCRIPT } from '@/components/site/theme';
+import { COMPANY_PHONE_E164 } from '@/lib/company';
 
 // Display font - elegant serif for headlines (authority & sophistication)
 const playfair = Playfair_Display({
@@ -164,7 +165,7 @@ export default function RootLayout({
         ],
         contactPoint: {
           '@type': 'ContactPoint',
-          telephone: '+91-9833257659',
+          telephone: COMPANY_PHONE_E164,
           contactType: 'customer service',
           email: 'freakingmindsdigital@gmail.com',
           areaServed: 'Worldwide',
@@ -177,7 +178,7 @@ export default function RootLayout({
         name: 'Freaking Minds',
         description: 'Full-service creative marketing agency. Strategy, design, and performance marketing that transforms ambitious brands into market leaders.',
         url: SITE_URL,
-        telephone: '+91-9833257659',
+        telephone: COMPANY_PHONE_E164,
         email: 'freakingmindsdigital@gmail.com',
         address: {
           '@type': 'PostalAddress',

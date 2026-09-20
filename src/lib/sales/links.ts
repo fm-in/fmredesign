@@ -3,7 +3,11 @@
  * the public booking button.
  */
 
-export const COMPANY_WHATSAPP_NUMBER = '919833257659';
+import { COMPANY_WHATSAPP_NUMBER } from '@/lib/company';
+
+/** Re-exported so existing importers keep working. */
+export { COMPANY_WHATSAPP_NUMBER };
+
 export const DEFAULT_BOOKING_LINK = 'fm-in/15min';
 export const DEFAULT_BOOKING_LINK_LONG = 'fm-in/30min';
 

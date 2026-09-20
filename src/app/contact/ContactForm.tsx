@@ -6,6 +6,7 @@ import { SERVICE_ENQUIRY_OPTIONS } from '@/lib/services-catalogue';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
 import { readFirstTouchSafely } from '@/lib/attribution';
+import { COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF } from '@/lib/company';
 
 /**
  * The contact enquiry form.
@@ -94,8 +95,8 @@ export function ContactForm() {
         </p>
         <p className="lede mt-4">
           Someone from the team will reply within 24 hours. If it is urgent, call{' '}
-          <a href="tel:+919833257659" style={{ color: 'var(--site-accent)' }}>
-            +91 98332 57659
+          <a href={COMPANY_PHONE_HREF} style={{ color: 'var(--site-accent)' }}>
+            {COMPANY_PHONE_DISPLAY}
           </a>
           .
         </p>

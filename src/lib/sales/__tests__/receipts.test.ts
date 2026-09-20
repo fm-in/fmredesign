@@ -18,7 +18,7 @@ vi.mock('@/lib/supabase', async () => {
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 
-const WHATSAPP_PREFIX = 'https://wa.me/919833257659?text=';
+const WHATSAPP_PREFIX = 'https://wa.me/916268112515?text=';
 
 /** A posted body as `POST /api/leads` hands it on: parsed by the route's own schema. */
 function accepted(body: unknown) {

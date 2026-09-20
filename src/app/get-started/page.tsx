@@ -30,6 +30,7 @@ import { DEFAULT_BOOKING_LINK } from '@/lib/sales/links';
 import { readFirstTouchSafely } from '@/lib/attribution';
 import type { LeadInput, ProjectType, BudgetRange, Timeline, CompanySize, Industry } from '@/lib/admin/lead-types';
 import { INDUSTRIES } from '@/lib/admin/lead-types';
+import { COMPANY_PHONE_DISPLAY, COMPANY_PHONE_HREF } from '@/lib/company';
 
 const PROJECT_TYPES: { value: ProjectType; label: string; description: string; icon: string }[] = [
   { value: 'website_design', label: 'Website Design', description: 'Custom website or redesign', icon: '🌐' },
@@ -849,8 +850,8 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
                   freakingmindsdigital@gmail.com
                 </a>{' '}
                 or call us at{' '}
-                <a href="tel:+919833257659" className="text-site-accent hover:underline font-medium">
-                  +91 98332 57659
+                <a href={COMPANY_PHONE_HREF} className="text-site-accent hover:underline font-medium">
+                  {COMPANY_PHONE_DISPLAY}
                 </a>
               </p>
             </div>

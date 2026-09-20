@@ -4,6 +4,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { Prose } from '@/components/site/Prose';
 import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
+import { COMPANY_PHONE_DISPLAY } from '@/lib/company';
 
 /**
  * Legal copy, carried over verbatim. The markup changed; not one word did.
@@ -172,7 +173,7 @@ export default function PrivacyPolicyPage() {
               <div>
                 <p>Freaking Minds</p>
                 <p>Email: freakingmindsdigital@gmail.com</p>
-                <p>Phone: +91 98332 57659</p>
+                <p>Phone: {COMPANY_PHONE_DISPLAY}</p>
                 <p>Address: India</p>
               </div>
             </section>
