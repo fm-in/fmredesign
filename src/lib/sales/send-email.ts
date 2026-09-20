@@ -247,7 +247,7 @@ export async function sendSalesEmail({ lead, template, settings, ownerName }: Se
   if (lead.consent_basis !== 'inbound_request' && lead.consent_basis !== 'consent') {
     return { sent: false, reason: 'no_consent' };
   }
-  if (await isSuppressed({ email: lead.email, phoneE164: lead.phone_e164 })) {
+  if (await isSuppressed({ email: lead.email, phoneE164: lead.phone_e164 }, 'email')) {
     return { sent: false, reason: 'suppressed' };
   }
 

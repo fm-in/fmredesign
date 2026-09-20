@@ -25,6 +25,10 @@ const TITLES: Record<ActivityType, string> = {
   ai_brief: 'AI brief',
   unsubscribed: 'Unsubscribed',
   confirmation_sent: 'Confirmation email sent',
+  // Channel-agnostic: the row's `channel` says whether it was WhatsApp.
+  message_sent: 'Message sent',
+  message_received: 'Message received',
+  message_failed: 'Message failed',
 };
 
 const PREVIEW_LENGTH = 600;
