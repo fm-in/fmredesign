@@ -28,6 +28,7 @@ import {
   runSequenceStep,
 } from '@/lib/sales/sequence-runner';
 import { createTask, hasOpenTask } from '@/lib/sales/tasks';
+import { enquiryFirstTouch, sendTemplateToLead } from '@/lib/whatsapp/send';
 
 const FIRST_TOUCH_TITLE = 'First touch within the hour';
 const UNIQUE_VIOLATION = '23505';
@@ -66,9 +67,41 @@ export const salesLeadCreatedFn = inngest.createFunction(
     });
     if (!brief.written) return { skipped: 'lead_missing' };
 
-    // No automatic enrolment: nothing is emailed until a person starts a
-    // sequence from the lead page (POST .../sequence with { action: 'start' }).
-    return { written: true };
+    /*
+     * The one message that goes out without a person deciding to.
+     *
+     * Everything else in this system is person-started — no automatic
+     * enrolment, nothing emailed until someone clicks Start on the lead page.
+     * This is the deliberate exception: a reply to an enquiry is worth far
+     * more in the first minutes than in the first hours, and the template is
+     * an acknowledgement rather than a pitch.
+     *
+     * It is still refusable. `sendTemplateToLead` checks consent, the
+     * do-not-contact list, the automation switch and configuration, so this
+     * cannot outrun any of them; `respondingToAction` waives only the
+     * sending-hours rule, because someone who filled a form at 02:00 is awake.
+     *
+     * Its own step, so a Meta outage retries the send without writing the AI
+     * brief or the task a second time.
+     */
+    const firstTouch = await step.run('whatsapp-first-touch', async () => {
+      const lead = await loadLead(leadId);
+      if (!lead || !lead.phone_e164) return { sent: false, reason: 'no_phone' };
+      const owner = await loadOwner(lead.owner_id);
+      const outcome = await sendTemplateToLead({
+        lead,
+        template: enquiryFirstTouch(lead, owner?.name ?? TEAM_SIGNATURE),
+        category: 'marketing',
+        respondingToAction: true,
+      });
+      // Only the reason leaves the step: Inngest keeps step results in its run
+      // history, which must not hold a customer's name or message.
+      return outcome.sent ? { sent: true } : { sent: false, reason: outcome.reason };
+    });
+
+    // No automatic enrolment beyond that: nothing further is sent until a
+    // person starts a sequence from the lead page.
+    return { written: true, whatsapp: firstTouch };
   }
 );
 
