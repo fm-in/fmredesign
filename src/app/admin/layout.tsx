@@ -56,7 +56,8 @@ import {
   Database,
   ClipboardList,
   GraduationCap,
-  ClipboardCheck,} from 'lucide-react';
+  ClipboardCheck,
+  MessageCircle,} from 'lucide-react';
 import React from 'react';
 
 /* ── Permission requirements per nav href ── */
@@ -69,6 +70,7 @@ const NAV_PERMISSIONS: Record<string, string> = {
   '/admin/invoices': 'finance.read',
   '/admin/proposals': 'finance.read',
   '/admin/leads': 'sales.read',
+  '/admin/whatsapp': 'sales.read',
   '/admin/scraped-contacts': 'users.read',    // Admin/super_admin only
   '/admin/scraped-contacts/scrape-jobs': 'users.read', // Sub-page surfaced in nav
   '/admin/academy': 'content.read',          // FM Academy — programs CRUD
@@ -132,6 +134,7 @@ const adminNavigation: NavigationGroup[] = [
     title: 'Operations',
     items: [
       { label: 'Leads', href: '/admin/leads', icon: <Target className="w-5 h-5" /> },
+      { label: 'WhatsApp', href: '/admin/whatsapp', icon: <MessageCircle className="w-5 h-5" /> },
       { label: 'Discovery', href: '/admin/discovery', icon: <Search className="w-5 h-5" /> },
       { label: 'Content Calendar', href: '/admin/content', icon: <Calendar className="w-5 h-5" /> },
       { label: 'Blog', href: '/admin/blog', icon: <FileText className="w-5 h-5" /> },

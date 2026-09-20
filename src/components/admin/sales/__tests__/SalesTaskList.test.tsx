@@ -17,10 +17,18 @@ const task: SalesTaskItem = {
 };
 
 describe('SalesTaskList', () => {
-  it('opens WhatsApp with the drafted message filled in', () => {
+  it('sends the reader to our inbox, not their own WhatsApp', () => {
+    /*
+     * This used to be a `wa.me` link, which opens the READER's WhatsApp and
+     * messages the lead from their personal number. Harmless when we had no
+     * business number; wrong now that we do — the customer would get the
+     * automated message from the business and the follow-up from a stranger.
+     * A Cloud API number cannot be opened in the WhatsApp app anyway.
+     */
     render(<SalesTaskList tasks={[task]} onComplete={() => undefined} />);
-    const link = screen.getByRole('link', { name: /open whatsapp/i });
-    expect(link).toHaveAttribute('href', `https://wa.me/919833257659?text=${encodeURIComponent(task.draftBody ?? '')}`);
+    const link = screen.getByRole('link', { name: /reply in whatsapp inbox/i });
+    expect(link).toHaveAttribute('href', '/admin/whatsapp?lead=lead_1');
+    expect(link.getAttribute('href')).not.toContain('wa.me');
   });
 
   it('marks a task done', () => {
