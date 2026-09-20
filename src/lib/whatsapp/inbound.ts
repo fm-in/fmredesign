@@ -79,7 +79,9 @@ async function repliedRecently(leadId: string): Promise<boolean> {
 /** A lead for a number that has never contacted us before. */
 async function createLeadFromMessage(phoneE164: string, message: WhatsAppInboundMessage): Promise<LeadRow | null> {
   try {
-    const { leadId } = await ingestLead({
+    // The id is not used: ingest may have merged this number into an existing
+    // lead, so the row is re-read below rather than assumed from the return.
+    await ingestLead({
       source: 'whatsapp',
       phone: phoneE164,
       message: message.text ?? undefined,
