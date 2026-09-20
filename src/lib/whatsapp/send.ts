@@ -18,13 +18,29 @@ import { getSalesSettings } from '@/lib/sales/settings';
 import { isSuppressed } from '@/lib/sales/suppression';
 import type { LeadRow } from '@/lib/sales/types';
 import { isWithinSendWindow } from '@/lib/sales/send-window';
-import { isWhatsAppConfigured, sendWhatsAppTemplate, templateParam, type TemplateSend } from '@/lib/whatsapp/client';
+import {
+  isWhatsAppConfigured,
+  sendWhatsAppTemplate,
+  sendWhatsAppText,
+  templateParam,
+  type TemplateSend,
+} from '@/lib/whatsapp/client';
+import { windowStateFor } from '@/lib/whatsapp/conversations';
 
 export type WhatsAppSendOutcome =
   | { sent: true; wamid?: string }
   | {
       sent: false;
-      reason: 'no_phone' | 'no_consent' | 'suppressed' | 'not_configured' | 'automation_off' | 'outside_hours' | 'failed';
+      reason:
+        | 'no_phone'
+        | 'no_consent'
+        | 'suppressed'
+        | 'not_configured'
+        | 'automation_off'
+        | 'outside_hours'
+        /** Past 24 hours since their last message: only a template will send. */
+        | 'window_closed'
+        | 'failed';
       error?: string;
     };
 
@@ -138,3 +154,55 @@ const SERVICE_PHRASES: Readonly<Record<string, string>> = {
   'Web Development': 'web design and development',
   'Content & Video': 'content and video',
 };
+
+
+/**
+ * A person replying as the business, from the inbox.
+ *
+ * Free text, so it is legal only inside the 24-hour window — checked here
+ * rather than trusted from the caller, because the window can close between
+ * the screen rendering and the send button being pressed, and Meta's refusal
+ * at that point is opaque.
+ *
+ * Deliberately NOT gated on consent, sending hours or the automation switch:
+ * this is a human answering someone who wrote to us first. Those gates exist
+ * to stop us starting conversations, not to stop us finishing them. A hard
+ * opt-out still applies — if they said stop, a person should not override it.
+ */
+export async function sendReplyToLead({
+  lead,
+  text,
+  actor,
+}: {
+  lead: LeadRow;
+  text: string;
+  actor: { id: string; name: string };
+}): Promise<WhatsAppSendOutcome> {
+  if (!lead.phone_e164) return { sent: false, reason: 'no_phone' };
+  if (!isWhatsAppConfigured()) return { sent: false, reason: 'not_configured' };
+
+  const body = text.trim();
+  if (!body) return { sent: false, reason: 'failed', error: 'Nothing to send' };
+
+  if (await isSuppressed({ phoneE164: lead.phone_e164 }, 'whatsapp')) {
+    return { sent: false, reason: 'suppressed' };
+  }
+
+  const window = await windowStateFor(lead.id);
+  if (!window.open) return { sent: false, reason: 'window_closed' };
+
+  const result = await sendWhatsAppText(lead.phone_e164, body);
+
+  await recordActivity({
+    leadId: lead.id,
+    type: result.ok ? 'message_sent' : 'message_failed',
+    channel: 'whatsapp',
+    direction: 'out',
+    body: result.ok ? body : null,
+    providerMessageId: result.wamid ?? null,
+    metadata: result.ok ? {} : { error: result.error },
+    actor,
+  });
+
+  return result.ok ? { sent: true, wamid: result.wamid } : { sent: false, reason: 'failed', error: result.error };
+}
