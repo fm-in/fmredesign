@@ -112,18 +112,18 @@ export function renderShell(input: ShellInput): string {
     // One flat accent rule where the magenta header band used to be.
     `<tr><td bgcolor="${BRAND_MAGENTA}" style="background-color:${BRAND_MAGENTA};height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>`,
     // Body
-    `<tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:34px 40px 36px;font-family:${FONT_STACK};font-size:15px;line-height:1.6;color:${BODY_TEXT};">`,
+    `<tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:34px 40px 36px;font-family:${FONT_STACK};font-size:16px;line-height:1.6;color:${BODY_TEXT};">`,
     input.paragraphs.map(paragraphHtml).join(''),
     '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0;">',
     '<tr>',
-    `<td align="center" bgcolor="${BRAND_MAGENTA}" style="background-color:${BRAND_MAGENTA};border-radius:999px;padding:15px 30px;">`,
-    `<a href="${escapeHtml(input.cta.url)}" style="display:inline-block;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;line-height:1;letter-spacing:0.02em;font-family:${FONT_STACK};">${escapeHtml(input.cta.label)}</a>`,
+    `<td align="center" bgcolor="${BRAND_MAGENTA}" style="background-color:${BRAND_MAGENTA};border-radius:999px;padding:13px 26px;">`,
+    `<a href="${escapeHtml(input.cta.url)}" style="display:inline-block;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;line-height:1;letter-spacing:0.02em;font-family:${FONT_STACK};">${escapeHtml(input.cta.label)}</a>`,
     '</td>',
     '</tr>',
     '</table>',
     '</td></tr>',
     // Footer
-    `<tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:22px 40px 26px;border-top:1px solid ${HAIRLINE};font-family:${FONT_STACK};font-size:12px;line-height:19px;color:${FOOTER_TEXT};">`,
+    `<tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:22px 40px 26px;border-top:1px solid ${HAIRLINE};font-family:${FONT_STACK};font-size:13px;line-height:20px;color:${FOOTER_TEXT};">`,
     footerHtml(footerLines),
     '</td></tr>',
     '</table>',

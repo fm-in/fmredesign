@@ -39,9 +39,9 @@ describe('renderShell', () => {
     expect(html).toMatch(/<td[^>]*bgcolor="#c9325d"[^>]*>\s*<a href="https:\/\/cal\.com\/fm-in\/15min"[^>]*>Book a call<\/a>/);
   });
 
-  it('sets body copy in 15px/1.6 on white in the shared body ink', () => {
+  it('sets body copy in 16px/1.6 on white in the shared body ink', () => {
     const html = renderShell(baseInput);
-    expect(html).toMatch(/bgcolor="#fffffe"[^>]*style="[^"]*font-size:15px;line-height:1\.6;color:#2e2926/);
+    expect(html).toMatch(/bgcolor="#fffffe"[^>]*style="[^"]*font-size:16px;line-height:1\.6;color:#2e2926/);
   });
 
   it('carries the company address in the footer of mail that can be unsubscribed from', () => {
@@ -95,9 +95,9 @@ describe('renderShell', () => {
      * change was intended; being surprised by them is the point.
      */
     delete process.env.COMPANY_ADDRESS;
-    expect(sha256(renderShell(baseInput))).toBe('46f44fed86e8a94fbca585d83c5f5ab1432fa78bbff7b7da720cb5f8a0ba900a');
+    expect(sha256(renderShell(baseInput))).toBe('533b222e482ae131a0fad556c1c575fab02edd89b4359beeff6064a990c73b02');
     process.env.COMPANY_ADDRESS = '123 Example Street, Bhopal';
-    expect(sha256(renderShell(baseInput))).toBe('63f6f256b0c6485fa30355f37a8516cb798803a270bf4e5f6f95c20d9ce17ab5');
+    expect(sha256(renderShell(baseInput))).toBe('bd3340e04ef305e038a21c9e08fc50755eab76edd563f4506203d73f975b08c8');
   });
 
   describe('without an unsubscribe link (transactional mail)', () => {
