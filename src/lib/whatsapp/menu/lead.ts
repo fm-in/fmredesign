@@ -131,14 +131,18 @@ const work: MenuNode = {
 const human: MenuNode = {
   id: id('human'),
   audience: 'lead',
-  async render() {
+  async render(ctx) {
     return {
       kind: 'handoff',
       reason: 'asked to speak to someone',
       body:
         'Of course — someone will pick this up here shortly.\n\n' +
         'If you would rather book a time and skip the back and forth: ' +
-        `https://cal.com/${DEFAULT_BOOKING_LINK}`,
+        `https://cal.com/${DEFAULT_BOOKING_LINK}` +
+        // Asked here rather than on the browsing branches: someone reading
+        // about our services has not asked for anything yet, and being asked
+        // for contact details mid-browse reads as a toll gate.
+        (ctx.hasEmail ? '' : '\n\nIf email suits you better, send the address you use and we will pick it up there too.'),
     };
   },
 };

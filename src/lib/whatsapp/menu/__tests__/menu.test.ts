@@ -16,11 +16,11 @@ import { CLIENT_ROOT } from '../client';
 import { LEAD_ROOT } from '../lead';
 
 const LEAD_CTX: MenuContext = {
-  audience: 'lead', leadId: 'lead_1', name: 'Priya Shah', phoneE164: '+916268112515',
+  audience: 'lead', leadId: 'lead_1', name: 'Priya Shah', phoneE164: '+916268112515', hasEmail: false,
 };
 const CLIENT_CTX: MenuContext = {
   audience: 'client', leadId: 'lead_2', clientId: 'cl_1', clientSlug: 'acme-retail',
-  name: 'Rohit Mehra', phoneE164: '+916268112516',
+  name: 'Rohit Mehra', phoneE164: '+916268112516', hasEmail: true,
 };
 
 beforeEach(() => {
@@ -213,4 +213,32 @@ describe('the scorecard and creative branches', () => {
     expect(reply.body).toContain('/creativeminds');
     expect(reply.kind).not.toBe('handoff');
   });
+});
+
+/**
+ * The capture is only worth having if something actually asks. It was built
+ * first and asked nowhere, so every address would have had to arrive by
+ * accident.
+ */
+describe('asking for an email', () => {
+  it('asks when handing over to a person and we have no address', async () => {
+    const reply = await routeTap('lead:human', { ...LEAD_CTX, hasEmail: false });
+    if (reply?.kind !== 'handoff') throw new Error('expected a handoff');
+    expect(reply.body).toMatch(/email/i);
+  });
+
+  it('does not ask when we already hold one', async () => {
+    const reply = await routeTap('lead:human', { ...LEAD_CTX, hasEmail: true });
+    if (reply?.kind !== 'handoff') throw new Error('expected a handoff');
+    expect(reply.body).not.toMatch(/send the address/i);
+  });
+
+  it.each(['lead:services', 'lead:work', 'lead:creative'])(
+    'does not ask mid-browse on %s, where it would read as a toll gate',
+    async (node) => {
+      const reply = await routeTap(node, { ...LEAD_CTX, hasEmail: false });
+      if (!reply || !('body' in reply)) throw new Error('expected a body');
+      expect(reply.body).not.toMatch(/send the address/i);
+    },
+  );
 });

@@ -477,3 +477,37 @@ describe('capturing an email from the conversation', () => {
     expect(createTask).toHaveBeenCalled();
   });
 });
+
+describe('the auto-reply asks for an email', () => {
+  it('asks when a real question arrives from someone we have no address for', async () => {
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [message('Can you quote for Instagram ads?')],
+      statuses: [],
+    });
+    expect(sendWhatsAppText.mock.calls[0][1]).toMatch(/email is easier/i);
+  });
+
+  it('does not ask a lead whose email we already hold', async () => {
+    tables({ lead: { ...LEAD, email: 'rohit@acmeretail.in' } as never });
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [message('Can you quote for Instagram ads?')],
+      statuses: [],
+    });
+    expect(sendWhatsAppText.mock.calls[0][1]).not.toMatch(/email is easier/i);
+  });
+
+  it('does not ask again in the same breath as confirming one', async () => {
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [message('rohit@acmeretail.in')],
+      statuses: [],
+    });
+    const sent = sendWhatsAppText.mock.calls[0][1] as string;
+    expect(sent).toContain('rohit@acmeretail.in');
+    expect(sent).not.toMatch(/email is easier/i);
+  });
+});

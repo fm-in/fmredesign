@@ -63,7 +63,7 @@ const MAX_BODY = 4_000;
  * on a Sunday is a promise that breaks by morning, and a broken promise reads
  * worse than an honest wait.
  */
-function autoReply(now: Date): string {
+function autoReply(now: Date, hasEmail: boolean): string {
   const { open, phrase } = businessHours(now);
   const opening = open
     ? `Thanks for messaging Freaking Minds. We have this and someone from the team will reply ${phrase}.`
@@ -72,9 +72,14 @@ function autoReply(now: Date): string {
   return (
     `${opening}\n\n` +
     'If it helps, tell us what you are trying to move — a number, a launch, a problem you have been circling — and we will come back with something specific.\n\n' +
-    // How anyone finds the menu at all. It is deliberately the last line and
-    // deliberately small: someone who has just asked a real question wants an
-    // answer, not to be sent round a list of options.
+    // The one place worth asking. They have just asked a real question, so a
+    // reply is coming either way and an address is a natural thing to hand
+    // over — unlike mid-browse, where it reads as a toll gate. Nothing has to
+    // remember that we asked: any address in any later message is picked up.
+    (hasEmail ? '' : 'If email is easier for you, send the address you use and we will pick it up there too.\n\n') +
+    // How anyone finds the menu at all. Deliberately last and deliberately
+    // small: someone who has just asked a real question wants an answer, not
+    // to be sent round a list of options.
     'Or send "menu" for the things you can check yourself.'
   );
 }
@@ -198,6 +203,7 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
    * why it does not go through `ingestLead`.
    */
   const captured = await captureEmail(lead.id, lead.email ?? null, body);
+  const hasEmail = Boolean(lead.email || captured);
 
   /*
    * Try the menu before troubling anyone.
@@ -214,6 +220,7 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
     clientSlug: client?.slug,
     name: client?.name ?? lead.name,
     phoneE164,
+    hasEmail,
   };
 
   let reply: MenuReply | null = null;
@@ -276,7 +283,7 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
     });
   }
 
-  if (!answered) await maybeAutoReply(lead, phoneE164);
+  if (!answered) await maybeAutoReply(lead, phoneE164, hasEmail);
 }
 
 /**
@@ -309,11 +316,11 @@ async function deliver(reply: MenuReply, phoneE164: string, leadId: string): Pro
   return result.ok;
 }
 
-async function maybeAutoReply(lead: LeadRow, phoneE164: string): Promise<void> {
+async function maybeAutoReply(lead: LeadRow, phoneE164: string, hasEmail: boolean): Promise<void> {
   if (await repliedRecently(lead.id)) return;
   if (await isSuppressed({ phoneE164 }, 'whatsapp')) return;
 
-  const message = autoReply(new Date());
+  const message = autoReply(new Date(), hasEmail);
   const result = await sendWhatsAppText(phoneE164, message);
 
   await recordActivity({

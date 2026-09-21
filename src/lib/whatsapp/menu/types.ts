@@ -28,6 +28,15 @@ export interface MenuContext {
   clientSlug?: string;
   name: string | null;
   phoneE164: string;
+  /**
+   * Whether we already hold an email for them.
+   *
+   * The ask is conditional because asking someone for an address we already
+   * have reads as a system that is not paying attention — and because the
+   * capture is stateless, the ask can sit wherever it is natural and still
+   * work whenever they happen to answer.
+   */
+  hasEmail: boolean;
 }
 
 /**
