@@ -44,6 +44,7 @@ import { mapMetaLead } from '@/lib/sales/intake/meta-graph';
 import { DIMENSIONS, QUESTIONS, RECOMMENDATIONS } from '@/lib/scorecard/questions';
 import { scoreScorecard } from '@/lib/scorecard/scoring';
 import { sendSalesEmail } from '../send-email';
+import { readableWords } from '@/test-utils/readable-email';
 
 const settings: SalesSettings = { automationEnabled: true, bookingLink: 'fm-in/15min', bookingLinkLong: 'fm-in/30min' };
 const NOW = new Date('2026-09-16T05:30:00.000Z');
@@ -86,12 +87,6 @@ async function emailFor(lead: LeadRow, template: SalesEmailTemplate): Promise<Se
   expect(outcome.sent).toBe(true);
   const payload = mocks.send.mock.calls[0]?.[0] as SentEmail;
   return { subject: payload.subject, html: payload.html, text: payload.text };
-}
-
-/** Everything a reader sees, with links removed (links legitimately carry ids and tokens). */
-function readableWords(email: SentEmail): string {
-  const visibleHtml = email.html.replace(/<\/?a\b[^>]*>/g, '').replace(/<[^>]+>/g, ' ');
-  return [email.subject, email.text, visibleHtml].join('\n').replace(/https?:\/\/[^\s.,;:!?)]+(?:[.,;:!?)]+[^\s.,;:!?)]+)*/g, 'LINK');
 }
 
 function expectNoInternalValues(email: SentEmail): void {

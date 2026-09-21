@@ -1,6 +1,16 @@
 /**
- * One do-not-contact list for every channel. Checked at send time, never at
- * scheduling time, so an unsubscribe takes effect for messages already queued.
+ * The do-not-contact list. Checked at send time, never at scheduling time, so
+ * an unsubscribe takes effect for messages already queued.
+ *
+ * A row with `channel = null` suppresses every channel; that is what an email
+ * unsubscribe, a bounce or a deletion request writes, and it is what every
+ * pre-existing row means. A row with a channel suppresses only that one.
+ *
+ * The distinction exists because a single list silently overreaches once there
+ * is more than one channel: `sendSalesEmail` asks about both the email address
+ * and the phone number, so a WhatsApp "STOP" stored against the phone would
+ * also stop that person's email. Asking us to stop messaging on WhatsApp is
+ * not asking us to stop sending an invoice.
  */
 
 import { likeLiteral } from '@/lib/postgrest';
@@ -22,18 +32,36 @@ function normaliseEmail(email: string | null | undefined): string | null {
   return email?.trim().toLowerCase() || null;
 }
 
-export async function isSuppressed(contact: { email?: string | null; phoneE164?: string | null }): Promise<boolean> {
+export type SuppressionChannel = 'email' | 'whatsapp';
+
+/**
+ * `channel` narrows the question to "may we reach them HERE". Omitting it asks
+ * the broader "are they listed at all", which is what the admin screens want.
+ * Every sender passes its own channel.
+ */
+export async function isSuppressed(
+  contact: { email?: string | null; phoneE164?: string | null },
+  channel?: SuppressionChannel
+): Promise<boolean> {
   const email = normaliseEmail(contact.email);
   const phone = contact.phoneE164 || null;
   if (!email && !phone) return false;
 
   const supabase = getSupabaseAdmin();
+  // A channel-scoped question matches the all-channel rows plus its own.
+  const scope = <T extends { or: (filter: string) => T }>(query: T): T =>
+    channel ? query.or(`channel.is.null,channel.eq.${channel}`) : query;
+
   if (email) {
-    const { data } = await supabase.from('suppression_list').select('id').ilike('email', likeLiteral(email)).limit(1);
+    const { data } = await scope(
+      supabase.from('suppression_list').select('id').ilike('email', likeLiteral(email))
+    ).limit(1);
     if (Array.isArray(data) && data.length > 0) return true;
   }
   if (phone) {
-    const { data } = await supabase.from('suppression_list').select('id').eq('phone_e164', phone).limit(1);
+    const { data } = await scope(
+      supabase.from('suppression_list').select('id').eq('phone_e164', phone)
+    ).limit(1);
     if (Array.isArray(data) && data.length > 0) return true;
   }
   return false;
@@ -118,6 +146,8 @@ export async function addSuppression(entry: {
   phoneE164?: string | null;
   reason: SuppressionReason;
   leadId?: string | null;
+  /** Omit to suppress every channel — what an email unsubscribe or a bounce means. */
+  channel?: SuppressionChannel | null;
 }): Promise<void> {
   const email = normaliseEmail(entry.email);
   const phone = entry.phoneE164 || null;
@@ -135,6 +165,7 @@ export async function addSuppression(entry: {
       id: generateSalesId('sup'),
       ...row,
       reason: entry.reason,
+      channel: entry.channel ?? null,
       lead_id: entry.leadId ?? null,
     });
     if (!error) continue;
@@ -146,7 +177,8 @@ export async function addSuppression(entry: {
     if (entry.reason !== RECEIPT_ALLOWED_REASON) {
       const update = supabase.from('suppression_list').update({ reason: entry.reason });
       const scoped = row.email !== null ? update.ilike('email', likeLiteral(row.email)) : update.eq('phone_e164', row.phone_e164);
-      const { error: updateError } = await scoped.eq('reason', RECEIPT_ALLOWED_REASON);
+      const channelScoped = entry.channel ? scoped.eq('channel', entry.channel) : scoped.is('channel', null);
+      const { error: updateError } = await channelScoped.eq('reason', RECEIPT_ALLOWED_REASON);
       if (updateError) throw updateError;
     }
   }

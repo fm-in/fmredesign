@@ -15,13 +15,17 @@ describe('renderShell', () => {
     delete process.env.COMPANY_ADDRESS;
   });
 
-  it('renders a header band in the brand magenta carrying the wordmark, linked home, with alt text', () => {
+  it('renders the wordmark on white above the card, linked home, with alt text', () => {
+    // Was a magenta header band carrying a white-on-transparent logo. The
+    // full-colour mark reads on white unaided, so the band is now a single
+    // flat accent rule and the mark sits on the paper.
     const html = renderShell(baseInput);
-    expect(html).toContain('bgcolor="#a82548"');
-    expect(html).toContain('src="https://www.freakingminds.in/email/logo.png"');
+    expect(html).toContain('src="https://www.freakingminds.in/logo.png"');
     expect(html).toContain('alt="FreakingMinds"');
-    expect(html).toContain('width="150"');
+    expect(html).toContain('width="132"');
     expect(html).toMatch(/<a href="https:\/\/www\.freakingminds\.in"[^>]*>\s*<img/);
+    expect(html).toContain('bgcolor="#c9325d"');
+    expect(html).not.toContain('#a82548');
   });
 
   it('lays out a 600px table', () => {
@@ -32,18 +36,34 @@ describe('renderShell', () => {
 
   it('renders the CTA as a padded, background-coloured table cell rather than a styled anchor', () => {
     const html = renderShell(baseInput);
-    expect(html).toMatch(/<td[^>]*bgcolor="#a82548"[^>]*>\s*<a href="https:\/\/cal\.com\/fm-in\/15min"[^>]*>Book a call<\/a>/);
+    expect(html).toMatch(/<td[^>]*bgcolor="#c9325d"[^>]*>\s*<a class="f" href="https:\/\/cal\.com\/fm-in\/15min"[^>]*>Book a call<\/a>/);
   });
 
-  it('sets body copy in 16px/1.6 on white with the neutral-700 colour', () => {
+  it('sets body copy in 16px/1.6 on white in the shared body ink', () => {
     const html = renderShell(baseInput);
-    expect(html).toMatch(/bgcolor="#ffffff"[^>]*style="[^"]*font-size:16px;line-height:1\.6;color:#2d2d2d/);
+    expect(html).toMatch(/bgcolor="#fffffe"[^>]*style="[^"]*font-size:16px;line-height:1\.6;color:#2e2926/);
   });
 
-  it('carries the company address in the footer when COMPANY_ADDRESS is set', () => {
+  it('carries the company address in the footer of mail that can be unsubscribed from', () => {
+    // A commercial email offering an unsubscribe is expected to carry a
+    // postal address — CAN-SPAM, and it helps deliverability.
     process.env.COMPANY_ADDRESS = '123 Example Street, Bhopal';
     const html = renderShell(baseInput);
     expect(html).toContain('123 Example Street, Bhopal');
+  });
+
+  it('leaves the address off a receipt, which is neither commercial nor unsubscribable', () => {
+    process.env.COMPANY_ADDRESS = '123 Example Street, Bhopal';
+    const { unsubscribeUrl: _drop, ...transactional } = baseInput;
+    const html = renderShell(transactional);
+    expect(html).not.toContain('123 Example Street, Bhopal');
+    expect(html).not.toContain('Bhopal');
+  });
+
+  it('describes the company the way the WhatsApp profile does', () => {
+    expect(renderShell(baseInput)).toContain(
+      'The marketing and digital partner for brands that intend to grow.',
+    );
   });
 
   it('omits the address line cleanly when COMPANY_ADDRESS is unset', () => {
@@ -65,12 +85,19 @@ describe('renderShell', () => {
     expect(html).toMatch(/Unsubscribe/);
   });
 
-  it('renders a sales email byte-for-byte as it did before transactional mail was supported', () => {
-    // sha256 of renderShell(baseInput) captured from the implementation at 1103d12.
+  it('renders a sales email byte-for-byte', () => {
+    /*
+     * A deliberate lock on the exact bytes of an outbound sales email, so
+     * that touching the shell for one caller cannot quietly restyle mail
+     * already in flight to strangers. Re-pinned when the shell moved onto
+     * the shared brand (magenta header band -> masthead on white, the
+     * palette in @/lib/email/brand). Changing these hashes is fine when the
+     * change was intended; being surprised by them is the point.
+     */
     delete process.env.COMPANY_ADDRESS;
-    expect(sha256(renderShell(baseInput))).toBe('89a1a841240bbccc5d9b411da8749ebdb3ca855fb4a709d51c9a41b256a20c2d');
+    expect(sha256(renderShell(baseInput))).toBe('f66c85485a6e1aec3418ac27dbef72f8e5c5b11c18b2b00a6bd871376dae38f2');
     process.env.COMPANY_ADDRESS = '123 Example Street, Bhopal';
-    expect(sha256(renderShell(baseInput))).toBe('42c33474ca6f9740b333abc9f4a50af55c2829b5de28a54b0d20abbf69173fe8');
+    expect(sha256(renderShell(baseInput))).toBe('00d1fc5cbb5d23d941aa2fc7fbcb8bc54c7940fe8d4091a6bb6f0cfa5b0edb77');
   });
 
   describe('without an unsubscribe link (transactional mail)', () => {
@@ -82,13 +109,13 @@ describe('renderShell', () => {
     };
 
     function footerOf(html: string): string {
-      return html.slice(html.indexOf('<tr><td bgcolor="#f4f1f2"'));
+      return html.slice(html.lastIndexOf('<tr><td class="s c" bgcolor="#fffffe"'));
     }
 
     it.each([
-      ['with an address', '123 Example Street, Bhopal', '123 Example Street, Bhopal'],
-      ['without an address', undefined, 'FreakingMinds'],
-    ])('omits the unsubscribe line cleanly %s, ending the footer on its last real line', (_label, address, lastLine) => {
+      ['with an address set', '123 Example Street, Bhopal'],
+      ['with none set', undefined],
+    ])('omits the unsubscribe line cleanly %s, ending the footer on its last real line', (_label, address) => {
       if (address) process.env.COMPANY_ADDRESS = address;
       else delete process.env.COMPANY_ADDRESS;
 
@@ -99,9 +126,12 @@ describe('renderShell', () => {
       expect(html).not.toContain('You are receiving this');
       expect(html).not.toContain('undefined');
       expect(footer).not.toMatch(/<p[^>]*>\s*<\/p>/);
-      expect(footer).toContain('<p style="margin:0 0 4px;padding:0;color:#2d2d2d;">Asha Rao</p>');
-      // The last paragraph carries no bottom margin, so no gap is left where the line was.
-      expect(footer).toMatch(new RegExp(`<p style="margin:0;padding:0;color:#666666;">${lastLine}</p></td></tr>`));
+      expect(footer).toContain('<p style="margin:0 0 4px;padding:0;color:#13110f;">Asha Rao</p>');
+      // The last paragraph carries no bottom margin, so no gap is left where
+      // the line was. On a receipt that last line is always the description.
+      expect(footer).toMatch(
+        /<p style="margin:0;padding:0;color:#6b635c;">The marketing and digital partner[^<]*<\/p><\/td><\/tr>/,
+      );
     });
   });
 
@@ -129,7 +159,7 @@ describe('renderShell', () => {
 
   it('linkifies bare URLs inside paragraphs the same way the old plain renderer did', () => {
     const html = renderShell(baseInput);
-    expect(html).toContain('<a href="https://www.freakingminds.in/work" style="color:#a82548">https://www.freakingminds.in/work</a>');
+    expect(html).toContain('<a href="https://www.freakingminds.in/work" style="color:#c9325d">https://www.freakingminds.in/work</a>');
   });
 
   it('does not swallow sentence punctuation after a link', () => {
@@ -140,13 +170,13 @@ describe('renderShell', () => {
         'Message us (https://wa.me/919833257659?text=Hi), or call: https://cal.com/fm-in/15min, https://x.in/a; https://x.in/b: https://x.in/c! https://x.in/d?',
       ],
     });
-    expect(html).toContain('<a href="https://www.freakingminds.in/work" style="color:#a82548">https://www.freakingminds.in/work</a>. Then reply.');
-    expect(html).toContain('(<a href="https://wa.me/919833257659?text=Hi" style="color:#a82548">https://wa.me/919833257659?text=Hi</a>),');
-    expect(html).toContain('<a href="https://cal.com/fm-in/15min" style="color:#a82548">https://cal.com/fm-in/15min</a>,');
-    expect(html).toContain('<a href="https://x.in/a" style="color:#a82548">https://x.in/a</a>;');
-    expect(html).toContain('<a href="https://x.in/b" style="color:#a82548">https://x.in/b</a>:');
-    expect(html).toContain('<a href="https://x.in/c" style="color:#a82548">https://x.in/c</a>!');
-    expect(html).toContain('<a href="https://x.in/d" style="color:#a82548">https://x.in/d</a>?');
+    expect(html).toContain('<a href="https://www.freakingminds.in/work" style="color:#c9325d">https://www.freakingminds.in/work</a>. Then reply.');
+    expect(html).toContain('(<a href="https://wa.me/919833257659?text=Hi" style="color:#c9325d">https://wa.me/919833257659?text=Hi</a>),');
+    expect(html).toContain('<a href="https://cal.com/fm-in/15min" style="color:#c9325d">https://cal.com/fm-in/15min</a>,');
+    expect(html).toContain('<a href="https://x.in/a" style="color:#c9325d">https://x.in/a</a>;');
+    expect(html).toContain('<a href="https://x.in/b" style="color:#c9325d">https://x.in/b</a>:');
+    expect(html).toContain('<a href="https://x.in/c" style="color:#c9325d">https://x.in/c</a>!');
+    expect(html).toContain('<a href="https://x.in/d" style="color:#c9325d">https://x.in/d</a>?');
   });
 
   it('puts a hidden preheader as the first element in the body, carrying the given text', () => {

@@ -23,6 +23,7 @@ export const SALES_SOURCES: readonly SalesSource[] = [
   'connector',
   'cal_booking',
   'scorecard',
+  'whatsapp',
 ];
 
 export function isSalesSource(value: unknown): value is SalesSource {
@@ -110,7 +111,15 @@ export type ActivityType =
   | 'sequence_stopped'
   | 'ai_brief'
   | 'unsubscribed'
-  | 'confirmation_sent';
+  | 'confirmation_sent'
+  /*
+   * Channel-agnostic on purpose: `lead_activities.channel` already says
+   * which transport carried it, so WhatsApp, SMS or anything later reuses
+   * these rather than adding a triple per channel.
+   */
+  | 'message_sent'
+  | 'message_received'
+  | 'message_failed';
 
 export type TaskType = 'call' | 'whatsapp' | 'linkedin' | 'instagram' | 'email' | 'follow_up' | 'custom';
 export type TaskStatus = 'open' | 'done' | 'skipped';

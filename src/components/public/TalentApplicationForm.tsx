@@ -20,6 +20,7 @@ import {
   PricingInfo,
   PortfolioLinks,
 } from '@/lib/admin/talent-types';
+import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import {
   ArrowLeft,
   ArrowRight,
@@ -32,7 +33,11 @@ import {
 } from 'lucide-react';
 
 interface TalentApplicationFormProps {
-  onSubmit: (application: TalentApplication) => Promise<void>;
+  /**
+   * `honeypot` carries the decoy field's value. `POST /api/talent` reads it
+   * from the top level of the body, so it cannot travel inside `application`.
+   */
+  onSubmit: (application: TalentApplication, honeypot: string) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -43,6 +48,13 @@ interface FormErrors {
 }
 
 export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationFormProps) {
+  /*
+   * The decoy. `POST /api/talent` has always checked for it, but this form
+   * never rendered one, so the check read `undefined` and could never fire —
+   * the cheapest bot filter was switched off on the one public form we hand
+   * to strangers. A person never sees this; a bot fills everything it finds.
+   */
+  const [honeypot, setHoneypot] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   const [submitStatus, setSubmitStatus] = useState<SubmitStatus>('idle');
   const [submitError, setSubmitError] = useState('');
@@ -195,7 +207,7 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
     setSubmitStatus('submitting');
     setSubmitError('');
     try {
-      await onSubmit(formData as TalentApplication);
+      await onSubmit(formData as TalentApplication, honeypot);
       setSubmitStatus('success');
     } catch (error) {
       console.error('Error submitting application:', error);
@@ -289,6 +301,27 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
           {currentStep === 4 && (
             <AvailabilityPricingStep formData={formData} updateData={updateData} errors={errors} />
           )}
+
+          {/*
+            The decoy. Clipped rather than `display:none` or `hidden`, because
+            a bot that parses styles skips anything obviously hidden but fills
+            a field it can still see in the DOM. `tabIndex={-1}` and
+            `aria-hidden` keep it away from keyboard users and screen readers;
+            `autoComplete="off"` stops a browser helpfully filling it in and
+            failing a real person's submission.
+          */}
+          <div aria-hidden="true" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' }}>
+            <label htmlFor={HONEYPOT_FIELD}>Company website</label>
+            <input
+              id={HONEYPOT_FIELD}
+              name={HONEYPOT_FIELD}
+              type="text"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+            />
+          </div>
 
           {/* Navigation */}
           <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center mt-8 pt-8 border-t border-site-line gap-3">

@@ -117,8 +117,10 @@ describe('renderSalesEmail plain-text output (exact)', () => {
 describe('renderSalesEmail html (branded shell)', () => {
   it.each(['instant_reply', 'follow_up_proof', 'close_the_loop'] as const)('%s renders through the branded shell', (template) => {
     const email = renderSalesEmail(template, ctx);
-    expect(email.html).toContain('bgcolor="#a82548"');
-    expect(email.html).toContain('https://www.freakingminds.in/email/logo.png');
+    expect(email.html).toContain('bgcolor="#c9325d"');
+    // The full-colour mark on white. `/email/logo.png` is the white-on-
+    // transparent cut for the old magenta header band, and is now unused.
+    expect(email.html).toContain('https://www.freakingminds.in/logo.png');
     expect(email.html).toContain('alt="FreakingMinds"');
     expect(email.html).toMatch(/<table[^>]*width="600"/);
   });

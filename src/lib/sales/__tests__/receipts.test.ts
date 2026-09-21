@@ -10,6 +10,8 @@ import { contactPageBody as contactPagePost, getStartedBody as getStartedPost } 
 import type { RenderedEmail } from '../emails';
 import { CONTACT_SERVICE_PHRASES, renderEnquiryReceipt } from '../receipts';
 import { SERVICE_ENQUIRY_OPTIONS } from '@/lib/services-catalogue';
+import { COMPANY_WHATSAPP_NUMBER } from '@/lib/company';
+import { readableWords } from '@/test-utils/readable-email';
 
 vi.mock('@/lib/supabase', async () => {
   const m = await import('@/test-utils/fake-supabase');
@@ -18,7 +20,7 @@ vi.mock('@/lib/supabase', async () => {
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn(async () => undefined) } }));
 vi.mock('@/lib/events/emitter', () => ({ emitEvent: vi.fn(async () => undefined) }));
 
-const WHATSAPP_PREFIX = 'https://wa.me/916268112515?text=';
+const WHATSAPP_PREFIX = `https://wa.me/${COMPANY_WHATSAPP_NUMBER}?text=`;
 
 /** A posted body as `POST /api/leads` hands it on: parsed by the route's own schema. */
 function accepted(body: unknown) {
@@ -36,12 +38,6 @@ function getStartedBody(form: Parameters<typeof getStartedPost>[0]) {
 /** The services the contact page offers, read from the catalogue it renders from. */
 function contactPageServices(): string[] {
   return [...SERVICE_ENQUIRY_OPTIONS];
-}
-
-/** Everything a reader sees, with link targets removed (links legitimately carry ids and slugs). */
-function readableWords(email: RenderedEmail): string {
-  const visibleHtml = email.html.replace(/<\/?a\b[^>]*>/g, '').replace(/<[^>]+>/g, ' ');
-  return [email.subject, email.text, visibleHtml].join('\n').replace(/https?:\/\/\S+/g, 'LINK');
 }
 
 function expectCleanReceipt(email: RenderedEmail): void {

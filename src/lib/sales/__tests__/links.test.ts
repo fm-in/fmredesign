@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { bookingUrl, companyWhatsappUrl, whatsappUrl } from '../links';
+import { COMPANY_WHATSAPP_NUMBER } from '@/lib/company';
 
 describe('bookingUrl', () => {
   it('links to the Cal.com event without prefill', () => {
@@ -26,6 +27,6 @@ describe('whatsappUrl', () => {
   });
 
   it('links to the company number', () => {
-    expect(companyWhatsappUrl('Hello')).toBe('https://wa.me/916268112515?text=Hello');
+    expect(companyWhatsappUrl('Hello')).toBe(`https://wa.me/${COMPANY_WHATSAPP_NUMBER}?text=Hello`);
   });
 });

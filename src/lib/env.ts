@@ -43,6 +43,11 @@ const envSchema = z.object({
   GOOGLE_ADS_LEAD_KEY: z.string().optional(),
   CALCOM_WEBHOOK_SECRET: z.string().optional(),
   LEAD_CONNECTOR_SECRET: z.string().optional(),
+  WHATSAPP_APP_SECRET: z.string().optional(),
+  WHATSAPP_VERIFY_TOKEN: z.string().optional(),
+  WHATSAPP_TOKEN: z.string().optional(),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+  WHATSAPP_WABA_ID: z.string().optional(),
 
   // n8n webhook URLs (AI content generation — optional)
   N8N_WEBHOOK_MONTHLY_CONTENT: z.string().url().optional(),

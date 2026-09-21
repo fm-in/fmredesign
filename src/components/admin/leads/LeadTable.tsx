@@ -59,6 +59,24 @@ function sourceLabel(source: string | null | undefined): string {
   return source ? source.replace(/_/g, ' ') : 'Unknown';
 }
 
+/**
+ * A stored enum value as a label, or an em dash when it is absent.
+ *
+ * `project_type`, `budget_range` and `timeline` have always been nullable —
+ * `normalise.ts` writes null for any lead whose source did not collect them.
+ * Every source did, until a WhatsApp message created the first lead with none
+ * of them and this list died on `null.replace`. A direct Cal.com booking would
+ * have done exactly the same; it just had not happened yet.
+ */
+function fieldLabel(value: string | null | undefined): string {
+  return value ? value.replace(/_/g, ' ') : '\u2014';
+}
+
+/** As above, but budgets read better with a capital K: `10k_25k` -> `10K 25K`. */
+function budgetLabel(value: string | null | undefined): string {
+  return value ? value.replace(/_/g, ' ').replace(/k/g, 'K') : '\u2014';
+}
+
 /** Statuses eligible for conversion to client */
 const CONVERTIBLE_STATUSES: LeadStatus[] = [
   'qualified',
@@ -255,7 +273,7 @@ export function LeadTable({
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-fm-neutral-900 capitalize">
-                        {lead.projectType.replace(/_/g, ' ')}
+                        {fieldLabel(lead.projectType)}
                       </div>
                       <div className="text-sm text-fm-neutral-500 line-clamp-2">
                         {lead.projectDescription}
@@ -263,10 +281,10 @@ export function LeadTable({
                     </td>
                     <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-fm-neutral-900">
-                        {lead.budgetRange.replace(/_/g, ' ').replace(/k/g, 'K')}
+                        {budgetLabel(lead.budgetRange)}
                       </div>
                       <div className="text-sm text-fm-neutral-500 capitalize">
-                        {lead.timeline.replace(/_/g, ' ')}
+                        {fieldLabel(lead.timeline)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -364,7 +382,7 @@ export function LeadTable({
 
                 <div className="mb-4">
                   <p className="text-sm font-medium text-fm-neutral-700 capitalize">
-                    {lead.projectType.replace(/_/g, ' ')}
+                    {fieldLabel(lead.projectType)}
                   </p>
                   <p className="text-sm text-fm-neutral-600 line-clamp-2 mt-1">
                     {lead.projectDescription}
@@ -374,10 +392,10 @@ export function LeadTable({
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-sm text-fm-neutral-600">
                     Budget:{' '}
-                    <span className="font-medium">{lead.budgetRange.replace(/_/g, ' ')}</span>
+                    <span className="font-medium">{budgetLabel(lead.budgetRange)}</span>
                   </div>
                   <div className="text-sm text-fm-neutral-600">
-                    {lead.timeline.replace(/_/g, ' ')}
+                    {fieldLabel(lead.timeline)}
                   </div>
                 </div>
 
@@ -486,7 +504,7 @@ export function LeadTable({
                   <div>
                     <span className="text-fm-neutral-500 text-sm block">Project Type</span>
                     <p className="font-medium text-fm-neutral-900 capitalize">
-                      {selectedLead.projectType.replace(/_/g, ' ')}
+                      {fieldLabel(selectedLead.projectType)}
                     </p>
                   </div>
                   <div>
@@ -499,13 +517,13 @@ export function LeadTable({
                     <div>
                       <span className="text-fm-neutral-500 text-sm block">Budget</span>
                       <p className="font-medium text-fm-neutral-900">
-                        {selectedLead.budgetRange.replace(/_/g, ' ')}
+                        {budgetLabel(selectedLead.budgetRange)}
                       </p>
                     </div>
                     <div>
                       <span className="text-fm-neutral-500 text-sm block">Timeline</span>
                       <p className="font-medium text-fm-neutral-900 capitalize">
-                        {selectedLead.timeline.replace(/_/g, ' ')}
+                        {fieldLabel(selectedLead.timeline)}
                       </p>
                     </div>
                   </div>

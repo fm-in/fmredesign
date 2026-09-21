@@ -3,9 +3,14 @@
  * the public booking button.
  */
 
+/*
+ * Re-exported, not redefined. This file used to hold its own copy of the
+ * number, which is how the "Prefer WhatsApp?" link in every sales email came
+ * to point at a handset with no webhook behind it — those replies reached a
+ * phone and were invisible to the system.
+ */
 import { COMPANY_WHATSAPP_NUMBER } from '@/lib/company';
 
-/** Re-exported so existing importers keep working. */
 export { COMPANY_WHATSAPP_NUMBER };
 
 export const DEFAULT_BOOKING_LINK = 'fm-in/15min';

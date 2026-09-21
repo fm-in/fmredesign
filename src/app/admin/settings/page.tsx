@@ -29,7 +29,8 @@ import {
   ToggleRight,
   ExternalLink,
   Clock,
-  Target
+  Target,
+  MessageCircle
 } from 'lucide-react';
 import {
   DashboardButton,
@@ -47,6 +48,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { SocialAccountsPanel } from '@/components/admin/social/SocialAccountsPanel';
 import { SalesSettingsPanel } from '@/components/admin/sales/SalesSettingsPanel';
+import { WhatsAppSettingsPanel } from '@/components/admin/whatsapp/WhatsAppSettingsPanel';
 import { cn } from '@/lib/utils';
 import { PERMISSIONS } from '@/lib/admin/permissions';
 import { ALL_EVENT_TYPES } from '@/lib/events/types';
@@ -466,6 +468,10 @@ export default function SettingsPage() {
                     <Target className="h-4 w-4" />
                     Sales
                   </TabsTrigger>
+                  <TabsTrigger value="whatsapp" className="justify-start gap-3">
+                    <MessageCircle className="h-4 w-4" />
+                    WhatsApp
+                  </TabsTrigger>
                 </TabsList>
               </CardContent>
             </DashboardCard>
@@ -841,6 +847,10 @@ export default function SettingsPage() {
                   ))}
                 </CardContent>
               </DashboardCard>
+            </TabsContent>
+
+            <TabsContent value="whatsapp">
+              <WhatsAppSettingsPanel />
             </TabsContent>
 
             <TabsContent value="sales">

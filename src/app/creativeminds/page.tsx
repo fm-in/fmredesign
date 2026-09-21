@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { TalentApplication } from '@/lib/admin/talent-types';
+import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { TalentApplicationForm } from '@/components/public/TalentApplicationForm';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
@@ -117,11 +118,12 @@ export default function CreativeMindsPage() {
     return () => observer.disconnect();
   }, []);
 
-  const handleApplicationSubmit = async (application: TalentApplication) => {
+  const handleApplicationSubmit = async (application: TalentApplication, honeypot: string) => {
     const response = await fetch('/api/talent', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'submit_application', application })
+      // The decoy sits at the top level: that is where the route reads it.
+      body: JSON.stringify({ action: 'submit_application', application, [HONEYPOT_FIELD]: honeypot })
     });
     const result = await response.json();
     if (result.success) {
