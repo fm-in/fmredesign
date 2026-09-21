@@ -18,6 +18,7 @@ import { createTask, hasOpenTask } from '@/lib/sales/tasks';
 import type { LeadRow } from '@/lib/sales/types';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sendWhatsAppInteractive, sendWhatsAppText } from '@/lib/whatsapp/client';
+import { captureEmail } from '@/lib/whatsapp/contact-capture';
 import { findClientByPhone } from '@/lib/whatsapp/menu/audience';
 import { looksLikeMenuRequest, renderRoot, routeTap, type MenuContext, type MenuReply } from '@/lib/whatsapp/menu';
 import { businessHours } from '@/lib/whatsapp/hours';
@@ -189,6 +190,16 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
   await stopSequence(lead.id, 'replied');
 
   /*
+   * An address they sent us fills the one field WhatsApp cannot give us.
+   *
+   * Without it the lead is a dead end — `sequenceStartState` refuses a lead
+   * with no email — so this runs before the menu and regardless of which
+   * branch they are on. It only ever fills a gap; see contact-capture.ts for
+   * why it does not go through `ingestLead`.
+   */
+  const captured = await captureEmail(lead.id, lead.email ?? null, body);
+
+  /*
    * Try the menu before troubling anyone.
    *
    * A tap always has an answer waiting. Typed text only opens the menu when
@@ -212,6 +223,24 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
     reply = await routeTap(message.replyId, menuCtx);
   } else if (looksLikeMenuRequest(body)) {
     reply = await renderRoot(menuCtx);
+  }
+
+  /*
+   * Confirm the address back to them, because a wrong one is far likelier to
+   * be corrected if they can see which we took. It replaces the menu answer
+   * rather than following it: two messages for one is noise, and a person is
+   * reading this thread anyway.
+   */
+  if (captured) {
+    // A handoff, not a plain answer. Giving us an address is not an answer to
+    // whatever they actually wanted, so this confirms receipt and still puts
+    // the conversation in front of a person — where a self-served menu reply
+    // would have closed it out and told nobody.
+    reply = {
+      kind: 'handoff',
+      reason: 'sent their email address',
+      body: `Thanks — noted, we will use ${captured}. If that is not the right address, just say so here.`,
+    };
   }
 
   let answered = false;

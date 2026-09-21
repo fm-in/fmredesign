@@ -438,3 +438,42 @@ describe('the self-service menu', () => {
     expect(sendWhatsAppInteractive).not.toHaveBeenCalled();
   });
 });
+
+describe('capturing an email from the conversation', () => {
+  it('stores it and confirms which address it took', async () => {
+    // WhatsApp gives us a number only, and a lead with no email cannot enter
+    // a sequence at all — this is the one route by which it gets one.
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [message('sure, rohit@acmeretail.in')],
+      statuses: [],
+    });
+
+    const update = fake.callsTo('leads', 'update').at(-1);
+    expect(update && payloadOf(update)).toEqual({ email: 'rohit@acmeretail.in' });
+    // Confirmed back, because a wrong address only gets corrected if visible.
+    expect(sendWhatsAppText.mock.calls[0][1]).toContain('rohit@acmeretail.in');
+  });
+
+  it('does not also send the generic auto-reply on top of the confirmation', async () => {
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [message('rohit@acmeretail.in')],
+      statuses: [],
+    });
+    expect(sendWhatsAppText).toHaveBeenCalledTimes(1);
+  });
+
+  it('still puts the message in front of a person', async () => {
+    // An address is not an answer to whatever they wanted.
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [message('rohit@acmeretail.in')],
+      statuses: [],
+    });
+    expect(createTask).toHaveBeenCalled();
+  });
+});

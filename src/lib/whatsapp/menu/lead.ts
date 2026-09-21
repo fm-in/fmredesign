@@ -1,11 +1,20 @@
 /**
  * The menu someone gets when they message us and we do not know them.
  *
- * Three buttons, because Meta allows three and a stranger should not be given
- * a decision tree. Every branch is public information — nothing here reads a
- * record or reveals that we hold one. The only branch that costs us anything
- * is the one that asks for a person, and that is the point of the menu: the
- * two questions we answer fifty times a week stop reaching a human at all.
+ * A flat list rather than nested buttons. Four distinct people message an
+ * agency — a business that might hire us, a creative who wants work from us,
+ * someone weighing us up, and someone who just wants a human — and nesting
+ * those behind a first choice costs a tap and hides the option that is most
+ * worth taking. Everything is one tap away and says what it is.
+ *
+ * Every branch is public information. Nothing here reads a record or reveals
+ * that we hold one; the client menu is the only place that does, and it is
+ * unreachable from here.
+ *
+ * The scorecard sits at the top on purpose. It is the only branch that gives
+ * a stranger something rather than showing them something, and the only one
+ * that comes back with an email address — without which a lead cannot be
+ * followed up at all.
  */
 
 import { SITE_URL } from '@/lib/site-url';
@@ -35,13 +44,58 @@ const root: MenuNode = {
         body:
           `${greeting(ctx)} thanks for messaging Freaking Minds.\n\n` +
           'Pick whichever is useful, or just type your question — a person reads this thread.',
-        buttons: [
-          // Titles are 20 characters or Meta rejects the whole message.
-          { id: id('services'), title: 'What we do' },
-          { id: id('work'), title: 'See our work' },
-          { id: id('human'), title: 'Talk to someone' },
-        ],
+        list: {
+          label: 'Open menu',
+          sections: [
+            {
+              // Row titles are 24 characters and descriptions 72, or Meta
+              // rejects the whole message rather than trimming it.
+              rows: [
+                { id: id('scorecard'), title: 'Free marketing score', description: '11 questions, two minutes, and the one thing to fix first' },
+                { id: id('services'), title: 'What we do', description: 'The work itself, and who it is for' },
+                { id: id('work'), title: 'See our work', description: 'Recent projects, with numbers where we can publish them' },
+                { id: id('creative'), title: 'Join as a creative', description: 'Photographers, editors, designers, writers' },
+                { id: id('human'), title: 'Talk to someone', description: 'A person picks this up in this thread' },
+              ],
+            },
+          ],
+        },
       },
+    };
+  },
+};
+
+const scorecard: MenuNode = {
+  id: id('scorecard'),
+  audience: 'lead',
+  async render() {
+    return {
+      kind: 'text',
+      body:
+        // The six dimensions and the length are taken from the scorecard
+        // itself (src/lib/scorecard/questions.ts) and from the copy already
+        // on the page. Nothing here should claim more than the tool does.
+        'Eleven questions about how you actually run things, and a score out of 100 across ' +
+        'six areas: foundation, getting found, content, paid reach, measurement and ' +
+        'follow-up.\n\n' +
+        `${SITE_URL}/scorecard\n\n` +
+        'About two minutes, no sign-up to start, and the full breakdown lands in your inbox. ' +
+        'No call required, and nothing to pay.',
+    };
+  },
+};
+
+const creative: MenuNode = {
+  id: id('creative'),
+  audience: 'lead',
+  async render() {
+    return {
+      kind: 'text',
+      body:
+        'CreativeMinds is our network of photographers, editors, designers and writers — we ' +
+        'bring them onto client work, and share the pool with other businesses who need them.\n\n' +
+        `Two short steps, and we read every portfolio ourselves: ${SITE_URL}/creativeminds\n\n` +
+        'We come back within 48 hours either way.',
     };
   },
 };
@@ -89,7 +143,7 @@ const human: MenuNode = {
   },
 };
 
-export const LEAD_NODES: MenuNode[] = [root, services, work, human];
+export const LEAD_NODES: MenuNode[] = [root, scorecard, services, work, creative, human];
 
 /**
  * Words that mean "show me the menu".

@@ -89,12 +89,19 @@ describe('every tappable id resolves', () => {
 });
 
 describe('the lead menu', () => {
-  it('opens with three buttons and no mention of any record we hold', async () => {
+  it('offers every intent one tap away, and mentions no record we hold', async () => {
     const reply = await renderRoot(LEAD_CTX);
     expect(reply.kind).toBe('interactive');
     if (reply.kind !== 'interactive') return;
-    expect(reply.message.buttons).toHaveLength(3);
+
+    const rows = reply.message.list?.sections.flatMap((s) => s.rows) ?? [];
+    expect(rows).toHaveLength(5);
+    // The scorecard leads: it is the only branch that gives something rather
+    // than shows something, and the only one that returns an email.
+    expect(rows[0].id).toBe('lead:scorecard');
     expect(reply.message.body).toContain('Priya');
+    // Nothing here may hint that we hold a record on anyone.
+    expect(JSON.stringify(reply.message)).not.toMatch(/invoice|client|account/i);
   });
 
   it('does not greet a name that is really a phone number', async () => {
@@ -187,5 +194,23 @@ describe('recognising a request for the menu', () => {
 
   it('is false for nothing at all', () => {
     expect(looksLikeMenuRequest(null)).toBe(false);
+  });
+});
+
+describe('the scorecard and creative branches', () => {
+  it('sends the scorecard link and says the report comes by email', async () => {
+    const reply = await routeTap('lead:scorecard', LEAD_CTX);
+    if (reply?.kind !== 'text') throw new Error('expected text');
+    expect(reply.body).toContain('/scorecard');
+    expect(reply.body).toMatch(/inbox|email/i);
+    // It must not read as a sales call in disguise.
+    expect(reply.body).toMatch(/no call required/i);
+  });
+
+  it('points a creative at the application, not at a salesperson', async () => {
+    const reply = await routeTap('lead:creative', LEAD_CTX);
+    if (reply?.kind !== 'text') throw new Error('expected text');
+    expect(reply.body).toContain('/creativeminds');
+    expect(reply.kind).not.toBe('handoff');
   });
 });
