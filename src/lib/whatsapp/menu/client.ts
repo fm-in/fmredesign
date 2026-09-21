@@ -72,7 +72,7 @@ const invoices: MenuNode = {
     }
 
     if (position.openCount === 0) {
-      return { kind: 'text', body: `Nothing outstanding — you are all settled.\n\nThe full history is in your portal: ${portal(ctx, '/invoices')}` };
+      return { kind: 'text', body: 'Nothing outstanding — you are all settled.' };
     }
 
     const lines = [
@@ -87,7 +87,16 @@ const invoices: MenuNode = {
           : `The next is due ${readableDate(position.oldestDue)}.`
       );
     }
-    lines.push('', `Numbers, dates and the PDFs are in your portal: ${portal(ctx, '/invoices')}`);
+    /*
+     * No portal link here, unlike the other branches.
+     *
+     * The client portal has no invoices page — it reads `client_documents`
+     * for whatever was uploaded by hand and never touches the `invoices`
+     * table these figures come from. Linking there sent people to a 404 and
+     * promised PDFs that are not on the other end. Offering to send it is
+     * the honest version until the portal can show them.
+     */
+    lines.push('', 'Reply here if you want the invoice itself and someone will send it across.');
 
     return { kind: 'text', body: lines.join('\n') };
   },

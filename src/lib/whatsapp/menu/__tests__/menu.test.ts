@@ -11,6 +11,7 @@ vi.mock('../client-data', async () => {
   };
 });
 
+import { readdirSync } from 'node:fs';
 import { allNodes, looksLikeMenuRequest, renderRoot, routeTap, type MenuContext } from '../index';
 import { CLIENT_ROOT } from '../client';
 import { LEAD_ROOT } from '../lead';
@@ -120,7 +121,31 @@ describe('the lead menu', () => {
 });
 
 describe('the client menu', () => {
-  it('reports the invoice position with a link into the portal, not a document', async () => {
+  it('links only to portal pages that exist', async () => {
+    /*
+     * The invoices branch shipped pointing at /client/<slug>/invoices, which
+     * is a 404 — the portal has no invoices page at all, and reads uploaded
+     * documents rather than the `invoices` table those figures come from. A
+     * client got a real answer and then a dead link promising PDFs.
+     */
+    const routes = new Set(
+      readdirSync('src/app/client/[clientId]', { withFileTypes: true })
+        .filter((e) => e.isDirectory())
+        .map((e) => e.name),
+    );
+
+    const emitted: string[] = [];
+    for (const node of allNodes().filter((n) => n.audience === 'client')) {
+      const reply = await node.render(CLIENT_CTX);
+      const text = reply.kind === 'interactive' ? JSON.stringify(reply.message) : reply.body;
+      for (const m of text.matchAll(/\/client\/[^/\s]+\/([a-z-]+)/g)) emitted.push(m[1]);
+    }
+
+    expect(emitted.length).toBeGreaterThan(0);
+    expect(emitted.filter((r) => !routes.has(r))).toEqual([]);
+  });
+
+  it('reports the invoice position without promising a page we do not have', async () => {
     invoicePosition.mockResolvedValue({
       openCount: 2, total: 186000, currency: 'INR', oldestDue: '2026-10-15', overdueCount: 0,
     });
@@ -130,7 +155,7 @@ describe('the client menu', () => {
     expect(reply.body).toContain('2 invoices open');
     expect(reply.body).toContain('₹1,86,000');
     expect(reply.body).toContain('15 October 2026');
-    expect(reply.body).toContain('/client/acme-retail/invoices');
+    expect(reply.body).not.toContain('/invoices');
   });
 
   it('says "due" for a future invoice and "was due" for a late one', async () => {
