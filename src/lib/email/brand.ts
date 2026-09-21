@@ -50,9 +50,24 @@ export const MUTED_COLOR = '#6b635c';
 /** Below AA on purpose. Decorative lines only, never content. */
 export const FAINT_COLOR = '#9a938c';
 
-export const LIGHT_BG = '#ffffff';
-export const CARD_BG = '#ffffff';
-export const PANEL_BG = '#ffffff';
+/*
+ * Off-white by one unit, on purpose.
+ *
+ * Outlook's dark mode decides what to repaint by looking at the colour, and
+ * pure #ffffff is the value it most reliably inverts. A white that is not
+ * exactly that usually falls outside the rule while being indistinguishable
+ * on screen — the difference is one unit of blue, which no one can see.
+ *
+ * This is the whole defence. The other half of the usual advice is to force
+ * the background back with `[data-ogsc]` overrides, and that is deliberately
+ * NOT done here: those overrides can only re-assert a background, while
+ * Outlook has already lightened the text to suit the dark one it chose. Win
+ * the background and lose the text and the result is white on white — an
+ * unreadable email, which is worse than an inverted but legible one.
+ */
+export const LIGHT_BG = '#fffffe';
+export const CARD_BG = '#fffffe';
+export const PANEL_BG = '#fffffe';
 /** `--site-line`, composited on white. */
 export const BORDER_COLOR = '#dedcd9';
 /** `--site-line-soft`, composited on white. */

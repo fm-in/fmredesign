@@ -26,7 +26,10 @@ describe('the transactional email shell', () => {
       expect(html).not.toContain('#f4f1f2'); // the old V2 ground
       expect(html).not.toContain('#f7f4ef'); // --site-ground
       expect(html).not.toContain('#fffdfa'); // --site-raised
-      expect(html).toMatch(/<body[^>]*background-color:#ffffff/);
+      // Off-white by one unit: Outlook's dark mode inverts pure #ffffff most
+      // reliably, and the difference is invisible on screen.
+      expect(html).toMatch(/<body[^>]*background-color:#fffffe/);
+      expect(html).not.toMatch(/background-color:#ffffff\b/);
     }
   });
 
