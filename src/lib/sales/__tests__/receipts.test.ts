@@ -12,6 +12,7 @@ import { contactPageBody as contactPagePost, getStartedBody as getStartedPost } 
 import type { RenderedEmail } from '../emails';
 import { CONTACT_SERVICE_PHRASES, renderEnquiryReceipt } from '../receipts';
 import { COMPANY_WHATSAPP_NUMBER } from '@/lib/company';
+import { readableWords } from '@/test-utils/readable-email';
 
 vi.mock('@/lib/supabase', async () => {
   const m = await import('@/test-utils/fake-supabase');
@@ -41,12 +42,6 @@ function contactPageServices(): string[] {
   const block = /const services = \[([\s\S]*?)\];/.exec(source)?.[1];
   if (!block) throw new Error('services list not found in the contact page');
   return [...block.matchAll(/"([^"]+)"/g)].map((match) => match[1] ?? '');
-}
-
-/** Everything a reader sees, with link targets removed (links legitimately carry ids and slugs). */
-function readableWords(email: RenderedEmail): string {
-  const visibleHtml = email.html.replace(/<\/?a\b[^>]*>/g, '').replace(/<[^>]+>/g, ' ');
-  return [email.subject, email.text, visibleHtml].join('\n').replace(/https?:\/\/\S+/g, 'LINK');
 }
 
 function expectCleanReceipt(email: RenderedEmail): void {

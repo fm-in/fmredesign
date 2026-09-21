@@ -91,6 +91,31 @@ describe('the transactional email shell', () => {
     }
   });
 
+  it('tells Outlook how to put the colours back, both halves of them', () => {
+    // Outlook forces dark mode with no opt-out, but it marks what it changed
+    // — data-ogsb for a background it replaced, data-ogsc for a colour — so
+    // the originals can be re-asserted. Gmail leaves the mail alone; this is
+    // only for Outlook.
+    for (const html of samples()) {
+      expect(html).toMatch(/\[data-ogsb\] \.s[^{]*\{background-color:#fffffe!important\}/);
+      // Both halves. A background put back without the text leaves the ink
+      // Outlook already lightened, i.e. white on white.
+      expect(html).toMatch(/\[data-ogsc\] \.c[^{]*\{color:#2e2926!important\}/);
+    }
+  });
+
+  it('keeps white text on a magenta fill more specific than the link rule', () => {
+    // The CTA is a link inside .c, so `[data-ogsc] .c a` matches it and is
+    // the more specific selector. Without an `a.f` form to outrank it, the
+    // button label was painted magenta on a magenta pill and disappeared —
+    // the exact invisible-text failure these overrides exist to avoid.
+    const html = newLeadEmail({ name: 'R', email: 'r@a.in', company: 'A' }).html;
+    expect(html).toContain('[data-ogsc] .c a.f');
+    expect(html).toMatch(/\.f[^{]*\{color:#ffffff!important\}/);
+    // And the CTA actually carries the class.
+    expect(html).toMatch(/<a class="f"[^>]*>View in Dashboard<\/a>/);
+  });
+
   it('keeps the button fill at the accent that never lightens', () => {
     // --site-accent-solid. White on #c9325d is 5.12:1; the dark-mode text
     // accent would drop the CTA under AA.

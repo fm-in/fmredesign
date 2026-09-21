@@ -100,4 +100,29 @@ export const COMPANY_ABOUT =
 export const LIGHT_ONLY_HEAD =
   '<meta name="color-scheme" content="only light">' +
   '<meta name="supported-color-schemes" content="light">' +
-  '<style>:root{color-scheme:only light;supported-color-schemes:only light}</style>';
+  '<style>' +
+  ':root{color-scheme:only light;supported-color-schemes:only light}' +
+  // Outlook rewrites the inline styles it changes and marks those elements —
+  // `data-ogsb` where it replaced a background, `data-ogsc` a colour. Both
+  // forms are written, as a wrapper and on the element itself, because which
+  // one carries the attribute differs between Outlook builds.
+  `[data-ogsb] .s,[data-ogsc] .s,.s[data-ogsb],.s[data-ogsc]{background-color:${CARD_BG}!important}` +
+  // Both halves, always. Re-asserting a background without the text is how
+  // this goes wrong: Outlook has already lightened the ink to suit the dark
+  // surface it chose, so winning the background alone leaves white on white.
+  // The catch-all flattens labels into body ink rather than risk leaving one
+  // of them invisible — a slightly duller email beats an unreadable one.
+  `[data-ogsc] .c,[data-ogsc] .c *,.c[data-ogsc],.c[data-ogsc] *{color:${TEXT_COLOR}!important}` +
+  `[data-ogsc] .c a,.c[data-ogsc] a{color:${BRAND_MAGENTA}!important}` +
+  `[data-ogsc] .c h1,.c[data-ogsc] h1{color:${HEADING_COLOR}!important}` +
+  // Anything sitting on a magenta fill keeps white text, or the catch-all
+  // above would paint the CTA label and the badge ink-on-magenta.
+  //
+  // `a.f` is not decoration. The CTA is a link inside `.c`, so the link rule
+  // above matches it too and is the more specific selector — which painted
+  // magenta text onto a magenta pill and made the button label vanish
+  // entirely. These selectors have to outrank it, not merely follow it.
+  '[data-ogsc] .c a.f,[data-ogsc] a.f,.c[data-ogsc] a.f,' +
+  '[data-ogsc] .f,[data-ogsc] .f *,.f[data-ogsc],.f[data-ogsc] *' +
+  '{color:#ffffff!important}' +
+  '</style>';

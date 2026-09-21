@@ -110,34 +110,34 @@ function emailWrapper(title: string, body: string): string {
 <html bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG}">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${LIGHT_ONLY_HEAD}</head>
 <body style="margin:0;padding:0;background-color:${LIGHT_BG};font-family:${SANS};-webkit-font-smoothing:antialiased" bgcolor="${LIGHT_BG}">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:44px 16px">
-<tr><td align="center" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG}">
+<table role="presentation" class="s" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:44px 16px">
+<tr><td class="s" align="center" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG}">
 
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="width:600px;max-width:600px;background-color:${LIGHT_BG}">
-  <tr><td bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:0 0 18px 40px">
+<table role="presentation" class="s" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="width:600px;max-width:600px;background-color:${LIGHT_BG}">
+  <tr><td class="s" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:0 0 18px 40px">
     <a href="${SITE_URL}" style="text-decoration:none">
       <img src="${LOGO_URL}" alt="FreakingMinds" width="132" style="display:block;width:132px;max-width:132px;height:auto;border:0;outline:none" />
     </a>
   </td></tr>
 </table>
 
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="width:600px;max-width:600px;background-color:${CARD_BG};border:1px solid ${BORDER_COLOR}">
+<table role="presentation" class="s" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${CARD_BG}" style="width:600px;max-width:600px;background-color:${CARD_BG};border:1px solid ${BORDER_COLOR}">
 
   <tr><td bgcolor="${BRAND_MAGENTA}" style="background-color:${BRAND_MAGENTA};height:3px;line-height:3px;font-size:0">&nbsp;</td></tr>
 
-  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:34px 40px 0">
+  <tr><td class="s c" bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:34px 40px 0">
     <h1 style="margin:0;color:${HEADING_COLOR};font-family:${SERIF};font-size:30px;font-weight:400;line-height:1.2;letter-spacing:-0.01em">${title}</h1>
   </td></tr>
 
-  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:22px 40px 0">
+  <tr><td class="s" bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:22px 40px 0">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${HAIRLINE}" style="background-color:${HAIRLINE};height:1px;line-height:1px;font-size:0">&nbsp;</td></tr></table>
   </td></tr>
 
-  <tr><td bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:26px 40px 36px;font-family:${SANS};font-size:16px;line-height:1.6;color:${TEXT_COLOR}">
+  <tr><td class="s c" bgcolor="${CARD_BG}" style="background-color:${CARD_BG};padding:26px 40px 36px;font-family:${SANS};font-size:16px;line-height:1.6;color:${TEXT_COLOR}">
     ${body}
   </td></tr>
 
-  <tr><td bgcolor="${PANEL_BG}" style="background-color:${PANEL_BG};padding:22px 40px 26px;border-top:1px solid ${HAIRLINE};font-family:${SANS}">
+  <tr><td class="s c" bgcolor="${PANEL_BG}" style="background-color:${PANEL_BG};padding:22px 40px 26px;border-top:1px solid ${HAIRLINE};font-family:${SANS}">
     <div style="color:${HEADING_COLOR};font-size:13px;font-weight:600;line-height:20px">FreakingMinds</div>
     <div style="color:${MUTED_COLOR};font-size:13px;line-height:20px;margin:1px 0 7px">${COMPANY_ABOUT}</div>
     <div style="color:${MUTED_COLOR};font-size:13px;line-height:20px">
@@ -149,8 +149,8 @@ function emailWrapper(title: string, body: string): string {
 
 </table>
 
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="width:600px;max-width:600px;background-color:${LIGHT_BG}">
-  <tr><td align="center" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:20px 0 0;color:${FAINT_COLOR};font-family:${SANS};font-size:12px;line-height:18px">
+<table role="presentation" class="s" width="600" cellpadding="0" cellspacing="0" border="0" bgcolor="${LIGHT_BG}" style="width:600px;max-width:600px;background-color:${LIGHT_BG}">
+  <tr><td class="s c" align="center" bgcolor="${LIGHT_BG}" style="background-color:${LIGHT_BG};padding:20px 0 0;color:${FAINT_COLOR};font-family:${SANS};font-size:12px;line-height:18px">
     &copy; ${new Date().getFullYear()} FreakingMinds Digital. All rights reserved.
   </td></tr>
 </table>
@@ -173,7 +173,7 @@ function dataTable(rows: string): string {
 }
 
 function badge(text: string, color: string = BRAND_MAGENTA): string {
-  return `<span style="display:inline-block;background-color:${color};color:#ffffff;padding:4px 11px;border-radius:999px;font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.09em;line-height:16px;text-transform:uppercase">${text}</span>`;
+  return `<span class="f" style="display:inline-block;background-color:${color};color:#ffffff;padding:4px 11px;border-radius:999px;font-family:${SANS};font-size:11px;font-weight:600;letter-spacing:0.09em;line-height:16px;text-transform:uppercase">${text}</span>`;
 }
 
 /** A pill, like `.btn--primary` on the site. Outlook squares the corners and
@@ -181,7 +181,7 @@ function badge(text: string, color: string = BRAND_MAGENTA): string {
 function ctaButton(text: string, href: string, color: string = BRAND_MAGENTA): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 8px"><tr>
     <td align="center" bgcolor="${color}" style="background-color:${color};border-radius:999px;padding:13px 26px">
-      <a href="${href}" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:15px;font-weight:600;line-height:1;letter-spacing:0.02em;text-decoration:none">${text}</a>
+      <a class="f" href="${href}" style="display:inline-block;color:#ffffff;font-family:${SANS};font-size:15px;font-weight:600;line-height:1;letter-spacing:0.02em;text-decoration:none">${text}</a>
     </td>
   </tr></table>`;
 }

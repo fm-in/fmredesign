@@ -36,7 +36,7 @@ describe('renderShell', () => {
 
   it('renders the CTA as a padded, background-coloured table cell rather than a styled anchor', () => {
     const html = renderShell(baseInput);
-    expect(html).toMatch(/<td[^>]*bgcolor="#c9325d"[^>]*>\s*<a href="https:\/\/cal\.com\/fm-in\/15min"[^>]*>Book a call<\/a>/);
+    expect(html).toMatch(/<td[^>]*bgcolor="#c9325d"[^>]*>\s*<a class="f" href="https:\/\/cal\.com\/fm-in\/15min"[^>]*>Book a call<\/a>/);
   });
 
   it('sets body copy in 16px/1.6 on white in the shared body ink', () => {
@@ -95,9 +95,9 @@ describe('renderShell', () => {
      * change was intended; being surprised by them is the point.
      */
     delete process.env.COMPANY_ADDRESS;
-    expect(sha256(renderShell(baseInput))).toBe('533b222e482ae131a0fad556c1c575fab02edd89b4359beeff6064a990c73b02');
+    expect(sha256(renderShell(baseInput))).toBe('f66c85485a6e1aec3418ac27dbef72f8e5c5b11c18b2b00a6bd871376dae38f2');
     process.env.COMPANY_ADDRESS = '123 Example Street, Bhopal';
-    expect(sha256(renderShell(baseInput))).toBe('bd3340e04ef305e038a21c9e08fc50755eab76edd563f4506203d73f975b08c8');
+    expect(sha256(renderShell(baseInput))).toBe('00d1fc5cbb5d23d941aa2fc7fbcb8bc54c7940fe8d4091a6bb6f0cfa5b0edb77');
   });
 
   describe('without an unsubscribe link (transactional mail)', () => {
@@ -109,7 +109,7 @@ describe('renderShell', () => {
     };
 
     function footerOf(html: string): string {
-      return html.slice(html.lastIndexOf('<tr><td bgcolor="#fffffe"'));
+      return html.slice(html.lastIndexOf('<tr><td class="s c" bgcolor="#fffffe"'));
     }
 
     it.each([
