@@ -7,7 +7,16 @@ vi.mock('@/lib/supabase', async () => {
 });
 
 const sendWhatsAppText = vi.fn().mockResolvedValue({ ok: true, wamid: 'wamid.OUT' });
-vi.mock('@/lib/whatsapp/client', () => ({ sendWhatsAppText: (...a: unknown[]) => sendWhatsAppText(...a) }));
+const sendWhatsAppInteractive = vi.fn().mockResolvedValue({ ok: true, wamid: 'wamid.MENU' });
+vi.mock('@/lib/whatsapp/client', () => ({
+  sendWhatsAppText: (...a: unknown[]) => sendWhatsAppText(...a),
+  sendWhatsAppInteractive: (...a: unknown[]) => sendWhatsAppInteractive(...a),
+}));
+
+const findClientByPhone = vi.fn().mockResolvedValue(null);
+vi.mock('@/lib/whatsapp/menu/audience', () => ({
+  findClientByPhone: (...a: unknown[]) => findClientByPhone(...a),
+}));
 
 const addSuppression = vi.fn().mockResolvedValue(undefined);
 const isSuppressed = vi.fn().mockResolvedValue(false);
@@ -75,6 +84,8 @@ beforeEach(() => {
   fake.reset();
   vi.clearAllMocks();
   sendWhatsAppText.mockResolvedValue({ ok: true, wamid: 'wamid.OUT' });
+  sendWhatsAppInteractive.mockResolvedValue({ ok: true, wamid: 'wamid.MENU' });
+  findClientByPhone.mockResolvedValue(null);
   isSuppressed.mockResolvedValue(false);
   hasOpenTask.mockResolvedValue(false);
 });
@@ -102,7 +113,7 @@ describe('an ordinary message from a known lead', () => {
 
   it('writes the automatic reply to the timeline as an outbound message', async () => {
     tables();
-    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Can you quote for Instagram ads?')], statuses: [] });
 
     expect(recordActivity).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -127,7 +138,7 @@ describe('an ordinary message from a known lead', () => {
   it('records the failure when the reply cannot be sent', async () => {
     tables();
     sendWhatsAppText.mockResolvedValue({ ok: false, error: 'Outside the 24 hour window' });
-    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Can you quote for Instagram ads?')], statuses: [] });
 
     expect(recordActivity).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'message_failed', metadata: { automatic: true, error: 'Outside the 24 hour window' } })
@@ -137,7 +148,7 @@ describe('an ordinary message from a known lead', () => {
   it('stays quiet when the number is already suppressed for WhatsApp', async () => {
     tables();
     isSuppressed.mockResolvedValue(true);
-    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Can you quote for Instagram ads?')], statuses: [] });
     expect(sendWhatsAppText).not.toHaveBeenCalled();
   });
 });
@@ -146,7 +157,7 @@ describe('the automatic reply tells the truth about when we will answer', () => 
   it('promises "shortly" during business hours', async () => {
     vi.useFakeTimers().setSystemTime(OPEN_HOURS);
     tables();
-    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Can you quote for Instagram ads?')], statuses: [] });
 
     expect(sendWhatsAppText.mock.calls[0][1]).toContain('shortly');
     vi.useRealTimers();
@@ -156,7 +167,7 @@ describe('the automatic reply tells the truth about when we will answer', () => 
     // A promise that breaks by morning reads worse than an honest wait.
     vi.useFakeTimers().setSystemTime(CLOSED_HOURS);
     tables();
-    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Can you quote for Instagram ads?')], statuses: [] });
 
     const body = sendWhatsAppText.mock.calls[0][1] as string;
     expect(body).not.toContain('shortly');
@@ -267,7 +278,7 @@ describe('a number we have never heard from', () => {
     tables({ lead: null });
     ingestLead.mockRejectedValue(new Error('A lead needs an email address or a phone number'));
 
-    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Can you quote for Instagram ads?')], statuses: [] });
 
     expect(notifyAdmins).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'WhatsApp message we could not attach to a lead' })
@@ -345,9 +356,85 @@ describe('the lead lookup', () => {
       return { data: [], error: null };
     });
 
-    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Can you quote for Instagram ads?')], statuses: [] });
 
     const lookup = calls.find((c) => c.table === 'leads' && c.op === 'select');
     expect(lookup && eqValue(lookup, 'phone_e164')).toBe('+919833257659');
+  });
+});
+
+/**
+ * The reason the menu exists: a question someone can answer themselves
+ * should not land on a person's list. These pin which paths open a task and
+ * which quietly finish.
+ */
+describe('the self-service menu', () => {
+  it('opens the menu for a bare greeting instead of the generic auto-reply', async () => {
+    tables();
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('Hello')], statuses: [] });
+
+    expect(sendWhatsAppInteractive).toHaveBeenCalledTimes(1);
+    expect(sendWhatsAppText).not.toHaveBeenCalled();
+  });
+
+  it('answers a tap without troubling anyone', async () => {
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [tap('lead:work', 'See our work')],
+      statuses: [],
+    });
+
+    expect(sendWhatsAppText).toHaveBeenCalledTimes(1);
+    expect(createTask).not.toHaveBeenCalled();
+    expect(notifyAdmins).not.toHaveBeenCalled();
+    // It still lands on the timeline — invisible is not the same as silent.
+    expect(recordActivity).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'message_sent', metadata: expect.objectContaining({ menu: 'text' }) }),
+    );
+  });
+
+  it('still opens a task when the menu hands over to a person', async () => {
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [tap('lead:human', 'Talk to someone')],
+      statuses: [],
+    });
+
+    expect(sendWhatsAppText).toHaveBeenCalledTimes(1);
+    expect(createTask).toHaveBeenCalledWith(expect.objectContaining({ leadId: 'lead_1' }));
+    expect(notifyAdmins).toHaveBeenCalled();
+  });
+
+  it('treats a tap on a menu we have since renamed as an ordinary message', async () => {
+    tables();
+    await handleWhatsAppEvents({
+      phoneNumberId: '1',
+      messages: [tap('lead:pricing_2024', 'Pricing')],
+      statuses: [],
+    });
+
+    // No menu answer exists, so it falls through to the human path rather
+    // than leaving the person staring at silence.
+    expect(sendWhatsAppInteractive).not.toHaveBeenCalled();
+    expect(createTask).toHaveBeenCalled();
+  });
+
+  it('gives a known client the client menu, not the lead one', async () => {
+    tables();
+    findClientByPhone.mockResolvedValue({ id: 'cl_1', slug: 'acme-retail', name: 'Acme Retail' });
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('menu')], statuses: [] });
+
+    const sent = sendWhatsAppInteractive.mock.calls[0][1] as { list?: unknown; buttons?: unknown };
+    expect(sent.list).toBeDefined();
+    expect(sent.buttons).toBeUndefined();
+  });
+
+  it('says nothing at all to a number that has opted out', async () => {
+    tables();
+    isSuppressed.mockResolvedValue(true);
+    await handleWhatsAppEvents({ phoneNumberId: '1', messages: [message('menu')], statuses: [] });
+    expect(sendWhatsAppInteractive).not.toHaveBeenCalled();
   });
 });

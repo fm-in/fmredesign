@@ -17,7 +17,9 @@ import { addSuppression, isSuppressed } from '@/lib/sales/suppression';
 import { createTask, hasOpenTask } from '@/lib/sales/tasks';
 import type { LeadRow } from '@/lib/sales/types';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { sendWhatsAppText } from '@/lib/whatsapp/client';
+import { sendWhatsAppInteractive, sendWhatsAppText } from '@/lib/whatsapp/client';
+import { findClientByPhone } from '@/lib/whatsapp/menu/audience';
+import { looksLikeMenuRequest, renderRoot, routeTap, type MenuContext, type MenuReply } from '@/lib/whatsapp/menu';
 import { businessHours } from '@/lib/whatsapp/hours';
 import type { WhatsAppEvents, WhatsAppInboundMessage, WhatsAppStatusUpdate } from '@/lib/sales/intake/adapters/whatsapp';
 
@@ -68,7 +70,11 @@ function autoReply(now: Date): string {
 
   return (
     `${opening}\n\n` +
-    'If it helps, tell us what you are trying to move — a number, a launch, a problem you have been circling — and we will come back with something specific.'
+    'If it helps, tell us what you are trying to move — a number, a launch, a problem you have been circling — and we will come back with something specific.\n\n' +
+    // How anyone finds the menu at all. It is deliberately the last line and
+    // deliberately small: someone who has just asked a real question wants an
+    // answer, not to be sent round a list of options.
+    'Or send "menu" for the things you can check yourself.'
   );
 }
 
@@ -182,6 +188,43 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
 
   await stopSequence(lead.id, 'replied');
 
+  /*
+   * Try the menu before troubling anyone.
+   *
+   * A tap always has an answer waiting. Typed text only opens the menu when
+   * it is plainly a greeting — someone who asked a real question wants an
+   * answer, and being handed a list of options instead reads as a brush-off.
+   */
+  const client = await findClientByPhone(phoneE164);
+  const menuCtx: MenuContext = {
+    audience: client ? 'client' : 'lead',
+    leadId: lead.id,
+    clientId: client?.id,
+    clientSlug: client?.slug,
+    name: client?.name ?? lead.name,
+    phoneE164,
+  };
+
+  let reply: MenuReply | null = null;
+  if (message.replyId) {
+    // Null for a tap on a menu we have since renamed. Treated as an ordinary
+    // message rather than an error: a person reads it.
+    reply = await routeTap(message.replyId, menuCtx);
+  } else if (looksLikeMenuRequest(body)) {
+    reply = await renderRoot(menuCtx);
+  }
+
+  let answered = false;
+  if (reply && !(await isSuppressed({ phoneE164 }, 'whatsapp'))) {
+    answered = await deliver(reply, phoneE164, lead.id);
+    // A self-served answer is finished business — no task, no notification.
+    // That is the whole point: the questions we answer fifty times a week
+    // stop reaching a person at all. A handoff falls through on purpose, to
+    // open the task; what it must not do is fall through to the auto-reply
+    // as well, which would put two messages back to back in their chat.
+    if (answered && reply.kind !== 'handoff') return;
+  }
+
   const owner = await loadOwner(lead.owner_id);
   const notification = {
     type: 'general' as const,
@@ -204,7 +247,37 @@ async function handleMessage(message: WhatsAppInboundMessage): Promise<void> {
     });
   }
 
-  await maybeAutoReply(lead, phoneE164);
+  if (!answered) await maybeAutoReply(lead, phoneE164);
+}
+
+/**
+ * Send whatever the menu produced, and put it on the timeline.
+ *
+ * Interactive messages and plain text are both session messages, legal only
+ * because their own message just opened the 24-hour window.
+ */
+async function deliver(reply: MenuReply, phoneE164: string, leadId: string): Promise<boolean> {
+  const result =
+    reply.kind === 'interactive'
+      ? await sendWhatsAppInteractive(phoneE164, reply.message)
+      : await sendWhatsAppText(phoneE164, reply.body);
+
+  // What the person sees, for the timeline: a menu's body, or the text.
+  const shown = reply.kind === 'interactive' ? reply.message.body : reply.body;
+
+  await recordActivity({
+    leadId,
+    type: result.ok ? 'message_sent' : 'message_failed',
+    channel: 'whatsapp',
+    direction: 'out',
+    body: result.ok ? shown : null,
+    providerMessageId: result.wamid ?? null,
+    metadata: result.ok
+      ? { automatic: true, menu: reply.kind }
+      : { automatic: true, menu: reply.kind, error: result.error },
+  });
+
+  return result.ok;
 }
 
 async function maybeAutoReply(lead: LeadRow, phoneE164: string): Promise<void> {
