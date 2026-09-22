@@ -293,6 +293,15 @@ export const submitTalentApplicationSchema = z.object({
       email: emailField,
       phone: nonEmptyString,
     }).catchall(z.unknown()),
+    /*
+     * Required, because it is the only thing the review is actually made on.
+     * The form asked for a rate card and left this optional, on a marketplace
+     * whose pitch is "portfolio-reviewed talent" — so applications arrived
+     * with nothing to review.
+     */
+    portfolioLinks: z.object({
+      websiteUrl: nonEmptyString,
+    }).catchall(z.unknown()),
   }).catchall(z.unknown()),
 });
 
