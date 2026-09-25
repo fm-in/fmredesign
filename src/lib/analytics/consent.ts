@@ -45,10 +45,10 @@ export function saveConsent(store: Pick<Storage, 'setItem'>, choice: ConsentChoi
   // gtag's consent commands must be pushed as an `arguments` object, not an
   // array — GTM ignores the array form. Hence the function rather than a
   // plain push.
-  function gtag(..._args: unknown[]) {
+  const gtag = function () {
     // eslint-disable-next-line prefer-rest-params
     layer.push(arguments as unknown as Record<string, unknown>);
-  }
+  } as (...args: unknown[]) => void;
   gtag('consent', 'update', consentState(choice));
 }
 
