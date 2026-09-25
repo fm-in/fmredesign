@@ -9,6 +9,7 @@ import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
 import { readFirstTouchSafely } from '@/lib/attribution';
 import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
+import { track } from '@/lib/analytics/events';
 
 const contactInfo = [
   {
@@ -116,6 +117,7 @@ export default function ContactPage() {
 
       if (!response.ok) throw new Error('Failed to submit');
 
+      track({ event: 'generate_lead', form_id: 'contact', lead_type: formData.service || 'general' });
       setSubmitStatus('success');
       setFormData({ name: '', email: '', phone: '', company: '', service: '', budget: '', message: '' });
     } catch {

@@ -1,29 +1,44 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { readConsent, saveConsent, type ConsentChoice } from '@/lib/analytics/consent';
 
-const COOKIE_CONSENT_KEY = 'fm-cookie-consent';
-
+/**
+ * The cookie banner, wired to Google Consent Mode.
+ *
+ * Accept and Decline both take effect on the current page view through
+ * `saveConsent`, and the GTM bootstrap in the root layout re-applies the
+ * stored choice before the container loads on every later visit.
+ *
+ * The old banner stored `fm-cookie-consent` and changed nothing either way;
+ * the key moved to `fm-consent`, so those visitors are asked once more and
+ * this time the answer counts.
+ */
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (!consent) {
+    let stored: ConsentChoice | null = null;
+    try {
+      stored = readConsent(window.localStorage);
+    } catch {
+      // Storage blocked: ask, and the choice lasts for this page view only.
+    }
+    if (!stored) {
       // Small delay so it doesn't flash on page load
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  const accept = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
-    setVisible(false);
-  };
-
-  const dismiss = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'dismissed');
+  const choose = (choice: ConsentChoice) => {
+    try {
+      saveConsent(window.localStorage, choice);
+    } catch {
+      // Storage blocked. saveConsent writes storage first, so apply the
+      // choice to this page view with an in-memory store instead.
+      saveConsent({ setItem: () => {} }, choice);
+    }
     setVisible(false);
   };
 
@@ -43,7 +58,8 @@ export function CookieConsent() {
       >
         <div className="flex-1 min-w-0">
           <p className="text-white/90 text-sm leading-relaxed">
-            We use cookies for analytics and to improve your experience. By continuing to use this site, you agree to our{' '}
+            We use cookies to understand how the site is used. You can accept or decline analytics
+            cookies — the site works the same either way. See our{' '}
             <a href="/privacy" className="text-fm-magenta-400 hover:text-fm-magenta-300 underline underline-offset-2">
               Privacy Policy
             </a>.
@@ -51,17 +67,16 @@ export function CookieConsent() {
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           <button
-            onClick={accept}
+            onClick={() => choose('denied')}
+            className="px-5 py-2 rounded-lg border border-white/30 text-white/90 hover:bg-white/10 text-sm font-medium transition-colors"
+          >
+            Decline
+          </button>
+          <button
+            onClick={() => choose('granted')}
             className="px-5 py-2 rounded-lg bg-fm-magenta-600 hover:bg-fm-magenta-700 text-white text-sm font-medium transition-colors"
           >
             Accept
-          </button>
-          <button
-            onClick={dismiss}
-            className="p-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/10 transition-colors"
-            aria-label="Dismiss cookie notice"
-          >
-            <X className="w-4 h-4" />
           </button>
         </div>
       </div>

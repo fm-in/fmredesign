@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import { bookingUrl, type BookingPrefill } from '@/lib/sales/links';
+import { track } from '@/lib/analytics/events';
 
 interface CalButtonProps {
   /** Cal.com event slug — "fm-in/15min" or "fm-in/30min" */
@@ -20,6 +21,9 @@ declare global {
 
 export function CalButton({ calLink, className, children, prefill }: CalButtonProps) {
   const openCal = useCallback(() => {
+    // The confirmed booking (`book_call`) comes from the embed's callback in
+    // the root layout; this is only the intent.
+    track({ event: 'booking_open', cal_link: calLink });
     const config: Record<string, string> = { layout: 'month_view' };
     if (prefill?.name) config.name = prefill.name;
     if (prefill?.email) config.email = prefill.email;

@@ -21,6 +21,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Clock, Search, SlidersHorizontal, X } from 'lucide-react';
+import { track } from '@/lib/analytics/events';
 import type { FeedItem } from '@/lib/resources/public-data';
 import type { Audience, Region, ResourceCategory } from '@/lib/resources/types';
 import { CATEGORY_LABELS, RESOURCE_TYPE_LABELS } from '@/lib/resources/types';
@@ -179,7 +180,19 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
   const set = useCallback(<K extends keyof Filters>(key: K, value: Filters[K]) => {
     setF((prev) => ({ ...prev, [key]: value }));
     setShown(PAGE_SIZE);
+    // The search box is tracked once typing pauses (below), not per keystroke.
+    if (key !== 'q') {
+      track({ event: 'filter_feed', filter_type: key, filter_value: value === null ? 'any' : String(value) });
+    }
   }, []);
+
+  // One `search` per pause in typing, so "seo audit" is one event, not eight.
+  useEffect(() => {
+    const term = f.q.trim();
+    if (term.length < 2) return;
+    const timer = setTimeout(() => track({ event: 'search', search_term: term }), 1200);
+    return () => clearTimeout(timer);
+  }, [f.q]);
 
   const filtered = useMemo(() => {
     const out = items.filter((i) => matches(i, f));
