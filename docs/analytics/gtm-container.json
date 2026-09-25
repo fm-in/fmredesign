@@ -517,6 +517,12 @@
       {
         "accountId": "0",
         "containerId": "0",
+        "type": "PAGE_HOSTNAME",
+        "name": "Page Hostname"
+      },
+      {
+        "accountId": "0",
+        "containerId": "0",
         "type": "PAGE_URL",
         "name": "Page URL"
       },
