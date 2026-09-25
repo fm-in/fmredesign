@@ -6,6 +6,13 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { HomeMotion } from '@/components/site/HomeMotion';
 import { SiteLoader } from '@/components/site/SiteLoader';
+import { HeroReel } from '@/components/site/HeroReel';
+import { CursorPreview } from '@/components/site/CursorPreview';
+import { BrainMark } from '@/components/site/BrainMark';
+import { CalButton } from '@/components/ui/CalButton';
+import { VIDEO_WORK } from '@/lib/portfolio';
+import { DEFAULT_BOOKING_LINK } from '@/lib/sales/links';
+import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
 import { getAcademyHomePricing } from '@/lib/academy/home-pricing';
 import { getService, serviceHref } from '@/lib/services-catalogue';
 
@@ -29,11 +36,21 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-const HERO_FILMS = [
-  { speed: '0.09', films: ['giovanni', 'skr_group'] },
-  { speed: '-0.13', films: ['kanha', 'concept_studio'] },
-  { speed: '0.06', films: ['renny', 'astroo_apaar'] },
-] as const;
+/*
+ * Eight films, split so none appears twice on the page: four play in turn in
+ * the hero window, four sit in the work row. Names and categories come from
+ * the portfolio list, the same one /work uses.
+ */
+const film = (id: (typeof VIDEO_WORK)[number]['id']) => {
+  const f = VIDEO_WORK.find((v) => v.id === id)!;
+  return { id: f.id, client: f.client, category: f.category };
+};
+const HERO_FILMS = ['giovanni', 'bhopal_manthan', 'adi', 'astroo_apaar'].map((id) =>
+  film(id as (typeof VIDEO_WORK)[number]['id']),
+);
+const WORK_FILMS = ['kanha', 'renny', 'skr_group', 'concept_studio'].map((id) =>
+  film(id as (typeof VIDEO_WORK)[number]['id']),
+);
 
 /** Twenty marks, split across two counter-running rows. */
 // File → client. The files are numbered exports, so without this map the
@@ -63,11 +80,10 @@ const CLIENTS = [
 
 const LOGO_ROWS = [CLIENTS.slice(0, 10), CLIENTS.slice(10)] as const;
 
-const REELS = [
-  { speed: '0.08', items: [['giovanni', 'Giovanni', 'Campaign film'], ['skr_group', 'SKR Group', 'Brand film']] },
-  { speed: '-0.14', items: [['kanha', 'Kanha', 'Social campaign'], ['concept_studio', 'Concept Studio', 'Launch film']] },
-  { speed: '0.05', items: [['renny', 'Renny', 'Product film'], ['astroo_apaar', 'Astroo Apaar', 'Content series']] },
-] as const;
+/** Every brand in /public/clients — the marquee shows twenty of them. One
+ *  number, used by the hero line and the evidence figure alike. */
+const BRAND_COUNT = 36;
+
 
 // Captions say what each piece is. They used to be invented labels
 // ("Elisa — product" on a Republic Day greeting). Product and promotion work
@@ -88,6 +104,18 @@ const CAMPAIGNS = [
 // Names come from the catalogue so the home page, /services and the footer
 // cannot call the same service three different things again ("Performance
 // marketing" here was "Pay-Per-Click (PPC) Advertising" on /services).
+// The work each service shows under the cursor on hover — real client
+// pieces, served through the image optimiser at preview size.
+const PREVIEW: Record<string, string> = {
+  seo: '/work/websites/restronaut_website.jpg',
+  social: '/work/services/harsh-service1.jpg',
+  performance: '/work/services/elisa-service1.jpg',
+  branding: '/work/websites/mohdiamond_website.jpg',
+  web: '/work/websites/mahua_house_website.jpg',
+  content: '/videos/renny-poster.jpg',
+};
+const preview = (src: string) => `/_next/image?url=${encodeURIComponent(src)}&w=640&q=75`;
+
 const CAPABILITY = [
   ['seo', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.'],
   ['social', 'Stop posting. Start connecting.', 'Thumb-stopping content that turns followers into customers.'],
@@ -174,40 +202,16 @@ export default async function Home() {
                   See our work
                 </Link>
               </div>
-              <div className="hero-figs">
-                <div>
-                  <b className="fig">{COURSES.length}</b>
-                  <span className="tag">Academy courses</span>
-                </div>
-                <div>
-                  <b className="fig">14</b>
-                  <span className="tag">Client sites live</span>
-                </div>
-                <div>
-                  <b className="fig">8</b>
-                  <span className="tag">Films in the reel</span>
-                </div>
-              </div>
+              {/* Proof, in words, where the eye already is. It replaces a stat
+                  row (6 courses, 14 sites, 8 films) that counted output, not
+                  who trusts the work. */}
+              <p className="hero-proof">
+                Radisson, Jio Studios, BNI and Dainik Bhaskar are among the {BRAND_COUNT} brands
+                we have made work for.
+              </p>
             </div>
 
-            <div className="hero-films" aria-hidden>
-              {HERO_FILMS.map((col) => (
-                <div className="film-col" key={col.speed} data-hero-speed={col.speed}>
-                  {col.films.map((id, i) => (
-                    <video
-                      key={id}
-                      poster={`/videos/${id}-poster.jpg`}
-                      muted
-                      playsInline
-                      loop
-                      preload={i === 0 ? 'metadata' : 'none'}
-                    >
-                      <source src={`/videos/${id}.mp4`} type="video/mp4" />
-                    </video>
-                  ))}
-                </div>
-              ))}
-            </div>
+            <HeroReel films={HERO_FILMS} />
           </div>
         </section>
 
@@ -255,29 +259,26 @@ export default async function Home() {
           </div>
 
           <div className="wrap">
-            <div className="reels">
-              {REELS.map((col) => (
-                <div className="rcol" key={col.speed} data-speed={col.speed}>
-                  {col.items.map(([id, client, note]) => (
-                    <figure className="reel" key={id}>
-                      <video poster={`/videos/${id}-poster.jpg`} muted playsInline loop preload="none">
-                        <source src={`/videos/${id}.mp4`} type="video/mp4" />
-                      </video>
-                      <figcaption>
-                        <b>{client}</b>
-                        <span className="tag">{note}</span>
-                      </figcaption>
-                    </figure>
-                  ))}
-                </div>
+            <div className="reel-row">
+              {WORK_FILMS.map((f) => (
+                <figure className="reel" key={f.id}>
+                  <video poster={`/videos/${f.id}-poster.jpg`} muted playsInline loop preload="none">
+                    <source src={`/videos/${f.id}.mp4`} type="video/mp4" />
+                  </video>
+                  <figcaption>
+                    <b>{f.client}</b>
+                    <span className="tag">{f.category}</span>
+                  </figcaption>
+                </figure>
               ))}
             </div>
+            <p className="reel-more">
+              <Link className="link-u" href="/work">
+                All {VIDEO_WORK.length} films, the sites and the identities
+              </Link>
+            </p>
           </div>
         </section>
-
-        <div className="wipe" aria-hidden>
-          <i />
-        </div>
 
         {/* ═══ CAMPAIGN STRIP (native horizontal scroll) ══════════════ */}
         <section className="strip-sec" id="campaigns">
@@ -327,11 +328,12 @@ export default async function Home() {
               </p>
             </div>
 
+            <CursorPreview listSelector=".cap" />
             <div className="cap">
               {CAPABILITY.map(([id, sub, desc], i) => {
                 const name = getService(id)?.title ?? id;
                 return (
-                <Link className="cap-row" key={id} href={serviceHref(id)}>
+                <Link className="cap-row" key={id} href={serviceHref(id)} data-preview={preview(PREVIEW[id])}>
                   <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
                   <span>
                     <span className="cap-name">{name}</span>
@@ -349,16 +351,18 @@ export default async function Home() {
         </section>
 
         {/* ═══ EVIDENCE ═══════════════════════════════════════════════ */}
-        <section className="sec" id="evidence">
+        <section className="sec sec--raised" id="evidence">
           <div className="wrap">
-            <div className="sec-head">
-              <div className="eyebrow">
-                <span className="tag">04 &mdash; Evidence</span>
+            <div className="sec-head sec-head--split">
+              <div>
+                <div className="eyebrow">
+                  <span className="tag">04 &mdash; Evidence</span>
+                </div>
+                <h2 className="d" data-mask>
+                  Why brands choose us.
+                </h2>
               </div>
-              <h2 className="d" data-mask>
-                Why brands choose us.
-              </h2>
-              <p className="lede">
+              <p className="lede" style={{ maxWidth: '38ch' }}>
                 We don&rsquo;t chase rankings. We build growth that puts you in front of customers
                 already looking for you.
               </p>
@@ -367,7 +371,7 @@ export default async function Home() {
             <div className="ev">
               <div className="ev-figs">
                 <div className="ev-fig">
-                  <b className="fig">36</b>
+                  <b className="fig">{BRAND_COUNT}</b>
                   <span>Brands whose marks hang on our wall.</span>
                 </div>
                 <div className="ev-fig">
@@ -491,18 +495,42 @@ export default async function Home() {
         </section>
 
         {/* ═══ CLOSING ════════════════════════════════════════════════ */}
-        <section className="sec close" id="close">
-          <div className="wrap">
-            <h2 className="d" data-mask>
-              Ready to grow your brand?
-            </h2>
-            <div className="close-row">
-              <p className="lede" style={{ maxWidth: '32ch' }}>
-                Response within 24 hours. No obligations, just ideas.
+        {/* The page's one ink band — it gives the scroll an ending, and puts
+            every way to start in one place. */}
+        <section className="sec close band-ink" id="close">
+          <div className="wrap close-grid">
+            <div>
+              <h2 className="d" data-mask>
+                Ready to grow your brand?
+              </h2>
+              <p className="lede" style={{ maxWidth: '36ch' }}>
+                Tell us what you are trying to move, and we will tell you whether we are the right
+                people for it.
               </p>
-              <Link className="btn btn--primary" href="/get-started">
-                Book a strategy call
-              </Link>
+              <div className="close-row">
+                <Link className="btn btn--primary" href="/get-started">
+                  Book a strategy call
+                </Link>
+              </div>
+            </div>
+            <div className="close-side">
+              <BrainMark pose="celebrating" width={220} className="close-mascot" style={{ ['--brain-tilt' as string]: '-5deg' }} />
+              <ul className="close-ways">
+                <li>
+                  <span className="tag">WhatsApp</span>
+                  <a href={COMPANY_WHATSAPP_URL}>{COMPANY_PHONE_DISPLAY}</a>
+                </li>
+                <li>
+                  <span className="tag">15-minute call</span>
+                  <CalButton calLink={DEFAULT_BOOKING_LINK} className="close-cal">
+                    Pick a time
+                  </CalButton>
+                </li>
+                <li>
+                  <span className="tag">Reply</span>
+                  <span>Within 24 hours, Mon&ndash;Sat</span>
+                </li>
+              </ul>
             </div>
           </div>
         </section>

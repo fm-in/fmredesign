@@ -17,7 +17,10 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      onClick={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        toggleTheme({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+      }}
       // Before the stored preference is read, the button still renders (so the
       // header does not reflow) but announces nothing misleading.
       aria-label={ready ? (goingDark ? 'Switch to dark mode' : 'Switch to light mode') : 'Switch colour theme'}

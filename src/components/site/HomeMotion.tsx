@@ -6,10 +6,10 @@ import { loadGsap, observeReveal, playWhileVisible } from '@/lib/motion';
 /**
  * The home page's motion, in one place.
  *
- * Ports the approved prototype's behaviour: word-mask headline reveals, hero
- * and reel-column parallax, the two counter-running client marquees, the
- * interference wipe, and the image that follows the cursor over the capability
- * list. The campaign strip is a native scroller and needs no script.
+ * Word-mask headline reveals, the hero reel's opening, the two counter-running
+ * client marquees, and the closing mascot leaning toward the pointer. The
+ * capability preview (CursorPreview) and the hero playlist (HeroReel) are their
+ * own components; the campaign strip is a native scroller and needs no script.
  *
  * Renders nothing. Every effect targets markup the server already sent, so the
  * page is complete and readable before this loads — and if it never loads, the
@@ -22,7 +22,8 @@ export function HomeMotion() {
     let cancelled = false;
 
     // Films: capped playback, and paused off-screen.
-    const videos = document.querySelectorAll<HTMLVideoElement>('.hero-films video, .reel video');
+    // The hero window runs its own playlist (HeroReel); this is the work row.
+    const videos = document.querySelectorAll<HTMLVideoElement>('.reel video');
     cleanups.push(playWhileVisible(videos, 4));
 
     // Reveals need no timeline, so they never pull GSAP in.
@@ -51,27 +52,38 @@ export function HomeMotion() {
           });
         });
 
-        /* ---- hero film parallax ----------------------------------------- */
-        // Desktop only: under 820px the films are a row below the text, and
-        // drifting them vertically would push them into the stats.
-        gsap.utils.toArray<HTMLElement>(window.innerWidth > 820 ? '[data-hero-speed]' : '.no-parallax').forEach((col) => {
-          const speed = parseFloat(col.dataset.heroSpeed ?? '0');
-          gsap.to(col, {
-            yPercent: speed * 100,
-            ease: 'none',
-            scrollTrigger: { trigger: '.hero', start: 'top top', end: 'bottom top', scrub: true },
-          });
-        });
+        /* ---- hero reel: the page's one orchestrated moment ------------- */
+        // The window opens from a slightly inset frame to full, in step with
+        // the headline's word reveal. It starts visible — the inset only
+        // trims the edges — so nothing on screen ever disappears.
+        const reelWindow = document.querySelector<HTMLElement>('.hero-reel-window');
+        if (reelWindow) {
+          gsap.fromTo(
+            reelWindow,
+            { clipPath: 'inset(7% 9% 7% 9% round 6px)' },
+            { clipPath: 'inset(0% 0% 0% 0% round 6px)', duration: 1.3, ease: 'expo.out', delay: 0.15 },
+          );
+        }
 
-        /* ---- reel column parallax --------------------------------------- */
-        gsap.utils.toArray<HTMLElement>('[data-speed]').forEach((col) => {
-          const speed = parseFloat(col.dataset.speed ?? '0');
-          gsap.to(col, {
-            yPercent: speed * 100,
-            ease: 'none',
-            scrollTrigger: { trigger: col.closest('section'), start: 'top bottom', end: 'bottom top', scrub: true },
+        /* ---- closing mascot leans toward the pointer --------------------- */
+        const close = document.getElementById('close');
+        const mascot = document.querySelector<HTMLElement>('.close-mascot');
+        if (close && mascot && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+          const leanX = gsap.quickTo(mascot, 'x', { duration: 0.8, ease: 'power3.out' });
+          const leanY = gsap.quickTo(mascot, 'y', { duration: 0.8, ease: 'power3.out' });
+          const onMove = (e: PointerEvent) => {
+            const r = close.getBoundingClientRect();
+            leanX(((e.clientX - r.left) / r.width - 0.5) * 16);
+            leanY(((e.clientY - r.top) / r.height - 0.5) * 16);
+          };
+          const onLeave = () => { leanX(0); leanY(0); };
+          close.addEventListener('pointermove', onMove);
+          close.addEventListener('pointerleave', onLeave);
+          cleanups.push(() => {
+            close.removeEventListener('pointermove', onMove);
+            close.removeEventListener('pointerleave', onLeave);
           });
-        });
+        }
 
         /* ---- client marquees, counter-running --------------------------- */
         document.querySelectorAll<HTMLElement>('[data-mq]').forEach((row) => {
@@ -102,18 +114,6 @@ export function HomeMotion() {
           });
         });
 
-        /* ---- interference wipe ------------------------------------------ */
-        document.querySelectorAll<HTMLElement>('.wipe i').forEach((bar) => {
-          gsap.fromTo(
-            bar,
-            { scaleY: 0 },
-            {
-              scaleY: 1,
-              ease: 'none',
-              scrollTrigger: { trigger: bar.parentElement, start: 'top bottom', end: 'bottom top', scrub: true },
-            },
-          );
-        });
       });
 
       cleanups.push(() => ctx.revert());

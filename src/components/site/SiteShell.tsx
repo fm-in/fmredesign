@@ -5,7 +5,8 @@ import { applyTheme, readStoredTheme, storeTheme, type SiteTheme } from './theme
 
 interface SiteThemeValue {
   theme: SiteTheme;
-  toggleTheme: () => void;
+  /** `origin` is where the switch was pressed; the new theme spreads from it. */
+  toggleTheme: (origin?: { x: number; y: number }) => void;
   /**
    * False until the client has read the stored preference. The toggle uses it
    * to avoid announcing "switch to dark" during the one frame before it knows
@@ -45,13 +46,28 @@ export function SiteShell({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const toggleTheme = useCallback(() => {
-    setTheme((current) => {
-      const next: SiteTheme = current === 'dark' ? 'light' : 'dark';
-      applyTheme(next, document.documentElement);
+  const toggleTheme = useCallback((origin?: { x: number; y: number }) => {
+    const root = document.documentElement;
+    const next: SiteTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    const swap = () => {
+      applyTheme(next, root);
       storeTheme(next);
-      return next;
-    });
+      setTheme(next);
+    };
+
+    // The new theme opens as a circle from the switch (View Transitions API).
+    // Feature-detected: without the API, or with reduced motion, it is the
+    // same instant swap as before. The attribute change inside the callback is
+    // synchronous, which is all the transition needs to capture both states.
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!doc.startViewTransition || reduced) {
+      swap();
+      return;
+    }
+    root.style.setProperty('--vt-x', `${origin?.x ?? window.innerWidth - 60}px`);
+    root.style.setProperty('--vt-y', `${origin?.y ?? 40}px`);
+    doc.startViewTransition(swap);
   }, []);
 
   return (

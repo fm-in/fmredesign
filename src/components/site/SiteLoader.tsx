@@ -88,10 +88,10 @@ export function SiteLoader() {
       */}
       <Image
         className="splash-brain brain-mark"
-        src="/3dasset/brain-loading-trim.webp"
+        src="/3dasset/brain-loading-cut.webp"
         alt=""
-        width={856}
-        height={793}
+        width={699}
+        height={717}
         priority
         sizes="(max-width: 640px) 38vw, 190px"
       />
