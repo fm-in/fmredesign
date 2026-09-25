@@ -16,6 +16,7 @@ import { QUESTIONS, DIMENSIONS } from '@/lib/scorecard/questions';
 import { scoreScorecard, BAND_LABELS } from '@/lib/scorecard/scoring';
 import type { AnswerMap, Band, ScorecardResult } from '@/lib/scorecard/types';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
+import { track } from '@/lib/analytics/events';
 
 type Phase = 'intro' | 'quiz' | 'score' | 'report';
 
@@ -62,7 +63,11 @@ export default function ScorecardClient() {
     // Small pause so the selection is visibly registered before moving on.
     window.setTimeout(() => {
       if (index + 1 < QUESTIONS.length) setIndex(index + 1);
-      else setPhase('score');
+      else {
+        const scored = scoreScorecard(next);
+        track({ event: 'scorecard_complete', score: scored.overall, band: scored.band });
+        setPhase('score');
+      }
     }, 180);
   }
 
@@ -96,6 +101,7 @@ export default function ScorecardClient() {
         return;
       }
       setServerResult(json.data.result as ScorecardResult);
+      track({ event: 'generate_lead', form_id: 'scorecard' });
       setPhase('report');
     } catch {
       setError('Could not reach the server. Please check your connection.');
@@ -123,7 +129,13 @@ export default function ScorecardClient() {
           <p className="text-fm-neutral-500 text-sm mb-8 max-w-xl mx-auto">
             Most of the advice you will get back is work you can do yourself.
           </p>
-          <button onClick={() => setPhase('quiz')} className="v2-btn v2-btn-magenta">
+          <button
+            onClick={() => {
+              track({ event: 'scorecard_start' });
+              setPhase('quiz');
+            }}
+            className="v2-btn v2-btn-magenta"
+          >
             Start the scorecard
             <ArrowRight className="w-4 h-4" />
           </button>

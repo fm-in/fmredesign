@@ -17,6 +17,9 @@ const envSchema = z.object({
   // Site URL
   NEXT_PUBLIC_SITE_URL: z.string().optional(),
 
+  // Google Tag Manager container (GTM-XXXXXXX). Unset = no analytics loads.
+  NEXT_PUBLIC_GTM_ID: z.string().regex(/^GTM-[A-Z0-9]{4,12}$/).optional(),
+
   // Company info (moved from source code)
   COMPANY_PAN: z.string().optional(),
   COMPANY_MSME: z.string().optional(),

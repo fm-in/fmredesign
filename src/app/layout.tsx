@@ -11,6 +11,10 @@ import { AttributionCapture } from "@/components/AttributionCapture";
 import Script from "next/script";
 import { SITE_URL } from '@/lib/site-url';
 import { COMPANY_PHONE_E164 } from '@/lib/company';
+import { ContactClickTracker } from '@/components/analytics/ContactClickTracker';
+import { gtmBootstrap, isValidContainerId } from '@/lib/analytics/consent';
+
+const GTM_ID = isValidContainerId(process.env.NEXT_PUBLIC_GTM_ID) ? process.env.NEXT_PUBLIC_GTM_ID : null;
 
 // Display font - elegant serif for headlines (authority & sophistication)
 const playfair = Playfair_Display({
@@ -220,6 +224,16 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased">
+        {GTM_ID && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+            />
+          </noscript>
+        )}
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-white focus:text-black focus:px-4 focus:py-2 focus:rounded"
@@ -241,30 +255,37 @@ export default function RootLayout({
           competed for bandwidth on throttled mobile connections; GTM alone is
           the single largest resource on the page (166 KB).
 
-          - Analytics: `afterInteractive` — the Next.js-recommended strategy
-            for GA. Still fires on every page view, just not before paint.
+          - Tag Manager: `afterInteractive` — the Next.js-recommended strategy
+            for analytics. Still fires on every page view, just not before paint.
           - cal.com: `lazyOnload` — not used on the homepage at all, and
             `CalButton` already falls back to opening cal.com in a new tab
             when the embed has not loaded yet.
           - Observatory pixel: `lazyOnload` — passive telemetry.
         */}
-        <Script
-          id="ga-lib"
-          src="https://www.googletagmanager.com/gtag/js?id=G-WRBTEE11SH"
-          strategy="afterInteractive"
-        />
-        <Script id="ga-init" strategy="afterInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-WRBTEE11SH');`}
-        </Script>
+        {/*
+          Google Tag Manager, with Consent Mode defaults and the visitor's
+          stored choice applied in the same script, before the container
+          loads (see src/lib/analytics/consent.ts). GA4 itself is configured
+          inside the container — docs/analytics/TRACKING.md. Without a valid
+          NEXT_PUBLIC_GTM_ID nothing loads: local dev sends no hits, and
+          neither do Vercel previews while the variable is scoped to
+          Production.
+        */}
+        {GTM_ID && (
+          <Script id="gtm" strategy="afterInteractive">
+            {gtmBootstrap(GTM_ID)}
+          </Script>
+        )}
         {/*
           Cal.com's embed expects its queueing stub to define window.Cal before
           embed.js loads; loading embed.js on its own is what threw
           "Cal is not defined" on every page. The stub loads embed.js itself.
         */}
         <Script id="cal-embed" strategy="lazyOnload">
-          {`(function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var d = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, "https://cal.com/embed/embed.js", "init"); Cal("init", { origin: "https://cal.com" });`}
+          {`(function (C, A, L) { var p = function (a, ar) { a.q.push(ar); }; var d = C.document; C.Cal = C.Cal || function () { var cal = C.Cal; var ar = arguments; if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; d.head.appendChild(d.createElement("script")).src = A; cal.loaded = true; } if (ar[0] === L) { var api = function () { p(api, arguments); }; var namespace = ar[1]; api.q = api.q || []; if (typeof namespace === "string") { cal.ns[namespace] = cal.ns[namespace] || api; p(cal.ns[namespace], ar); p(cal, ["initNamespace", namespace]); } else p(cal, ar); return; } p(cal, ar); }; })(window, "https://cal.com/embed/embed.js", "init"); Cal("init", { origin: "https://cal.com" }); Cal("on", { action: "bookingSuccessfulV2", callback: function () { var l = window.dataLayer = window.dataLayer || []; l.push({ ecommerce: null }); l.push({ event: "book_call" }); } });`}
         </Script>
         <AttributionCapture />
+        <ContactClickTracker />
         <Script
           id="observatory-pixel"
           src="https://observatory.goodmantech.co/api/pixel/proj_freaking-minds_misvd05m"

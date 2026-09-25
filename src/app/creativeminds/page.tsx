@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { TalentApplication } from '@/lib/admin/talent-types';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
+import { track } from '@/lib/analytics/events';
 import { TalentApplicationForm } from '@/components/public/TalentApplicationForm';
 import { V2PageWrapper } from "@/components/layouts/V2PageWrapper";
 
@@ -140,6 +141,7 @@ export default function CreativeMindsPage() {
     });
     const result = await response.json();
     if (result.success) {
+      track({ event: 'talent_apply' });
       setSubmitted(true);
       setShowApplicationForm(false);
     } else {
