@@ -32,6 +32,7 @@ import { readFirstTouchSafely } from '@/lib/attribution';
 import type { LeadInput, ProjectType, BudgetRange, Timeline, CompanySize, Industry } from '@/lib/admin/lead-types';
 import { INDUSTRIES } from '@/lib/admin/lead-types';
 import { COMPANY_WHATSAPP_URL } from '@/lib/company';
+import { track } from '@/lib/analytics/events';
 
 const PROJECT_TYPES: { value: ProjectType; label: string; description: string; icon: string }[] = [
   { value: 'website_design', label: 'Website Design', description: 'Custom website or redesign', icon: '🌐' },
@@ -242,13 +243,7 @@ export default function GetStartedPage() {
       setSubmitted(true);
       setCurrentStep(5);
 
-      if (typeof window !== 'undefined' && typeof (window as any).gtag === 'function') {
-        (window as any).gtag('event', 'generate_lead', {
-          event_category: 'form',
-          event_label: formData.projectType,
-          value: 1
-        });
-      }
+      track({ event: 'generate_lead', form_id: 'get_started', lead_type: formData.projectType });
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('There was an error submitting your form. Please try again.');

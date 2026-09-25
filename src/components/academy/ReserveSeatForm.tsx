@@ -25,6 +25,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
+import { track, academyEcommerce } from '@/lib/analytics/events';
 import { Loader2, CheckCircle2, XCircle, RotateCcw, AlertTriangle } from 'lucide-react';
 
 declare global {
@@ -136,6 +137,12 @@ export function ReserveSeatForm({
       handler: () => {
         // Client-side success. The webhook is the actual source of truth
         // and will flip the row to `paid` server-side within seconds.
+        // The Razorpay order id is the transaction id: one per checkout,
+        // so a retried payment on the same order is not counted twice.
+        track({
+          event: 'purchase',
+          ecommerce: academyEcommerce({ id: programId, title: programTitle, amountInr }, order.orderId),
+        });
         setPhase('paid');
         setErr(null);
       },
@@ -149,7 +156,7 @@ export function ReserveSeatForm({
     });
     rzp.open();
     setPhase('awaiting_payment');
-  }, [programTitle]);
+  }, [programId, programTitle, amountInr]);
 
   // Shared by the form's submit and the "Try again" button on the
   // checkout-unavailable state — both start checkout with the same details.
@@ -201,6 +208,12 @@ export function ReserveSeatForm({
           prefill: { name: name.trim(), email: email.trim(), contact: phone.trim() || undefined },
         };
         setPendingOrder(order);
+        // Once per checkout: a retry from the "Payment not completed" state
+        // reopens this order through retryPayment, not through here.
+        track({
+          event: 'begin_checkout',
+          ecommerce: academyEcommerce({ id: programId, title: programTitle, amountInr }),
+        });
         openModal(order);
         return;
       }
@@ -214,7 +227,7 @@ export function ReserveSeatForm({
     } finally {
       submittedRef.current = false;
     }
-  }, [programId, name, email, phone, company, message, honeypot, openModal]);
+  }, [programId, programTitle, amountInr, name, email, phone, company, message, honeypot, openModal]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

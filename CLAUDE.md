@@ -318,6 +318,22 @@ Spec: `docs/superpowers/specs/2026-09-15-sales-phase-0-1-design.md`, amended by
   `leads`) from `migrations/2026-09-15-sales-foundation.sql`.
 - Tests use `src/test-utils/fake-supabase.ts` and `src/test-utils/lead-row.ts`.
 
+## Analytics (GTM + GA4)
+
+Guide: `docs/analytics/TRACKING.md`. GA4 is configured **inside Google Tag
+Manager**, never hard-coded; the site only pushes events.
+
+- Send events only through `track()` from `src/lib/analytics/events.ts`. The
+  `AnalyticsEvent` union is the list of what exists — no raw `gtag()` or
+  `dataLayer.push` in components.
+- **Never put personal data in an event** (names, emails, phones, messages).
+- A new event name must also be added to `ANALYTICS_EVENT_NAMES` and to the
+  trigger in `docs/analytics/gtm-container.json`; a test fails until they match.
+- WhatsApp and `mailto:` links are tracked automatically by
+  `ContactClickTracker` — no per-link code.
+- Consent Mode v2 (region-based) is set in the same inline script that loads
+  GTM (`gtmBootstrap`), so it always runs first. Do not split it.
+
 ## Invoice & Proposal System
 
 ### Invoices
@@ -415,6 +431,7 @@ COMPANY_PAN, COMPANY_MSME, COMPANY_ADDRESS
 RESEND_API_KEY, NOTIFICATION_EMAIL          # Email (Resend)
 META_TOKEN_SECRET                            # Social publishing (min 32 chars)
 INNGEST_EVENT_KEY, INNGEST_SIGNING_KEY       # Background jobs (prod only)
+NEXT_PUBLIC_GTM_ID                           # Google Tag Manager container (Production scope only)
 GOOGLE_SHEETS_PRIVATE_KEY, GOOGLE_SHEETS_CLIENT_EMAIL, GOOGLE_SHEETS_SPREADSHEET_ID  # Legacy
 # Sales automation (optional): see docs/SALES-SETUP.md — SALES_LINK_SECRET, SALES_REPLY_TO, SALES_FROM_EMAIL, RESEND_WEBHOOK_SECRET, META_APP_SECRET, META_LEADS_VERIFY_TOKEN, GOOGLE_ADS_LEAD_KEY, CALCOM_WEBHOOK_SECRET, LEAD_CONNECTOR_SECRET
 ```

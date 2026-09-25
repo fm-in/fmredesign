@@ -7,6 +7,7 @@ import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
 import { readFirstTouchSafely } from '@/lib/attribution';
 import { COMPANY_WHATSAPP_URL } from '@/lib/company';
+import { track } from '@/lib/analytics/events';
 
 /**
  * The contact enquiry form.
@@ -77,6 +78,7 @@ export function ContactForm() {
         }),
       });
       if (!response.ok) throw new Error('Failed to submit');
+      track({ event: 'generate_lead', form_id: 'contact', lead_type: form.service || 'general' });
       setStatus('success');
       setForm(EMPTY);
     } catch {
