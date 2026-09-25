@@ -7,7 +7,7 @@ import { SiteFooter } from '@/components/site/SiteFooter';
 import { HomeMotion } from '@/components/site/HomeMotion';
 import { SiteLoader } from '@/components/site/SiteLoader';
 import { getAcademyHomePricing } from '@/lib/academy/home-pricing';
-import { serviceHref } from '@/lib/services-catalogue';
+import { getService, serviceHref } from '@/lib/services-catalogue';
 
 /**
  * The home page — the approved design, section for section.
@@ -36,10 +36,32 @@ const HERO_FILMS = [
 ] as const;
 
 /** Twenty marks, split across two counter-running rows. */
-const LOGO_ROWS = [
-  Array.from({ length: 10 }, (_, i) => `Asset-${10 + i}`),
-  Array.from({ length: 10 }, (_, i) => `Asset-${20 + i}`),
+// File → client. The files are numbered exports, so without this map the
+// wall told screen readers and search engines nothing about who the clients are.
+const CLIENTS = [
+  ['Asset-10', 'Wise Consultancy'],
+  ['Asset-11', 'Radisson'],
+  ['Asset-12', 'Jio Studios'],
+  ['Asset-13', 'BNI'],
+  ['Asset-14', 'Hind Wallcare'],
+  ['Asset-15', 'Zuper Hotels & Resorts'],
+  ['Asset-16', 'Indian Kayaking & Canoeing Association'],
+  ['Asset-17', 'Uthara Print'],
+  ['Asset-18', 'Dainik Bhaskar'],
+  ['Asset-19', 'Bhaskar Denim'],
+  ['Asset-20', 'Galaxy Enclave'],
+  ['Asset-21', 'SKR Group'],
+  ['Asset-22', 'Elisa'],
+  ["Asset-23", "Kanha's Fun City"],
+  ["Asset-24", "Kanha's Palm Springs Hotel"],
+  ['Asset-25', 'Palm Suite'],
+  ["Asset-26", "Aangan by Kanha's"],
+  ['Asset-27', 'Giovanni Village'],
+  ['Asset-28', 'Harsh Express'],
+  ['Asset-29', 'Miracle Organization'],
 ] as const;
+
+const LOGO_ROWS = [CLIENTS.slice(0, 10), CLIENTS.slice(10)] as const;
 
 const REELS = [
   { speed: '0.08', items: [['giovanni', 'Giovanni', 'Campaign film'], ['skr_group', 'SKR Group', 'Brand film']] },
@@ -47,26 +69,32 @@ const REELS = [
   { speed: '0.05', items: [['renny', 'Renny', 'Product film'], ['astroo_apaar', 'Astroo Apaar', 'Content series']] },
 ] as const;
 
+// Captions say what each piece is. They used to be invented labels
+// ("Elisa — product" on a Republic Day greeting). Product and promotion work
+// leads; the festival posts follow.
 const CAMPAIGNS = [
-  ['giovanni-service1', 'Giovanni — campaign'],
-  ['elisa-service1', 'Elisa — launch'],
-  ['skr-service1', 'SKR Group — brand'],
-  ['harsh-service1', 'Harsh — social'],
-  ['giovanni-service3', 'Giovanni — series'],
-  ['elisa-service3', 'Elisa — product'],
-  ['skr-service3', 'SKR Group — launch'],
-  ['harsh-service3', 'Harsh — campaign'],
-  ['giovanni-service5', 'Giovanni — film'],
-  ['skr-service5', 'SKR Group — social'],
+  ['elisa-service1', 'Elisa — Kiwi 90 product ad'],
+  ['harsh-service1', 'Harsh Express — coverage campaign'],
+  ['giovanni-service1', 'Giovanni Village — wedding venue'],
+  ['giovanni-service5', 'Giovanni Village — venue promotion'],
+  ['giovanni-service3', 'Giovanni Village — Christmas'],
+  ['elisa-service3', 'Elisa — Republic Day'],
+  ['harsh-service3', 'Harsh Express — Republic Day'],
+  ['skr-service1', 'SKR Group — Maharashtra Day'],
+  ['skr-service3', 'SKR Group — Kisan Diwas'],
+  ['skr-service5', 'SKR Group — Bhai Dooj'],
 ] as const;
 
+// Names come from the catalogue so the home page, /services and the footer
+// cannot call the same service three different things again ("Performance
+// marketing" here was "Pay-Per-Click (PPC) Advertising" on /services).
 const CAPABILITY = [
-  ['seo', 'Search engine optimization', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.'],
-  ['social', 'Social media marketing', 'Stop posting. Start connecting.', 'Thumb-stopping content that turns followers into customers.'],
-  ['performance', 'Performance marketing', 'Every rupee. Maximum impact.', 'Focused paid campaigns that deliver qualified leads and protect your ROI.'],
-  ['branding', 'Brand identity design', 'Look unforgettable.', 'Visual identities that capture attention, build trust, and make competitors jealous.'],
-  ['web', 'Website development', 'Fast. Beautiful. Converting.', 'Responsive, conversion-first websites that work as marketing tools.'],
-  ['content', 'Content production', 'Stories that sell.', 'From scroll-stopping videos to blogs that rank: content that drives action.'],
+  ['seo', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.'],
+  ['social', 'Stop posting. Start connecting.', 'Thumb-stopping content that turns followers into customers.'],
+  ['performance', 'Every rupee. Maximum impact.', 'Focused paid campaigns that deliver qualified leads and protect your ROI.'],
+  ['branding', 'Look unforgettable.', 'Visual identities that capture attention, build trust, and make competitors jealous.'],
+  ['web', 'Fast. Beautiful. Converting.', 'Responsive, conversion-first websites that work as marketing tools.'],
+  ['content', 'Stories that sell.', 'From scroll-stopping videos to blogs that rank: content that drives action.'],
 ] as const;
 
 const PILLARS = [
@@ -184,20 +212,28 @@ export default async function Home() {
         </section>
 
         {/* ═══ CLIENT WALL ════════════════════════════════════════════ */}
-        <div className="wall" aria-label="Clients we work with">
+        <section className="wall" aria-label="Clients we work with">
+          {/* The names, once, for screen readers and search. The marquee below
+              clones its logos to loop, so alt text there would be read out
+              several times over. */}
+          <ul className="sr-only">
+            {CLIENTS.map(([file, client]) => (
+              <li key={file}>{client}</li>
+            ))}
+          </ul>
           {LOGO_ROWS.map((row, i) => (
-            <div className="mq" key={i} data-mq={i === 0 ? '1' : '-1'}>
-              {row.map((name) => (
-                // Small files, but 36 of them in two marquees. Left as plain
+            <div className="mq" key={i} data-mq={i === 0 ? '1' : '-1'} aria-hidden>
+              {row.map(([file, client]) => (
+                // Small files, but 20 of them in two marquees. Left as plain
                 // <img>: the marquee duplicates its children until a cycle
                 // exceeds the viewport, and next/image's wrapper markup breaks
                 // the flex measurement that duplication depends on.
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={name} src={`/clients/${name}.png`} alt="" width={220} height={110} loading="lazy" decoding="async" />
+                <img key={file} src={`/clients/${file}.png`} alt="" title={client} width={220} height={110} loading="lazy" decoding="async" />
               ))}
             </div>
           ))}
-        </div>
+        </section>
 
         {/* ═══ REEL WALL ══════════════════════════════════════════════ */}
         <section className="sec" id="work">
@@ -243,7 +279,7 @@ export default async function Home() {
           <i />
         </div>
 
-        {/* ═══ CAMPAIGN STRIP (pinned) ════════════════════════════════ */}
+        {/* ═══ CAMPAIGN STRIP (native horizontal scroll) ══════════════ */}
         <section className="strip-sec" id="campaigns">
           <div className="strip-stage">
             <div className="strip-head">
@@ -292,7 +328,9 @@ export default async function Home() {
             </div>
 
             <div className="cap">
-              {CAPABILITY.map(([id, name, sub, desc], i) => (
+              {CAPABILITY.map(([id, sub, desc], i) => {
+                const name = getService(id)?.title ?? id;
+                return (
                 <Link className="cap-row" key={id} href={serviceHref(id)}>
                   <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
                   <span>
@@ -304,7 +342,8 @@ export default async function Home() {
                   </span>
                   <span className="cap-desc">{desc}</span>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

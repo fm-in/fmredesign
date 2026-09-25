@@ -20,13 +20,13 @@ import {
   Clock,
   Users,
   CheckCircle2,
-  GraduationCap,
   Sparkles,
   ArrowLeft,
   MapPin,
   BadgeCheck,
   ChevronRight,
 } from 'lucide-react';
+import { BrainMark } from '@/components/site/BrainMark';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
@@ -228,7 +228,9 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                    so it rendered as white text on the page ground. */
                 <div className="relative aspect-[4/3] w-full rounded-site-lg overflow-hidden site-surface">
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
-                    <GraduationCap className="w-20 h-20 mb-4 text-site-accent" aria-hidden />
+                    {/* No cover image yet, so the mascot holds the slot — one
+                        per page, where the hero has no real imagery. */}
+                    <BrainMark pose="teaching" width={150} className="mb-6" />
                     <div className="text-site-h3 font-site-display text-site-text mb-2 leading-tight" style={{ textAlign: 'center' }}>
                       {isBundle ? 'All 6 Courses' : p.title}
                     </div>

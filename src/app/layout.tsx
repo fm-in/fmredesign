@@ -16,19 +16,26 @@ import { gtmBootstrap, isValidContainerId } from '@/lib/analytics/consent';
 
 const GTM_ID = isValidContainerId(process.env.NEXT_PUBLIC_GTM_ID) ? process.env.NEXT_PUBLIC_GTM_ID : null;
 
-// Display font - elegant serif for headlines (authority & sophistication)
+/*
+ * Playfair and Plus Jakarta are the portals' faces (admin, client, talent).
+ * `preload: false` because the root layout wraps public pages too: preloaded,
+ * every public visitor downloaded two families no public text uses. Unpreloaded,
+ * a browser fetches a face only when text on the page actually needs it, so
+ * public pages never do and portal pages still get them, just not early.
+ */
 const playfair = Playfair_Display({
   variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   weight: ["400", "600", "700", "900"],
 });
 
-// Body font - modern, highly readable sans
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
+  preload: false,
   // "300" dropped — `font-light` has zero usages across src/.
   weight: ["400", "500", "600", "700"],
 });
@@ -279,10 +286,11 @@ export default function RootLayout({
           </noscript>
         )}
         <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:bg-site-raised focus:text-site-text focus:px-4 focus:py-2 focus:rounded focus:outline focus:outline-2 focus:outline-site-accent"
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded"
+          style={{ background: 'var(--site-text, #111)', color: 'var(--site-ground, #fff)', fontFamily: 'var(--site-font-sans, system-ui)' }}
         >
-          Skip to content
+          Skip to main content
         </a>
         <QueryProvider>
           <SmoothScrollProvider>

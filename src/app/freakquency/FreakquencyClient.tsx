@@ -280,9 +280,12 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
       </div>
 
       {/* ------------------------------------------------------ stream bar */}
-      {/* Sticks below the fixed site header (81px) so the one axis people
+      {/* Sticks below the fixed site header (78px) so the one axis people
           actually browse by stays reachable deep into a long list. */}
-      <div className="sticky z-30 -mx-2 px-2 py-2" style={{ top: '84px' }}>
+      {/* `top` matches the header's height and the wrapper carries the page
+          ground: with a gap and a transparent wrapper, headlines scrolled
+          visibly through the strip between the two bars. */}
+      <div className="sticky z-30 -mx-2 px-2 py-2" style={{ top: '78px', background: 'var(--site-ground)' }}>
         <div className="site-surface rounded-site-lg px-3 py-2.5 flex items-center gap-3">
           <div
             ref={streamScroller.ref}
@@ -443,15 +446,36 @@ function Thumb({ item, tall = false }: { item: FeedItem; tall?: boolean }) {
         />
       ) : (
         // Roughly a quarter of items have no artwork anywhere — Marketing Dive,
-        // Social Media Today and Adweek publish neither. A tinted panel with the
-        // publisher mark reads as deliberate; a gap reads as broken.
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-fm-magenta-50 via-white to-fm-neutral-100">
-          {item.sourceLogoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- see note above
-            <img src={item.sourceLogoUrl} alt="" width={28} height={28} loading="lazy" className="opacity-60" />
-          ) : (
-            <span className="font-site-display text-2xl font-bold text-site-accent/30">FM</span>
-          )}
+        // Social Media Today and Adweek publish neither, and our own guides
+        // have none yet. So they get a typographic cover: an ink panel with
+        // the stream and the source set like a magazine section opener. It
+        // replaced a pale gradient with a faint "FM", which read as a missing
+        // image — on the featured slot most of all.
+        <div
+          className="w-full h-full flex flex-col justify-between"
+          style={{ background: 'var(--site-text)', color: 'var(--site-ground)', padding: tall ? 'clamp(20px, 3vw, 36px)' : '18px' }}
+        >
+          <span className="tag" style={{ color: 'inherit', opacity: 0.7 }}>
+            {item.external ? (item.sourceName ?? 'News') : `Guide${item.readMinutes ? ` · ${item.readMinutes} min read` : ''}`}
+          </span>
+          <span
+            className="font-site-display"
+            style={{ fontSize: tall ? 'clamp(2.2rem, 4.4vw, 3.6rem)' : 'clamp(1.5rem, 2.2vw, 2rem)', lineHeight: 0.95, letterSpacing: '-0.02em' }}
+          >
+            {item.external ? (
+              <>
+                {item.category ? CATEGORY_LABELS[item.category] : RESOURCE_TYPE_LABELS[item.type]}
+                <span style={{ color: 'var(--site-accent-solid)' }}>.</span>
+              </>
+            ) : (
+              // Our own guides carry the publication's wordmark, set as on
+              // the page masthead — "Guide." under a "guide" label said the
+              // same thing twice.
+              <>
+                Freak<span style={{ color: 'var(--site-accent-solid)' }}>quency</span>
+              </>
+            )}
+          </span>
         </div>
       )}
     </div>

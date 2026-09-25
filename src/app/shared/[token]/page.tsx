@@ -109,7 +109,7 @@ export default function SharedResourcePage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main id="main-content" className="max-w-5xl mx-auto px-6 py-8">
         {resource.type === 'project' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">

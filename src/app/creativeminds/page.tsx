@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { TalentApplication } from '@/lib/admin/talent-types';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
@@ -12,19 +12,12 @@ import { SiteFooter } from '@/components/site/SiteFooter';
 import { BrainMark } from '@/components/site/BrainMark';
 
 import {
-  Palette,
-  Code,
-  Megaphone,
-  PenTool,
   Users,
   Briefcase,
   LineChart,
-  Video,
   Camera,
   Type,
   ShieldCheck,
-  Zap,
-  TrendingUp,
   ArrowRight,
   Globe,
   Check,
@@ -34,22 +27,22 @@ import {
 
 const bentoCategories = [
   {
-    icon: Palette, name: 'Creative Design', description: 'Visual identity & branding',
+    name: 'Creative Design', description: 'Visual identity & branding',
   },
   {
-    icon: Code, name: 'Development', description: 'Web & app development',
+    name: 'Development', description: 'Web & app development',
   },
   {
-    icon: Video, name: 'Video Production', description: 'Motion graphics & reels',
+    name: 'Video Production', description: 'Motion graphics & reels',
   },
   {
-    icon: PenTool, name: 'Content Creation', description: 'Blogs, scripts & strategy',
+    name: 'Content Creation', description: 'Blogs, scripts & strategy',
   },
   {
-    icon: Megaphone, name: 'Digital Marketing', description: 'SEO, PPC & campaigns',
+    name: 'Digital Marketing', description: 'SEO, PPC & campaigns',
   },
   {
-    icon: Users, name: 'Influencer & Social', description: 'Creators & community',
+    name: 'Influencer & Social', description: 'Creators & community',
   },
 ];
 
@@ -68,28 +61,28 @@ const processSteps = [
 
 const creativeBenefits = [
   {
-    icon: Briefcase, title: 'Real Brand Projects', tagline: 'No more cheap gigs.',
-    description: 'Work with actual businesses who have real budgets — not someone offering"exposure" as payment.', featured: true,
+    title: 'Real Brand Projects',
+    description: 'Work with actual businesses who have real budgets — not someone offering “exposure” as payment.',
   },
   {
-    icon: ShieldCheck, title: 'No Bidding Wars', tagline: 'Your work speaks for itself.',
-    description: 'We match you to projects based on your skills, not who bids lowest. Your portfolio is your pitch.', featured: true,
+    title: 'No Bidding Wars',
+    description: 'We match you to projects based on your skills, not who bids lowest. Your portfolio is your pitch.',
   },
   {
-    icon: Users, title: 'Agency Team Behind You',
-    description: 'You\'re not alone. Project managers, creative directors, and a full agency backing your work.', featured: false,
+    title: 'Agency Team Behind You',
+    description: 'You\'re not alone. Project managers, creative directors, and a full agency backing your work.',
   },
   {
-    icon: Globe, title: 'Your Own Profile Page',
-    description: 'Get a public talent profile that showcases your work to clients worldwide.', featured: false,
+    title: 'Your Own Profile Page',
+    description: 'Get a public talent profile that showcases your work to clients worldwide.',
   },
   {
-    icon: Zap, title: 'Fast Onboarding',
-    description: 'Apply today, get reviewed in 48 hours, start working on projects right away.', featured: false,
+    title: 'Fast Onboarding',
+    description: 'Apply today, get reviewed in 48 hours, start working on projects right away.',
   },
   {
-    icon: TrendingUp, title: 'Grow With Us',
-    description: 'As you deliver great work, you get access to bigger projects and better clients.', featured: false,
+    title: 'Grow With Us',
+    description: 'As you deliver great work, you get access to bigger projects and better clients.',
   },
 ];
 
@@ -106,18 +99,6 @@ export default function CreativeMindsPage() {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // Intersection observer for bento entrance
-  const bentoSectionRef = useRef<HTMLElement>(null);
-  const [bentoVisible, setBentoVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setBentoVisible(true); },
-      { threshold: 0.1 }
-    );
-    if (bentoSectionRef.current) observer.observe(bentoSectionRef.current);
-    return () => observer.disconnect();
-  }, []);
 
   const handleApplicationSubmit = async (application: TalentApplication, honeypot: string) => {
     const response = await fetch('/api/talent', {
@@ -148,7 +129,7 @@ export default function CreativeMindsPage() {
                 <span className="tag tag--a">Join CreativeMinds</span>
               </div>
               <h1 className="d" style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)', marginTop: 18 }}>
-                Apply to the <span className="text-site-accent">network.</span>
+                Apply to the network.
               </h1>
               <p className="lede lay-measure" style={{ marginTop: 20 }}>
                 Four quick steps. Our team reviews every application within 48 hours.
@@ -223,8 +204,6 @@ export default function CreativeMindsPage() {
     );
   }
 
-  const featuredBenefits = creativeBenefits.filter(b => b.featured);
-  const regularBenefits = creativeBenefits.filter(b => !b.featured);
 
   return (
     <SiteShell>
@@ -242,7 +221,7 @@ export default function CreativeMindsPage() {
               </div>
 
               <h1 className="d" style={{ maxWidth: '15ch' }}>
-                Stop chasing gigs. <span className="text-site-accent">Start creating.</span>
+                Stop chasing gigs. Start creating.
               </h1>
 
               <p className="lede lay-measure" style={{ marginTop: 'clamp(22px, 2.6vw, 34px)' }}>
@@ -294,7 +273,7 @@ export default function CreativeMindsPage() {
                 <span className="tag">Your journey</span>
               </div>
               <h2 className="d" style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)', marginTop: 18 }}>
-                From application to <span className="text-site-accent">earning.</span>
+                From application to earning.
               </h2>
             </div>
 
@@ -330,21 +309,20 @@ export default function CreativeMindsPage() {
       </section>
 
       {/* ── Section 3: Categories — Asymmetric 2-col with bento ──── */}
-      <section ref={bentoSectionRef} className="sec overflow-hidden">
+      <section className="sec overflow-hidden">
         {/* `wrap`, not `site-measure`. The two are identical rules under two
             names; keeping both meant a reader could not tell whether this
             section was deliberately different. */}
         <div className="wrap">
           <div className="lay-split">
             {/* Left: Copy */}
-            <div className={`transition-[opacity,transform] duration-500 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div>
               <div className="eyebrow">
               <span className="tag">We Need You</span>
             </div>
 
-              <h2 className="text-site-h2 font-site-display font-bold text-site-text mb-6 leading-[1.1]">
-                Whatever you do,{' '}
-                <span className="text-site-accent">we want you in.</span>
+              <h2 className="d" style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)', marginTop: 18, marginBottom: 24 }}>
+                Whatever you do, we want you in.
               </h2>
 
               <p className="lede lay-measure mb-10">
@@ -373,38 +351,25 @@ export default function CreativeMindsPage() {
             </div>
 
             {/* Right: Bento grid */}
-            <div
-              className={`relative transition-[opacity,transform] duration-500 delay-100 ease-out ${bentoVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
-            >
+            <div>
               {/*
                 One grid. This was two: a `lg:hidden` two-column version and a
                 `hidden lg:grid` bento with named template areas, both mapping
                 the same six categories. The bento's areas gave three tiles
                 double width for decoration only — the categories are peers.
               */}
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-                {bentoCategories.map((cat) => {
-                  const Icon = cat.icon;
-                  return (
-                    <Link
-                      key={cat.name}
-                      href="#apply"
-                      className="site-surface group flex flex-col justify-between p-4 transition-colors"
-                      style={{ minHeight: 140 }}
-                    >
-                      <Icon className="w-5 h-5 text-site-accent" aria-hidden />
-                      <span>
-                        <span className="block font-site-sans text-site-body text-site-text">
-                          {cat.name}
-                        </span>
-                        <span className="mt-1 block font-site-sans text-site-label uppercase text-site-muted">
-                          {cat.description}
-                        </span>
-                      </span>
-                    </Link>
-                  );
-                })}
-              </div>
+              {/* Ruled columns, as on the academy page. These were icon
+                  tiles linking to #apply — six decorative buttons that all
+                  went to the same place. */}
+              <ul className="trust-row trust-row--2" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {bentoCategories.map((cat, i) => (
+                  <li key={cat.name} className="trust-item">
+                    <span className="tag">{String(i + 1).padStart(2, '0')}</span>
+                    <h3 className="d">{cat.name}</h3>
+                    <p>{cat.description}</p>
+                  </li>
+                ))}
+              </ul>
 
             </div>
           </div>
@@ -415,10 +380,7 @@ export default function CreativeMindsPage() {
               left over from the V2 dark theme. On the bone ground they were
               invisible, and hovering made them more so. Tokens now, so they
               work in both themes. */}
-          <div
-            className="flex flex-wrap items-center gap-3 mt-12"
-            style={{ opacity: bentoVisible ? 1 : 0, transition: 'opacity 0.5s ease-out 0.4s' }}
-          >
+          <div className="flex flex-wrap items-center gap-3 mt-12">
             <span className="tag mr-2">Plus</span>
             {moreCategories.map((cat) => {
               const Icon = cat.icon;
@@ -441,56 +403,22 @@ export default function CreativeMindsPage() {
               <span className="tag">Why join</span>
             </div>
             <h2 className="d" data-mask style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)', marginTop: 18 }}>
-              This isn&apos;t another <span className="text-site-accent">freelance platform.</span>
+              This isn&apos;t another freelance platform.
             </h2>
           </div>
 
-          {/* Featured 2 — larger horizontal cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
-            {featuredBenefits.map((benefit) => {
-              const Icon = benefit.icon;
-              return (
-                <div
-                  key={benefit.title}
-                  className="site-surface rounded-site-lg p-6 md:p-8 transition-[box-shadow,transform] duration-300 hover:-translate-y-1 relative overflow-hidden group"
-                >
-
-                  <div className="relative" style={{ zIndex: 2 }}>
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="cm-tile cm-tile--lg">
-                        <Icon className="w-7 h-7" aria-hidden />
-                      </div>
-                      <p className="text-site-accent font-semibold text-sm tracking-wide uppercase">{benefit.tagline}</p>
-                    </div>
-                    <h3 className="font-site-display text-xl font-bold text-site-text mb-3">{benefit.title}</h3>
-                    <p className="text-site-muted text-sm leading-relaxed">{benefit.description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Regular 4 — smaller cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {regularBenefits.map((benefit) => {
-              const Icon = benefit.icon;
-              return (
-                <div
-                  key={benefit.title}
-                  className="site-surface rounded-site-lg p-6 relative overflow-hidden group hover:scale-[1.03] transition-transform duration-300"
-                >
-
-                  <div className="relative" style={{ zIndex: 2 }}>
-                    <div className="cm-tile mb-4">
-                      <Icon className="w-6 h-6" aria-hidden />
-                    </div>
-                    <h3 className="font-site-display text-base font-bold text-site-text mb-2">{benefit.title}</h3>
-                    <p className="text-site-muted text-xs leading-relaxed">{benefit.description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {/* One ruled grid. It was two featured cards and four smaller ones,
+              each with an icon tile and a hover lift — the card pattern the
+              rest of the site does not use. */}
+          <ul className="trust-row" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {creativeBenefits.map((benefit, i) => (
+              <li key={benefit.title} className="trust-item">
+                <span className="tag">{String(i + 1).padStart(2, '0')}</span>
+                <h3 className="d">{benefit.title}</h3>
+                <p>{benefit.description}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -514,7 +442,7 @@ export default function CreativeMindsPage() {
                 <span className="tag tag--a">For creatives</span>
               </div>
               <h2 className="d" style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)', maxWidth: '14ch' }}>
-                Ready to do some <span className="text-site-accent">freaking great</span> work?
+                Ready to do some freaking great work?
               </h2>
               <p className="lede lay-measure" style={{ marginTop: 'clamp(20px, 2.4vw, 30px)' }}>
                 Apply in minutes. Get reviewed in 48 hours. Start working with real brands.

@@ -24,6 +24,12 @@ export function StillFrame({
    * an 890KB screenshot to fill a 420px frame — fourteen times on one page.
    */
   sizes = '(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw',
+  /*
+   * Which part survives the crop. Centre suits photos; a website screenshot
+   * wants its top-left, where the logo and headline are — centred, the crop
+   * cut headlines mid-word ("nd the perfect", "dia's Leading").
+   */
+  position = 'center',
 }: {
   src: string;
   alt: string;
@@ -32,6 +38,7 @@ export function StillFrame({
   bleed?: boolean;
   priority?: boolean;
   sizes?: string;
+  position?: string;
 }) {
   return (
     <figure className="m-0">
@@ -51,7 +58,7 @@ export function StillFrame({
           className="pointer-events-none absolute inset-0 rounded-site-md"
           style={{ boxShadow: 'inset 0 0 0 1px var(--site-line)', zIndex: 1 }}
         />
-        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
+        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" style={{ objectPosition: position }} />
       </div>
       {caption && (
         <figcaption className="mt-3 font-site-sans text-site-label uppercase text-site-muted">

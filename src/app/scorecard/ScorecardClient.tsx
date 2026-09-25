@@ -120,7 +120,9 @@ export default function ScorecardClient() {
           <div className="eyebrow">
             <span className="tag tag--a">Free &middot; 2 minutes &middot; No sign-up to start</span>
           </div>
-          <h1 className="d">
+          {/* Same gap as the home hero's h1. With none, the descenders of
+              "your marketing?" ran into the paragraph below. */}
+          <h1 className="d" style={{ marginBottom: 'clamp(22px, 2.6vw, 34px)' }}>
             How healthy is your marketing?
           </h1>
           <p className="text-site-muted text-base md:text-lg mb-4 lay-measure leading-relaxed">

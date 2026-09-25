@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
@@ -9,10 +10,14 @@ import { Container, Display, Eyebrow, Label, Section, Text } from '@/components/
  * 404.
  *
  * Gets the full site chrome, because the most useful thing on a 404 is the
- * navigation. The mascot takes the same graphite treatment as everywhere else
- * — in native colours it is pink and purple, which on a bone page reads as
- * clip art.
+ * navigation. The mascot is a BrainMark sticker like everywhere else.
  */
+// Without this the tab and any shared link say the home page's title.
+export const metadata: Metadata = {
+  title: 'Page not found',
+  robots: { index: false, follow: true },
+};
+
 export default function NotFound() {
   return (
     <SiteShell>

@@ -172,7 +172,7 @@ export default function ServicesPage() {
 
                     <div className="mt-12">
                       <Link className="link-u" href="/get-started">
-                        Talk to us about {service.name.toLowerCase()} <span aria-hidden>&rarr;</span>
+                        Talk to us about {service.name} <span aria-hidden>&rarr;</span>
                       </Link>
                     </div>
                   </div>

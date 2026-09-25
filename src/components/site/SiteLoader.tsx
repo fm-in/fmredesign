@@ -90,7 +90,7 @@ export function SiteLoader() {
         className="splash-brain brain-mark"
         src="/3dasset/brain-loading-trim.webp"
         alt=""
-        width={858}
+        width={856}
         height={793}
         priority
         sizes="(max-width: 640px) 38vw, 190px"

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { SERVICES, serviceHref } from '@/lib/services-catalogue';
+import { COMPANY_EMAIL, COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
 
 /**
  * The public site's footer, as approved: brand block plus three columns —
@@ -33,7 +34,9 @@ const COMPANY = [
 function Column({ title, links }: { title: string; links: readonly { label: string; href: string }[] }) {
   return (
     <div className="foot-col">
-      <h4 className="tag">{title}</h4>
+      {/* h3, not h4: the page's last section heading is an h2, and skipping
+          a level breaks the outline screen readers navigate by. */}
+      <h3 className="tag">{title}</h3>
       <ul>
         {links.map((link) => (
           <li key={link.href}>
@@ -59,6 +62,16 @@ export function SiteFooter() {
               The marketing and digital partner for brands that intend to grow. India, and
               worldwide.
             </p>
+            {/* Every page ends here, so the two ways people actually reach us
+                belong here too — not only on /contact. */}
+            <ul className="foot-contact">
+              <li>
+                <a href={COMPANY_WHATSAPP_URL}>WhatsApp &middot; {COMPANY_PHONE_DISPLAY}</a>
+              </li>
+              <li>
+                <a href={`mailto:${COMPANY_EMAIL}`}>{COMPANY_EMAIL}</a>
+              </li>
+            </ul>
           </div>
 
           <Column

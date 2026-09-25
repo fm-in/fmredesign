@@ -48,14 +48,8 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
 
   return (
     <>
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-site-sm focus:px-4 focus:py-2"
-        style={{ background: 'var(--site-text)', color: 'var(--site-ground)' }}
-      >
-        Skip to main content
-      </a>
-
+      {/* The skip link lives once, in the root layout, and targets
+          `#main-content` — every public page and portal renders that id. */}
       {/* `floating` is for the home page, whose hero runs under the header.
           Every other page starts with content, so the bar is solid at once. */}
       <header className={floating ? 'hdr' : 'hdr is-stuck'}>
@@ -97,7 +91,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
             aria-expanded={menuOpen}
             aria-controls="site-menu"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full max-[900px]:inline-flex min-[901px]:hidden"
+            className="inline-flex h-11 w-11 flex-none items-center justify-center rounded-full max-[900px]:inline-flex min-[901px]:hidden"
             style={{ border: '1px solid var(--site-line)', color: 'var(--site-text)' }}
           >
             {menuOpen ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
@@ -114,7 +108,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
           paddingTop: 'calc(env(safe-area-inset-top, 0px) + 86px)',
         }}
       >
-        <nav className="wrap flex flex-col" aria-label="Main">
+        <nav className="wrap flex flex-col" aria-label="Mobile">
           {NAV.map((item) => (
             <Link
               key={item.href}

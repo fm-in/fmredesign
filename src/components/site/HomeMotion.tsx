@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
-import { loadGsap, observeReveal, playWhileVisible, prefersReducedMotion } from '@/lib/motion';
+import { loadGsap, observeReveal, playWhileVisible } from '@/lib/motion';
 
 /**
  * The home page's motion, in one place.
  *
  * Ports the approved prototype's behaviour: word-mask headline reveals, hero
  * and reel-column parallax, the two counter-running client marquees, the
- * pinned campaign strip, the interference wipe, and the image that follows the
- * cursor over the capability list.
+ * interference wipe, and the image that follows the cursor over the capability
+ * list. The campaign strip is a native scroller and needs no script.
  *
  * Renders nothing. Every effect targets markup the server already sent, so the
  * page is complete and readable before this loads — and if it never loads, the
@@ -31,8 +31,6 @@ export function HomeMotion() {
     (async () => {
       const gsap = await loadGsap();
       if (!gsap || cancelled) return;
-      const { ScrollTrigger } = await import('gsap/ScrollTrigger');
-      if (cancelled) return;
 
       const ctx = gsap.context(() => {
         /* ---- headline word masks ---------------------------------------- */
@@ -54,7 +52,9 @@ export function HomeMotion() {
         });
 
         /* ---- hero film parallax ----------------------------------------- */
-        gsap.utils.toArray<HTMLElement>('[data-hero-speed]').forEach((col) => {
+        // Desktop only: under 820px the films are a row below the text, and
+        // drifting them vertically would push them into the stats.
+        gsap.utils.toArray<HTMLElement>(window.innerWidth > 820 ? '[data-hero-speed]' : '.no-parallax').forEach((col) => {
           const speed = parseFloat(col.dataset.heroSpeed ?? '0');
           gsap.to(col, {
             yPercent: speed * 100,
@@ -102,26 +102,6 @@ export function HomeMotion() {
           });
         });
 
-        /* ---- pinned campaign strip -------------------------------------- */
-        const stage = document.querySelector<HTMLElement>('.strip-stage');
-        const track = document.querySelector<HTMLElement>('.strip-track');
-        if (stage && track && window.innerWidth > 760) {
-          const distance = () => Math.max(0, track.scrollWidth - window.innerWidth + 64);
-          gsap.to(track, {
-            x: () => -distance(),
-            ease: 'none',
-            scrollTrigger: {
-              trigger: stage,
-              start: 'top top',
-              end: () => `+=${distance()}`,
-              pin: true,
-              scrub: 0.6,
-              invalidateOnRefresh: true,
-              anticipatePin: 1,
-            },
-          });
-        }
-
         /* ---- interference wipe ------------------------------------------ */
         document.querySelectorAll<HTMLElement>('.wipe i').forEach((bar) => {
           gsap.fromTo(
@@ -134,16 +114,6 @@ export function HomeMotion() {
             },
           );
         });
-
-
-        /* ---- header state ------------------------------------------------ */
-        const hdr = document.querySelector<HTMLElement>('.hdr');
-        if (hdr) {
-          ScrollTrigger.create({
-            start: 'top -20',
-            onToggle: (self) => hdr.classList.toggle('is-stuck', self.isActive),
-          });
-        }
       });
 
       cleanups.push(() => ctx.revert());
@@ -155,10 +125,10 @@ export function HomeMotion() {
     };
   }, []);
 
-  // The header needs its scrolled state even with motion off, so this one
-  // listener lives outside the GSAP branch.
+  // The header's scrolled state is a plain listener, not part of the GSAP
+  // branch: GSAP loads after hydration, and until it did the header stayed a
+  // see-through scrim over body text — worst on slow mobile connections.
   useEffect(() => {
-    if (!prefersReducedMotion()) return;
     const hdr = document.querySelector<HTMLElement>('.hdr');
     if (!hdr) return;
     const onScroll = () => hdr.classList.toggle('is-stuck', window.scrollY > 20);

@@ -59,6 +59,7 @@ export default function WorkPage() {
                     src={site.src}
                     alt={`${site.client} website`}
                     ratio="4 / 5"
+                    position="left top"
                     caption={site.client}
                     sizes="(min-width: 900px) 22vw, 45vw"
                   />
@@ -91,6 +92,7 @@ export default function WorkPage() {
                     src={site.src}
                     alt={`${site.client} website`}
                     ratio="16 / 11"
+                    position="left top"
                     sizes="(min-width: 1024px) 30vw, (min-width: 640px) 46vw, 92vw"
                   />
                   <div className="mt-3 flex items-baseline justify-between gap-3">

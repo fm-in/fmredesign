@@ -45,7 +45,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     id: 'seo',
     icon: Search,
     name: 'SEO',
-    title: 'Search Engine Optimization (SEO)',
+    title: 'Search Engine Optimization',
     tagline: 'Get found. Get chosen.',
     navDesc: 'Dominate search results',
     description:
@@ -83,7 +83,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     id: 'performance',
     icon: BarChart3,
     name: 'Performance Marketing',
-    title: 'Pay-Per-Click (PPC) Advertising',
+    title: 'Performance Marketing',
     tagline: 'Every rupee. Maximum impact.',
     navDesc: 'ROI-focused campaigns',
     description:
@@ -102,7 +102,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     id: 'branding',
     icon: Palette,
     name: 'Brand Identity',
-    title: 'Creative Design & Branding',
+    title: 'Brand Identity Design',
     tagline: 'Look unforgettable.',
     navDesc: 'Unforgettable visuals',
     description:
@@ -121,7 +121,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     id: 'web',
     icon: Globe,
     name: 'Web Development',
-    title: 'Website Design & Development',
+    title: 'Website Development',
     tagline: 'Fast. Beautiful. Converting.',
     navDesc: 'Fast, beautiful sites',
     description:
@@ -140,7 +140,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     id: 'content',
     icon: Video,
     name: 'Content & Video',
-    title: 'Content Marketing & Video Production',
+    title: 'Content Production',
     tagline: 'Stories that sell.',
     navDesc: 'Stories that convert',
     description:

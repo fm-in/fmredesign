@@ -12,14 +12,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  Calendar, Users, Sparkles, ArrowRight, GraduationCap,
-  CheckCircle2, Building2, Award,
-} from 'lucide-react';
+import { Users, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { Rule } from '@/components/site/primitives';
+import { BrainMark } from '@/components/site/BrainMark';
 import {
   formatProgramPrice,
   type Program,
@@ -79,7 +77,7 @@ export default async function AcademyPage() {
         <section className="py-site-section">
           <div className="site-measure">
             <div className="site-surface rounded-site-lg p-12 lay-measure">
-              <GraduationCap className="w-12 h-12 text-site-muted mb-4" />
+              <BrainMark pose="teaching" width={140} className="mb-6" />
               <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-3">
                 New programs launching soon
               </h2>
@@ -158,7 +156,7 @@ export default async function AcademyPage() {
         <section className="sec">
           <div className="wrap">
             <div className="sec-head">
-              <h2 className="d" data-mask style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)' }}>
+              <h2 className="d" data-mask style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)', marginBottom: 18 }}>
                 Or pick a single course.
               </h2>
               <p className="text-base md:text-lg text-site-muted leading-relaxed">
@@ -167,11 +165,11 @@ export default async function AcademyPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses.map((p) => (
-                <CourseCard key={p.id} p={p} />
+            <ol className="course-list">
+              {courses.map((p, i) => (
+                <CourseRow key={p.id} p={p} n={i + 1} />
               ))}
-            </div>
+            </ol>
           </div>
         </section>
       )}
@@ -179,19 +177,19 @@ export default async function AcademyPage() {
       {/* ── Trust band ──────────────────────────────────────── */}
       <section className="sec">
         <div className="wrap">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="trust-row">
             <TrustItem
-              icon={<Building2 className="w-6 h-6" />}
+              mark="A"
               title="Agency-led"
               body="Taught by the team running real brand campaigns for Indian & international clients."
             />
             <TrustItem
-              icon={<Users className="w-6 h-6" />}
+              mark="B"
               title="Small batches"
-              body="15-25 seats per cohort. Real attention, real feedback, real portfolio work."
+              body={`${seatRange(programs) ? `${seatRange(programs)} seats per cohort. ` : ''}Real attention, real feedback, real portfolio work.`}
             />
             <TrustItem
-              icon={<Award className="w-6 h-6" />}
+              mark="C"
               title="Career-ready"
               body="Practical assignments on live briefs. You walk out with a portfolio, not just notes."
             />
@@ -214,18 +212,27 @@ function effectivePrice(p: Program): number {
 }
 
 /**
- * Saving of the bundle vs the six courses bought individually, rounded down to
- * the nearest 100 so the figure can never overstate. Returns null when the
- * bundle does not actually undercut them.
+ * Saving of the bundle vs the six courses bought individually — the exact
+ * figure. It was rounded down to the nearest 100, which printed "₹29,900" for
+ * a ₹29,995 saving: a number no buyer could reproduce from the prices shown.
+ * Returns null when the bundle does not actually undercut them.
  */
 function bundleSavingLabel(bundle: Program | undefined, courses: Program[]): string | null {
   if (!bundle || !courses.length) return null;
   const saving = courses.reduce((n, c) => n + effectivePrice(c), 0) - effectivePrice(bundle);
-  const rounded = Math.floor(saving / 100) * 100;
-  if (rounded <= 0) return null;
+  if (saving <= 0) return null;
   return new Intl.NumberFormat('en-IN', {
     style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-  }).format(rounded);
+  }).format(saving);
+}
+
+/** "15–25" from the programmes' own seat counts, or null when none are set. */
+function seatRange(programs: Program[]): string | null {
+  const seats = programs.map((p) => p.seatsTotal).filter((n): n is number => n != null);
+  if (!seats.length) return null;
+  const low = Math.min(...seats);
+  const high = Math.max(...seats);
+  return low === high ? String(low) : `${low}–${high}`;
 }
 
 /**
@@ -247,12 +254,8 @@ function heroFacts(
     ['Courses', `${courses.length} individual, or the full program`],
   ];
 
-  const seats = programs.map((p) => p.seatsTotal).filter((n): n is number => n != null);
-  if (seats.length) {
-    const low = Math.min(...seats);
-    const high = Math.max(...seats);
-    facts.push(['Seats per cohort', low === high ? String(low) : `${low}–${high}`]);
-  }
+  const seats = seatRange(programs);
+  if (seats) facts.push(['Seats per cohort', seats]);
 
   if (courses.length) {
     const cheapest = courses.reduce((a, b) => (effectivePrice(a) <= effectivePrice(b) ? a : b));
@@ -350,79 +353,55 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
   );
 }
 
-function CourseCard({ p }: { p: Program }) {
+/**
+ * One course as a ruled row, the same shape as the home page's capability
+ * list. It was a grid of six identical rounded cards, each topped by the same
+ * graduation-cap placeholder because no course has a cover image — the most
+ * templated-looking block on the site. A cover, when one is added, sits at the
+ * end of the row.
+ */
+function CourseRow({ p, n }: { p: Program; n: number }) {
   const price = formatProgramPrice(p);
-  const cardScarcity = seatScarcity(p.seatsTotal, p.seatsTaken);
-  const cardSchedule = batchSchedule(p.startsAt);
+  const scarcity = seatScarcity(p.seatsTotal, p.seatsTaken);
+  const schedule = batchSchedule(p.startsAt);
 
   return (
-    <Link
-      href={`/academy/${p.slug}`}
-      className="group block site-surface rounded-site-lg overflow-hidden hover:-translate-y-0.5 transition-all"
-    >
-      {p.coverImageUrl ? (
-        <div className="relative h-44 w-full bg-site-raised">
-          <Image
-            src={p.coverImageUrl}
-            alt={p.title}
-            fill
-            className="object-cover"
-            sizes="(max-width:768px) 100vw, 33vw"
-          />
-        </div>
-      ) : (
-        <div className="relative h-44 w-full bg-gradient-to-br flex items-center justify-center overflow-hidden">
-          <GraduationCap className="w-14 h-14 text-site-accent opacity-50" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,color-mix(in srgb, var(--site-accent) 0.1500%, transparent),transparent_50%)]" />
-        </div>
-      )}
-
-      <div className="p-6 space-y-3">
-        <div className="flex items-center gap-2 text-xs flex-wrap">
-          <span className="text-site-muted inline-flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            {cardSchedule.shortLabel}
+    <li>
+      <Link href={`/academy/${p.slug}`} className="course-row group">
+        <span className="tag n">{String(n).padStart(2, '0')}</span>
+        <span className="course-main">
+          <span className="course-name">{p.title}</span>
+          {p.shortDescription && <span className="course-desc">{p.shortDescription}</span>}
+          <span className="course-meta tag">
+            {schedule.shortLabel}
+            {scarcity.show && scarcity.remaining != null && scarcity.remaining <= 10 && (
+              <> &middot; {scarcity.remaining} seats left</>
+            )}
           </span>
-          {cardScarcity.show && cardScarcity.remaining != null && cardScarcity.remaining <= 10 && (
-            <span className="text-site-text inline-flex items-center gap-1 font-medium">
-              <Users className="w-3 h-3" />
-              {cardScarcity.remaining} seats left
-            </span>
-          )}
-        </div>
-
-        <h3 className="text-xl font-bold text-site-text group-hover:text-site-accent transition-colors">
-          {p.title}
-        </h3>
-
-        {p.shortDescription && (
-          <p className="text-sm text-site-muted line-clamp-2">{p.shortDescription}</p>
+        </span>
+        <span className="course-price">
+          <span className="font-site-display text-site-accent">{price.current}</span>
+          {price.earlyBirdActive && <s className="course-was">{price.original}</s>}
+          <span className="course-go">
+            Book your seat <span aria-hidden>&rarr;</span>
+          </span>
+        </span>
+        {p.coverImageUrl && (
+          <span className="course-cover">
+            <Image src={p.coverImageUrl} alt="" fill className="object-cover" sizes="160px" />
+          </span>
         )}
-
-        <div className="flex items-baseline gap-2 pt-3 border-t border-site-line">
-          <span className="text-site-h3 font-bold text-site-accent">{price.current}</span>
-          {price.earlyBirdActive && (
-            <span className="text-sm text-site-muted line-through">{price.original}</span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 text-sm text-site-accent font-medium pt-1">
-          Book your seat
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </div>
-      </div>
-    </Link>
+      </Link>
+    </li>
   );
 }
 
-function TrustItem({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
+function TrustItem({ mark, title, body }: { mark: string; title: string; body: string }) {
   return (
-    <div className="site-surface rounded-site-lg p-6 space-y-3">
-      <div className="w-12 h-12 rounded-site-md bg-site-raised text-site-accent flex items-center justify-center">
-        {icon}
-      </div>
-      <h3 className="font-semibold text-site-text text-lg">{title}</h3>
-      <p className="text-sm text-site-muted leading-relaxed">{body}</p>
+    <div className="trust-item">
+      <span className="tag">{mark}</span>
+      <h3 className="d">{title}</h3>
+      <p>{body}</p>
     </div>
   );
 }

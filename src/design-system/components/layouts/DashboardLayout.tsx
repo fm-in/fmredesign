@@ -666,7 +666,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-3 md:p-4 lg:p-6 pb-20 md:pb-4 lg:pb-6 overflow-auto">
+        <main id="main-content" tabIndex={-1} className="flex-1 p-3 md:p-4 lg:p-6 pb-20 md:pb-4 lg:pb-6 overflow-auto">
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
