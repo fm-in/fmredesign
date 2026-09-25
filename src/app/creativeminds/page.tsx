@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { TalentApplication } from '@/lib/admin/talent-types';
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { TalentApplicationForm } from '@/components/public/TalentApplicationForm';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
+import { BrainMark } from '@/components/site/BrainMark';
 
 import {
   Palette,
@@ -275,15 +275,7 @@ export default function CreativeMindsPage() {
             </div>
 
             <div className="flex justify-center lg:justify-end">
-              <Image
-                src="/3dasset/brain-celebrating.webp"
-                alt=""
-                aria-hidden
-                width={380}
-                height={380}
-                className="h-auto"
-                style={{ width: 'min(380px, 70vw)', filter: 'grayscale(1) brightness(0.72) contrast(1.45)' }}
-              />
+              <BrainMark pose="celebrating" width={380} style={{ ['--brain-tilt' as string]: '5deg' }} />
             </div>
           </div>
         </div>

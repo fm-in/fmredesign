@@ -366,10 +366,30 @@ them.
 
 ### 3D brain renders
 
-`/3dasset/brain-*.webp`. On the public site they take
-`filter: grayscale(1) brightness(0.72) contrast(1.45)` — in native colours the
-renders are pink and purple and read as clip art against bone paper. Use one,
-large, per page.
+`/3dasset/brain-*.webp`, rendered through **`<BrainMark pose="…" />`**
+(`src/components/site/BrainMark.tsx`). Never drop one in as a bare `<img>`:
+the component carries the treatment, the sizing and `alt="" aria-hidden`, and
+these renders are always decorative — each repeats something the page has
+already said in words.
+
+They run in **full colour**, cut out as stickers: `--site-brain-filter` gives
+four 3px white drop-shadows on the cardinal axes (a die-cut vinyl edge) plus
+one hard offset shadow, and `.brain-mark` adds a tilt that flips on hover.
+They were desaturated before; that solved the clash with the bone ground by
+throwing the artwork away. Declaring them as objects works better and keeps
+the colour. Per-instance angle via `--brain-tilt`.
+
+**Only the mascots tilt** — every frame, rule and still on the site stays
+square, which is what makes the tilt read as deliberate. Use one, large, per
+page, and only where the hero is not already carrying real content: `/about`,
+`/work`, `/academy` and `/services` fill that slot with portraits, client
+screenshots and facts, which beat a mascot.
+
+Two of the shipped files are opaque `RGB` with no alpha (`happy-brain`,
+`medibrain`) and are a different character — no glasses, different
+proportions. The die-cut edge needs alpha, so neither belongs in `BrainMark`.
+The six `*-bg.webp` neon collages belong to the deleted `ServicesSectionV2`
+and have text baked into their pixels; nothing renders them.
 
 ## Development Commands
 

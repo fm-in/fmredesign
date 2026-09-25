@@ -21,6 +21,7 @@
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Clock, Search, SlidersHorizontal, X } from 'lucide-react';
+import { BrainMark } from '@/components/site/BrainMark';
 import type { FeedItem } from '@/lib/resources/public-data';
 import type { Audience, Region, ResourceCategory } from '@/lib/resources/types';
 import { CATEGORY_LABELS, RESOURCE_TYPE_LABELS } from '@/lib/resources/types';
@@ -246,7 +247,16 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
   const clearAll = () => { setF(EMPTY); setSort('newest'); setShown(PAGE_SIZE); setPanelOpen(false); };
 
   return (
-    <div className="site-measure site-measure py-site-section">
+    // `site-measure` was listed twice here; the duplicate is dropped rather
+    // than left on a line being edited anyway.
+    <div className="site-measure py-site-section relative">
+      {/* The masthead sits in `lay-measure`, a narrow column, so the right of
+          the page is empty beside it. Absolute, so it cannot push the sticky
+          stream bar below it out of place; hidden below lg, where the column
+          is the full width. */}
+      <div className="absolute right-0 top-24 hidden lg:block">
+        <BrainMark pose="creative" width={170} />
+      </div>
       <div className="lay-measure" style={{ marginBottom: '32px' }}>
         <h1 className="font-site-display text-4xl md:text-6xl font-bold text-site-text mb-4 leading-tight">
           Freak<span className="text-site-accent">quency</span>

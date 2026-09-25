@@ -23,6 +23,7 @@ import {
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
+import { BrainMark } from '@/components/site/BrainMark';
 import { CalButton } from"@/components/ui/CalButton";
 import { HONEYPOT_FIELD } from '@/lib/spam-guard-field';
 import { INBOUND_CONSENT_TEXT } from '@/lib/sales/consent';
@@ -268,16 +269,10 @@ export default function GetStartedPage() {
         <div className="site-measure">
           {/* 3D Brain Decoration */}
           <div className="absolute right-8 lg:right-20 top-36 hidden lg:block" style={{ zIndex: 10 }}>
-            <img
-              src="/3dasset/brain-rocket.webp"
-              alt="Launch Your Project"
-              loading="lazy"
-              className="h-auto"
-              style={{
-                width: 'min(180px, 30vw)',
-                filter: 'grayscale(1) brightness(0.72) contrast(1.45)',
-              }}
-            />
+            {/* Was `alt="Launch Your Project"` on a purely ornamental render,
+                which a screen reader read out over the heading that already
+                says it. BrainMark is decorative by construction. */}
+            <BrainMark pose="rocket" width={180} style={{ ['--brain-tilt' as string]: '6deg' }} />
           </div>
 
           <div className="max-w-4xl">

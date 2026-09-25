@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
+import { BrainMark } from '@/components/site/BrainMark';
 import { Container, Display, Eyebrow, Label, Section, Text } from '@/components/site/primitives';
 
 /**
@@ -20,15 +20,7 @@ export default function NotFound() {
       <main id="main-content">
         <Section>
           <Container width="narrow">
-            <Image
-              src="/3dasset/brain-confused.webp"
-              alt=""
-              aria-hidden
-              width={220}
-              height={220}
-              className="h-auto"
-              style={{ maxWidth: '180px', filter: 'grayscale(1) brightness(0.72) contrast(1.45)' }}
-            />
+            <BrainMark pose="confused" width={180} />
             <Eyebrow className="mt-10 block">Error 404</Eyebrow>
             <Display level="h1" className="mt-5">
               This page does not exist.

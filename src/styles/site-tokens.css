@@ -132,10 +132,32 @@
     0 20px 44px -24px rgba(19, 17, 15, 0.5),
     0 2px 6px -2px rgba(19, 17, 15, 0.18);
 
-  /* The creatives carry the colour; the chrome does not. */
-  --site-logo-filter: grayscale(1);
+  /* Measured across all 36 files: 35 carry real colour — mean saturation above
+     0.5, with more than 70% of their ink saturated. Desaturating them was
+     throwing the brands themselves away, so the marks now run in full colour.
+     Multiply still earns its keep: 25 of the files ship an opaque white box,
+     and against paper multiply drops it with no filter at all. */
+  --site-logo-filter: none;
   --site-logo-blend: multiply;
-  --site-logo-opacity: 0.72;
+  --site-logo-opacity: 1;
+
+  /*
+   * The 3D brain renders, cut out as stickers.
+   *
+   * These arrive as full-colour cartoons, and the earlier answer was to
+   * desaturate them so they would stop shouting on paper. That solved the
+   * clash by throwing away the artwork — the same mistake the client logos
+   * were making. Declaring them instead works better: four 3px white shadows
+   * on the cardinal axes give a die-cut vinyl edge, and one hard offset shadow
+   * lifts the sticker off the page. They read as an object placed on the
+   * layout rather than an illustration competing with it, and they keep their
+   * colour. Taken from the Refined direction, where the rule was: only the
+   * mascots tilt.
+   */
+  --site-brain-filter:
+    drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff)
+    drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff)
+    drop-shadow(4px 5px 0 rgba(19, 17, 15, 0.85));
 
   --site-font-display: var(--font-instrument-serif), Georgia, 'Times New Roman', serif;
   --site-font-sans: var(--font-dm-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -169,8 +191,20 @@
   /* Nothing casts a shadow on ink; the ground is already darker than the cast. */
   --site-film-shadow: none;
 
-  /* Measured: every client logo is opaque dark artwork on white, so on a dark
-     ground it must be inverted and lifted. On paper, multiply does it cleanly. */
+  /* The die-cut edge is what separates a sticker from the ground, and white
+     does that better on ink than it does on paper. The offset shadow is
+     dropped: a near-black shadow on a near-black ground is invisible, so it
+     would only cost a filter pass. */
+  --site-brain-filter:
+    drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff)
+    drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff);
+
+  /* Deliberately still monochrome here, where paper runs the marks in colour.
+     `invert` is load-bearing, not decorative: it turns each file's white box
+     black so `lighten` can drop it against this ground. Removing only the
+     `grayscale` would leave the invert flipping every hue — a red mark comes
+     out cyan — so colour in dark mode needs a light plate behind the strip,
+     not a shorter filter. Not built; paper is the default and dark is opt-in. */
   --site-logo-filter: grayscale(1) invert(1) contrast(1.15);
   --site-logo-blend: lighten;
   --site-logo-opacity: 0.72;

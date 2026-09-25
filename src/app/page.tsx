@@ -5,6 +5,7 @@ import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { HomeMotion } from '@/components/site/HomeMotion';
+import { SiteLoader } from '@/components/site/SiteLoader';
 import { getAcademyHomePricing } from '@/lib/academy/home-pricing';
 import { serviceHref } from '@/lib/services-catalogue';
 
@@ -78,7 +79,6 @@ const PILLARS = [
 const TEAM = [
   ['/team/Arushimaheshwari.png', 'Arushi'],
   ['/team/Abhishek.png', 'Abhishek'],
-  ['/team/alii-palau.png', 'Ali'],
 ] as const;
 
 const SYSTEMS = [
@@ -117,6 +117,9 @@ export default async function Home() {
 
   return (
     <SiteShell>
+      {/* Home only, as on the live site: this is the first-visit splash, and
+          the session flag it sets means it shows once per tab. */}
+      <SiteLoader />
       <SiteHeader floating />
       <HomeMotion />
 
@@ -347,9 +350,8 @@ export default async function Home() {
               <div className="team">
                 {TEAM.map(([src, name]) => (
                   <figure key={name}>
-                    {/* 142px on screen. `alii-palau.png` is 1348px wide and
-                        980KB — 9.5x oversampled, the single heaviest asset on
-                        the page. */}
+                    {/* 142px on screen. `Abhishek.png` is 813px and 812KB —
+                        5.7x oversampled, and now the heaviest portrait here. */}
                     <Image src={src} alt="" width={460} height={460} sizes="160px" />
                     <figcaption className="tag">{name}</figcaption>
                   </figure>

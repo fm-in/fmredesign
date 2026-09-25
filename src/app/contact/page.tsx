@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
+import { BrainMark } from '@/components/site/BrainMark';
 import { ContactForm } from './ContactForm';
 import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
 
@@ -55,6 +56,13 @@ export default function ContactPage() {
       <SiteHeader />
       <main id="main-content">
         <section className="sec" style={{ paddingBottom: 0 }}>
+          {/* The headline is capped at 18ch, so the right of this section is
+              empty at desktop widths and the render has somewhere to sit
+              without crowding anything. Hidden below lg, where there is no
+              such gap. `.sec` is already position:relative. */}
+          <div className="absolute right-8 top-32 hidden lg:block lg:right-20">
+            <BrainMark pose="support" width={190} />
+          </div>
           <div className="wrap">
             <div className="eyebrow">
               <span className="tag tag--a">Contact</span>
