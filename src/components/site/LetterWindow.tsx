@@ -102,6 +102,7 @@ export function LetterWindow({
         ring.style.opacity = String(1 - span(r / reach, 0.55, 1));
       }
       wall.style.transform = `scale(${1.1 - 0.1 * e})`;
+      wall.style.gap = `${6 * e}px`;
       // Neighbouring strips drift in opposite directions, so the open wall never sits still.
       strips.forEach((v, i) => {
         v.style.transform = `translateY(${Math.sin(t * 0.4 + i * 1.3) * 3.5 * (i % 2 ? 1 : -1)}%)`;
