@@ -10,6 +10,7 @@ import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { BrainMark } from '@/components/site/BrainMark';
+import { StepsLoop } from '@/components/site/StepsLoop';
 
 import {
   Users,
@@ -290,19 +291,12 @@ export default function CreativeMindsPage() {
                 was V2's decorative language; the site's language is numbered
                 rows.
               */}
-              <ul className="cap" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {processSteps.map((item) => (
-                  <li key={item.step} className="cap-row" style={{ gridTemplateColumns: '54px 1fr' }}>
-                    <span className="tag n">{item.step}</span>
-                    <span>
-                      <span className="cap-name">{item.title}</span>
-                      <span className="cap-desc" style={{ gridColumn: 'auto', marginTop: 10, display: 'block' }}>
-                        {item.description}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <StepsLoop
+                src="/videos/steps/talent"
+                steps={processSteps}
+                windows={[[0, 2.1], [2.1, 4.2], [4.2, 7]]}
+                label="From application to earning"
+              />
             </div>
           </div>
         </div>

@@ -141,12 +141,13 @@ const TEAM = [
   ['/team/Abhishek.png', 'Abhishek'],
 ] as const;
 
+// [name, what it does, public page, loop id, link text]. Loops live in /public/videos/software/.
 const SYSTEMS = [
-  ['Growth Scorecard', 'A public diagnostic that scores a brand’s digital health.', '/scorecard'],
-  ['Freakquency', 'Our content engine. It ingests, publishes and distributes, on a schedule.', '/freakquency'],
-  ['CreativeMinds', 'The talent network platform — applications, portfolios and the people who make the work.', '/creativeminds'],
-  ['Client Portal', 'Project tracking, content approval, contracts and reports, in one place for every client.', null],
-  ['Sales System', 'Capture through follow-up, automated — the same machinery we build into your business.', null],
+  ['Growth Scorecard', 'A public diagnostic that scores a brand’s digital health.', '/scorecard', 'scorecard', 'Take the Scorecard'],
+  ['Freakquency', 'Our content engine. It ingests, publishes and distributes, on a schedule.', '/freakquency', 'freakquency', 'Read Freakquency'],
+  ['CreativeMinds', 'The talent network platform — applications, portfolios and the people who make the work.', '/creativeminds', 'creativeminds', 'Visit CreativeMinds'],
+  ['Client Portal', 'Project tracking, content approval, contracts and reports, in one place for every client.', null, 'portal', null],
+  ['Sales System', 'Capture through follow-up, automated — the same machinery we build into your business.', null, 'sales', null],
 ] as const;
 
 /*
@@ -163,14 +164,6 @@ const COURSES = [
   ['website-designing', 'Website Designing'],
 ] as const;
 
-const SYSTEM_PROOF = [
-  ['elisa_website.jpg', 'Elisa'],
-  ['mahua_house_website.jpg', 'Mahua House'],
-  ['playpal_website.png', 'Playpal'],
-  ['restronaut_website.jpg', 'Restronaut'],
-  ['badastoor_website.jpg', 'Badastoor'],
-  ['mohdiamond_website.jpg', 'Mohdiamond'],
-] as const;
 
 export default async function Home() {
   const pricing = await getAcademyHomePricing();
@@ -408,57 +401,24 @@ export default async function Home() {
                 We build our own software. The same team builds yours.
               </h2>
               <p className="lede">
-                Most agencies buy their tools. These five run our business today &mdash; and the
-                sites beside them are ones we designed, built and still run.
+                Most agencies buy their tools. These five run our business today, and each one
+                is shown here doing its job.
               </p>
             </div>
 
-            <div className="sys">
-              <div className="sys-list">
-                {SYSTEMS.map(([name, body, href]) => (
-                  <div className="sys-row" key={name}>
-                    <i className="sys-dot" />
-                    <h3 className="h3">{href ? <Link href={href}>{name}</Link> : name}</h3>
-                    <p>{body}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* A live wall: two columns of work drifting in opposite
-                  directions. Placeholder screenshots of client sites stand in
-                  until there are screen recordings of the software itself. */}
-              <div className="sys-wall">
-                {[0, 1].map((col) => {
-                  const items = SYSTEM_PROOF.filter((_, i) => i % 2 === col);
-                  return (
-                    <div className={`sys-col sys-col--${col}`} key={col}>
-                      {/* Twice over, for a seamless loop; the copy is hidden from assistive tech. */}
-                      {[items, items].map((set, copy) => (
-                        <div className="sys-set" key={copy} aria-hidden={copy === 1 ? true : undefined}>
-                          {set.map(([file, name]) => (
-                            <figure className="sys-shot" key={file}>
-                              <span className="sys-bar" aria-hidden>
-                                <i />
-                                <i />
-                                <i />
-                              </span>
-                              <Image
-                                src={`/work/websites/${file}`}
-                                alt={copy === 0 ? `${name} website` : ''}
-                                width={880}
-                                height={605}
-                                sizes="(max-width: 700px) 45vw, 300px"
-                              />
-                              <figcaption className="tag">{name}</figcaption>
-                            </figure>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            {/* Each product in use, one at a time: the same list + stage as
+                the services above. */}
+            <LoopStage
+              label="Our software"
+              base="/videos/software/"
+              items={SYSTEMS.map(([name, body, href, id, cta]) => ({
+                id,
+                name,
+                sub: body,
+                href: href ?? undefined,
+                linkLabel: cta ?? undefined,
+              }))}
+            />
           </div>
         </section>
 

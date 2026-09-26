@@ -78,7 +78,7 @@ export function LoopStage({
         if (e.isIntersecting && !reduced.current) void v.play().catch(() => {});
         else v.pause();
       },
-      { threshold: 0.35 },
+      { threshold: 0.2 },
     );
     io.observe(root);
     return () => io.disconnect();

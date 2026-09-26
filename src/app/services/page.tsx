@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/site/SiteFooter';
 import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
 import { LetterWindow } from '@/components/site/LetterWindow';
 import { ServiceLoop } from '@/components/site/ServiceLoop';
+import { StepsLoop } from '@/components/site/StepsLoop';
 import { SERVICES, serviceHref } from '@/lib/services-catalogue';
 import { serviceDeepDiveData } from '@/data/serviceDeepDiveData';
 
@@ -191,19 +192,14 @@ export default function ServicesPage() {
             <Display level="h2" as="h2" className="mt-5 max-w-[18ch]">
               The same four steps, every time.
             </Display>
-            <ul className="mt-14" style={{ listStyle: 'none', margin: '3.5rem 0 0', padding: 0 }}>
-              {PROCESS.map((item) => (
-                <li key={item.step} style={{ borderTop: '1px solid var(--site-line-soft)' }}>
-                  <div className="grid gap-3 py-8 sm:grid-cols-[4rem_minmax(0,18ch)_1fr] sm:gap-10">
-                    <span className="font-site-sans text-site-label text-site-muted">{item.step}</span>
-                    <Display level="h3" as="h3">
-                      {item.title}
-                    </Display>
-                    <Text muted>{item.description}</Text>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            {/* The loop acts the steps out; each row lights as the mascot
+                reaches its station (timings from the loop's composition). */}
+            <StepsLoop
+              src="/videos/steps/process"
+              steps={PROCESS}
+              windows={[[0, 2.05], [2.05, 3.65], [3.65, 5.25], [5.25, 7]]}
+              label="How we work"
+            />
             <Rule soft />
           </Container>
         </Section>

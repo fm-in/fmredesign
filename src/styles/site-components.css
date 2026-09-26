@@ -744,63 +744,6 @@
     [data-site] .ev { grid-template-columns: minmax(0, 1fr); }
   }
 
-  /* ---------- systems ---------- */
-  [data-site] .sys {
-    display: grid;
-    grid-template-columns: var(--split-cols);
-    gap: clamp(34px, 4vw, 60px) var(--split-gap);
-    align-items: start;
-  }
-  [data-site] .sys-list { border-top: 1px solid var(--site-line); }
-  [data-site] .sys-row {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 4px 14px;
-    padding-block: clamp(16px, 2vw, 24px);
-    border-bottom: 1px solid var(--site-line);
-  }
-  [data-site] .sys-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--site-accent);
-    margin-top: 9px;
-  }
-  [data-site] .sys-row p { grid-column: 2; color: var(--site-muted); font-size: 0.9375rem; margin-top: 6px; }
-  /* A live wall: two columns of work drifting in opposite directions. Each
-     column holds its set twice, so moving by half its height loops seamlessly. */
-  [data-site] .sys-wall {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(10px, 1.4vw, 18px);
-    height: clamp(440px, 42vw, 600px);
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
-  }
-  [data-site] .sys-col { display: flex; flex-direction: column; animation: fm-drift 40s linear infinite; }
-  [data-site] .sys-col--1 { animation-direction: reverse; }
-  [data-site] .sys-wall:hover .sys-col { animation-play-state: paused; }
-  [data-site] .sys-set { display: grid; gap: clamp(10px, 1.4vw, 18px); padding-bottom: clamp(10px, 1.4vw, 18px); }
-  [data-site] .sys-shot {
-    margin: 0;
-    border-radius: 6px;
-    overflow: hidden;
-    background: var(--site-raised);
-    border: 1px solid var(--site-line-soft);
-    box-shadow: var(--site-film-shadow);
-  }
-  [data-site] .sys-bar { display: flex; gap: 6px; padding: 8px 10px; background: color-mix(in srgb, var(--site-text) 5%, var(--site-raised)); }
-  [data-site] .sys-bar i { width: 7px; height: 7px; border-radius: 50%; background: var(--site-line); }
-  [data-site] .sys-shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 11; object-fit: cover; object-position: left top; }
-  [data-site] .sys-shot figcaption { padding: 8px 10px 10px; }
-  @keyframes fm-drift { to { transform: translateY(-50%); } }
-  @media (prefers-reduced-motion: reduce) {
-    [data-site] .sys-col { animation: none; }
-  }
-  @media (max-width: 900px) {
-    [data-site] .sys { grid-template-columns: minmax(0, 1fr); }
-  }
-
   /* ---------- academy ---------- */
   [data-site] .acad { border-top: 1px solid var(--site-line); }
   [data-site] .acad-grid {
@@ -1444,6 +1387,65 @@
   }
   @media (prefers-reduced-motion: reduce) {
     [data-site] .lstage-frame video { transition: none; }
+  }
+
+  /* ---------- a process beside its loop (StepsLoop) ----------
+     The list reads on its own; once the loop plays, the step it is acting
+     out lights up and the others step back. */
+  [data-site] .steps-loop {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 340px);
+    gap: 28px clamp(24px, 4vw, 56px);
+    align-items: center;
+    margin-top: clamp(28px, 3.5vw, 48px);
+  }
+  [data-site] .steps-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--site-line); }
+  [data-site] .steps-list li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 8px 24px;
+    padding: clamp(16px, 2vw, 24px) 0;
+    border-bottom: 1px solid var(--site-line);
+    transition: opacity 0.4s ease;
+  }
+  [data-site] .steps-list li::before {
+    content: "";
+    position: absolute;
+    left: -16px;
+    top: 18px;
+    bottom: 18px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--site-accent);
+    transform: scaleY(0);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  [data-site] .steps-loop.is-live .steps-list li { opacity: 0.45; }
+  [data-site] .steps-loop.is-live .steps-list li.is-on { opacity: 1; }
+  [data-site] .steps-list li.is-on::before { transform: scaleY(1); }
+  [data-site] .steps-list li.is-on .n { color: var(--site-accent); }
+  [data-site] .steps-title { margin: 0; font-family: var(--site-font-display); font-weight: 400; font-size: clamp(1.4rem, 2.4vw, 2rem); line-height: 1.05; letter-spacing: -0.02em; }
+  [data-site] .steps-list p { margin: 8px 0 0; color: var(--site-muted); font-size: 0.9375rem; max-width: 54ch; }
+  [data-site] .steps-frame {
+    margin: 0;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid var(--site-line-soft);
+    background: #f7f4ef;
+    box-shadow: var(--site-film-shadow);
+  }
+  [data-site] .steps-frame video { display: block; width: 100%; height: 100%; object-fit: cover; }
+  @media (max-width: 760px) {
+    [data-site] .steps-loop { grid-template-columns: minmax(0, 1fr); }
+    [data-site] .steps-frame { order: -1; max-width: 380px; }
+    [data-site] .steps-list li { grid-template-columns: 36px 1fr; }
+    [data-site] .steps-list li::before { left: -10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-site] .steps-list li, [data-site] .steps-list li::before { transition: none; }
   }
 
   /* ---------- close: confetti from the mascot ---------- */
