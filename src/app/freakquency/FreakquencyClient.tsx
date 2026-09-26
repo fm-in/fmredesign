@@ -83,14 +83,33 @@ function matches(item: FeedItem, f: Filters, skip: Dim = null): boolean {
 }
 
 /** Relative age. Absolute dates make a live feed look stale even when it is not. */
-function timeAgo(iso: string): string {
-  const mins = Math.floor((Date.now() - Date.parse(iso)) / 60000);
+function timeAgo(iso: string, now: number): string {
+  const mins = Math.floor((now - Date.parse(iso)) / 60000);
   if (mins < 60) return `${Math.max(1, mins)}m ago`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
   if (days < 30) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  return fixedDate(iso);
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** The same string on the server and in every browser: no locale, no clock. */
+function fixedDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+/**
+ * An item's age. The page is cached on the server, so "3h ago" worked out
+ * there disagreed with the browser's clock at hydration (React #418) and could
+ * be hours stale. The first render prints the fixed date; the relative age
+ * replaces it once the browser's own clock is available.
+ */
+function Ago({ iso }: { iso: string }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => setNow(Date.now()), []);
+  return <time dateTime={iso}>{now === null ? fixedDate(iso) : timeAgo(iso, now)}</time>;
 }
 
 /**
@@ -514,7 +533,7 @@ function Meta({ item }: { item: FeedItem }) {
         </span>
       )}
       {item.category && <span>· {CATEGORY_LABELS[item.category] ?? item.category}</span>}
-      <span>· {timeAgo(item.publishedAt)}</span>
+      <span>· <Ago iso={item.publishedAt} /></span>
       {item.readMinutes ? (
         <span className="inline-flex items-center gap-1">
           · <Clock className="w-3 h-3" /> {item.readMinutes} min
