@@ -204,3 +204,47 @@ export async function pinSection(
 
   return () => instance.kill();
 }
+
+/**
+ * Drive a sticky scroll scene: call `onFrame(progress, seconds)` every frame
+ * while `section` is on screen, where progress runs 0→1 as the section scrolls
+ * past (its height minus one viewport).
+ *
+ * Deliberately not a pin. The section is tall and its stage is
+ * `position: sticky` in CSS, so the browser does the holding and there is no
+ * second scroll engine to fight — the lesson of `pinSection`'s own history.
+ * The frame loop exists only while the section intersects the viewport.
+ *
+ * Returns a cleanup. Callers check reduced motion themselves, because a scene
+ * under reduced motion should not be tall in the first place.
+ */
+export function stickyScene(
+  section: HTMLElement,
+  onFrame: (progress: number, seconds: number) => void,
+): MotionCleanup {
+  let raf = 0;
+  const tick = (now: number) => {
+    const r = section.getBoundingClientRect();
+    const run = r.height - window.innerHeight;
+    const p = run > 0 ? Math.min(1, Math.max(0, -r.top / run)) : 0;
+    onFrame(p, now / 1000);
+    raf = requestAnimationFrame(tick);
+  };
+  const start = () => { if (!raf) raf = requestAnimationFrame(tick); };
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+
+  if (typeof IntersectionObserver === 'undefined') {
+    start();
+    return stop;
+  }
+  const observer = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()));
+  observer.observe(section);
+  // Draw once immediately so the first painted frame matches the scroll position.
+  onFrame(0, performance.now() / 1000);
+  return () => { observer.disconnect(); stop(); };
+}
+
+/** Clamp `x` into 0–1 across the span a→b. Shared by the scroll scenes. */
+export const span = (x: number, a: number, b: number): number => Math.min(1, Math.max(0, (x - a) / (b - a)));
+/** Cubic in-out easing for scroll-linked moves. */
+export const easeInOut = (x: number): number => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);

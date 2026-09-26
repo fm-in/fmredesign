@@ -6,29 +6,36 @@ import { loadGsap } from '@/lib/motion';
 /**
  * A piece of real work that follows the cursor over a list.
  *
- * Each row inside `listSelector` names its image in `data-preview`. Hovering a
- * row shows that image beside the pointer; leaving the list hides it.
+ * Each item inside `listSelector` names its media in `data-preview` (an image)
+ * or `data-preview-video` (an mp4, with `data-preview` as its poster). Hovering
+ * an item shows it beside the pointer; leaving the list hides it.
+ *
+ * Listens by delegation on the list, not on each item, so it works for rows
+ * that are cloned or added after mount — the client logo marquee duplicates
+ * its children to loop.
  *
  * An enhancement only, and it answers the visitor's own movement rather than
  * playing by itself:
  * - fine pointers that can hover — never on touch;
  * - not at all with reduced motion (`loadGsap` returns null);
- * - images load on the first hover, not with the page;
- * - the frame is `aria-hidden` — every row still says what it is in text.
+ * - media loads on the first hover, not with the page;
+ * - the frame is `aria-hidden` — every item still says what it is in text.
  */
 export function CursorPreview({ listSelector }: { listSelector: string }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const list = document.querySelector<HTMLElement>(listSelector);
     const frame = frameRef.current;
     const img = imgRef.current;
-    if (!list || !frame || !img) return;
+    const video = videoRef.current;
+    if (!list || !frame || !img || !video) return;
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
     let cancelled = false;
-    const cleanups: Array<() => void> = [];
+    let cleanup = () => {};
 
     (async () => {
       const gsap = await loadGsap();
@@ -36,41 +43,58 @@ export function CursorPreview({ listSelector }: { listSelector: string }) {
 
       const moveX = gsap.quickTo(frame, 'x', { duration: 0.45, ease: 'power3.out' });
       const moveY = gsap.quickTo(frame, 'y', { duration: 0.45, ease: 'power3.out' });
-      let current = '';
+      let current: HTMLElement | null = null;
+      let shown = false;
 
-      const onMove = (e: PointerEvent) => {
-        // Offset right and up so the image never sits under the cursor or
-        // covers the row being read.
-        moveX(e.clientX + 28);
-        moveY(e.clientY - frame.offsetHeight / 2);
-      };
-      const onEnterRow = (e: Event) => {
-        const src = (e.currentTarget as HTMLElement).dataset.preview;
-        if (!src) return;
-        if (src !== current) {
-          current = src;
-          img.src = src;
+      const show = (item: HTMLElement) => {
+        if (item === current) return;
+        current = item;
+        const still = item.dataset.preview ?? '';
+        const clip = item.dataset.previewVideo;
+        if (clip) {
+          frame.classList.add('is-video');
+          video.poster = still;
+          if (video.getAttribute('src') !== clip) video.src = clip;
+          void video.play().catch(() => {});
+        } else {
+          frame.classList.remove('is-video');
+          video.pause();
+          img.src = still;
         }
-        gsap.to(frame, { autoAlpha: 1, scale: 1, rotate: -2, duration: 0.35, ease: 'power3.out' });
+        if (!shown) {
+          shown = true;
+          gsap.to(frame, { autoAlpha: 1, scale: 1, rotate: -2, duration: 0.35, ease: 'power3.out' });
+        }
       };
-      const onLeaveList = () => {
+      const hide = () => {
+        current = null;
+        shown = false;
+        video.pause();
         gsap.to(frame, { autoAlpha: 0, scale: 0.92, rotate: 0, duration: 0.25, ease: 'power2.in' });
       };
 
-      const rows = list.querySelectorAll<HTMLElement>('[data-preview]');
-      rows.forEach((row) => row.addEventListener('pointerenter', onEnterRow));
+      const onMove = (e: PointerEvent) => {
+        // Offset right and up so the preview never sits under the cursor or
+        // covers the item being read.
+        moveX(e.clientX + 28);
+        moveY(e.clientY - frame.offsetHeight / 2);
+        const item = (e.target as Element | null)?.closest<HTMLElement>('[data-preview], [data-preview-video]');
+        if (item && list.contains(item)) show(item);
+        else if (shown) hide();
+      };
+
       list.addEventListener('pointermove', onMove);
-      list.addEventListener('pointerleave', onLeaveList);
-      cleanups.push(() => {
-        rows.forEach((row) => row.removeEventListener('pointerenter', onEnterRow));
+      list.addEventListener('pointerleave', hide);
+      cleanup = () => {
         list.removeEventListener('pointermove', onMove);
-        list.removeEventListener('pointerleave', onLeaveList);
-      });
+        list.removeEventListener('pointerleave', hide);
+        video.pause();
+      };
     })();
 
     return () => {
       cancelled = true;
-      cleanups.forEach((fn) => fn());
+      cleanup();
     };
   }, [listSelector]);
 
@@ -78,6 +102,7 @@ export function CursorPreview({ listSelector }: { listSelector: string }) {
     <div ref={frameRef} className="cursor-preview" aria-hidden>
       {/* eslint-disable-next-line @next/next/no-img-element -- src is set on hover */}
       <img ref={imgRef} alt="" decoding="async" />
+      <video ref={videoRef} muted playsInline loop preload="none" />
     </div>
   );
 }

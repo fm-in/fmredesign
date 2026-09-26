@@ -6,7 +6,9 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { HomeMotion } from '@/components/site/HomeMotion';
 import { SiteLoader } from '@/components/site/SiteLoader';
-import { HeroReel } from '@/components/site/HeroReel';
+import { LetterWindow } from '@/components/site/LetterWindow';
+import { ReelRow } from '@/components/site/ReelRow';
+import { FilmVideo } from '@/components/site/FilmVideo';
 import { CursorPreview } from '@/components/site/CursorPreview';
 import { BrainMark } from '@/components/site/BrainMark';
 import { CalButton } from '@/components/ui/CalButton';
@@ -37,17 +39,17 @@ export const metadata: Metadata = {
 export const revalidate = 60;
 
 /*
- * Eight films, split so none appears twice on the page: four play in turn in
- * the hero window, four sit in the work row. Names and categories come from
- * the portfolio list, the same one /work uses.
+ * The hero's letter window runs six films behind the headline, as strips of
+ * colour; the work row then shows four at full size, with names. There are
+ * only eight films, so some appear in both — in the hero they are texture, in
+ * the row they are the work. Names and categories come from the portfolio
+ * list, the same one /work uses.
  */
 const film = (id: (typeof VIDEO_WORK)[number]['id']) => {
   const f = VIDEO_WORK.find((v) => v.id === id)!;
   return { id: f.id, client: f.client, category: f.category };
 };
-const HERO_FILMS = ['giovanni', 'bhopal_manthan', 'adi', 'astroo_apaar'].map((id) =>
-  film(id as (typeof VIDEO_WORK)[number]['id']),
-);
+const HERO_WALL = ['giovanni', 'kanha', 'renny', 'concept_studio', 'skr_group', 'astroo_apaar'] as const;
 const WORK_FILMS = ['kanha', 'renny', 'skr_group', 'concept_studio'].map((id) =>
   film(id as (typeof VIDEO_WORK)[number]['id']),
 );
@@ -79,6 +81,15 @@ const CLIENTS = [
 ] as const;
 
 const LOGO_ROWS = [CLIENTS.slice(0, 10), CLIENTS.slice(10)] as const;
+
+/** Logos we have work for: hovering one plays or shows it beside the cursor. */
+const LOGO_WORK: Record<string, { still: string; clip?: string }> = {
+  'Asset-27': { still: '/videos/giovanni-poster.jpg', clip: '/videos/giovanni.mp4' },
+  'Asset-21': { still: '/videos/skr_group-poster.jpg', clip: '/videos/skr_group.mp4' },
+  'Asset-23': { still: '/videos/kanha-poster.jpg', clip: '/videos/kanha.mp4' },
+  'Asset-22': { still: '/work/services/elisa-service1.jpg' },
+  'Asset-28': { still: '/work/services/harsh-service1.jpg' },
+};
 
 /** Every brand in /public/clients — the marquee shows twenty of them. One
  *  number, used by the hero line and the evidence figure alike. */
@@ -115,6 +126,13 @@ const PREVIEW: Record<string, string> = {
   content: '/videos/renny-poster.jpg',
 };
 const preview = (src: string) => `/_next/image?url=${encodeURIComponent(src)}&w=640&q=75`;
+// Placeholders until each service has its own clip: the nearest existing film.
+const PREVIEW_FILM: Record<string, string> = {
+  social: 'giovanni',
+  performance: 'adi',
+  branding: 'concept_studio',
+  content: 'renny',
+};
 
 const CAPABILITY = [
   ['seo', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.'],
@@ -182,41 +200,30 @@ export default async function Home() {
 
       <main id="main-content">
         {/* ═══ HERO ═══════════════════════════════════════════════════ */}
-        <section className="hero">
-          <div className="hero-shade" aria-hidden />
-          <div className="wrap hero-grid">
-            <div className="hero-in">
-              <div className="eyebrow">
-                <span className="tag tag--a">Marketing &amp; digital partner</span>
-              </div>
-              <h1 className="d">Ideas that move markets.</h1>
-              <p className="lede">
-                We are the marketing and digital partner for brands that intend to grow. Strategy,
-                creative, performance &mdash; and the software underneath. One team.
-              </p>
-              <div className="hero-actions">
-                <Link className="btn btn--primary" href="/get-started">
-                  Get a free strategy call
-                </Link>
-                <Link className="btn btn--ghost" href="/work">
-                  See our work
-                </Link>
-              </div>
-              {/* Proof, in words, where the eye already is. It replaces a stat
-                  row (6 courses, 14 sites, 8 films) that counted output, not
-                  who trusts the work. */}
-              <p className="hero-proof">
-                Radisson, Jio Studios, BNI and Dainik Bhaskar are among the {BRAND_COUNT} brands
-                we have made work for.
-              </p>
-            </div>
-
-            <HeroReel films={HERO_FILMS} />
+        {/* The letter window: six client films behind the headline, opening
+            into the full wall as the visitor scrolls. */}
+        <LetterWindow films={HERO_WALL} lines={['Ideas', 'that move', 'markets.']}>
+          <p className="lede">
+            We are the marketing and digital partner for brands that intend to grow. Strategy,
+            creative, performance &mdash; and the software underneath. One team.
+          </p>
+          <div className="hero-actions">
+            <Link className="btn btn--primary" href="/get-started">
+              Get a free strategy call
+            </Link>
+            <Link className="btn btn--ghost" href="/work">
+              See our work
+            </Link>
           </div>
-        </section>
+          <p className="hero-proof">
+            Radisson, Jio Studios, BNI and Dainik Bhaskar are among the {BRAND_COUNT} brands we
+            have made work for.
+          </p>
+        </LetterWindow>
 
         {/* ═══ CLIENT WALL ════════════════════════════════════════════ */}
         <section className="wall" aria-label="Clients we work with">
+          <CursorPreview listSelector=".wall" />
           {/* The names, once, for screen readers and search. The marquee below
               clones its logos to loop, so alt text there would be read out
               several times over. */}
@@ -233,7 +240,18 @@ export default async function Home() {
                 // exceeds the viewport, and next/image's wrapper markup breaks
                 // the flex measurement that duplication depends on.
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={file} src={`/clients/${file}.png`} alt="" title={client} width={220} height={110} loading="lazy" decoding="async" />
+                <img
+                  key={file}
+                  src={`/clients/${file}.png`}
+                  alt=""
+                  title={client}
+                  width={220}
+                  height={110}
+                  loading="lazy"
+                  decoding="async"
+                  data-preview={LOGO_WORK[file]?.still}
+                  data-preview-video={LOGO_WORK[file]?.clip}
+                />
               ))}
             </div>
           ))}
@@ -259,19 +277,7 @@ export default async function Home() {
           </div>
 
           <div className="wrap">
-            <div className="reel-row">
-              {WORK_FILMS.map((f) => (
-                <figure className="reel" key={f.id}>
-                  <video poster={`/videos/${f.id}-poster.jpg`} muted playsInline loop preload="none">
-                    <source src={`/videos/${f.id}.mp4`} type="video/mp4" />
-                  </video>
-                  <figcaption>
-                    <b>{f.client}</b>
-                    <span className="tag">{f.category}</span>
-                  </figcaption>
-                </figure>
-              ))}
-            </div>
+            <ReelRow films={WORK_FILMS} />
             <p className="reel-more">
               <Link className="link-u" href="/work">
                 All {VIDEO_WORK.length} films, the sites and the identities
@@ -333,7 +339,13 @@ export default async function Home() {
               {CAPABILITY.map(([id, sub, desc], i) => {
                 const name = getService(id)?.title ?? id;
                 return (
-                <Link className="cap-row" key={id} href={serviceHref(id)} data-preview={preview(PREVIEW[id])}>
+                <Link
+                  className="cap-row"
+                  key={id}
+                  href={serviceHref(id)}
+                  data-preview={PREVIEW_FILM[id] ? `/videos/${PREVIEW_FILM[id]}-poster.jpg` : preview(PREVIEW[id])}
+                  data-preview-video={PREVIEW_FILM[id] ? `/videos/${PREVIEW_FILM[id]}.mp4` : undefined}
+                >
                   <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
                   <span>
                     <span className="cap-name">{name}</span>
@@ -343,6 +355,15 @@ export default async function Home() {
                     &rarr;
                   </span>
                   <span className="cap-desc">{desc}</span>
+                  {/* Phones have no hover: the row nearest mid-screen opens and plays this. */}
+                  <span className="cap-media" aria-hidden>
+                    {PREVIEW_FILM[id] ? (
+                      <FilmVideo id={PREVIEW_FILM[id]} preload="none" />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={preview(PREVIEW[id])} alt="" loading="lazy" decoding="async" />
+                    )}
+                  </span>
                 </Link>
                 );
               })}
@@ -434,20 +455,39 @@ export default async function Home() {
                 ))}
               </div>
 
-              <div className="sys-proof">
-                {SYSTEM_PROOF.map(([file, name]) => (
-                  <figure key={file}>
-                    {/* 295px rendered from 1280px sources. */}
-                    <Image
-                      src={`/work/websites/${file}`}
-                      alt={`${name} website`}
-                      width={880}
-                      height={605}
-                      sizes="(max-width: 700px) 70vw, 320px"
-                    />
-                    <figcaption className="tag">{name}</figcaption>
-                  </figure>
-                ))}
+              {/* A live wall: two columns of work drifting in opposite
+                  directions. Placeholder screenshots of client sites stand in
+                  until there are screen recordings of the software itself. */}
+              <div className="sys-wall">
+                {[0, 1].map((col) => {
+                  const items = SYSTEM_PROOF.filter((_, i) => i % 2 === col);
+                  return (
+                    <div className={`sys-col sys-col--${col}`} key={col}>
+                      {/* Twice over, for a seamless loop; the copy is hidden from assistive tech. */}
+                      {[items, items].map((set, copy) => (
+                        <div className="sys-set" key={copy} aria-hidden={copy === 1 ? true : undefined}>
+                          {set.map(([file, name]) => (
+                            <figure className="sys-shot" key={file}>
+                              <span className="sys-bar" aria-hidden>
+                                <i />
+                                <i />
+                                <i />
+                              </span>
+                              <Image
+                                src={`/work/websites/${file}`}
+                                alt={copy === 0 ? `${name} website` : ''}
+                                width={880}
+                                height={605}
+                                sizes="(max-width: 700px) 45vw, 300px"
+                              />
+                              <figcaption className="tag">{name}</figcaption>
+                            </figure>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

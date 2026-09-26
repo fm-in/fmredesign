@@ -1,15 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
-import { loadGsap, observeReveal, playWhileVisible } from '@/lib/motion';
+import { loadGsap, observeReveal, prefersReducedMotion } from '@/lib/motion';
 
 /**
  * The home page's motion, in one place.
  *
- * Word-mask headline reveals, the hero reel's opening, the two counter-running
- * client marquees, and the closing mascot leaning toward the pointer. The
- * capability preview (CursorPreview) and the hero playlist (HeroReel) are their
- * own components; the campaign strip is a native scroller and needs no script.
+ * Word-mask headline reveals, the two client marquees (which speed up and lean
+ * with the visitor's scroll), the capability row that opens on phones, and the
+ * closing band arriving through the ink circle. The hero (LetterWindow), the
+ * work row (ReelRow) and the hover preview (CursorPreview) are their own
+ * components; the campaign strip animates in CSS with a scroll timeline.
  *
  * Renders nothing. Every effect targets markup the server already sent, so the
  * page is complete and readable before this loads — and if it never loads, the
@@ -21,10 +22,7 @@ export function HomeMotion() {
     const cleanups: Array<() => void> = [];
     let cancelled = false;
 
-    // Films: capped playback, and paused off-screen.
-    // The hero window runs its own playlist (HeroReel); this is the work row.
-    const videos = document.querySelectorAll<HTMLVideoElement>('.reel video');
-    cleanups.push(playWhileVisible(videos, 4));
+    cleanups.push(capabilityOnPhones());
 
     // Reveals need no timeline, so they never pull GSAP in.
     cleanups.push(observeReveal(document.querySelectorAll('[data-reveal]')));
@@ -52,22 +50,38 @@ export function HomeMotion() {
           });
         });
 
-        /* ---- hero reel: the page's one orchestrated moment ------------- */
-        // The window opens from a slightly inset frame to full, in step with
-        // the headline's word reveal. It starts visible — the inset only
-        // trims the edges — so nothing on screen ever disappears.
-        const reelWindow = document.querySelector<HTMLElement>('.hero-reel-window');
-        if (reelWindow) {
+        /* ---- close: arrives through the ink circle ------------------------ */
+        // The launch video's ending, driven by scroll: the dark band opens as
+        // a circle while it rises into view, and is complete by the time its
+        // top reaches a quarter of the screen. Scrubbed, so scrolling back
+        // closes it again; anyone arriving mid-page sees the right state.
+        const close = document.getElementById('close');
+        const mascot = document.querySelector<HTMLElement>('.close-mascot');
+        if (close) {
+          const radius = () => Math.hypot(close.offsetWidth, close.offsetHeight);
           gsap.fromTo(
-            reelWindow,
-            { clipPath: 'inset(7% 9% 7% 9% round 6px)' },
-            { clipPath: 'inset(0% 0% 0% 0% round 6px)', duration: 1.3, ease: 'expo.out', delay: 0.15 },
+            close,
+            { clipPath: 'circle(0px at 50% 45%)' },
+            {
+              clipPath: () => `circle(${radius()}px at 50% 45%)`,
+              ease: 'none',
+              scrollTrigger: { trigger: close, start: 'top bottom', end: 'top 25%', scrub: 0.4, invalidateOnRefresh: true },
+            },
           );
+          // Once opened, the mascot pops in with a burst of confetti. Once per visit.
+          if (mascot) {
+            gsap.set(mascot, { scale: 0.55, rotate: -12 });
+            gsap.to(mascot, {
+              scale: 1,
+              rotate: 0,
+              duration: 0.9,
+              ease: 'back.out(2.4)',
+              scrollTrigger: { trigger: close, start: 'top 30%', once: true, onEnter: () => confetti(gsap, mascot) },
+            });
+          }
         }
 
         /* ---- closing mascot leans toward the pointer --------------------- */
-        const close = document.getElementById('close');
-        const mascot = document.querySelector<HTMLElement>('.close-mascot');
         if (close && mascot && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
           const leanX = gsap.quickTo(mascot, 'x', { duration: 0.8, ease: 'power3.out' });
           const leanY = gsap.quickTo(mascot, 'y', { duration: 0.8, ease: 'power3.out' });
@@ -85,8 +99,12 @@ export function HomeMotion() {
           });
         }
 
-        /* ---- client marquees, counter-running --------------------------- */
-        document.querySelectorAll<HTMLElement>('[data-mq]').forEach((row) => {
+        /* ---- client marquees, counter-running ---------------------------- */
+        // Each row loops on its own; scrolling speeds both up and leans them
+        // in the direction of travel, then they ease back to their pace.
+        const loops: Array<ReturnType<typeof gsap.to>> = [];
+        const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-mq]'));
+        rows.forEach((row) => {
           const dir = parseFloat(row.dataset.mq ?? '1');
           /*
             Duplicate until one cycle is at least as wide as the viewport.
@@ -106,13 +124,35 @@ export function HomeMotion() {
           }
           const half = row.scrollWidth / copies;
           gsap.set(row, { x: dir < 0 ? -half : 0 });
-          gsap.to(row, {
+          loops.push(gsap.to(row, {
             x: dir < 0 ? 0 : -half,
             duration: 38,
             ease: 'none',
             repeat: -1,
-          });
+          }));
         });
+        if (rows.length) {
+          const lean = rows.map((row) => gsap.quickTo(row, 'skewX', { duration: 0.5, ease: 'power3.out' }));
+          let lastY = window.scrollY;
+          let settle = 0;
+          const onScroll = () => {
+            const v = window.scrollY - lastY;
+            lastY = window.scrollY;
+            const speed = Math.min(Math.abs(v) / 12, 5);
+            loops.forEach((l) => gsap.to(l, { timeScale: 1 + speed, duration: 0.25, overwrite: true }));
+            lean.forEach((fn) => fn(Math.max(-8, Math.min(8, v * -0.4))));
+            window.clearTimeout(settle);
+            settle = window.setTimeout(() => {
+              loops.forEach((l) => gsap.to(l, { timeScale: 1, duration: 0.9, ease: 'power2.out', overwrite: true }));
+              lean.forEach((fn) => fn(0));
+            }, 120);
+          };
+          window.addEventListener('scroll', onScroll, { passive: true });
+          cleanups.push(() => {
+            window.removeEventListener('scroll', onScroll);
+            window.clearTimeout(settle);
+          });
+        }
 
       });
 
@@ -138,4 +178,65 @@ export function HomeMotion() {
   }, []);
 
   return null;
+}
+
+/**
+ * Phones have no hover, so the capability preview becomes inline: the row
+ * nearest the middle of the screen opens and plays its clip; the others close.
+ * Nothing loads until a row is active. Desktop keeps the cursor preview.
+ */
+function capabilityOnPhones(): () => void {
+  if (!window.matchMedia('(max-width: 700px)').matches || prefersReducedMotion()) return () => {};
+  if (typeof IntersectionObserver === 'undefined') return () => {};
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('.cap-row'));
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const row = entry.target as HTMLElement;
+        row.classList.toggle('is-active', entry.isIntersecting);
+        const video = row.querySelector('video');
+        if (!video) continue;
+        if (entry.isIntersecting) {
+          video.preload = 'auto';
+          void video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      }
+    },
+    // A thin band across the middle of the screen: one row at a time.
+    { rootMargin: '-46% 0px -46% 0px' },
+  );
+  rows.forEach((row) => observer.observe(row));
+  return () => observer.disconnect();
+}
+
+/** A burst of paper confetti from behind the mascot, in the brand colours. */
+function confetti(gsap: typeof import('gsap').gsap, mascot: HTMLElement) {
+  const host = mascot.parentElement;
+  if (!host) return;
+  const colours = ['#ee4276', '#f3ede6', '#c9325d', '#f2b84b'];
+  const box = mascot.getBoundingClientRect();
+  const hostBox = host.getBoundingClientRect();
+  const cx = box.left - hostBox.left + box.width / 2;
+  const cy = box.top - hostBox.top + box.height * 0.4;
+  for (let i = 0; i < 26; i++) {
+    const bit = document.createElement('i');
+    bit.className = 'confetti-bit';
+    bit.setAttribute('aria-hidden', 'true');
+    bit.style.background = colours[i % colours.length];
+    bit.style.left = `${cx}px`;
+    bit.style.top = `${cy}px`;
+    host.appendChild(bit);
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.4;
+    const dist = 120 + Math.random() * 200;
+    gsap
+      .timeline({ onComplete: () => bit.remove() })
+      .fromTo(
+        bit,
+        { x: 0, y: 0, rotate: 0, opacity: 1 },
+        { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist, rotate: (Math.random() - 0.5) * 540, duration: 0.8, ease: 'power3.out' },
+      )
+      .to(bit, { y: '+=140', opacity: 0, duration: 0.9, ease: 'power1.in' });
+  }
 }

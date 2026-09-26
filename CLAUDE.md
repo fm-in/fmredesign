@@ -104,6 +104,12 @@ scoped by `[data-site]`.
 - **Primitives**: `src/components/site/` — `Section`, `Container`, `Display`,
   `Text`, `Label`, `Rule`, `Prose`, `StillFrame`, `FilmWall`, `LogoWall`,
   `ThemeToggle`, and the form set in `Field.tsx`.
+- **Scroll scenes**: `LetterWindow` (headline cut out over a wall of films;
+  `scroll` on the home hero, `still` on inner pages), `LiveWall` (mosaic the
+  camera pushes into; /work hero), `ReelRow` (film row, a swipe deck on
+  phones). Films render through `FilmVideo`, which serves `/public/videos/sm/`
+  (360p) to phones. Scenes are tall + `position: sticky` via `stickyScene()`,
+  never a GSAP pin, and only become tall once script confirms motion.
 - **Motion**: `src/lib/motion/` only. GSAP is imported dynamically and never at
   module scope; `prefersReducedMotion()` is a live check, not a cached boolean.
 

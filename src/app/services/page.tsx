@@ -4,6 +4,7 @@ import { SiteShell } from '@/components/site/SiteShell';
 import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
+import { LetterWindow } from '@/components/site/LetterWindow';
 import { SERVICES, serviceHref } from '@/lib/services-catalogue';
 import { serviceDeepDiveData } from '@/data/serviceDeepDiveData';
 
@@ -61,42 +62,37 @@ export default function ServicesPage() {
     <SiteShell>
       <SiteHeader />
       <main id="main-content">
-        <Section as="div" className="pb-0">
-          <Container>
-            <div className="lay-split">
-              <div>
-                <Eyebrow>What we do</Eyebrow>
-                <Display level="display" className="mt-6">
-                  Six things, done properly.
-                </Display>
-                <Text size="lead" muted className="mt-8 lay-measure">
-                  Strategy, creative and performance under one roof. Each one below says what it
-                  actually involves and who it tends to be right for.
-                </Text>
-              </div>
-
-              {/* The index belongs beside the headline, not stacked under the
-                  lede as a wrapped row with an empty half-page to its right. */}
-              <nav aria-label="Services on this page">
-                <Rule />
-                <ul style={{ listStyle: 'none', margin: '1.5rem 0 0', padding: 0 }}>
-                  {SERVICES.map((service, i) => (
-                    <li key={service.id} style={{ borderBottom: '1px solid var(--site-line-soft)' }}>
-                      <Link
-                        href={serviceHref(service.id)}
-                        className="flex items-baseline justify-between gap-6 py-3"
-                        style={{ color: 'var(--site-text)' }}
-                      >
-                        <span className="font-site-sans text-site-body">{service.name}</span>
-                        <span className="tag">{String(i + 1).padStart(2, '0')}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </div>
-          </Container>
-        </Section>
+        {/* The letter window, still: the headline cut out over client films.
+            Placeholder films until each service has its own footage. */}
+        <LetterWindow
+          mode="still"
+          films={['astroo_apaar', 'kanha', 'giovanni', 'skr_group', 'renny', 'concept_studio']}
+          lines={['Six things,', 'done properly.']}
+        >
+          <p className="lede">
+            Strategy, creative and performance under one roof. Each one below says what it actually
+            involves and who it tends to be right for.
+          </p>
+          <div style={{ marginTop: '2rem' }}>
+            <nav aria-label="Services on this page">
+              <Rule />
+              <ul style={{ listStyle: 'none', margin: '1.5rem 0 0', padding: 0 }}>
+                {SERVICES.map((service, i) => (
+                  <li key={service.id} style={{ borderBottom: '1px solid var(--site-line-soft)' }}>
+                    <Link
+                      href={serviceHref(service.id)}
+                      className="flex items-baseline justify-between gap-6 py-3"
+                      style={{ color: 'var(--site-text)' }}
+                    >
+                      <span className="font-site-sans text-site-body">{service.name}</span>
+                      <span className="tag">{String(i + 1).padStart(2, '0')}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </div>
+        </LetterWindow>
 
         {SERVICES.map((service, index) => {
           const detail = serviceDeepDiveData.find((d) => d.serviceId === service.id);

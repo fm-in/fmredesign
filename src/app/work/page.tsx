@@ -5,7 +5,8 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { StillFrame } from '@/components/site/StillFrame';
 import { FilmWall, type Film } from '@/components/site/FilmWall';
-import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
+import { LiveWall, type WallTile } from '@/components/site/LiveWall';
+import { Container, Display, Label, Rule, Section, Text } from '@/components/site/primitives';
 import { PORTFOLIO, VIDEO_WORK, isUnnamedClient } from '@/lib/portfolio';
 
 /**
@@ -32,42 +33,36 @@ const FILMS: readonly Film[] = VIDEO_WORK.slice(0, 6).map((v) => ({
   note: v.category,
 }));
 
+/*
+ * The hero wall, in grid order (see `.lwall-grid`). Films take the tall
+ * columns; sites and a campaign post fill the short cells. The last tile only
+ * appears on phones, where it waits past the right edge until the push.
+ */
+const WALL: readonly WallTile[] = [
+  { kind: 'film', id: 'giovanni', label: 'Giovanni Village, brand film' },
+  { kind: 'image', src: PORTFOLIO.websites[0].src, label: `${PORTFOLIO.websites[0].client} website`, site: true },
+  { kind: 'film', id: 'skr_group', label: 'SKR Group, corporate film' },
+  { kind: 'film', id: 'kanha', label: 'Kanha, promotional film' },
+  { kind: 'film', id: 'concept_studio', label: 'Concept Studio, creative film' },
+  { kind: 'image', src: PORTFOLIO.websites[1].src, label: `${PORTFOLIO.websites[1].client} website`, site: true },
+  { kind: 'film', id: 'renny', label: 'Renny, social media film' },
+  { kind: 'image', src: '/work/services/harsh-service1.jpg', label: 'Harsh Express, campaign post' },
+];
+
 export default function WorkPage() {
   return (
     <SiteShell>
       <SiteHeader />
       <main id="main-content">
-        <Section as="div" className="pb-0">
-          <Container>
-            <div className="lay-split">
-              <div>
-                <Eyebrow>Selected work</Eyebrow>
-                <Display level="display" className="mt-6">
-                  Real results for real brands.
-                </Display>
-                <Text size="lead" muted className="mt-8 lay-measure">
-                  {PORTFOLIO.websites.length} live sites, {VIDEO_WORK.length} films, and the campaign
-                  and identity work behind them.
-                </Text>
-              </div>
-              {/* Two sites, in the hero. This page's job is to show the work;
-                  it should start doing that above the fold. */}
-              <div className="grid grid-cols-2 gap-4">
-                {PORTFOLIO.websites.slice(0, 2).map((site) => (
-                  <StillFrame
-                    key={site.src}
-                    src={site.src}
-                    alt={`${site.client} website`}
-                    ratio="4 / 5"
-                    position="left top"
-                    caption={site.client}
-                    sizes="(min-width: 900px) 22vw, 45vw"
-                  />
-                ))}
-              </div>
-            </div>
-          </Container>
-        </Section>
+        {/* The live wall: this page's job is the work, so it opens on all of
+            it at once, and scrolling pushes into the middle of it. */}
+        <LiveWall tiles={WALL} centre={3}>
+          <h1 className="d">Real results for real brands.</h1>
+          <p className="lede">
+            {PORTFOLIO.websites.length} live sites, {VIDEO_WORK.length} films, and the campaign and
+            identity work behind them.
+          </p>
+        </LiveWall>
 
         {/* ── Sites ─────────────────────────────────────────────────────── */}
         <Section>
