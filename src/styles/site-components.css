@@ -1082,8 +1082,20 @@
     pointer-events: none;
     background: linear-gradient(to top, rgba(11, 10, 12, 0.84), rgba(11, 10, 12, 0.22) 62%, rgba(11, 10, 12, 0.1));
   }
+  /* The words are never quite still: each floats up and settles on a slow
+     cycle, offset from its neighbours, so a gentle wave runs through the
+     headline. Whole words, not letters, so the type's kerning holds. */
+  [data-site] .lw-w { display: inline-block; transform-origin: 50% 90%; }
+  @media (prefers-reduced-motion: no-preference) {
+    [data-site] .lw-w { animation: lw-float 6.4s ease-in-out infinite; animation-delay: calc(var(--i) * -1.1s); }
+  }
+  @keyframes lw-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    30% { transform: translateY(-0.028em) rotate(-0.45deg); }
+    65% { transform: translateY(0.012em) rotate(0.3deg); }
+  }
+
   /* The first-visit entrance: words rise as the splash fades. */
-  [data-site] .lw-w { display: inline-block; }
   [data-site] .lw.lw-intro .lw-w {
     animation: lw-rise 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
     animation-delay: calc(var(--lw-delay, 0ms) + var(--i) * 85ms);
