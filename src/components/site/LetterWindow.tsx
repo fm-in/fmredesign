@@ -111,19 +111,6 @@ export function LetterWindow({
 
     section.classList.add('is-scroll');
 
-    // First visit: the splash is still up. The words rise as it fades, so
-    // the page opens on one orchestrated moment. Timed from the splash's own
-    // animation clock, and only if it has not started fading, so nobody sees
-    // the words vanish before they rise.
-    const splash = document.querySelector<HTMLElement>('.splash');
-    const splashAt = Number(splash?.getAnimations?.()[0]?.currentTime ?? Infinity);
-    let introTimer = 0;
-    if (splash && splashAt < 1000) {
-      section.style.setProperty('--lw-delay', `${Math.round(1150 - splashAt)}ms`);
-      section.classList.add('lw-intro');
-      introTimer = window.setTimeout(() => section.classList.remove('lw-intro'), 3400);
-    }
-
     // Window parallax: the films shift a little against the pointer, as if
     // seen through real windows. Fine pointers only; eased every frame.
     const aim = { x: 0, y: 0 };
@@ -205,10 +192,9 @@ export function LetterWindow({
       stopScene();
       stopPlayback();
       window.removeEventListener('resize', measure);
-      window.clearTimeout(introTimer);
       stage.removeEventListener('pointermove', onMove);
       stage.removeEventListener('pointerleave', onLeave);
-      section.classList.remove('is-scroll', 'is-open', 'lw-intro');
+      section.classList.remove('is-scroll', 'is-open');
     };
   }, [films.length, mode]);
 

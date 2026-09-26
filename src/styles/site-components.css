@@ -1095,15 +1095,6 @@
     65% { transform: translateY(0.012em) rotate(0.3deg); }
   }
 
-  /* The first-visit entrance: words rise as the splash fades. */
-  [data-site] .lw.lw-intro .lw-w {
-    animation: lw-rise 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
-    animation-delay: calc(var(--lw-delay, 0ms) + var(--i) * 85ms);
-  }
-  @keyframes lw-rise {
-    from { transform: translateY(0.45em) rotate(2deg); opacity: 0; }
-    to { transform: none; opacity: 1; }
-  }
 
   /* Words break differently by width: three lines on phones, two wide.
      Each break has a partner space that shows at the width it does not
