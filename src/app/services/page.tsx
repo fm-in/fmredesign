@@ -7,6 +7,7 @@ import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/compo
 import { LetterWindow } from '@/components/site/LetterWindow';
 import { ServiceLoop } from '@/components/site/ServiceLoop';
 import { StepsLoop } from '@/components/site/StepsLoop';
+import { LoopStage } from '@/components/site/LoopStage';
 import { SERVICES, serviceHref } from '@/lib/services-catalogue';
 import { serviceDeepDiveData } from '@/data/serviceDeepDiveData';
 
@@ -79,25 +80,21 @@ export default function ServicesPage() {
             Strategy, creative and performance under one roof. Each one below says what it actually
             involves and who it tends to be right for.
           </p>
-          <div style={{ marginTop: '2rem' }}>
-            <nav aria-label="Services on this page">
-              <Rule />
-              <ul style={{ listStyle: 'none', margin: '1.5rem 0 0', padding: 0 }}>
-                {SERVICES.map((service, i) => (
-                  <li key={service.id} style={{ borderBottom: '1px solid var(--site-line-soft)' }}>
-                    <Link
-                      href={serviceHref(service.id)}
-                      className="flex items-baseline justify-between gap-6 py-3"
-                      style={{ color: 'var(--site-text)' }}
-                    >
-                      <span className="font-site-sans text-site-body">{service.name}</span>
-                      <span className="tag">{String(i + 1).padStart(2, '0')}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+          {/* The page's index: each service previews its loop on hover and
+              links down to its section. */}
+          <LoopStage
+            label="Services on this page"
+            base="/videos/services/"
+            rowsAreLinks
+            items={SERVICES.map((service) => ({
+              id: service.id,
+              name: service.name,
+              sub: service.tagline,
+              desc: service.description,
+              href: serviceHref(service.id),
+              linkLabel: `Read about ${service.name}`,
+            }))}
+          />
         </LetterWindow>
 
         {SERVICES.map((service, index) => {

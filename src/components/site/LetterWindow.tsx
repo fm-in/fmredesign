@@ -10,9 +10,9 @@ import { easeInOut, playWhileVisible, prefersReducedMotion, span, stickyScene } 
  *
  * Two modes:
  * - `scroll` (home hero): full-width type over the films, with the copy in a
- *   row along the bottom. Scrolling holds on the letters, opens an ink circle
- *   through them into the full wall, holds on the wall, then brings in a
- *   closing line and the actions. The wall keeps playing throughout.
+ *   row along the bottom. Scrolling holds on the letters, then they grow and
+ *   dissolve into the full wall, which holds before a closing line and the
+ *   actions arrive. The wall keeps playing throughout.
  * - `still` (inner pages): the same cut-out, no scroll scene.
  *
  * How the cut-out works, with no canvas and no SVG mask: a sheet the colour of
@@ -112,23 +112,18 @@ export function LetterWindow({
     section.classList.add('is-scroll');
     const wall = section.querySelector<HTMLElement>('.lw-wall');
     const shade = section.querySelector<HTMLElement>('.lw-shade');
-    const ring = section.querySelector<HTMLElement>('.lw-ring');
     const copy = section.querySelector<HTMLElement>('.lw-copy');
     const strips = Array.from(videos);
-    if (!wall || !shade || !ring || !copy) return stopPlayback;
+    if (!wall || !shade || !copy) return stopPlayback;
     const rows = Array.from(copy.children) as HTMLElement[];
 
-    // The ink circle opens from the middle of the headline.
-    let o = { x: 0, y: 0 };
-    let reach = 1;
+    // The letters grow about the middle of the headline, measured at rest.
     const measure = () => {
       knock.style.transform = 'none';
       fit();
       const st = stage.getBoundingClientRect();
       const h = heading.getBoundingClientRect();
-      o = { x: h.left - st.left + h.width * 0.5, y: h.top - st.top + h.height * 0.5 };
-      knock.style.transformOrigin = `${o.x}px ${o.y}px`;
-      reach = Math.hypot(Math.max(o.x, st.width - o.x), Math.max(o.y, st.height - o.y)) + 40;
+      knock.style.transformOrigin = `${h.left - st.left + h.width * 0.5}px ${h.top - st.top + h.height * 0.5}px`;
     };
     measure();
     window.addEventListener('resize', measure);
@@ -137,30 +132,21 @@ export function LetterWindow({
      * The scene runs over a little over three screens of scrolling, in beats:
      *   0.00–0.10  hold on the letters
      *   0.06–0.16  the copy row steps away
-     *   0.10–0.60  the ink circle opens, slowly, with the ring on its edge
+     *   0.10–0.62  the letters grow and dissolve into the wall
      *   0.60–0.68  hold on the open wall
      *   0.68–0.92  the closing line and actions arrive, one after another
      *   0.92–1.00  hold, then the page carries on
      */
     const stopScene = stickyScene(section, (p, t) => {
-      const e = easeInOut(span(p, 0.1, 0.6));
-      const grow = 1 + 0.3 * e;
-      const r = reach * e;
-      knock.style.transform = `scale(${grow})`;
-      // Inside the circle the white sheet is gone, so the films show at full
-      // strength: never a half-faded, milky frame. Mask coordinates are in
-      // the knock's own (scaled) space.
-      const mask = e <= 0 ? 'none' : e >= 1 ? 'linear-gradient(transparent, transparent)'
-        : `radial-gradient(circle ${r / grow}px at ${o.x}px ${o.y}px, transparent calc(100% - 1px), #000 100%)`;
-      knock.style.maskImage = mask;
-      knock.style.setProperty('-webkit-mask-image', mask);
-      const ringOn = e > 0 && e < 1;
-      ring.style.visibility = ringOn ? 'visible' : 'hidden';
-      if (ringOn) {
-        ring.style.width = ring.style.height = `${r * 2}px`;
-        ring.style.transform = `translate(${o.x - r}px, ${o.y - r}px)`;
-        ring.style.opacity = String(1 - span(r / reach, 0.55, 1));
-      }
+      /*
+       * The letters come towards the viewer and dissolve into the wall they
+       * were cut from: they grow about the middle of the headline while the
+       * paper around them fades, so the films inside the letters become the
+       * whole screen. (An ink-circle version read as a plain wipe.)
+       */
+      const e = easeInOut(span(p, 0.1, 0.62));
+      knock.style.transform = `scale(${1 + 2.4 * e})`;
+      knock.style.opacity = String(1 - easeInOut(span(p, 0.26, 0.6)));
       wall.style.transform = `scale(${1.1 - 0.1 * e})`;
       wall.style.gap = `${6 * e}px`;
       // Neighbouring strips drift in opposite directions, so the open wall never sits still.
@@ -250,7 +236,6 @@ export function LetterWindow({
           </div>
         </div>
         <div className="lw-tint" aria-hidden />
-        {mode === 'scroll' && <div className="lw-ring" aria-hidden />}
         {mode === 'scroll' && <div className="lw-shade" aria-hidden />}
         {mode === 'scroll' && copy}
       </div>

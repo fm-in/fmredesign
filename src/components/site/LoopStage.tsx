@@ -34,12 +34,18 @@ export function LoopStage({
   items,
   base,
   label,
+  rowsAreLinks = false,
 }: {
   items: readonly StageItem[];
   /** Folder under /public, with trailing slash, e.g. '/videos/services/'. */
   base: string;
   /** What the list is, for assistive tech. */
   label: string;
+  /**
+   * Rows navigate to each item's `href` instead of only selecting it (for a
+   * list that is also the page's index). Hover and focus still preview.
+   */
+  rowsAreLinks?: boolean;
 }) {
   const [active, setActive] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -161,23 +167,41 @@ export function LoopStage({
           const on = i === active;
           return (
             <li key={it.id} className={`lstage-row${on ? ' is-on' : ''}`}>
-              <button
-                type="button"
-                className="lstage-pick"
-                aria-pressed={on}
-                onClick={() => setActive(i)}
-                // Only a pointer that actually moves selects: scrolling the page
-                // under a resting mouse fires enter events on every row it
-                // passes, which would flick through the whole list.
-                onPointerMove={(e) => {
-                  if ((e.movementX || e.movementY) && fine() && !on) setActive(i);
-                }}
-                onFocus={() => setActive(i)}
-              >
-                <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
-                <span className="lstage-name">{it.name}</span>
-                {it.sub && <span className="lstage-sub">{it.sub}</span>}
-              </button>
+              {rowsAreLinks && it.href ? (
+                <Link
+                  className="lstage-pick"
+                  href={it.href}
+                  // Only a pointer that actually moves selects: scrolling the page
+                  // under a resting mouse fires enter events on every row it
+                  // passes, which would flick through the whole list.
+                  onPointerMove={(e) => {
+                    if ((e.movementX || e.movementY) && fine() && !on) setActive(i);
+                  }}
+                  onFocus={() => setActive(i)}
+                >
+                  <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="lstage-name">{it.name}</span>
+                  {it.sub && <span className="lstage-sub">{it.sub}</span>}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  className="lstage-pick"
+                  aria-pressed={on}
+                  onClick={() => setActive(i)}
+                  // Only a pointer that actually moves selects: scrolling the page
+                  // under a resting mouse fires enter events on every row it
+                  // passes, which would flick through the whole list.
+                  onPointerMove={(e) => {
+                    if ((e.movementX || e.movementY) && fine() && !on) setActive(i);
+                  }}
+                  onFocus={() => setActive(i)}
+                >
+                  <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="lstage-name">{it.name}</span>
+                  {it.sub && <span className="lstage-sub">{it.sub}</span>}
+                </button>
+              )}
               <span className="lstage-rule" aria-hidden>
                 <i
                   ref={
