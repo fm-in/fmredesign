@@ -59,7 +59,7 @@ const PROCESS = [
 ] as const;
 
 /** Services that have a mascot loop so far. The rest follow once approved. */
-const SERVICE_LOOPS = new Set(['seo']);
+const SERVICE_LOOPS = new Set(['seo', 'social']);
 
 export default function ServicesPage() {
   return (
