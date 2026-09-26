@@ -8,6 +8,7 @@ import { HomeMotion } from '@/components/site/HomeMotion';
 import { SiteLoader } from '@/components/site/SiteLoader';
 import { LetterWindow } from '@/components/site/LetterWindow';
 import { ReelRow } from '@/components/site/ReelRow';
+import { SwipeRow } from '@/components/site/SwipeRow';
 import { FilmVideo } from '@/components/site/FilmVideo';
 import { CursorPreview } from '@/components/site/CursorPreview';
 import { BrainMark } from '@/components/site/BrainMark';
@@ -301,7 +302,7 @@ export default async function Home() {
                 The creative that ran with it.
               </h2>
             </div>
-            <div className="strip-track">
+            <SwipeRow label="Campaign work, scrolls sideways">
               {CAMPAIGNS.map(([file, caption]) => (
                 <figure key={file}>
                   {/* Measured: these render at 314px and the source files are
@@ -318,7 +319,7 @@ export default async function Home() {
                   <figcaption className="tag">{caption}</figcaption>
                 </figure>
               ))}
-            </div>
+            </SwipeRow>
           </div>
         </section>
 

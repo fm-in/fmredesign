@@ -107,3 +107,20 @@ describe('ReelRow', () => {
     vi.useRealTimers();
   });
 });
+
+describe('SwipeRow', () => {
+  it('is a named, focusable region with previous and next controls', async () => {
+    stubMatchMedia(reduced);
+    const { SwipeRow } = await import('../SwipeRow');
+    render(
+      <SwipeRow label="Campaign work">
+        <figure>One</figure>
+        <figure>Two</figure>
+      </SwipeRow>,
+    );
+    const region = screen.getByRole('region', { name: 'Campaign work' });
+    expect(region.getAttribute('tabindex')).toBe('0');
+    expect(screen.getByRole('button', { name: 'Previous' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
+  });
+});

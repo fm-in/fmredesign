@@ -530,6 +530,60 @@
     [data-site] .strip-track figure { width: min(74vw, 320px); }
   }
 
+  /* ---------- swipe cues (SwipeRow) ----------
+     Edge fades on whichever side has more to see, a progress rule, and
+     previous/next buttons. The row itself stays a native scroller. */
+  [data-site] .swipe { --fade: clamp(40px, 7vw, 110px); }
+  [data-site] .swipe .strip-track {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+    outline-offset: -2px;
+  }
+  [data-site] .swipe.at-start .strip-track {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--fade)), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - var(--fade)), transparent);
+  }
+  [data-site] .swipe.at-end .strip-track {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade));
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade));
+  }
+  [data-site] .swipe.at-start.at-end .strip-track { -webkit-mask-image: none; mask-image: none; }
+  [data-site] .swipe-bar {
+    display: flex;
+    align-items: center;
+    gap: clamp(16px, 2.4vw, 32px);
+    max-width: var(--site-max-width);
+    margin: clamp(14px, 2vw, 24px) auto 0;
+    padding-inline: var(--spacing-site-gutter);
+  }
+  [data-site] .swipe-rule { position: relative; flex: 1; height: 2px; background: var(--site-line); overflow: hidden; }
+  [data-site] .swipe-rule i {
+    position: absolute;
+    inset: 0;
+    background: var(--site-text);
+    transform-origin: left center;
+    transition: transform 0.2s linear;
+  }
+  [data-site] .swipe-btns { display: flex; gap: 10px; }
+  [data-site] .swipe-btns button {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--site-line);
+    color: var(--site-text);
+    font-size: 1.05rem;
+    display: grid;
+    place-items: center;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+  }
+  [data-site] .swipe-btns button:hover:not(:disabled) { background: var(--site-text); color: var(--site-ground); border-color: var(--site-text); }
+  [data-site] .swipe-btns button:disabled { opacity: 0.35; cursor: default; }
+  @media (hover: hover) and (pointer: fine) {
+    [data-site] .swipe .strip-track { cursor: grab; }
+    [data-site] .swipe .strip-track.is-dragging { cursor: grabbing; scroll-snap-type: none; user-select: none; }
+  }
+  [data-site] .swipe .strip-track img { -webkit-user-drag: none; user-select: none; }
+
   /* ---------- capability list ---------- */
   [data-site] .cap { border-top: 1px solid var(--site-line); }
   [data-site] .cap-row {
