@@ -184,8 +184,8 @@
      collide at wide widths; in a grid they cannot. */
   [data-site] .hero-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr);
-    gap: clamp(24px, 4vw, 64px);
+    grid-template-columns: var(--split-cols);
+    gap: var(--split-gap);
     align-items: center;
   }
   [data-site] .hero .wrap { position: relative; z-index: 2; }
@@ -206,7 +206,8 @@
      instead of stretching. */
   [data-site] .hero-reel {
     margin: 0;
-    justify-self: end;
+    /* Starts on the split line, like every other second column. */
+    justify-self: start;
     /* 66vh keeps the caption and playlist above the chat bubble's corner on
        a 768px-tall laptop. */
     width: min(100%, 420px, calc(min(66vh, 680px) * 0.5625));
@@ -320,15 +321,26 @@
     [data-site] .lay-rail { grid-template-columns: minmax(0, 24ch) minmax(0, 1fr); }
   }
 
-  /* Text + object, asymmetric. What the home hero does. */
+  /*
+   * THE split. Text + object, asymmetric, and the only two-column proportion
+   * on the site: every second column — hero film, section intros, evidence,
+   * systems, the closing band, and every inner page's hero — starts on this
+   * one line. The home page once had five private grids (5/7, 6/6, 1.4fr/1fr,
+   * flex space-between, 1fr/.72fr), so its right columns started at 651, 703,
+   * 822, 829 and 1026px on the same screen and nothing lined up.
+   */
+  [data-site] {
+    --split-cols: minmax(0, 1fr) minmax(0, 0.72fr);
+    --split-gap: clamp(24px, 4vw, 64px);
+  }
   [data-site] .lay-split {
     display: grid;
-    gap: clamp(24px, 4vw, 64px);
+    gap: var(--split-gap);
     grid-template-columns: minmax(0, 1fr);
     align-items: center;
   }
   @media (min-width: 900px) {
-    [data-site] .lay-split { grid-template-columns: minmax(0, 1fr) minmax(0, 0.72fr); }
+    [data-site] .lay-split { grid-template-columns: var(--split-cols); }
   }
   /* Flip the object to the left without reordering the markup, so the heading
      still comes first for a screen reader. */
@@ -353,16 +365,16 @@
   }
   [data-site] .sec-head .lede { margin-top: 22px; }
   [data-site] .sec-head--split {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px 56px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px var(--split-gap);
+    align-items: end;
     max-width: none;
   }
-  /* A narrower headline measure is what lets the intro sit beside it; at full
-     width the headline pushed the intro underneath and the "split" never split. */
-  [data-site] .sec-head--split .d { max-width: 12ch; }
+  @media (min-width: 900px) {
+    [data-site] .sec-head--split { grid-template-columns: var(--split-cols); }
+  }
+  [data-site] .sec-head--split > :last-child { max-width: 44ch; }
 
   /* ---------- client marquee ---------- */
   [data-site] .wall {
@@ -638,14 +650,14 @@
   /* ---------- evidence ---------- */
   [data-site] .ev {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: clamp(34px, 5vw, 64px) clamp(24px, 3vw, 44px);
+    grid-template-columns: var(--split-cols);
+    gap: clamp(34px, 5vw, 64px) var(--split-gap);
     align-items: start;
   }
-  [data-site] .ev-figs { grid-column: span 5; display: grid; gap: clamp(30px, 4vw, 54px); }
+  [data-site] .ev-figs { display: grid; gap: clamp(30px, 4vw, 54px); }
   [data-site] .ev-fig b { display: block; font-size: clamp(4rem, 9vw, 8rem); color: var(--site-accent); }
   [data-site] .ev-fig span { display: block; margin-top: 14px; color: var(--site-muted); }
-  [data-site] .ev-pillars { grid-column: span 7; border-top: 1px solid var(--site-line); }
+  [data-site] .ev-pillars { border-top: 1px solid var(--site-line); }
   [data-site] .pillar {
     display: grid;
     grid-template-columns: 40px 1fr;
@@ -655,7 +667,7 @@
   }
   [data-site] .pillar p { grid-column: 2; color: var(--site-muted); font-size: 0.9375rem; margin-top: 6px; }
   [data-site] .team {
-    grid-column: span 12;
+    grid-column: 1 / -1;
     display: flex;
     flex-wrap: wrap;
     gap: clamp(14px, 2vw, 26px);
@@ -675,17 +687,17 @@
   [data-site] .team figure:hover img { filter: none; }
   [data-site] .team figcaption { margin-top: 10px; }
   @media (max-width: 900px) {
-    [data-site] .ev-figs, [data-site] .ev-pillars { grid-column: span 12; }
+    [data-site] .ev { grid-template-columns: minmax(0, 1fr); }
   }
 
   /* ---------- systems ---------- */
   [data-site] .sys {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: clamp(34px, 4vw, 60px) clamp(24px, 3vw, 44px);
+    grid-template-columns: var(--split-cols);
+    gap: clamp(34px, 4vw, 60px) var(--split-gap);
     align-items: start;
   }
-  [data-site] .sys-list { grid-column: span 6; border-top: 1px solid var(--site-line); }
+  [data-site] .sys-list { border-top: 1px solid var(--site-line); }
   [data-site] .sys-row {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -701,7 +713,6 @@
   }
   [data-site] .sys-row p { grid-column: 2; color: var(--site-muted); font-size: 0.9375rem; margin-top: 6px; }
   [data-site] .sys-proof {
-    grid-column: span 6;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(10px, 1.4vw, 18px);
@@ -719,7 +730,7 @@
   [data-site] .sys-proof figure:hover img { transform: scale(1.03); }
   [data-site] .sys-proof figcaption { margin-top: 9px; }
   @media (max-width: 900px) {
-    [data-site] .sys-list, [data-site] .sys-proof { grid-column: span 12; }
+    [data-site] .sys { grid-template-columns: minmax(0, 1fr); }
   }
 
   /* ---------- academy ---------- */
@@ -826,8 +837,8 @@
   [data-site] .close .lede { margin-top: clamp(20px, 2.4vw, 30px); }
   [data-site] .close-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-    gap: clamp(40px, 6vw, 96px);
+    grid-template-columns: var(--split-cols);
+    gap: 40px var(--split-gap);
     align-items: end;
   }
   [data-site] .close-side { display: grid; gap: 28px; justify-items: start; }
