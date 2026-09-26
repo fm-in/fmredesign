@@ -217,10 +217,10 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
   };
 
   const steps = [
-    { number: 1, title: 'About You', icon: User },
-    { number: 2, title: 'Your Expertise', icon: Briefcase },
-    { number: 3, title: 'Online Presence', icon: Globe },
-    { number: 4, title: 'Availability & Pricing', icon: DollarSign },
+    { number: 1, title: 'About you', icon: User },
+    { number: 2, title: 'Your expertise', icon: Briefcase },
+    { number: 3, title: 'Online presence', icon: Globe },
+    { number: 4, title: 'Availability & pricing', icon: DollarSign },
   ];
 
   const totalSteps = steps.length;
@@ -232,9 +232,9 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
           <div className="w-16 h-16 bg-site-raised rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-10 h-10 text-site-text" />
           </div>
-          <h2 className="text-2xl font-bold text-site-text mb-3">Application Submitted!</h2>
+          <h2 className="text-2xl font-bold text-site-text mb-3">Application submitted.</h2>
           <p className="text-site-muted mb-6">
-            Thank you for applying to join CreativeMinds. Our team will review your application within 24-48 hours.
+            Thank you for applying to join CreativeMinds. Our team will review your application within 48 hours.
           </p>
           <button onClick={onCancel} className="btn btn--primary">
             Back to CreativeMinds
@@ -339,14 +339,14 @@ export function TalentApplicationForm({ onSubmit, onCancel }: TalentApplicationF
                 disabled={submitStatus === 'submitting'}
                 className="btn btn--primary disabled:opacity-60 min-h-[48px]"
               >
-                {submitStatus === 'submitting' ? 'Submitting...' : 'Submit Application'}
+                {submitStatus === 'submitting' ? 'Sending…' : 'Submit application'}
               </button>
             ) : (
               <button
                 onClick={handleNext}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-site-accent-solid text-white text-sm font-medium rounded-lg hover:bg-site-text transition-colors min-h-[48px]"
               >
-                Next Step
+                Next step
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}
@@ -393,13 +393,13 @@ function PersonalInfoStep({ formData, updateData, errors }: StepInternalProps) {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-site-text mb-2">About You</h2>
+        <h2 className="text-2xl font-bold text-site-text mb-2">About you</h2>
         <p className="text-site-muted">Tell us about yourself</p>
       </div>
 
       <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-site-text mb-1.5">Full Name *</label>
+          <label className="block text-sm font-medium text-site-text mb-1.5">Full name *</label>
           <input
             type="text"
             value={pi.fullName}
@@ -555,14 +555,14 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-site-text mb-2">Your Expertise</h2>
+        <h2 className="text-2xl font-bold text-site-text mb-2">Your expertise</h2>
         <p className="text-site-muted">Share your skills, tools, and portfolio</p>
       </div>
 
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-site-text mb-1.5">
-            Primary Category *
+            Primary category *
           </label>
           <select
             value={pd.category}
@@ -605,7 +605,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-site-text mb-1.5">
-              Experience Level *
+              Experience level *
             </label>
             <select
               value={pd.experienceLevel}
@@ -626,7 +626,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
 
           <div>
             <label className="block text-sm font-medium text-site-text mb-1.5">
-              Years of Experience *
+              Years of experience *
             </label>
             <input
               type="number"
@@ -645,7 +645,7 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-site-text mb-1.5">Core Skills *</label>
+          <label className="block text-sm font-medium text-site-text mb-1.5">Core skills *</label>
           <div className="flex flex-wrap gap-2">
             {POPULAR_SKILLS.map((skill) => (
               <button
@@ -686,11 +686,11 @@ function ExpertiseStep({ formData, updateData, errors }: StepInternalProps) {
         </div>
 
         <div className="border-t border-site-line pt-6">
-          <h3 className="text-sm font-semibold text-site-text mb-3">Portfolio Links</h3>
+          <h3 className="text-sm font-semibold text-site-text mb-3">Portfolio links</h3>
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-site-text mb-1.5">
-                Portfolio Website URL
+                Portfolio website URL
               </label>
               <input
                 type="url"
@@ -738,7 +738,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-site-text mb-2">Online Presence</h2>
+        <h2 className="text-2xl font-bold text-site-text mb-2">Online presence</h2>
         <p className="text-site-muted">Help us understand your online reach (all optional)</p>
       </div>
 
@@ -855,7 +855,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
         {/* LinkedIn */}
         <div>
           <label className="block text-sm font-medium text-site-text mb-1.5">
-            LinkedIn Profile URL
+            LinkedIn profile URL
           </label>
           <input
             type="url"
@@ -874,7 +874,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
         {/* Behance */}
         <div>
           <label className="block text-sm font-medium text-site-text mb-1.5">
-            Behance Profile URL
+            Behance profile URL
           </label>
           <input
             type="url"
@@ -900,7 +900,7 @@ function OnlinePresenceStep({ formData, updateData, errors }: StepInternalProps)
         {/* Dribbble */}
         <div>
           <label className="block text-sm font-medium text-site-text mb-1.5">
-            Dribbble Profile URL
+            Dribbble profile URL
           </label>
           <input
             type="url"
@@ -952,7 +952,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-site-text mb-2">Availability & Pricing</h2>
+        <h2 className="text-2xl font-bold text-site-text mb-2">Availability & pricing</h2>
         <p className="text-site-muted">Set your availability and rate ranges</p>
       </div>
 
@@ -961,7 +961,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-site-text mb-1.5">
-              Current Status
+              Current status
             </label>
             <select
               value={avail.currentStatus}
@@ -971,14 +971,14 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
               className={inputClass}
             >
               <option value="available">Available</option>
-              <option value="partially_available">Partially Available</option>
+              <option value="partially_available">Partially available</option>
               <option value="busy">Busy</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-site-text mb-1.5">
-              Hours per Week *
+              Hours per week *
             </label>
             <input
               type="number"
@@ -1013,7 +1013,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
 
         <div>
           <label className="block text-sm font-medium text-site-text mb-1.5">
-            Project Commitment
+            Project commitment
           </label>
           <select
             value={avail.projectCommitment}
@@ -1035,7 +1035,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-site-text mb-1.5">
-              Minimum Project Value
+              Minimum project value
             </label>
             <input
               type="number"
@@ -1069,7 +1069,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
 
         <div>
           <label className="block text-sm font-medium text-site-text mb-1.5">
-            Communication Style
+            Communication style
           </label>
           <select
             value={prefs.communicationStyle}
@@ -1089,7 +1089,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
         {/* Pricing section */}
         <div className="border-t border-site-line pt-6">
           <h3 className="text-sm font-semibold text-site-text mb-1">
-            Pricing Rates *
+            Pricing rates *
           </h3>
           <p className="text-xs text-site-muted mb-4">
             Fill at least one rate range ({currencySymbol})
@@ -1190,7 +1190,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
         <div className="bg-site-raised border border-site-accent rounded-site-md p-6 mt-4">
           <div className="flex items-center gap-3 mb-3">
             <CheckCircle className="h-5 w-5 text-site-accent" />
-            <h3 className="text-lg font-semibold text-site-accent">Ready to Submit!</h3>
+            <h3 className="text-lg font-semibold text-site-accent">Ready to submit</h3>
           </div>
           <p className="text-site-accent mb-4">
             Review your information and submit your application.
@@ -1200,7 +1200,7 @@ function AvailabilityPricingStep({ formData, updateData, errors }: StepInternalP
             <ul className="list-disc list-inside mt-2 space-y-1">
               <li>Application review (24-48 hours)</li>
               <li>Portfolio verification call</li>
-              <li>Welcome to CreativeMinds network</li>
+              <li>Welcome to the CreativeMinds network</li>
               <li>Start receiving project opportunities</li>
             </ul>
           </div>

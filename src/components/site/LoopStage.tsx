@@ -28,7 +28,12 @@ export interface StageItem {
  *   is over the list it stays on the chosen item and loops it.
  * - Only plays while on screen. Under reduced motion nothing autoplays or
  *   advances; the poster of the selected item stands in, and rows still select.
- * - One video decodes at a time; the next one is preloaded.
+ * - One video decodes at a time; the next one is preloaded — and nothing
+ *   downloads until the stage is within a screen of the viewport (the
+ *   posters stand in until then; under reduced motion, for good).
+ * - Keyboard focus inside the list holds the rotation like a hovering
+ *   pointer does, and the caption is announced only after a visitor picks a
+ *   row, never on every automatic hand-over (WCAG 2.2.2, 4.1.3).
  */
 export function LoopStage({
   items,
@@ -48,12 +53,37 @@ export function LoopStage({
   rowsAreLinks?: boolean;
 }) {
   const [active, setActive] = useState(0);
+  // Within a screen of the viewport: until then no loop is fetched.
+  const [near, setNear] = useState(false);
+  // Announce the caption only once the visitor has chosen a row.
+  const [picked, setPicked] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const videos = useRef<(HTMLVideoElement | null)[]>([]);
   const bar = useRef<HTMLElement | null>(null);
   const hovering = useRef(false);
+  const focused = useRef(false);
   const visible = useRef(false);
   const reduced = useRef(false);
+
+  // Fetch nothing until the stage is close to being seen.
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || prefersReducedMotion()) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setNear(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        setNear(true);
+        io.disconnect();
+      },
+      { rootMargin: '100% 0px' },
+    );
+    io.observe(root);
+    return () => io.disconnect();
+  }, []);
 
   // Play only the active loop, from the start, while on screen.
   useEffect(() => {
@@ -61,16 +91,16 @@ export function LoopStage({
     videos.current.forEach((v, i) => {
       if (!v) return;
       if (i === active) {
-        v.preload = 'auto';
+        if (near && !reduced.current) v.preload = 'auto';
         v.currentTime = 0;
         if (visible.current && !reduced.current) void v.play().catch(() => {});
       } else {
         v.pause();
         // Warm the next one so the hand-over never waits.
-        v.preload = i === (active + 1) % items.length ? 'auto' : 'none';
+        if (near && !reduced.current) v.preload = i === (active + 1) % items.length ? 'auto' : 'none';
       }
     });
-  }, [active, items.length]);
+  }, [active, items.length, near]);
 
   // Visibility: pause off screen, resume on return.
   useEffect(() => {
@@ -102,7 +132,7 @@ export function LoopStage({
     raf = requestAnimationFrame(tick);
     const v = videos.current[active];
     const onEnd = () => {
-      if (hovering.current || reduced.current) {
+      if (hovering.current || focused.current || reduced.current) {
         if (v && !reduced.current) {
           v.currentTime = 0;
           void v.play().catch(() => {});
@@ -131,6 +161,12 @@ export function LoopStage({
       onPointerLeave={() => {
         hovering.current = false;
       }}
+      onFocus={() => {
+        focused.current = true;
+      }}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) focused.current = false;
+      }}
     >
       <div className="lstage-stage">
         <figure className="lstage-frame" aria-hidden>
@@ -144,7 +180,9 @@ export function LoopStage({
               poster={`${base}${it.id}-poster.jpg`}
               muted
               playsInline
-              preload={i === 0 ? 'auto' : 'none'}
+              // Raised to `auto` for the active and next loop once the stage
+              // is near the viewport (see the effects above).
+              preload="none"
               width={544}
               height={680}
             >
@@ -152,7 +190,7 @@ export function LoopStage({
             </video>
           ))}
         </figure>
-        <div className="lstage-caption" aria-live="polite">
+        <div className="lstage-caption" aria-live={picked ? 'polite' : 'off'}>
           {items[active].desc && <p>{items[active].desc}</p>}
           {items[active].href && (
             <Link className="link-u" href={items[active].href!}>
@@ -177,7 +215,10 @@ export function LoopStage({
                   onPointerMove={(e) => {
                     if ((e.movementX || e.movementY) && fine() && !on) setActive(i);
                   }}
-                  onFocus={() => setActive(i)}
+                  onFocus={() => {
+                    setActive(i);
+                    setPicked(true);
+                  }}
                 >
                   <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
                   <span className="lstage-name">{it.name}</span>
@@ -188,14 +229,20 @@ export function LoopStage({
                   type="button"
                   className="lstage-pick"
                   aria-pressed={on}
-                  onClick={() => setActive(i)}
+                  onClick={() => {
+                    setActive(i);
+                    setPicked(true);
+                  }}
                   // Only a pointer that actually moves selects: scrolling the page
                   // under a resting mouse fires enter events on every row it
                   // passes, which would flick through the whole list.
                   onPointerMove={(e) => {
                     if ((e.movementX || e.movementY) && fine() && !on) setActive(i);
                   }}
-                  onFocus={() => setActive(i)}
+                  onFocus={() => {
+                    setActive(i);
+                    setPicked(true);
+                  }}
                 >
                   <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
                   <span className="lstage-name">{it.name}</span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { playWhileVisible } from '@/lib/motion';
+import { playWhileVisible, preloadWhenNear } from '@/lib/motion';
 
 /**
  * A service explained by the mascot: a short seamless loop from
@@ -18,7 +18,12 @@ export function ServiceLoop({ id }: { id: string }) {
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
-    return playWhileVisible([video], 1);
+    const stopPreload = preloadWhenNear([video]);
+    const stopPlayback = playWhileVisible([video], 1);
+    return () => {
+      stopPreload();
+      stopPlayback();
+    };
   }, []);
 
   return (
@@ -29,9 +34,11 @@ export function ServiceLoop({ id }: { id: string }) {
         muted
         playsInline
         loop
-        // The whole clip (~200KB) up front: with only metadata loaded, every
-        // loop back to the start stalled while the browser refetched it.
-        preload="auto"
+        // The whole clip (~200KB) is fetched before it plays: with only
+        // metadata loaded, every loop back to the start stalled while the
+        // browser refetched it. `preloadWhenNear` raises this to `auto` a
+        // screen ahead, so six loops no longer all download at page load.
+        preload="none"
         width={544}
         height={680}
       >

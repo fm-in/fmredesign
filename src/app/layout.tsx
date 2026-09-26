@@ -108,7 +108,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_IN",
     url: SITE_URL,
     title: "Freaking Minds - Creative Marketing Agency",
     description: "Full-service creative marketing agency. Strategy, design, and performance under one roof.",
@@ -123,19 +123,12 @@ export const metadata: Metadata = {
       },
     ],
   },
+  // Card type only. With no title, description or images here, Next fills
+  // the Twitter tags from each page's resolved openGraph. Setting them at the
+  // root pinned every page's X/Twitter card to the home page's copy.
+  // No `site` handle: nothing on the site links to an X account to confirm one.
   twitter: {
     card: "summary_large_image",
-    site: "@freakingminds",
-    title: "Freaking Minds - Creative Marketing Agency",
-    description: "Full-service creative marketing. Strategy, design, and performance under one roof.",
-    images: [
-      {
-        url:"/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Freaking Minds - Creative Marketing Agency",
-      },
-    ],
   },
   robots: {
     index: true,
@@ -184,11 +177,17 @@ export default function RootLayout({
         },
       },
       {
-        '@type': 'LocalBusiness',
+        // ProfessionalService is a LocalBusiness subtype — the closer fit for
+        // an agency. Street address and postcode are not published anywhere
+        // on the site, so only the city is given.
+        '@type': 'ProfessionalService',
         '@id': `${SITE_URL}/#localbusiness`,
         name: 'Freaking Minds',
         description: 'Full-service creative marketing agency. Strategy, design, and performance marketing that transforms ambitious brands into market leaders.',
         url: SITE_URL,
+        image: `${SITE_URL}/og-image.png`,
+        logo: `${SITE_URL}/logo.png`,
+        parentOrganization: { '@id': `${SITE_URL}/#organization` },
         telephone: COMPANY_PHONE_E164,
         email: 'freakingmindsdigital@gmail.com',
         address: {
@@ -197,13 +196,22 @@ export default function RootLayout({
           addressRegion: 'Madhya Pradesh',
           addressCountry: 'IN',
         },
-        priceRange: '$$',
-        openingHoursSpecification: {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-          opens: '09:00',
-          closes: '18:00',
-        },
+        // Mirrors the hours printed on /contact. The two had drifted
+        // (this said Mon–Sat 09:00–18:00).
+        openingHoursSpecification: [
+          {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+            opens: '09:00',
+            closes: '19:00',
+          },
+          {
+            '@type': 'OpeningHoursSpecification',
+            dayOfWeek: 'Saturday',
+            opens: '10:00',
+            closes: '17:00',
+          },
+        ],
       },
       {
         '@type': 'WebSite',
@@ -211,27 +219,12 @@ export default function RootLayout({
         url: SITE_URL,
         name: 'Freaking Minds',
         publisher: { '@id': `${SITE_URL}/#organization` },
-        potentialAction: {
-          '@type': 'SearchAction',
-          target: `${SITE_URL}/freakquency?q={search_term_string}`,
-          'query-input': 'required name=search_term_string',
-        },
+        inLanguage: 'en-IN',
       },
-      {
-        '@type': 'BreadcrumbList',
-        '@id': `${SITE_URL}/#breadcrumb`,
-        itemListElement: [
-          // `position` is an ordinal, not a depth marker. Every entry after Home
-          // was previously `position: 2`, which makes the list invalid.
-          { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-          { '@type': 'ListItem', position: 2, name: 'Services', item: `${SITE_URL}/services` },
-          { '@type': 'ListItem', position: 3, name: 'Work', item: `${SITE_URL}/work` },
-          { '@type': 'ListItem', position: 4, name: 'About', item: `${SITE_URL}/about` },
-          { '@type': 'ListItem', position: 5, name: 'FM Academy', item: `${SITE_URL}/academy` },
-          { '@type': 'ListItem', position: 6, name: 'Freakquency', item: `${SITE_URL}/freakquency` },
-          { '@type': 'ListItem', position: 7, name: 'Contact', item: `${SITE_URL}/contact` },
-        ],
-      },
+      // No SearchAction: /freakquency has no ?q= search for it to point at.
+      // No site-wide BreadcrumbList: the same Home > Services > Work > …
+      // list on every page described the nav, not where a page sits. Pages
+      // deeper than one level emit their own (see /academy/[slug]).
     ],
   };
 

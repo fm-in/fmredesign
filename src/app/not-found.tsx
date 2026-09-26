@@ -16,6 +16,8 @@ import { Container, Display, Eyebrow, Label, Section, Text } from '@/components/
 export const metadata: Metadata = {
   title: 'Page not found',
   robots: { index: false, follow: true },
+  // Otherwise the root's canonical of '/' is emitted on every 404.
+  alternates: { canonical: null },
 };
 
 export default function NotFound() {

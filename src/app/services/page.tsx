@@ -27,36 +27,36 @@ import { serviceDeepDiveData } from '@/data/serviceDeepDiveData';
  * A server component: the modal was the only reason this page held state.
  */
 export const metadata: Metadata = {
-  title: 'Services',
+  title: 'Digital Marketing Services in Bhopal',
   description:
-    'SEO, social media, performance marketing, brand identity, web development and content — what each one actually involves.',
+    'SEO, social media, performance marketing, brand identity, web development and content & video — what each one involves and who it suits. Freaking Minds, Bhopal.',
   alternates: { canonical: '/services' },
 };
 
 const PROCESS = [
   {
     step: '01',
-    title: 'Discovery & Audit',
+    title: 'Discovery & audit',
     description:
-      'We analyze your current digital presence, understand your goals, and identify opportunities for growth.',
+      'We look at where you stand today, what you want to move, and where the quickest wins are.',
   },
   {
     step: '02',
-    title: 'Strategy Development',
+    title: 'Strategy',
     description:
-      'Our team creates a comprehensive digital marketing strategy tailored to your business objectives and target audience.',
+      'A written plan: which channels, what we will make, what it costs, and the number we report against.',
   },
   {
     step: '03',
     title: 'Implementation',
     description:
-      'We execute your custom strategy with precision, using the latest tools and best practices for maximum impact.',
+      'We make the work and run it, with one team across strategy, creative and media.',
   },
   {
     step: '04',
-    title: 'Monitor & Optimize',
+    title: 'Measure & improve',
     description:
-      'Continuous monitoring and optimization ensure your campaigns deliver the best possible results and ROI.',
+      'We report every month, keep what works, and change what does not.',
   },
 ] as const;
 

@@ -17,9 +17,9 @@ import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
  * only two of them and a two-card grid on a wide page reads as a gap.
  */
 export const metadata: Metadata = {
-  title: 'About',
+  title: 'About Us — Our Team & Story',
   description:
-    'Freaking Minds is a full-service creative marketing agency. Strategy, design and performance under one roof.',
+    'Freaking Minds is a full-service creative marketing agency in Bhopal. Meet the team, and see how strategy, design and performance marketing work under one roof.',
   alternates: { canonical: '/about' },
 };
 
@@ -27,22 +27,22 @@ const VALUES = [
   {
     title: 'Innovation',
     description:
-      'We constantly push boundaries and explore new creative territories to deliver cutting-edge solutions that set our clients apart.',
+      'We try new formats, tools and ideas early, so our clients are not the last in their market to use them.',
   },
   {
     title: 'Authenticity',
     description:
-      'We believe in genuine brand stories and authentic connections. Every strategy we create reflects the true essence of your brand.',
+      'We tell the story your brand can actually back up. No borrowed personality, no claims your customers will see through.',
   },
   {
     title: 'Results',
     description:
-      "Data-driven approach ensures every campaign delivers measurable ROI. We don't just create beautiful campaigns, we create business growth.",
+      'Every campaign is measured against a number agreed at the start. Good-looking work that does not move it is not finished.',
   },
   {
     title: 'Collaboration',
     description:
-      'Your success is our success. We work as an extension of your team, bringing expertise while respecting your vision and goals.',
+      'We work as an extension of your team, respect your goals, and say so early when something is not working.',
   },
 ] as const;
 
@@ -53,7 +53,7 @@ const TEAM = [
     experience: '10+ years',
     expertise: 'Brand Strategy, Business Development',
     description:
-      'Visionary leader with a passion for transforming brands through innovative marketing strategies.',
+      'Leads strategy and new business, and sets the direction for the work the studio takes on.',
     image: '/team/Arushimaheshwari.png',
   },
   {
@@ -62,7 +62,7 @@ const TEAM = [
     experience: '6+ years',
     expertise: 'Sales Strategy, Client Acquisition',
     description:
-      'Dynamic sales professional driving business growth through strategic partnerships and client relationships.',
+      'Looks after new clients and partnerships, from the first conversation to a signed brief.',
     image: '/team/Abhishek.png',
   },
 ] as const;
@@ -81,25 +81,25 @@ export default function AboutPage() {
               <div>
             <Eyebrow>Meet the minds behind the work</Eyebrow>
             <Display level="display" className="mt-6">
-              Your growth is our mission.
+              Your growth is the brief.
             </Display>
             <Text size="lead" muted className="mt-8 lay-measure">
-              Freaking Minds is a full-service creative marketing agency that has been revolutionizing
-              brand growth for over a decade. We combine strategic thinking with creative excellence to
-              deliver campaigns that don&rsquo;t just look good&mdash;they drive real business results.
+              Freaking Minds is a full-service creative and marketing agency in Bhopal, working with
+              brands for over a decade. Strategy and creative sit in one team, and the work is judged
+              by what it does for the business, not only by how it looks.
             </Text>
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 href="/get-started"
                 className="btn btn--primary"
               >
-                Work with us
+                Start a project
               </Link>
               <Link
                 href="/work"
                 className="link-u"
               >
-                View our work
+                See our work
               </Link>
             </div>
               </div>
@@ -129,7 +129,7 @@ export default function AboutPage() {
         <Section>
           <Container>
             <div className="lay-rail">
-              <Eyebrow>What drives our excellence</Eyebrow>
+              <Eyebrow>How we work</Eyebrow>
               <div>
             {/*
               Four numbered rows, not four icon cards. The icons were generic
@@ -160,7 +160,7 @@ export default function AboutPage() {
         <Section tone="raised">
           <Container>
             <div className="lay-rail">
-              <Eyebrow>The creative minds behind your success</Eyebrow>
+              <Eyebrow>The people you will work with</Eyebrow>
               <div className="grid gap-12 sm:grid-cols-2">
               {TEAM.map((member) => (
                 <div key={member.name}>
@@ -224,7 +224,7 @@ export default function AboutPage() {
                 href="/contact"
                 className="link-u"
               >
-                Or just ask a question
+                Or ask a question
               </Link>
             </div>
               </div>

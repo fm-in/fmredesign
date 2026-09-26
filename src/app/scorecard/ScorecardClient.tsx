@@ -430,7 +430,7 @@ export default function ScorecardClient() {
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <Link href="/get-started" className="btn btn--primary">
-                Talk to us
+                Start a project
               </Link>
               <button onClick={restart} className="btn btn--ghost inline-flex items-center gap-2">
                 <RotateCcw className="w-4 h-4" /> Start again

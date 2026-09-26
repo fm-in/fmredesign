@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type ReactNode } from 'react';
+import { getImageProps } from 'next/image';
 import { FilmVideo } from './FilmVideo';
 import { easeInOut, playWhileVisible, prefersReducedMotion, span, stickyScene } from '@/lib/motion';
 
@@ -129,10 +130,7 @@ export function LiveWall({
               {tile.kind === 'film' ? (
                 <FilmVideo id={tile.id} />
               ) : (
-                // Plain <img>: tiles are cropped by the grid, and the push scales
-                // them past their box, which next/image's sizing would fight.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={tile.src} alt="" loading="eager" decoding="async" />
+                <TileImage src={tile.src} />
               )}
               <figcaption className="sr-only">{tile.label}</figcaption>
             </figure>
@@ -147,4 +145,24 @@ export function LiveWall({
       </div>
     </section>
   );
+}
+
+/**
+ * A still tile. A plain <img>, because tiles are cropped by the grid and the
+ * push scales them past their box, which next/image's own sizing would fight —
+ * but its source set still comes from the image optimiser. Served raw, the two
+ * site screenshots were 1.2 MB and 0.9 MB PNGs on a phone for a ~190px tile.
+ * `sizes` allows for the push, which scales a tile up to about 1.6x.
+ */
+function TileImage({ src }: { src: string }) {
+  const { props } = getImageProps({
+    src,
+    alt: '',
+    width: 1200,
+    height: 1200,
+    sizes: '(max-width: 700px) 70vw, 32vw',
+  });
+  // The width/height attributes are inert: `.lwall-tile img` fills the cell.
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img {...props} alt="" loading="eager" decoding="async" />;
 }

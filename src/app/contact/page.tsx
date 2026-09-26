@@ -20,9 +20,9 @@ import { COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL } from '@/lib/company';
  * clicks for no gain.
  */
 export const metadata: Metadata = {
-  title: 'Contact',
+  title: 'Contact Us — Start a Conversation',
   description:
-    'Tell us what you are trying to move. We reply within 24 hours — or message us on WhatsApp.',
+    'Tell us what you are trying to move — a number, a launch, a problem. Email, WhatsApp or send a brief and we reply within 24 hours. Serving brands worldwide.',
   alternates: { canonical: '/contact' },
 };
 
@@ -30,23 +30,23 @@ const DETAILS = [
   ['Email', 'freakingmindsdigital@gmail.com', 'mailto:freakingmindsdigital@gmail.com'],
   ['WhatsApp', COMPANY_PHONE_DISPLAY, COMPANY_WHATSAPP_URL],
   ['Hours', 'Mon–Fri 9:00–19:00 · Sat 10:00–17:00', null],
-  ['Where', 'India-based, serving brands worldwide', null],
+  ['Where', 'Bhopal, India. Working with brands worldwide', null],
 ] as const;
 
 const FAQ = [
   [
-    'How long does it take to see results from digital marketing?',"Results vary by service, but typically you'll see initial improvements in 3-6 months for SEO, immediate results for PPC, and 1-3 months for social media marketing.",
+    'How long does it take to see results from digital marketing?','It depends on the channel. Paid ads show results within days, social media usually within 1–3 months, and SEO within 3–6 months.',
   ],
   [
     'Do you work with businesses outside of India?',
-    'Yes! We work with clients across India and internationally. Our team collaborates seamlessly across time zones through digital tools.',
+    'Yes. We work with clients across India and abroad, and plan calls and reviews around your time zone.',
   ],
   ["What's included in your monthly reporting?",
-    'Our reports include key metrics, campaign performance, ROI analysis, competitor insights, and strategic recommendations for the next month.',
+    'The numbers we agreed to track, how each campaign performed, what it returned, what competitors did, and what we will change next month.',
   ],
   [
     'Can you work with our existing marketing team?',
-    'Absolutely! We often collaborate with in-house teams and can provide training, consultation, or handle specific aspects of your marketing strategy.',
+    'Yes, often. We can train your team, advise it, or take on the parts of the work it does not have time for.',
   ],
 ] as const;
 
@@ -82,7 +82,8 @@ export default function ContactPage() {
             <div className="grid gap-12 lg:grid-cols-[1.4fr_0.6fr] lg:gap-20">
               <ContactForm />
 
-              <aside>
+              {/* A div, not <aside>: a complementary landmark must not sit inside <main>. */}
+              <div>
                 <div className="tag">Direct</div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0' }}>
                   {DETAILS.map(([label, value, href]) => (
@@ -106,10 +107,10 @@ export default function ContactPage() {
 
                 <div className="mt-10">
                   <Link className="link-u" href="/get-started">
-                    Prefer a guided brief? <span aria-hidden>&rarr;</span>
+                    Prefer a step-by-step brief? <span aria-hidden>&rarr;</span>
                   </Link>
                 </div>
-              </aside>
+              </div>
             </div>
           </div>
         </section>

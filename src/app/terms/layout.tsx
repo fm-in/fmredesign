@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     ...OG_DEFAULTS,
     title: "Terms of Service | Freaking Minds",
     description: "Read the Terms of Service for Freaking Minds.",
+    url: "/terms",
   },
   alternates: {
     canonical:"/terms",

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     ...OG_DEFAULTS,
     title: "Privacy Policy | Freaking Minds",
     description: "Learn how Freaking Minds collects, uses, and protects your personal information.",
+    url: "/privacy",
   },
   alternates: {
     canonical:"/privacy",

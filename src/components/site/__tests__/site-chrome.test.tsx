@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { SiteFooter } from '../SiteFooter';
+import { SiteHeader } from '../SiteHeader';
+import { SiteShell } from '../SiteShell';
 import { SERVICES, serviceHref } from '@/lib/services-catalogue';
 
 vi.mock('next/navigation', () => ({
@@ -52,5 +54,33 @@ describe('SiteFooter', () => {
     for (const anchor of container.querySelectorAll('a[target="_blank"]')) {
       expect(anchor.getAttribute('rel')).toContain('noopener');
     }
+  });
+});
+
+describe('SiteHeader mobile menu', () => {
+  function renderPage() {
+    return render(
+      <SiteShell>
+        <SiteHeader />
+        <main>
+          <a href="/behind">Behind the menu</a>
+        </main>
+      </SiteShell>,
+    );
+  }
+
+  it('takes the page out of reach while open and gives it back on Escape', () => {
+    renderPage();
+    const main = screen.getByRole('main');
+    const toggle = screen.getByRole('button', { name: 'Open menu' });
+
+    fireEvent.click(toggle);
+    // Focus moves into the menu, and the covered page cannot be tabbed into.
+    expect(document.activeElement?.closest('#site-menu')).not.toBeNull();
+    expect(main.inert).toBe(true);
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(main.inert).toBe(false);
+    expect(document.activeElement).toBe(toggle);
   });
 });

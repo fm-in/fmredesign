@@ -896,7 +896,7 @@
   [data-site] .foot-brand img { width: 88px; margin-bottom: 16px; }
   [data-site] .foot-brand p { color: var(--site-muted); font-size: 0.9375rem; max-width: 34ch; }
   [data-site] .foot-col { grid-column: span 2; }
-  [data-site] .foot-col h3 { margin-bottom: 12px; }
+  [data-site] .foot-col h2 { margin-bottom: 12px; }
   [data-site] .foot-contact { list-style: none; padding: 0; margin: 18px 0 0; }
   [data-site] .foot-contact li { padding-block: 4px; font-size: 0.9375rem; }
   [data-site] .foot-contact a { border-bottom: 1px solid var(--site-line); transition: color 0.2s ease, border-color 0.2s ease; }
@@ -1356,7 +1356,8 @@
     font-size: clamp(1.6rem, 3.2vw, 2.7rem);
     line-height: 1;
     letter-spacing: -0.03em;
-    color: color-mix(in srgb, var(--site-text) 42%, var(--site-ground));
+    /* 50%, not less: the resting rows are large text and must hold 3:1 (WCAG AA). */
+    color: color-mix(in srgb, var(--site-text) 50%, var(--site-ground));
     transition: color 0.35s ease;
   }
   [data-site] .lstage-sub { grid-column: 2; color: var(--site-muted); font-size: 0.9375rem; font-weight: 500; transition: color 0.35s ease; }
@@ -1426,8 +1427,12 @@
     transform: scaleY(0);
     transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  [data-site] .steps-loop.is-live .steps-list li { opacity: 0.45; }
-  [data-site] .steps-loop.is-live .steps-list li.is-on { opacity: 1; }
+  /* Resting steps dim their title only, and only to 60%: fading the whole row
+     (it was opacity 0.45) took the body copy to 1.95:1 in dark, under AA. */
+  [data-site] .steps-loop.is-live .steps-list li:not(.is-on) .steps-title {
+    color: color-mix(in srgb, var(--site-text) 60%, var(--site-ground));
+  }
+  [data-site] .steps-title { transition: color 0.4s ease; }
   [data-site] .steps-list li.is-on::before { transform: scaleY(1); }
   [data-site] .steps-list li.is-on .n { color: var(--site-accent); }
   [data-site] .steps-title { margin: 0; font-family: var(--site-font-display); font-weight: 400; font-size: clamp(1.4rem, 2.4vw, 2rem); line-height: 1.05; letter-spacing: -0.02em; }
@@ -1456,6 +1461,63 @@
   /* ---------- close: confetti from the mascot ---------- */
   [data-site] .close-side { position: relative; }
   [data-site] .confetti-bit { position: absolute; width: 10px; height: 6px; border-radius: 1px; pointer-events: none; z-index: 3; }
+
+  /* ---------- responsive fixes (merge pass) ---------- */
+
+  /* The confetti burst flies up to ~320px from the mascot, past the page's
+     right edge on phones and tablets, which briefly made the whole page
+     scroll sideways. `clip` (not `hidden`) trims only the x axis and makes no
+     scroll container, so the bits still rise above the band. */
+  [data-site] .close { overflow-x: clip; }
+
+  /* The studio address is one unbreakable token, wider than a 320px phone's
+     column in the /about contact list. */
+  [data-site] a[href^='mailto:'] { overflow-wrap: anywhere; }
+
+  /* Header on narrow phones: logo, theme toggle, CTA and menu button did not
+     fit, so flexbox squashed the logo and the toggle. The toggle and logo
+     now hold their size; the gaps and the CTA's side padding give instead. */
+  [data-site] .hdr-in > .logo,
+  [data-site] .hdr-in > button { flex-shrink: 0; }
+  @media (max-width: 380px) {
+    [data-site] .hdr-in { gap: 10px; }
+    [data-site] .hdr .btn { padding-inline: 16px; }
+  }
+  @media (max-width: 340px) {
+    [data-site] .hdr-in { gap: 8px; }
+    [data-site] .hdr img { width: 60px; }
+    [data-site] .hdr .btn { padding-inline: 12px; }
+  }
+
+  /* Touch targets. On a coarse pointer, small controls get a 44px hit area
+     from an invisible pseudo-element, so nothing moves visually; lists whose
+     rows sit closer than 44px get taller rows instead, since overlapping hit
+     areas would make neighbours steal each other's taps. */
+  @media (pointer: coarse) {
+    [data-site] .hdr-in > button,
+    [data-site] .link-u,
+    [data-site] .close-ways a,
+    [data-site] .close-cal,
+    [data-site] .foot-contact a { position: relative; }
+    [data-site] .hdr-in > button::before,
+    [data-site] .hdr .btn::before,
+    [data-site] .link-u::before,
+    [data-site] .close-ways a::before,
+    [data-site] .close-cal::before,
+    [data-site] .foot-contact a::before,
+    [data-site] .nav a::before {
+      content: "";
+      position: absolute;
+      inset: -12px -4px;
+    }
+    /* Sized to reach 44px without spilling into the next control. */
+    [data-site] .hdr-in > button::before { inset: -5px; }
+    [data-site] .hdr .btn::before { inset: -5px 0; }
+    [data-site] .nav a::before { inset: -9px 0; }
+    [data-site] .foot-contact li { padding-block: 11px; }
+    [data-site] .foot-col li { padding-block: 0; }
+    [data-site] .foot-col a { display: inline-block; padding-block: 11px; }
+  }
 }
 
 /* ---------- theme switch: circular reveal (View Transitions) ----------
@@ -1473,4 +1535,16 @@
 @keyframes fm-theme-reveal {
   from { clip-path: circle(0 at var(--vt-x, 100%) var(--vt-y, 0)); }
   to { clip-path: circle(150vmax at var(--vt-x, 100%) var(--vt-y, 0)); }
+}
+
+/* ---------- first section clears the fixed header ----------
+   The header is a fixed 79px bar. Inner pages open with a section whose top
+   padding is the section rhythm, which shrinks with the viewport (56px on a
+   phone, 83px at 1280), so below ~1300px each page's eyebrow or heading sat
+   underneath the bar. The first section now gets at least 6rem, which is what
+   the rhythm already gives at 1440 and above. Unlayered because
+   `py-site-section` is a Tailwind utility, and a layered rule cannot outrank
+   the utilities layer; `[data-site]` keeps it off the portals. */
+[data-site] main > :is(.sec, .py-site-section):first-child {
+  padding-top: max(var(--spacing-site-section), 6rem);
 }

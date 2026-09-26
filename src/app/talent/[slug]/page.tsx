@@ -112,7 +112,7 @@ function ProfileAvatar({ name, src }: { name: string; src?: string }) {
 function ProfileShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-fm-neutral-50">
-      <div className="border-b border-fm-neutral-200 bg-site-raised">
+      <div className="border-b border-fm-neutral-200 bg-white">
         <div className="v2-container flex items-center justify-between py-4">
           <Link href="/" className="font-display text-lg font-bold text-fm-neutral-900">
             Freaking<span className="text-fm-magenta-600">Minds</span>
@@ -274,11 +274,11 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
       <ProfileShell>
         <section className="py-12 md:py-16">
           <div className="v2-container">
-            <div className="max-w-lg mx-auto bg-site-raised rounded-site-lg p-10" style={{ textAlign: 'center' }}>
+            <div className="max-w-lg mx-auto bg-white rounded-site-lg p-10" style={{ textAlign: 'center' }}>
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <X className="w-8 h-8 text-red-600" />
               </div>
-              <h1 className="text-2xl font-bold text-fm-neutral-900 mb-3">Profile Not Found</h1>
+              <h1 className="text-2xl font-bold text-fm-neutral-900 mb-3">Profile not found</h1>
               <p className="text-fm-neutral-600 mb-6">
                 This profile link may be invalid or the account may have been deactivated.
               </p>
@@ -334,9 +334,9 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
         <div className="v2-container">
           {/* Header */}
           <div className="max-w-4xl mx-auto" style={{ marginBottom: '40px' }}>
-            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-site-raised border border-fm-neutral-200 text-sm font-medium text-fm-neutral-700">
+            <div className="inline-flex items-center gap-2 mb-6 px-3 py-1.5 rounded-full bg-white border border-fm-neutral-200 text-sm font-medium text-fm-neutral-700">
               <Sparkles className="w-4 h-4 text-fm-magenta-600" />
-              <span>CreativeMinds Profile</span>
+              <span>CreativeMinds profile</span>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -375,7 +375,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
 
               {/* Skills & Tools (read-only, set by admin) */}
               <div className="v2-paper rounded-site-lg p-6 md:p-8">
-                <h2 className="text-lg font-bold text-fm-neutral-900 mb-4">Skills & Tools</h2>
+                <h2 className="text-lg font-bold text-fm-neutral-900 mb-4">Skills & tools</h2>
                 {subcategories.length > 0 && (
                   <div className="mb-4">
                     <p className="text-xs font-medium text-fm-neutral-500 uppercase tracking-wide mb-2">Specializations</p>
@@ -390,7 +390,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                 )}
                 {skills.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-xs font-medium text-fm-neutral-500 uppercase tracking-wide mb-2">Core Skills</p>
+                    <p className="text-xs font-medium text-fm-neutral-500 uppercase tracking-wide mb-2">Core skills</p>
                     <div className="flex flex-wrap gap-2">
                       {skills.map((s) => (
                         <span key={s} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
@@ -428,7 +428,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                 {editing === 'portfolio' && draftPortfolio ? (
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Portfolio Website</label>
+                      <label className="block text-sm font-medium text-fm-neutral-700 mb-1">Portfolio website</label>
                       <input
                         type="url"
                         value={draftPortfolio.websiteUrl || ''}
@@ -528,7 +528,7 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Profile Picture URL</label>
+                      <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Profile picture URL</label>
                       <div className="flex items-center gap-2">
                         <ImageIcon className="w-4 h-4 text-fm-neutral-400 shrink-0" />
                         <input
@@ -576,12 +576,12 @@ export default function TalentProfilePage({ params }: { params: Promise<{ slug: 
                         className={inputClass}
                       >
                         <option value="available">Available</option>
-                        <option value="partially_available">Partially Available</option>
+                        <option value="partially_available">Partially available</option>
                         <option value="busy">Busy</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Hours / Week</label>
+                      <label className="block text-xs font-medium text-fm-neutral-600 mb-1">Hours per week</label>
                       <input
                         type="number"
                         min={0}

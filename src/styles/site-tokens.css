@@ -168,9 +168,13 @@
 }
 
 /* ---------- DARK: a pure token swap, no layout or asset changes ---------- */
-:root[data-theme='dark'] {
+/* Native controls and scrollbars go dark only on public-site pages; the
+   theme attribute is set on every route, and the portals stay light. */
+:root[data-theme='dark']:has([data-site]) {
   color-scheme: dark;
+}
 
+:root[data-theme='dark'] {
   --site-ground: #0b0a0c;
   --site-scrim: rgba(11, 10, 12, 0.86);
   --site-ground-rgb: 11, 10, 12;

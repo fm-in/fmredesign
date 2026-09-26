@@ -112,6 +112,46 @@ export function observeReveal(
 }
 
 /**
+ * Fetch a loop in full only once it is about to be seen.
+ *
+ * The short mascot loops need `preload="auto"`: with only metadata loaded,
+ * every wrap back to the start stalled while the browser refetched the file.
+ * But rendered with `auto`, every loop on the page downloaded at load — about
+ * 1.5 MB on /services, all of it below the fold. So the element renders with
+ * `preload="none"` (the poster shows) and this raises it to `auto` when the
+ * video comes within `rootMargin` of the viewport — a screen ahead by default,
+ * so the whole clip is in hand before `playWhileVisible` starts it.
+ *
+ * Under reduced motion nothing is fetched: nothing will play.
+ */
+export function preloadWhenNear(
+  videos: Iterable<HTMLVideoElement>,
+  rootMargin = '100% 0px',
+): MotionCleanup {
+  const nodes = Array.from(videos);
+  if (nodes.length === 0 || prefersReducedMotion()) return () => {};
+  const warm = (video: HTMLVideoElement) => {
+    video.preload = 'auto';
+  };
+  if (typeof IntersectionObserver === 'undefined') {
+    nodes.forEach(warm);
+    return () => {};
+  }
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        warm(entry.target as HTMLVideoElement);
+        observer.unobserve(entry.target);
+      }
+    },
+    { rootMargin },
+  );
+  nodes.forEach((video) => observer.observe(video));
+  return () => observer.disconnect();
+}
+
+/**
  * Play media only while it is on screen, and cap how many play at once.
  *
  * The home page carries six vertical client films. Six autoplaying videos

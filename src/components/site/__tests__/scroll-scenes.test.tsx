@@ -92,7 +92,7 @@ describe('ReelRow', () => {
     stubMatchMedia(() => false);
     render(<ReelRow films={films} />);
     expect(screen.getAllByText(/Kanha|Renny|SKR Group/)).toHaveLength(3);
-    expect(screen.queryByRole('button', { name: 'Next film' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Next film/ })).toBeNull();
   });
 
   it('becomes a deck on phones, and the next button sends the front film to the back', () => {
@@ -101,7 +101,7 @@ describe('ReelRow', () => {
     const { container } = render(<ReelRow films={films} />);
     const front = () => container.querySelector('[data-slot="0"] b')?.textContent;
     expect(front()).toBe('Kanha');
-    fireEvent.click(screen.getByRole('button', { name: 'Next film' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Next film/ }));
     act(() => { vi.runAllTimers(); });
     expect(front()).toBe('Renny');
     vi.useRealTimers();

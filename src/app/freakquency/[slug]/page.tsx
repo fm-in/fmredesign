@@ -21,6 +21,7 @@ import { notFound } from 'next/navigation';
 import { getPublicPostBySlug, getAllPublishedPosts } from '@/lib/blog-data-public';
 import ArticleClient from './ArticleClient';
 import { OG_IMAGE } from '@/lib/seo';
+import { breadcrumbJsonLd, jsonLdString } from '@/lib/structured-data';
 import { SITE_URL } from '@/lib/site-url';
 
 export const revalidate = 60;
@@ -56,6 +57,7 @@ export async function generateMetadata({
     openGraph: {
       title: post.title,
       description: post.excerpt,
+      url: `/freakquency/${slug}`,
       type: 'article',
       publishedTime: post.date,
       authors: [post.author],
@@ -96,8 +98,8 @@ export default async function BlogPostPage({
   /**
    * Article structured data.
    *
-   * The root layout supplies Organization / LocalBusiness / WebSite /
-   * BreadcrumbList, but nothing described the article itself, so posts were
+   * The root layout supplies Organization / ProfessionalService / WebSite,
+   * but nothing described the article itself, so posts were
    * not eligible for article rich results at all. `publisher` points at the
    * Organization node the root layout already declares rather than repeating
    * it, so there is one organisation entity across the site.
@@ -123,7 +125,18 @@ export default async function BlogPostPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdString(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdString(
+            breadcrumbJsonLd([
+              { name: 'Freakquency', path: '/freakquency' },
+              { name: post.title, path: `/freakquency/${post.slug}` },
+            ]),
+          ),
+        }}
       />
       <ArticleClient post={post} related={related} />
     </>

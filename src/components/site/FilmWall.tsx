@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { playWhileVisible } from '@/lib/motion';
+import { smallFilmSrc } from './FilmVideo';
 
 export interface Film {
   /** Basename in /public/videos, without extension. */
@@ -85,6 +86,10 @@ export function FilmWall({ films }: { films: readonly Film[] }) {
               preload="none"
               aria-label={`${film.client} — ${film.note}`}
             >
+              {/* Phones get the 360p encode (~40% of the size), as FilmVideo does. */}
+              {smallFilmSrc(film.id) && (
+                <source media="(max-width: 700px)" src={smallFilmSrc(film.id) ?? undefined} type="video/mp4" />
+              )}
               <source src={`/videos/${film.id}.mp4`} type="video/mp4" />
             </video>
           </div>

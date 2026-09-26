@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -31,18 +31,50 @@ const NAV = [
 export function SiteHeader({ floating = false }: { floating?: boolean }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => setMenuOpen(false), [pathname]);
 
   useEffect(() => {
     if (!menuOpen) return;
+    const menu = menuRef.current;
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onEscape = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
+
+    /*
+     * The menu covers the page, so the page must be out of reach while it is
+     * open: without this, tabbing past the last menu link walked into links
+     * hidden underneath the overlay. Everything beside the header and the
+     * menu goes inert (unfocusable, hidden from assistive tech) until it
+     * closes. The header stays live — it carries the close button.
+     */
+    const inerted: HTMLElement[] = [];
+    Array.from(menu?.parentElement?.children ?? []).forEach((el) => {
+      if (el === menu || el === headerRef.current || !(el instanceof HTMLElement) || el.inert) return;
+      el.inert = true;
+      inerted.push(el);
+    });
+    menu?.querySelector<HTMLElement>('a')?.focus();
+
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setMenuOpen(false);
+      toggleRef.current?.focus();
+    };
+    // Widening past the breakpoint hides the menu in CSS; close it for real.
+    const wide = window.matchMedia('(min-width: 901px)');
+    const onWide = () => wide.matches && setMenuOpen(false);
     document.addEventListener('keydown', onEscape);
+    wide.addEventListener('change', onWide);
     return () => {
       document.body.style.overflow = previous;
+      inerted.forEach((el) => {
+        el.inert = false;
+      });
       document.removeEventListener('keydown', onEscape);
+      wide.removeEventListener('change', onWide);
     };
   }, [menuOpen]);
 
@@ -52,7 +84,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
           `#main-content` — every public page and portal renders that id. */}
       {/* `floating` is for the home page, whose hero runs under the header.
           Every other page starts with content, so the bar is solid at once. */}
-      <header className={floating ? 'hdr' : 'hdr is-stuck'}>
+      <header ref={headerRef} className={floating ? 'hdr' : 'hdr is-stuck'}>
         <div className="wrap hdr-in">
           <Link href="/" className="logo" aria-label="Freaking Minds, home">
             <Image className="on-light" src="/logo.png" alt="Freaking Minds" width={74} height={46} priority />
@@ -82,10 +114,11 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
           <ThemeToggle />
 
           <Link className="btn btn--primary" href="/get-started">
-            Get started
+            Start a project
           </Link>
 
           <button
+            ref={toggleRef}
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
@@ -100,6 +133,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
       </header>
 
       <div
+        ref={menuRef}
         id="site-menu"
         hidden={!menuOpen}
         className="fixed inset-0 z-[79] min-[901px]:hidden"
@@ -120,7 +154,7 @@ export function SiteHeader({ floating = false }: { floating?: boolean }) {
             </Link>
           ))}
           <Link className="btn btn--primary mt-10 self-start" href="/get-started">
-            Get started
+            Start a project
           </Link>
         </nav>
       </div>

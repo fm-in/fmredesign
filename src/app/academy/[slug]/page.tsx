@@ -40,6 +40,8 @@ import {
 } from '@/lib/admin/academy-types';
 import { ReserveSeatForm } from '@/components/academy/ReserveSeatForm';
 import { OG_DEFAULTS } from '@/lib/seo';
+import { SITE_URL } from '@/lib/site-url';
+import { breadcrumbJsonLd, jsonLdString } from '@/lib/structured-data';
 
 export const revalidate = 60;
 // Pre-render every currently-open program at build time so the first
@@ -146,9 +148,71 @@ export default async function ProgramDetailPage({ params }: PageProps) {
     price.earlyBirdActive && p.earlyBirdPriceInr ? p.earlyBirdPriceInr : p.priceInr;
   const isBundle = p.slug === 'creator-program-full';
 
+  /*
+   * Course + breadcrumb structured data. Built only from the programme row
+   * and what this page already states (in person, at the Bhopal studio);
+   * optional fields are left out when the row does not have them.
+   */
+  const courseUrl = `${SITE_URL}/academy/${p.slug}`;
+  const courseSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    '@id': `${courseUrl}#course`,
+    name: p.title,
+    description: (p.shortDescription || p.longDescription || p.title).replace(/\s+/g, ' ').trim(),
+    url: courseUrl,
+    ...(p.coverImageUrl ? { image: [p.coverImageUrl] } : {}),
+    inLanguage: 'en-IN',
+    // Named inline as well as by @id — Google's Course check wants provider.name.
+    provider: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'Freaking Minds', url: SITE_URL },
+    offers: {
+      '@type': 'Offer',
+      category: 'Paid',
+      price: buyerAmount,
+      priceCurrency: p.currency || 'INR',
+      url: courseUrl,
+      availability:
+        isSoldOut
+          ? 'https://schema.org/SoldOut'
+          : p.status === 'open'
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock',
+      ...(price.earlyBirdActive && p.earlyBirdUntil ? { priceValidUntil: p.earlyBirdUntil } : {}),
+    },
+    hasCourseInstance: {
+      '@type': 'CourseInstance',
+      courseMode: 'Onsite',
+      location: {
+        '@type': 'Place',
+        name: 'Freaking Minds studio',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Bhopal',
+          addressRegion: 'Madhya Pradesh',
+          addressCountry: 'IN',
+        },
+      },
+      ...(p.startsAt ? { startDate: p.startsAt } : {}),
+      ...(p.endsAt ? { endDate: p.endsAt } : {}),
+      ...(p.instructorName ? { instructor: { '@type': 'Person', name: p.instructorName } } : {}),
+    },
+  };
+  const breadcrumbSchema = breadcrumbJsonLd([
+    { name: 'FM Academy', path: '/academy' },
+    { name: p.title, path: `/academy/${p.slug}` },
+  ]);
+
   return (
     <SiteShell>
       <SiteHeader />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(courseSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbSchema) }}
+      />
       <main id="main-content">
       {/* ── HERO ────────────────────────────────────────────── */}
       <section className="pt-24 pb-12 md:pb-16">
@@ -167,7 +231,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                 {/* Was `bg-site-raised/10` behind `text-white/90`: a 10%-opacity
                     near-white fill under white text, on a bone ground. */}
                 <span className="px-3 py-1 rounded-full border border-site-line text-site-accent font-medium">
-                  {isBundle ? 'Creator Program — Full Bundle' : FORMAT_LABELS[p.format]}
+                  {isBundle ? 'Creator Program — all six courses' : FORMAT_LABELS[p.format]}
                 </span>
                 <span className="text-site-muted inline-flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" />
@@ -232,7 +296,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                         per page, where the hero has no real imagery. */}
                     <BrainMark pose="teaching" width={150} className="mb-6" />
                     <div className="text-site-h3 font-site-display text-site-text mb-2 leading-tight" style={{ textAlign: 'center' }}>
-                      {isBundle ? 'All 6 Courses' : p.title}
+                      {isBundle ? 'All six courses' : p.title}
                     </div>
                     <span className="tag">FM Academy &middot; Creator Program</span>
                   </div>
@@ -279,7 +343,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                         className="border-l-2 border-site-accent pl-5 py-1"
                       >
                         <div className="flex items-baseline gap-3 flex-wrap mb-2">
-                          <h4 className="font-semibold text-site-text text-lg">{m.title}</h4>
+                          <h3 className="font-site-sans font-semibold text-site-text text-lg">{m.title}</h3>
                           {m.durationLabel && (
                             <span className="text-xs font-medium text-site-accent bg-site-raised px-2 py-0.5 rounded-full">
                               {m.durationLabel}
@@ -340,7 +404,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                       </div>
                     )}
                     <div>
-                      <h4 className="font-semibold text-site-text text-lg">{p.instructorName}</h4>
+                      <h3 className="font-site-sans font-semibold text-site-text text-lg">{p.instructorName}</h3>
                       {p.instructorBio && (
                         <p className="text-site-muted mt-2 whitespace-pre-line leading-relaxed">
                           {p.instructorBio}
@@ -376,7 +440,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   <div className="space-y-5">
                     {p.faq.map((f, i) => (
                       <div key={i}>
-                        <h4 className="font-semibold text-site-text">{f.q}</h4>
+                        <h3 className="font-site-sans font-semibold text-site-text">{f.q}</h3>
                         <p className="text-site-muted mt-1.5 whitespace-pre-line leading-relaxed">
                           {f.a}
                         </p>
@@ -406,8 +470,11 @@ export default async function ProgramDetailPage({ params }: PageProps) {
               564px is available once stuck, so 77px of the checkout form was
               unreachable. It now scrolls its own overflow instead.
             */}
-            <aside
+            {/* A section, not <aside>: a complementary landmark must not sit
+                inside <main>. Labelled so it is still reachable as a region. */}
+            <section
               id="reserve"
+              aria-label="Reserve a seat"
               className="scroll-mt-24 lg:sticky lg:top-24 lg:self-start space-y-4 lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto"
             >
               <div className="site-surface rounded-site-lg p-6 space-y-5">
@@ -475,7 +542,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   Indian GST applies. Razorpay receipt issued on payment.
                 </p>
               </div>
-            </aside>
+            </section>
           </div>
         </div>
       </section>
@@ -497,9 +564,11 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 function SubSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-site-h3 font-site-display font-bold text-site-text mb-5">
+      {/* h2 (and h3 for the items inside): these follow the page's h1
+          directly, so an h3 here skipped a level. */}
+      <h2 className="text-site-h3 font-site-display font-bold text-site-text mb-5">
         {title}
-      </h3>
+      </h2>
       <div className="site-surface rounded-site-lg p-6 md:p-8">{children}</div>
     </div>
   );
@@ -515,8 +584,11 @@ function MobileStickyBar({
   price: string;
   originalPrice?: string;
 }) {
+  // The right padding keeps "Book now" clear of the chat bubble, which sits
+  // over the bar's bottom-right corner (the cookie banner reserves the same
+  // 88px). The bottom padding clears the home indicator on notched phones.
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-site-raised border-t border-site-line shadow-[0_-8px_24px_rgba(0,0,0,0.08)] p-3">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-site-raised border-t border-site-line shadow-[0_-8px_24px_rgba(0,0,0,0.08)] p-3 pr-[88px] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-3 max-w-screen-sm">
         <div className="flex flex-col">
           <div className="flex items-baseline gap-1.5">

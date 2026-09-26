@@ -24,6 +24,7 @@ import {
   transformProgramRow,
 } from '@/lib/admin/academy-types';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { OG_DEFAULTS } from '@/lib/seo';
 import { BATCH_CADENCE, batchSchedule, seatScarcity, type BatchSchedule } from '@/lib/academy/schedule';
 
 export const revalidate = 60;
@@ -36,6 +37,15 @@ export const metadata = {
   alternates: { canonical: '/academy' },
   description:
     'Learn digital marketing, performance ads, design, video editing and AI filmmaking in person, from the Freaking Minds agency team in Bhopal.',
+  // Without its own openGraph the page shared as the home page: root og:title
+  // and an og:url of '/'.
+  openGraph: {
+    ...OG_DEFAULTS,
+    title: 'FM Academy — Marketing, Design & Video Courses in Bhopal',
+    description:
+      'Six in-person courses from the Freaking Minds team: digital marketing, performance ads, design, video editing, AI filmmaking and web design.',
+    url: '/academy',
+  },
 };
 
 const BUNDLE_SLUG = 'creator-program-full';
@@ -160,8 +170,8 @@ export default async function AcademyPage() {
                 Or pick a single course.
               </h2>
               <p className="text-base md:text-lg text-site-muted leading-relaxed">
-                Want to go deep on just one craft? Each course runs as its own cohort
-                in the same batch — pick the one that fits where you&apos;re heading.
+                Want to go deep on one craft? Each course runs as its own cohort in the same
+                batch, so pick the one that fits where you&apos;re heading.
               </p>
             </div>
 
@@ -294,14 +304,16 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
             </span>
           </div>
 
-          <h3 className="d" style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.8rem)', marginTop: 16 }}>
+          {/* h2: the first heading after the page's h1 (an h3 skipped a level).
+              The inline size keeps it looking exactly as before. */}
+          <h2 className="d" style={{ fontSize: 'clamp(1.7rem, 3.2vw, 2.8rem)', marginTop: 16 }}>
             The full Creator Program
-          </h3>
+          </h2>
 
           <p className="mt-6 font-site-sans text-site-lead text-site-muted lay-measure">
             Everything in one batch &mdash; digital marketing, performance ads, design, video
             editing, AI filmmaking and web design.
-            {saving && <> Save {saving} against buying the courses individually.</>}
+            {saving && <> Save {saving} on buying the six separately.</>}
           </p>
 
           <ul
@@ -309,8 +321,8 @@ function BundleCard({ p, saving }: { p: Program; saving: string | null }) {
             style={{ listStyle: 'none', padding: 0, margin: '2rem 0 0' }}
           >
             {[
-              'All 6 modules',
-              'Single integrated certificate',
+              'All six courses',
+              'One certificate',
               `Small batch (${p.seatsTotal} seats)`,
             ].map((item) => (
               <li key={item} className="inline-flex items-center gap-2 font-site-sans text-site-label text-site-muted">

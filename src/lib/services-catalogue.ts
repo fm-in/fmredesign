@@ -49,7 +49,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     tagline: 'Get found. Get chosen.',
     navDesc: 'Dominate search results',
     description:
-      'Dominate search results with our data-driven SEO strategies. We optimize your website for visibility, traffic, and conversions.',
+      'Technical fixes, content and links that move you up for the searches your customers already make.',
     features: [
       'Keyword Research & Strategy',
       'On-page & Technical SEO',
@@ -68,7 +68,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     tagline: 'Stop posting. Start connecting.',
     navDesc: 'Build engaged communities',
     description:
-      'Build engaged communities and drive brand awareness across all major social platforms with strategic content and campaigns.',
+      'A plan for each platform, content people stop for, and a community that someone actually answers.',
     features: [
       'Social Media Strategy',
       'Content Creation & Curation',
@@ -87,7 +87,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     tagline: 'Every rupee. Maximum impact.',
     navDesc: 'ROI-focused campaigns',
     description:
-      'Maximize your ROI with targeted PPC campaigns across Google Ads, Facebook, and other platforms.',
+      'Search and social ad campaigns on Google and Meta, run against a target you agree up front.',
     features: [
       'Google Ads Management',
       'Facebook & Instagram Ads',
@@ -106,7 +106,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     tagline: 'Look unforgettable.',
     navDesc: 'Unforgettable visuals',
     description:
-      'Create compelling visual identities and marketing materials that resonate with your target audience.',
+      'Positioning, logo, typography and guidelines: a system your team can use without us.',
     features: [
       'Brand Identity Design',
       'Logo & Visual Guidelines',
@@ -125,7 +125,7 @@ export const SERVICES: readonly ServiceEntry[] = [
     tagline: 'Fast. Beautiful. Converting.',
     navDesc: 'Fast, beautiful sites',
     description:
-      'Build fast, responsive, and conversion-optimized websites that serve as powerful marketing tools.',
+      'Fast, mobile-first websites built to turn visits into enquiries and sales.',
     features: [
       'Responsive Web Design',
       'E-commerce Development',
@@ -140,11 +140,11 @@ export const SERVICES: readonly ServiceEntry[] = [
     id: 'content',
     icon: Video,
     name: 'Content & Video',
-    title: 'Content Production',
+    title: 'Content & Video Production',
     tagline: 'Stories that sell.',
     navDesc: 'Stories that convert',
     description:
-      'Engage your audience with high-quality content that tells your brand story and drives action.',
+      'Films, reels, posts and articles, planned together so each one does a job.',
     features: [
       'Content Strategy',
       'Blog Writing & SEO Content',

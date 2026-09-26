@@ -123,7 +123,7 @@ const CAPABILITY = [
   ['seo', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.'],
   ['social', 'Stop posting. Start connecting.', 'Thumb-stopping content that turns followers into customers.'],
   ['performance', 'Every rupee. Maximum impact.', 'Focused paid campaigns that deliver qualified leads and protect your ROI.'],
-  ['branding', 'Look unforgettable.', 'Visual identities that capture attention, build trust, and make competitors jealous.'],
+  ['branding', 'Look unforgettable.', 'Identities that make a brand easy to spot and hard to forget.'],
   ['web', 'Fast. Beautiful. Converting.', 'Responsive, conversion-first websites that work as marketing tools.'],
   ['content', 'Stories that sell.', 'From scroll-stopping videos to blogs that rank: content that drives action.'],
 ] as const;
@@ -131,8 +131,8 @@ const CAPABILITY = [
 const PILLARS = [
   ['A', 'SEO that actually works', 'First-page rankings and quality leads, not vanity traffic.'],
   ['B', 'Social that converts', 'Communities built on content people stop for, then buy from.'],
-  ['C', 'Performance you can measure', 'We obsess over your metrics so you can obsess over your business.'],
-  ['D', 'A brand people remember', 'Complete visual systems that leave a lasting impression.'],
+  ['C', 'Performance you can measure', 'Spend tracked to leads and sales, and reported every month.'],
+  ['D', 'A brand people remember', 'Complete visual systems, from the logo to the packaging.'],
 ] as const;
 
 const TEAM = [
@@ -192,7 +192,7 @@ export default async function Home() {
           </p>
           <div className="hero-actions">
             <Link className="btn btn--primary" href="/get-started">
-              Get a free strategy call
+              Start a project
             </Link>
             <Link className="btn btn--ghost" href="/work">
               See our work
@@ -345,7 +345,7 @@ export default async function Home() {
                 </h2>
               </div>
               <p className="lede" style={{ maxWidth: '38ch' }}>
-                We don&rsquo;t chase rankings. We build growth that puts you in front of customers
+                We don&rsquo;t chase vanity numbers. We put you in front of customers who are
                 already looking for you.
               </p>
             </div>
@@ -477,7 +477,7 @@ export default async function Home() {
               </p>
               <div className="close-row">
                 <Link className="btn btn--primary" href="/get-started">
-                  Book a strategy call
+                  Start a project
                 </Link>
               </div>
             </div>

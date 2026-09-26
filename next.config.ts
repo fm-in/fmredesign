@@ -26,6 +26,28 @@ const nextConfig: NextConfig = {
         has: [{ type: 'host', value: '(.*)\\.vercel\\.app' }],
         headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
+      /*
+       * Private and per-recipient pages, on every host.
+       *
+       * Several of these render the root layout's metadata — `index, follow`
+       * and a canonical of '/' — because they are client components with no
+       * metadata of their own: /shared/<token> was indexable, and so was the
+       * admin login page /admin redirects to. A header covers the whole path
+       * regardless of what any one page remembers to declare.
+       */
+      ...[
+        '/admin/:path*',
+        '/client/:path*',
+        '/api/:path*',
+        '/shared/:path*',
+        '/talent/:path*',
+        '/unsubscribe',
+        '/creativeminds/login',
+        '/creativeminds/portal/:path*',
+      ].map((source) => ({
+        source,
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
+      })),
     ];
   },
   async redirects() {
@@ -34,6 +56,9 @@ const nextConfig: NextConfig = {
       { source: '/career', destination: '/creativeminds', permanent: true },
       { source: '/connect', destination: '/contact', permanent: true },
       { source: '/know-us', destination: '/about', permanent: true },
+      // /diagnostic was a design-system test page on main, removed in the
+      // redesign. The scorecard is the site's public "diagnostic" now.
+      { source: '/diagnostic', destination: '/scorecard', permanent: true },
       // FM Academy — the original single Creator Program was split into six
       // courses plus a bundle on 2026-06-01 (6557b0d). Temporary at the time
       // in case it came back; two and a half months on it has taken no

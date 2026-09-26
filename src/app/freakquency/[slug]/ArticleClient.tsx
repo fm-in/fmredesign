@@ -22,7 +22,7 @@ interface BlogPostClientProps {
 
 export default function BlogPostClient({ post, related }: BlogPostClientProps) {
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareText = `${post.title} - FreakingMinds Blog`;
+  const shareText = `${post.title} — Freaking Minds`;
   const formattedDate = new Date(post.date).toLocaleDateString('en-IN', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
@@ -146,7 +146,7 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
         <section className="relative z-10 py-site-section">
           <div className="site-measure site-measure--narrow">
             <h2 className="font-site-display text-2xl md:text-3xl font-bold text-site-text mb-8">
-              Related Articles
+              Related articles
             </h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {related.map((r) => (
@@ -175,18 +175,18 @@ export default function BlogPostClient({ post, related }: BlogPostClientProps) {
         <div className="site-measure site-measure--narrow">
           <div className="site-surface rounded-site-lg p-10 lg:p-6 md:p-8">
             <h2 className="font-site-display text-3xl md:text-4xl font-bold text-site-text mb-6 leading-tight">
-              Ready to Grow Your <span className="text-site-accent">Business</span>?
+              Ready to grow your <span className="text-site-accent">business</span>?
             </h2>
             <p className="text-site-muted mb-8 lay-measure">
-              Turn these insights into action. Our team can help you implement proven strategies that drive real results.
+              Want help putting this to work? Tell us what you are trying to move and we will tell you what it takes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/get-started" className="btn btn--primary">
-                Get a Free Consultation
+                Start a project
                 <ArrowRight className="w-5 h-5" />
               </Link>
               <Link href="/contact" className="btn btn--ghost">
-                Talk to Us
+                Ask a question
               </Link>
             </div>
           </div>

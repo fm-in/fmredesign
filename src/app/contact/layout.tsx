@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     ...OG_DEFAULTS,
     title: 'Contact Freaking Minds — Free Marketing Consultation',
-    description: 'Get in touch for a free consultation. Call, email, or book a meeting with our team.',
+    description: 'Email, WhatsApp or send us a brief — we reply within 24 hours.',
     url: '/contact',
   },
 };

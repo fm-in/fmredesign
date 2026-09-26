@@ -9,6 +9,18 @@
  * Renders no state and runs no script: playback is owned by whoever lays the
  * films out (`playWhileVisible`, or a scroll scene).
  */
+/**
+ * Films with a 360p encode in /public/videos/sm/. `bhopal_manthan` has none:
+ * its full file is already ~120 KB, and a `<source>` pointing at a missing
+ * file costs phones a 404 before the fallback.
+ */
+const SMALL = new Set(['adi', 'astroo_apaar', 'concept_studio', 'giovanni', 'kanha', 'renny', 'skr_group']);
+
+/** The phone-sized source for a film, or null when it has none. */
+export function smallFilmSrc(id: string): string | null {
+  return SMALL.has(id) ? `/videos/sm/${id}.mp4` : null;
+}
+
 export function FilmVideo({
   id,
   className,
@@ -19,6 +31,7 @@ export function FilmVideo({
   className?: string;
   preload?: 'none' | 'metadata' | 'auto';
 }) {
+  const small = smallFilmSrc(id);
   return (
     <video
       className={className}
@@ -29,7 +42,7 @@ export function FilmVideo({
       preload={preload}
       aria-hidden
     >
-      <source media="(max-width: 700px)" src={`/videos/sm/${id}.mp4`} type="video/mp4" />
+      {small && <source media="(max-width: 700px)" src={small} type="video/mp4" />}
       <source src={`/videos/${id}.mp4`} type="video/mp4" />
     </video>
   );

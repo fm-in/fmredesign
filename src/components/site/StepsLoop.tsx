@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { playWhileVisible } from '@/lib/motion';
+import { playWhileVisible, preloadWhenNear } from '@/lib/motion';
 
 export interface Step {
   step: string;
@@ -36,6 +36,7 @@ export function StepsLoop({
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
+    const stopPreload = preloadWhenNear([video]);
     const stop = playWhileVisible([video], 1);
     let raf = 0;
     const tick = () => {
@@ -48,6 +49,7 @@ export function StepsLoop({
     };
     raf = requestAnimationFrame(tick);
     return () => {
+      stopPreload();
       stop();
       cancelAnimationFrame(raf);
     };
@@ -67,7 +69,9 @@ export function StepsLoop({
         ))}
       </ol>
       <figure className="steps-frame" aria-hidden>
-        <video ref={ref} poster={`${src}-poster.jpg`} muted playsInline loop preload="auto" width={544} height={680}>
+        {/* `none` until `preloadWhenNear` raises it to `auto` a screen ahead:
+            the loop still arrives whole before it plays (see ServiceLoop). */}
+        <video ref={ref} poster={`${src}-poster.jpg`} muted playsInline loop preload="none" width={544} height={680}>
           <source src={`${src}.mp4`} type="video/mp4" />
         </video>
       </figure>

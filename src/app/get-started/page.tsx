@@ -35,14 +35,14 @@ import { COMPANY_WHATSAPP_URL } from '@/lib/company';
 import { track } from '@/lib/analytics/events';
 
 const PROJECT_TYPES: { value: ProjectType; label: string; description: string; icon: string }[] = [
-  { value: 'website_design', label: 'Website Design', description: 'Custom website or redesign', icon: '🌐' },
-  { value: 'ecommerce', label: 'E-commerce Store', description: 'Online store with payments', icon: '🛒' },
-  { value: 'web_app', label: 'Web Application', description: 'Custom web-based software', icon: '💻' },
-  { value: 'mobile_app', label: 'Mobile App', description: 'iOS/Android application', icon: '📱' },
-  { value: 'branding', label: 'Branding & Identity', description: 'Logo, brand guidelines', icon: '🎨' },
-  { value: 'digital_marketing', label: 'Digital Marketing', description: 'SEO, PPC, social media', icon: '📈' },
-  { value: 'full_service', label: 'Full Service', description: 'Complete digital transformation', icon: '🚀' },
-  { value: 'consultation', label: 'Consultation', description: 'Strategy and guidance', icon: '💡' }
+  { value: 'website_design', label: 'Website design', description: 'A new website or a redesign', icon: '🌐' },
+  { value: 'ecommerce', label: 'E-commerce store', description: 'Online store with payments', icon: '🛒' },
+  { value: 'web_app', label: 'Web application', description: 'Custom web-based software', icon: '💻' },
+  { value: 'mobile_app', label: 'Mobile app', description: 'iOS or Android app', icon: '📱' },
+  { value: 'branding', label: 'Brand identity', description: 'Logo and brand guidelines', icon: '🎨' },
+  { value: 'digital_marketing', label: 'Digital marketing', description: 'SEO, paid ads, social media', icon: '📈' },
+  { value: 'full_service', label: 'Full service', description: 'Strategy, creative and media together', icon: '🚀' },
+  { value: 'consultation', label: 'Consultation', description: 'Advice and a plan', icon: '💡' }
 ];
 
 const BUDGET_RANGES: { value: BudgetRange; label: string; popular?: boolean }[] = [
@@ -52,7 +52,7 @@ const BUDGET_RANGES: { value: BudgetRange; label: string; popular?: boolean }[] 
   { value: '50k_100k', label: '₹50,000 - ₹1,00,000', popular: true },
   { value: '100k_250k', label: '₹1,00,000 - ₹2,50,000' },
   { value: 'over_250k', label: 'Over ₹2,50,000' },
-  { value: 'not_disclosed', label: 'Prefer not to disclose' }
+  { value: 'not_disclosed', label: 'Prefer not to say' }
 ];
 
 const TIMELINES: { value: Timeline; label: string; urgent?: boolean }[] = [
@@ -61,17 +61,17 @@ const TIMELINES: { value: Timeline; label: string; urgent?: boolean }[] = [
   { value: '2_3_months', label: '2-3 months' },
   { value: '3_6_months', label: '3-6 months' },
   { value: '6_months_plus', label: '6+ months' },
-  { value: 'flexible', label: 'Timeline is flexible' }
+  { value: 'flexible', label: 'Flexible' }
 ];
 
 const COMPANY_SIZES: { value: CompanySize; label: string; icon: string }[] = [
-  { value: 'startup', label: 'Startup (1-10 employees)', icon: '🚀' },
-  { value: 'small_business', label: 'Small Business (11-50)', icon: '🏢' },
-  { value: 'medium_business', label: 'Medium Business (51-200)', icon: '🏬' },
+  { value: 'startup', label: 'Startup (1–10 people)', icon: '🚀' },
+  { value: 'small_business', label: 'Small business (11–50)', icon: '🏢' },
+  { value: 'medium_business', label: 'Mid-sized business (51–200)', icon: '🏬' },
   { value: 'enterprise', label: 'Enterprise (200+)', icon: '🏭' },
-  { value: 'agency', label: 'Agency/Consultant', icon: '🎯' },
+  { value: 'agency', label: 'Agency or consultant', icon: '🎯' },
   { value: 'nonprofit', label: 'Non-profit', icon: '❤️' },
-  { value: 'individual', label: 'Individual/Freelancer', icon: '👤' }
+  { value: 'individual', label: 'Individual or freelancer', icon: '👤' }
 ];
 
 // Modern input styling (inline to avoid Tailwind v4 cascade issues)
@@ -101,7 +101,7 @@ const selectStyle: React.CSSProperties = {
 
 const handleFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
   e.target.style.border = '1.5px solid var(--site-accent)';
-  e.target.style.boxShadow = '0 0 0 4px color-mix(in srgb, var(--site-accent) 0.0800%, transparent)';
+  e.target.style.boxShadow = '0 0 0 4px color-mix(in srgb, var(--site-accent) 22%, transparent)';
   e.target.style.background = '#fff';
 };
 
@@ -113,7 +113,7 @@ const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement |
 
 const handleErrorFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
   e.target.style.border = '1.5px solid var(--site-accent)';
-  e.target.style.boxShadow = '0 0 0 4px color-mix(in srgb, var(--site-accent) 0.0800%, transparent)';
+  e.target.style.boxShadow = '0 0 0 4px color-mix(in srgb, var(--site-accent) 22%, transparent)';
   e.target.style.background = '#fff';
 };
 
@@ -174,7 +174,7 @@ export default function GetStartedPage() {
       case 1:
         if (!formData.name?.trim()) newErrors.name = 'Name is required';
         if (!formData.email?.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
-          newErrors.email = 'Valid email is required';
+          newErrors.email = 'A valid email is required';
         }
         if (!formData.company?.trim()) newErrors.company = 'Company is required';
         break;
@@ -195,7 +195,7 @@ export default function GetStartedPage() {
         if (!formData.primaryChallenge?.trim() || formData.primaryChallenge.length < 5) {
           newErrors.primaryChallenge = 'Please describe your main challenge (at least 5 characters)';
         }
-        if (!formData.companySize) newErrors.companySize = 'Please select company size';
+        if (!formData.companySize) newErrors.companySize = 'Please select a company size';
         break;
     }
 
@@ -274,13 +274,13 @@ export default function GetStartedPage() {
             {/* Page Header */}
             <div style={{ marginBottom: '48px' }}>
               <div className="eyebrow">
-              <span className="tag">Start Your Project</span>
+              <span className="tag">Start a project</span>
             </div>
               <h1 className="text-site-h2 font-site-display font-bold text-site-text leading-tight" style={{ marginBottom: '16px' }}>
-                Let&apos;s Grow Your <span className="text-site-accent">Brand</span>
+                Let&apos;s grow your <span className="text-site-accent">brand</span>
               </h1>
               <p className="text-base md:text-lg text-site-muted leading-relaxed lay-measure">
-                Tell us about your project. We&apos;ll get back within 24 hours with a customized proposal.
+                Tell us about your project. We&apos;ll reply within 24 hours with a proposal written for you.
               </p>
             </div>
 
@@ -336,14 +336,14 @@ export default function GetStartedPage() {
                           Let&apos;s get to know you
                         </h2>
                         <p className="text-lg text-site-muted">
-                          Share your contact details so we can connect
+                          So we know who to reply to
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                            Your Name *
+                            Your name *
                           </label>
                           <input
                             type="text"
@@ -359,7 +359,7 @@ export default function GetStartedPage() {
 
                         <div>
                           <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                            Email Address *
+                            Email address *
                           </label>
                           <div className="relative">
                             <Mail className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-site-muted" />
@@ -378,7 +378,7 @@ export default function GetStartedPage() {
 
                         <div>
                           <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                            Company Name *
+                            Company name *
                           </label>
                           <div className="relative">
                             <Building className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-site-muted" />
@@ -397,7 +397,7 @@ export default function GetStartedPage() {
 
                         <div>
                           <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                            Phone Number
+                            Phone number
                           </label>
                           <div className="relative">
                             <Phone className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-site-muted" />
@@ -416,7 +416,7 @@ export default function GetStartedPage() {
 
                       <div>
                         <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                          Website (Optional)
+                          Website (optional)
                         </label>
                         <div className="relative">
                           <Globe className="w-5 h-5 absolute left-[14px] top-1/2 transform -translate-y-1/2 text-site-muted" />
@@ -445,13 +445,13 @@ export default function GetStartedPage() {
                           What do you need?
                         </h2>
                         <p className="text-lg text-site-muted">
-                          Tell us about your project requirements
+                          What you want to build, fix or grow
                         </p>
                       </div>
 
                       <div>
                         <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '24px' }}>
-                          Project Type *
+                          Project type *
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {PROJECT_TYPES.map((type) => (
@@ -479,7 +479,7 @@ export default function GetStartedPage() {
 
                       <div>
                         <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                          Project Description *
+                          Project description *
                         </label>
                         <textarea
                           value={formData.projectDescription || ''}
@@ -500,7 +500,7 @@ export default function GetStartedPage() {
 
                       <div>
                         <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                          Industry (Optional)
+                          Industry (optional)
                         </label>
                         <select
                           value={formData.industry || ''}
@@ -528,16 +528,16 @@ export default function GetStartedPage() {
                           <DollarSign className="w-8 h-8 text-site-accent" />
                         </div>
                         <h2 className="text-site-h3 font-bold text-site-text" style={{ marginBottom: '12px' }}>
-                          Budget & Timeline
+                          Budget and timeline
                         </h2>
                         <p className="text-lg text-site-muted">
-                          Help us create the perfect proposal for you
+                          So the proposal fits what you can spend
                         </p>
                       </div>
 
                       <div>
                         <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '24px' }}>
-                          Budget Range *
+                          Budget range *
                         </label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {BUDGET_RANGES.map((budget) => (
@@ -605,7 +605,7 @@ export default function GetStartedPage() {
                           Tell us your challenges
                         </h2>
                         <p className="text-lg text-site-muted">
-                          Understanding your pain points helps us deliver better solutions
+                          The more we know, the better the plan
                         </p>
                       </div>
 
@@ -627,7 +627,7 @@ export default function GetStartedPage() {
 
                       <div>
                         <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                          Any specific requirements? (Optional)
+                          Any specific requirements? (optional)
                         </label>
                         <textarea
                           value={formData.specificRequirements || ''}
@@ -642,7 +642,7 @@ export default function GetStartedPage() {
 
                       <div>
                         <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '24px' }}>
-                          Company Size *
+                          Company size *
                         </label>
                         <div className="space-y-3">
                           {COMPANY_SIZES.map((size) => (
@@ -667,7 +667,7 @@ export default function GetStartedPage() {
 
                       <div>
                         <label className="block text-sm font-semibold text-site-text" style={{ marginBottom: '12px' }}>
-                          Your Role at the Company (Optional)
+                          Your role (optional)
                         </label>
                         <input
                           type="text"
@@ -731,11 +731,11 @@ export default function GetStartedPage() {
                       {isSubmitting ? (
                         <>
                           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                          Submitting...
+                          Sending…
                         </>
                       ) : (
                         <>
-                          Submit Request
+                          Send brief
                           <ArrowRight className="w-5 h-5" />
                         </>
                       )}
@@ -749,10 +749,10 @@ export default function GetStartedPage() {
             <div className="site-surface rounded-site-lg p-6 md:p-8 lay-measure" style={{ marginBottom: '64px' }}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                 {[
-                  { icon: Zap, label:"24hr Response" },
-                  { icon: Target, label:"Custom Strategy" },
-                  { icon: BarChart3, label:"Data-Driven" },
-                  { icon: Gift, label:"Free Consultation" }
+                  { icon: Zap, label:"24-hour reply" },
+                  { icon: Target, label:"A plan for you" },
+                  { icon: BarChart3, label:"Priced up front" },
+                  { icon: Gift, label:"Free consultation" }
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
@@ -788,13 +788,13 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
             </div>
 
             <h1 className="text-site-h2 font-bold text-site-text mb-6">
-              Thank You, {formData.name}!
+              Thank you, {formData.name}.
             </h1>
 
             <p className="text-xl text-site-muted mb-10 leading-relaxed">
-              We&apos;ve received your project details and our expert team will get back to you within
+              We have your project details, and we will get back to you within
               <span className="font-semibold text-site-accent"> 24 hours </span>
-              with a customized proposal.
+              with a proposal.
             </p>
 
             {/* What's Next Section */}
@@ -802,10 +802,10 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
               <h3 className="font-bold text-site-text mb-6 text-xl">What happens next?</h3>
               <ul className="space-y-4">
                 {[
-                  { step: 1, title:"Expert Review", desc:"Our team will carefully analyze your requirements and challenges" },
-                  { step: 2, title:"Custom Proposal", desc:"We'll create a detailed proposal with timeline, strategy, and transparent pricing" },
-                  { step: 3, title:"Discovery Call", desc:"Schedule a call to discuss your project in detail and answer any questions" },
-                  { step: 4, title:"Project Kickoff", desc:"Start building your amazing project with our expert team!" }
+                  { step: 1, title:"We read it", desc:"The team goes through your brief and the problem behind it" },
+                  { step: 2, title:"Proposal", desc:"A written plan with the approach, timeline and price" },
+                  { step: 3, title:"Discovery call", desc:"A call to go through the plan and answer your questions" },
+                  { step: 4, title:"Kickoff", desc:"Work starts once the plan is agreed" }
                 ].map((item) => (
                   <li key={item.step} className="flex items-start space-x-4">
                     <div className="w-8 h-8 bg-site-accent-solid rounded-full flex items-center justify-center flex-shrink-0 mt-1">
@@ -827,11 +827,11 @@ function ThankYouStep({ formData }: { formData: Partial<LeadInput> }) {
                 prefill={{ name: formData.name, email: formData.email }}
                 className="btn btn--primary"
               >
-                Book your discovery call now
+                Book a discovery call
                 <ArrowRight className="w-5 h-5" />
               </CalButton>
               <Link href="/" className="btn btn--ghost">
-                Return to Homepage
+                Back to the homepage
               </Link>
 
               <p className="text-sm text-site-muted">

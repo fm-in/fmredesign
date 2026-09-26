@@ -110,7 +110,9 @@ export function ReelRow({ films }: { films: readonly ReelFilm[] }) {
         );
       })}
       {deck && (
-        <button type="button" className="reel-next" onClick={next} aria-label="Next film">
+        // No aria-label: the visible text ("Next film 01 / 04") is the name, so
+        // speech-input users can say what they see (WCAG 2.5.3).
+        <button type="button" className="reel-next" onClick={next}>
           Next film <span aria-hidden>&rarr;</span>
           <span className="reel-count">
             {String(order[0] + 1).padStart(2, '0')} / {String(films.length).padStart(2, '0')}

@@ -27,7 +27,7 @@ const CONTENTS = [
   '5. Data Security',
   '6. Data Retention',
   '7. Your Rights',
-  '8. Children&apos;s Privacy',
+  '8. Children’s Privacy',
   '9. Changes to This Policy',
   '10. Contact Us',
 ] as const;
@@ -152,7 +152,7 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section>
-              <h2>8. Children&apos;s Privacy</h2>
+              <h2>8. Children&rsquo;s Privacy</h2>
               <p>
                 Our services are not directed to individuals under the age of 18. We do not knowingly collect personal information from children. If you believe we have inadvertently collected such information, please contact us immediately.
               </p>

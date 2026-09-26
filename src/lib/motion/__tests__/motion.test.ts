@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { observeReveal, playWhileVisible, prefersReducedMotion } from '../index';
+import { observeReveal, playWhileVisible, preloadWhenNear, prefersReducedMotion } from '../index';
 
 /** Minimal IntersectionObserver stand-in — jsdom ships none. */
 class FakeObserver {
@@ -156,5 +156,35 @@ describe('playWhileVisible', () => {
     cleanup();
     expect(videos.every((v) => v.paused)).toBe(true);
     expect(FakeObserver.instances[0].disconnected).toBe(true);
+  });
+});
+
+describe('preloadWhenNear', () => {
+  it('raises preload to auto only once a video comes near, then stops watching it', () => {
+    const near = document.createElement('video');
+    const far = document.createElement('video');
+    near.preload = 'none';
+    far.preload = 'none';
+    preloadWhenNear([near, far]);
+    const observer = FakeObserver.instances[0];
+
+    observer.fire([
+      { target: near, isIntersecting: true },
+      { target: far, isIntersecting: false },
+    ]);
+
+    expect(near.preload).toBe('auto');
+    expect(far.preload).toBe('none');
+    expect(observer.observed).toEqual([far]);
+  });
+
+  it('fetches nothing under reduced motion — nothing will play', () => {
+    setReducedMotion(true);
+    const video = document.createElement('video');
+    video.preload = 'none';
+    preloadWhenNear([video]);
+
+    expect(video.preload).toBe('none');
+    expect(FakeObserver.instances).toHaveLength(0);
   });
 });

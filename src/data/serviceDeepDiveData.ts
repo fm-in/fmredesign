@@ -89,16 +89,16 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
       headline: 'Be Found When It Matters Most',
       tagline: 'Get found. Get chosen.',
       problemStatement:
-        'Your competitors are ranking above you — stealing clicks, leads, and revenue every single day. Without a strategic SEO plan, your website is invisible to the people actively searching for what you offer.',
+        'When a competitor ranks above you, they get the click, the lead and the sale. Without an SEO plan, your site stays invisible to the people already searching for what you offer.',
       stat: '93%',
       statLabel: 'of online experiences begin with a search engine',
     },
     whatWeDo: {
       intro:
-        'We build SEO strategies that compound over time — turning organic search into your most reliable growth channel.',
+        'We build SEO that compounds over time, so organic search becomes the channel you can count on.',
       pillars: [
         {
-          name: 'Technical Foundation',
+          name: 'Technical foundation',
           deliverables: [
             'Site architecture audit',
             'Core Web Vitals optimization',
@@ -107,7 +107,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Content & Keywords',
+          name: 'Content & keywords',
           deliverables: [
             'Keyword gap analysis',
             'Content calendar creation',
@@ -116,7 +116,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Authority Building',
+          name: 'Authority building',
           deliverables: [
             'Backlink acquisition',
             'Digital PR campaigns',
@@ -131,22 +131,22 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'SEO works for every business that wants sustainable, long-term organic growth.',
       personas: [
         {
-          title: 'E-commerce Brands',
+          title: 'E-commerce brands',
           description: 'Product pages that rank and convert organic shoppers.',
           painPoint: 'Lost in a sea of competitors on page 2+',
         },
         {
-          title: 'Local Businesses',
-          description: 'Dominate local search and Google Maps in your area.',
+          title: 'Local businesses',
+          description: 'Show up in local search and on Google Maps near you.',
           painPoint: 'Invisible to nearby customers searching right now',
         },
         {
-          title: 'B2B Companies',
+          title: 'B2B companies',
           description: 'Capture high-intent decision-makers researching solutions.',
           painPoint: 'Relying solely on paid ads for leads',
         },
         {
-          title: 'Startups & Scale-ups',
+          title: 'Startups & scale-ups',
           description: 'Build organic visibility from day one for compounding growth.',
           painPoint: 'Zero organic traffic and brand awareness',
         },
@@ -204,16 +204,16 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
       headline: 'Stop Posting. Start Connecting.',
       tagline: 'Build communities, not just followers.',
       problemStatement:
-        'Posting without a strategy is just noise. Your audience scrolls past generic content every day. Without genuine engagement and strategic storytelling, your social presence is a missed opportunity.',
+        'Posting without a plan is noise. Your audience scrolls past generic content all day, and a feed that never starts a conversation is a missed opportunity.',
       stat: '4.9B',
       statLabel: 'people use social media worldwide',
     },
     whatWeDo: {
       intro:
-        'We turn social channels into engines for community, brand love, and measurable business growth.',
+        'We run social as a business channel: a community that trusts you, and numbers you can see.',
       pillars: [
         {
-          name: 'Strategy & Planning',
+          name: 'Strategy & planning',
           deliverables: [
             'Platform-specific strategy',
             'Audience research & personas',
@@ -222,7 +222,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Content Creation',
+          name: 'Content creation',
           deliverables: [
             'Scroll-stopping visuals',
             'Short-form video (Reels/Shorts)',
@@ -231,7 +231,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Growth & Engagement',
+          name: 'Growth & engagement',
           deliverables: [
             'Community management',
             'Influencer collaborations',
@@ -246,22 +246,22 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'Social media is for brands that want real connection — not vanity metrics.',
       personas: [
         {
-          title: 'D2C Brands',
+          title: 'D2C brands',
           description: 'Build brand loyalty and drive direct sales through social.',
           painPoint: 'Low engagement despite posting regularly',
         },
         {
-          title: 'Restaurants & Hospitality',
-          description: 'Showcase your vibe and drive foot traffic.',
+          title: 'Restaurants & hospitality',
+          description: 'Show what a visit feels like, and bring people through the door.',
           painPoint: 'Inconsistent posting with no clear strategy',
         },
         {
-          title: 'Personal Brands',
-          description: 'Position yourself as a thought leader in your space.',
+          title: 'Personal brands',
+          description: 'Become the name people think of in your field.',
           painPoint: 'No time to create and manage content',
         },
         {
-          title: 'E-commerce Stores',
+          title: 'E-commerce stores',
           description: 'Turn followers into buyers with shoppable content.',
           painPoint: 'High follower count but low conversions',
         },
@@ -319,16 +319,16 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
       headline: 'Every Rupee. Maximum Impact.',
       tagline: 'Targeted ads that deliver ROI.',
       problemStatement:
-        'Without expert management, paid ads burn budget fast. Poor targeting, weak copy, and unoptimized landing pages mean you\'re paying for clicks that never convert.',
+        'Paid ads burn budget fast when nobody is watching them. Loose targeting, weak copy and slow landing pages mean you pay for clicks that never convert.',
       stat: '65%',
       statLabel: 'of high-intent searches result in an ad click',
     },
     whatWeDo: {
       intro:
-        'We engineer paid campaigns that turn ad spend into predictable, profitable growth.',
+        'We build paid campaigns where every rupee of spend can be traced to a lead or a sale.',
       pillars: [
         {
-          name: 'Search Ads',
+          name: 'Search ads',
           deliverables: [
             'Google Ads management',
             'Keyword bidding strategy',
@@ -337,7 +337,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Social Ads',
+          name: 'Social ads',
           deliverables: [
             'Facebook & Instagram Ads',
             'LinkedIn B2B campaigns',
@@ -361,22 +361,22 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'PPC is for businesses that want fast, measurable results from their ad spend.',
       personas: [
         {
-          title: 'E-commerce Brands',
+          title: 'E-commerce brands',
           description: 'Drive product sales with Shopping and search campaigns.',
           painPoint: 'High ad spend but low ROAS',
         },
         {
-          title: 'Lead-Gen Businesses',
+          title: 'Lead-gen businesses',
           description: 'Fill your pipeline with qualified leads at scale.',
           painPoint: 'Inconsistent lead flow and high CPL',
         },
         {
-          title: 'Funded Startups',
+          title: 'Funded startups',
           description: 'Scale user acquisition with data-driven paid growth.',
           painPoint: 'Need rapid growth but burning through budget',
         },
         {
-          title: 'Service Businesses',
+          title: 'Service businesses',
           description: 'Capture local demand and book more appointments.',
           painPoint: 'Competitors outbidding you on every keyword',
         },
@@ -440,10 +440,10 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
     },
     whatWeDo: {
       intro:
-        'We craft brand identities that are impossible to ignore — from strategy to every visual touchpoint.',
+        'We design identities from the strategy up, and carry them through to every place your brand appears.',
       pillars: [
         {
-          name: 'Brand Strategy',
+          name: 'Brand strategy',
           deliverables: [
             'Brand positioning & messaging',
             'Audience & competitor analysis',
@@ -452,7 +452,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Visual Identity',
+          name: 'Visual identity',
           deliverables: [
             'Logo design & variations',
             'Color palette & typography',
@@ -461,7 +461,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Marketing Design',
+          name: 'Marketing design',
           deliverables: [
             'Social media templates',
             'Business card & stationery',
@@ -481,17 +481,17 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           painPoint: 'DIY branding that looks amateur',
         },
         {
-          title: 'Rebranding Companies',
+          title: 'Companies rebranding',
           description: 'Refresh your identity to match your evolved business.',
           painPoint: 'Outdated brand that no longer represents you',
         },
         {
-          title: 'Product Brands',
+          title: 'Product brands',
           description: 'Stand out on shelves and screens with cohesive design.',
           painPoint: 'Inconsistent visuals across touchpoints',
         },
         {
-          title: 'Personal Brands',
+          title: 'Personal brands',
           description: 'Build a professional visual identity for your personal brand.',
           painPoint: 'No cohesive look across platforms',
         },
@@ -549,13 +549,13 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
       headline: 'Fast. Beautiful. Converting.',
       tagline: 'Websites that work as hard as you do.',
       problemStatement:
-        'A slow, outdated, or poorly designed website isn\'t just embarrassing — it\'s costing you customers. Every second of load time, every confusing layout, drives potential buyers straight to competitors.',
+        'A slow, dated or confusing website is not just embarrassing: it costs you customers. Every extra second of load time sends buyers to a competitor.',
       stat: '88%',
       statLabel: 'of users won\'t return after a bad website experience',
     },
     whatWeDo: {
       intro:
-        'We build websites that look stunning, load fast, and convert visitors into customers.',
+        'We build websites that look right, load fast and turn visitors into enquiries.',
       pillars: [
         {
           name: 'Design & UX',
@@ -591,12 +591,12 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'A great website is the foundation of every digital strategy.',
       personas: [
         {
-          title: 'Outdated Websites',
+          title: 'Businesses with an old site',
           description: 'Modernize your site to match your brand and goals.',
           painPoint: 'Website looks like it\'s from 2015',
         },
         {
-          title: 'E-commerce Businesses',
+          title: 'E-commerce businesses',
           description: 'Build a store that handles traffic spikes and converts.',
           painPoint: 'Cart abandonment rates through the roof',
         },
@@ -606,7 +606,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           painPoint: 'Need a professional web presence quickly',
         },
         {
-          title: 'B2B Companies',
+          title: 'B2B companies',
           description: 'Generate and nurture leads with a high-authority site.',
           painPoint: 'Website doesn\'t generate any leads',
         },
@@ -670,10 +670,10 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
     },
     whatWeDo: {
       intro:
-        'We create content ecosystems that attract, engage, and convert — across every format and channel.',
+        'We plan and make content people choose to watch and read, in every format your audience uses.',
       pillars: [
         {
-          name: 'Content Strategy',
+          name: 'Content strategy',
           deliverables: [
             'Content audit & gap analysis',
             'Editorial calendar creation',
@@ -682,7 +682,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Written Content',
+          name: 'Written content',
           deliverables: [
             'Blog posts & articles',
             'Case studies & whitepapers',
@@ -691,7 +691,7 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
           ],
         },
         {
-          name: 'Video & Visual',
+          name: 'Video & visual',
           deliverables: [
             'Brand videos & ads',
             'Social media reels',
@@ -706,22 +706,22 @@ export const serviceDeepDiveData: ServiceDeepDive[] = [
         'Content marketing works for any brand ready to invest in long-term audience growth.',
       personas: [
         {
-          title: 'B2B Companies',
+          title: 'B2B companies',
           description: 'Establish thought leadership and nurture leads with content.',
           painPoint: 'Long sales cycles with no content to support them',
         },
         {
-          title: 'E-commerce Brands',
+          title: 'E-commerce brands',
           description: 'Drive organic traffic and reduce ad dependency with content.',
           painPoint: '100% reliant on paid traffic for sales',
         },
         {
-          title: 'Personal Brands',
+          title: 'Personal brands',
           description: 'Build authority and grow your audience with consistent content.',
           painPoint: 'Great expertise but no content to show for it',
         },
         {
-          title: 'Service Businesses',
+          title: 'Service businesses',
           description: 'Attract local customers with helpful, trust-building content.',
           painPoint: 'No online content to differentiate from competitors',
         },

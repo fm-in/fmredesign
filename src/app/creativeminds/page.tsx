@@ -28,19 +28,19 @@ import {
 
 const bentoCategories = [
   {
-    name: 'Creative Design', description: 'Visual identity & branding',
+    name: 'Design', description: 'Visual identity & branding',
   },
   {
     name: 'Development', description: 'Web & app development',
   },
   {
-    name: 'Video Production', description: 'Motion graphics & reels',
+    name: 'Video production', description: 'Motion graphics & reels',
   },
   {
-    name: 'Content Creation', description: 'Blogs, scripts & strategy',
+    name: 'Content creation', description: 'Blogs, scripts & strategy',
   },
   {
-    name: 'Digital Marketing', description: 'SEO, PPC & campaigns',
+    name: 'Digital marketing', description: 'SEO, paid ads & campaigns',
   },
   {
     name: 'Influencer & Social', description: 'Creators & community',
@@ -50,8 +50,8 @@ const bentoCategories = [
 const moreCategories = [
   { icon: Camera, name: 'Photography' },
   { icon: Type, name: 'Copywriting' },
-  { icon: Briefcase, name: 'Project Management' },
-  { icon: LineChart, name: 'Business Consulting' },
+  { icon: Briefcase, name: 'Project management' },
+  { icon: LineChart, name: 'Business consulting' },
 ];
 
 const processSteps = [
@@ -62,36 +62,36 @@ const processSteps = [
 
 const creativeBenefits = [
   {
-    title: 'Real Brand Projects',
+    title: 'Real brand projects',
     description: 'Work with actual businesses who have real budgets — not someone offering “exposure” as payment.',
   },
   {
-    title: 'No Bidding Wars',
+    title: 'No bidding wars',
     description: 'We match you to projects based on your skills, not who bids lowest. Your portfolio is your pitch.',
   },
   {
-    title: 'Agency Team Behind You',
+    title: 'An agency behind you',
     description: 'You\'re not alone. Project managers, creative directors, and a full agency backing your work.',
   },
   {
-    title: 'Your Own Profile Page',
+    title: 'Your own profile page',
     description: 'Get a public talent profile that showcases your work to clients worldwide.',
   },
   {
-    title: 'Fast Onboarding',
-    description: 'Apply today, get reviewed in 48 hours, start working on projects right away.',
+    title: 'Fast review',
+    description: 'Apply today, hear back within 48 hours, and get matched as projects come in.',
   },
   {
-    title: 'Grow With Us',
+    title: 'Grow with us',
     description: 'As you deliver great work, you get access to bigger projects and better clients.',
   },
 ];
 
 const talentPerks = [
-  { icon: Briefcase, title: 'Real Brand Projects' },
-  { icon: Globe, title: 'Public Profile Page' },
-  { icon: ShieldCheck, title: 'No Bidding Wars' },
-  { icon: Users, title: 'Agency Backing' },
+  { icon: Briefcase, title: 'Real brand projects' },
+  { icon: Globe, title: 'Public profile page' },
+  { icon: ShieldCheck, title: 'No bidding wars' },
+  { icon: Users, title: 'Agency backing' },
 ];
 
 /* ─── Page ───────────────────────────────────────────────────────── */
@@ -178,7 +178,7 @@ export default function CreativeMindsPage() {
 
                 <ul className="cap" style={{ listStyle: 'none', padding: 0, margin: '3rem 0 0' }}>
                   {[
-                    'Application review, within 24–48 hours',
+                    'Application review, within 48 hours',
                     'Portfolio verification',
                     'Welcome to the network, and first project opportunities',
                   ].map((text, i) => (
@@ -218,7 +218,7 @@ export default function CreativeMindsPage() {
           <div className="lay-split">
             <div>
               <div className="eyebrow">
-                <span className="tag tag--a">CreativeMinds by FreakingMinds</span>
+                <span className="tag tag--a">CreativeMinds by Freaking Minds</span>
               </div>
 
               <h1 className="d" style={{ maxWidth: '15ch' }}>
@@ -235,11 +235,11 @@ export default function CreativeMindsPage() {
                   onClick={() => setShowApplicationForm(true)}
                   className="group btn btn--primary"
                 >
-                  Apply to Join
+                  Apply to join
                   <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
                 </button>
                 <Link href="/get-started" className="btn btn--ghost">
-                  Hire Talent Instead
+                  Hire talent instead
                 </Link>
               </div>
 
@@ -247,7 +247,7 @@ export default function CreativeMindsPage() {
                 className="flex flex-wrap gap-x-6 gap-y-3"
                 style={{ listStyle: 'none', padding: 0, margin: '2.5rem 0 0' }}
               >
-                {['Portfolio-reviewed talent', 'Backed by the FreakingMinds agency', '48-hour application review'].map((item) => (
+                {['Portfolio-reviewed talent', 'Backed by the Freaking Minds agency', '48-hour application review'].map((item) => (
                   <li key={item} className="flex items-center gap-2 font-site-sans text-site-label text-site-muted">
                     <Check className="w-4 h-4 text-site-accent" aria-hidden />
                     <span>{item}</span>
@@ -312,7 +312,7 @@ export default function CreativeMindsPage() {
             {/* Left: Copy */}
             <div>
               <div className="eyebrow">
-              <span className="tag">We Need You</span>
+              <span className="tag">We need you</span>
             </div>
 
               <h2 className="d" style={{ fontSize: 'clamp(1.9rem, 3.6vw, 3.2rem)', marginTop: 18, marginBottom: 24 }}>
@@ -325,7 +325,7 @@ export default function CreativeMindsPage() {
               </p>
 
               <div className="flex flex-wrap gap-x-6 gap-y-3 mb-10">
-                {['All Skill Levels Welcome', 'Global Talent Pool', 'Portfolio-Based Review'].map((item) => (
+                {['All skill levels welcome', 'Open to talent anywhere', 'Portfolio-based review'].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm text-site-muted">
                     <Check className="w-4 h-4 text-site-accent" />
                     <span>{item}</span>
@@ -338,7 +338,7 @@ export default function CreativeMindsPage() {
                   onClick={() => setShowApplicationForm(true)}
                   className="btn btn--primary"
                 >
-                  Apply Now
+                  Apply to join
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
@@ -446,7 +446,7 @@ export default function CreativeMindsPage() {
                   onClick={() => setShowApplicationForm(true)}
                   className="group btn btn--primary"
                 >
-                  Apply to Join
+                  Apply to join
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>

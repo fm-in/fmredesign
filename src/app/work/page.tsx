@@ -21,9 +21,9 @@ import { PORTFOLIO, VIDEO_WORK, isUnnamedClient } from '@/lib/portfolio';
  * wall, which brings its own.
  */
 export const metadata: Metadata = {
-  title: 'Work',
+  title: 'Our Work — Websites, Films & Campaigns',
   description:
-    'Websites, brand films, campaigns and identities for Radisson, Jio Studios, Dainik Bhaskar, SKR Group and others.',
+    'Websites, brand films, campaigns and identities for Radisson, Jio Studios, Dainik Bhaskar, SKR Group and others — made by one team at Freaking Minds in Bhopal.',
   alternates: { canonical: '/work' },
 };
 
@@ -61,12 +61,12 @@ export default function WorkPage() {
           centre={3}
           end={
             <>
-              <p className="lwall-end-h">Real results for real brands.</p>
+              <p className="lwall-end-h">Real work for real brands.</p>
               <p className="lede">Films, sites and campaigns, made by one team. All of it below.</p>
             </>
           }
         >
-          <h1 className="d">Real results for real brands.</h1>
+          <h1 className="d">Real work for real brands.</h1>
           <p className="lede">
             {PORTFOLIO.websites.length} live sites, {VIDEO_WORK.length} films, and the campaign and
             identity work behind them.
@@ -196,7 +196,7 @@ export default function WorkPage() {
                 href="/services"
                 className="link-u"
               >
-                See what we do
+                See our services
               </Link>
             </div>
               </div>

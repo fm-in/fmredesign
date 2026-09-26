@@ -63,7 +63,7 @@ describe('CookieConsent', () => {
     expect(consentUpdates()).toEqual([
       ['consent', 'update', expect.objectContaining({ analytics_storage: 'denied', ad_storage: 'denied' })],
     ]);
-    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Cookie consent' })).toBeNull();
   });
 
   it('Accept grants consent', () => {
@@ -78,13 +78,13 @@ describe('CookieConsent', () => {
     window.localStorage.setItem(CONSENT_KEY, 'granted');
     render(<CookieConsent />);
     act(() => void vi.advanceTimersByTime(1600));
-    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Cookie consent' })).toBeNull();
   });
 
   it('asks again visitors who only saw the old, non-functional banner', () => {
     window.localStorage.setItem('fm-cookie-consent', 'accepted');
     render(<CookieConsent />);
     act(() => void vi.advanceTimersByTime(1600));
-    expect(screen.getByRole('dialog')).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Cookie consent' })).toBeTruthy();
   });
 });

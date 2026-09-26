@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { readConsent, saveConsent, type ConsentChoice } from '@/lib/analytics/consent';
 
 /**
@@ -16,6 +16,7 @@ import { readConsent, saveConsent, type ConsentChoice } from '@/lib/analytics/co
  */
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let stored: ConsentChoice | null = null;
@@ -30,6 +31,22 @@ export function CookieConsent() {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  /*
+   * While the card is up, keep keyboard focus out from under it (WCAG 2.4.11).
+   * Tabbing scrolls the focused link only just into view, which on this site
+   * put it behind the card; scroll padding makes the browser stop short of it.
+   */
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!visible || !card) return;
+    const root = document.documentElement;
+    const previous = root.style.scrollPaddingBottom;
+    root.style.scrollPaddingBottom = `${card.offsetHeight + 24}px`;
+    return () => {
+      root.style.scrollPaddingBottom = previous;
+    };
+  }, [visible]);
 
   const choose = (choice: ConsentChoice) => {
     try {
@@ -50,8 +67,11 @@ export function CookieConsent() {
   // screen on phones, with the chat bubble sitting on its Accept button. The
   // right edge stops short of the bubble's corner at every width.
   return (
+    // A region, not a dialog: it takes no focus and blocks nothing, and
+    // "dialog" told screen readers to expect a modal they were not in.
     <div
-      role="dialog"
+      ref={cardRef}
+      role="region"
       aria-label="Cookie consent"
       className="fixed z-[9998]"
       style={{

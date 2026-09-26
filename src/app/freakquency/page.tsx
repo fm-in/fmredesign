@@ -24,7 +24,8 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   // The coined word earns recall; everything after the dash earns search.
-  title: 'Freakquency — Marketing News, Guides & Tools',
+  // ≤60 with the ' | Freaking Minds' suffix; the og:title below keeps "Tools".
+  title: 'Freakquency — Marketing News & Guides',
   description:
     'What actually happened in marketing this week, filtered — plus guides and tools for people who have to act on it. Curated by the Freaking Minds team.',
   alternates: { canonical: '/freakquency' },

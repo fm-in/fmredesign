@@ -285,8 +285,10 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
       {/* The masthead sits in `lay-measure`, a narrow column, so the right of
           the page is empty beside it. Absolute, so it cannot push the sticky
           stream bar below it out of place; hidden below lg, where the column
-          is the full width. */}
-      <div className="absolute right-0 top-24 hidden lg:block">
+          is the full width. Inset by the gutter, not flush: at right-0 the
+          tilted sticker poked 8px past the viewport between 1024 and 1380px
+          and made the page scroll sideways. */}
+      <div className="absolute right-site-gutter top-24 hidden lg:block">
         <BrainMark pose="creative" width={170} />
       </div>
       <div className="lay-measure" style={{ marginBottom: '32px' }}>
@@ -336,13 +338,15 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
             ) : (
               <button onClick={() => setSearchOpen(true)} aria-label="Search the feed"
                 className="p-2 rounded-full border border-site-line-soft bg-site-raised text-site-muted hover:border-site-line">
-                <Search className="w-4 h-4" />
+                <Search className="w-4 h-4" aria-hidden />
               </button>
             )}
 
             <button
               onClick={() => setPanelOpen((o) => !o)}
               aria-expanded={panelOpen}
+              // The word "Filters" is hidden on phones, which left the button nameless.
+              aria-label={refineCount > 0 ? `Filters, ${refineCount} active` : 'Filters'}
               className={[
                 'inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium border transition-colors',
                 refineCount > 0
@@ -350,7 +354,7 @@ export default function FreakquencyClient({ items }: { items: FeedItem[] }) {
                   : 'bg-site-raised text-site-text border-site-line-soft hover:border-site-line',
               ].join(' ')}
             >
-              <SlidersHorizontal className="w-4 h-4" />
+              <SlidersHorizontal className="w-4 h-4" aria-hidden />
               <span className="hidden sm:inline">Filters</span>
               {refineCount > 0 && <span className="text-white/90">{refineCount}</span>}
             </button>

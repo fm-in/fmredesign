@@ -34,9 +34,10 @@ const COMPANY = [
 function Column({ title, links }: { title: string; links: readonly { label: string; href: string }[] }) {
   return (
     <div className="foot-col">
-      {/* h3, not h4: the page's last section heading is an h2, and skipping
-          a level breaks the outline screen readers navigate by. */}
-      <h3 className="tag">{title}</h3>
+      {/* h2: the footer is its own top-level region, and several pages (the
+          Scorecard, the 404) have no h2 of their own, so an h3 here skipped a
+          level in the outline screen readers navigate by. */}
+      <h2 className="tag">{title}</h2>
       <ul>
         {links.map((link) => (
           <li key={link.href}>
@@ -59,8 +60,8 @@ export function SiteFooter() {
               <Image className="on-dark" src="/logo-white.png" alt="" aria-hidden width={88} height={55} />
             </span>
             <p>
-              The marketing and digital partner for brands that intend to grow. India, and
-              worldwide.
+              The marketing and digital partner for brands that intend to grow. Based in
+              Bhopal, working worldwide.
             </p>
             {/* Every page ends here, so the two ways people actually reach us
                 belong here too — not only on /contact. */}

@@ -76,7 +76,7 @@ export default function SharedResourcePage() {
   if (error || !data) {
     return (
       <div className="min-h-screen bg-[#FEFCFB] flex items-center justify-center">
-        <div className="max-w-md mx-auto p-6 md:p-8 bg-site-raised rounded-site-lg shadow-lg border border-fm-neutral-200" style={{ textAlign: 'center' as const }}>
+        <div className="max-w-md mx-auto p-6 md:p-8 bg-white rounded-site-lg shadow-lg border border-fm-neutral-200" style={{ textAlign: 'center' as const }}>
           <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-fm-neutral-900 mb-2">Link Unavailable</h2>
           <p className="text-fm-neutral-600">{error || 'This shared link is no longer available.'}</p>
@@ -90,7 +90,7 @@ export default function SharedResourcePage() {
   return (
     <div className="min-h-screen bg-[#FEFCFB]">
       {/* Branded Header */}
-      <header className="border-b border-fm-neutral-200 bg-site-raised">
+      <header className="border-b border-fm-neutral-200 bg-white">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {clientLogo && (
@@ -128,7 +128,7 @@ export default function SharedResourcePage() {
 
             {/* Progress */}
             {resource.progress !== undefined && (
-              <div className="bg-site-raised rounded-site-md border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-site-md border border-fm-neutral-200 p-6">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-fm-neutral-600">Overall Progress</span>
                   <span className="font-semibold text-fm-magenta-600">{resource.progress}%</span>
@@ -151,7 +151,7 @@ export default function SharedResourcePage() {
 
             {/* Milestones */}
             {resource.milestones && resource.milestones.length > 0 && (
-              <div className="bg-site-raised rounded-site-md border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-site-md border border-fm-neutral-200 p-6">
                 <h2 className="text-lg font-semibold text-fm-neutral-900 mb-4 flex items-center">
                   <Target className="w-5 h-5 mr-2 text-fm-magenta-600" />
                   Milestones
@@ -180,7 +180,7 @@ export default function SharedResourcePage() {
 
             {/* Deliverables */}
             {resource.deliverables && resource.deliverables.length > 0 && (
-              <div className="bg-site-raised rounded-site-md border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-site-md border border-fm-neutral-200 p-6">
                 <h2 className="text-lg font-semibold text-fm-neutral-900 mb-4 flex items-center">
                   <FileText className="w-5 h-5 mr-2 text-fm-magenta-600" />
                   Deliverables
@@ -206,7 +206,7 @@ export default function SharedResourcePage() {
 
             {/* Projects Summary */}
             {resource.projects && resource.projects.length > 0 && (
-              <div className="bg-site-raised rounded-site-md border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-site-md border border-fm-neutral-200 p-6">
                 <h2 className="text-lg font-semibold text-fm-neutral-900 mb-4 flex items-center">
                   <Briefcase className="w-5 h-5 mr-2 text-fm-magenta-600" />
                   Projects Overview
@@ -233,7 +233,7 @@ export default function SharedResourcePage() {
 
             {/* Recent Content */}
             {resource.recentContent && resource.recentContent.length > 0 && (
-              <div className="bg-site-raised rounded-site-md border border-fm-neutral-200 p-6">
+              <div className="bg-white rounded-site-md border border-fm-neutral-200 p-6">
                 <h2 className="text-lg font-semibold text-fm-neutral-900 mb-4 flex items-center">
                   <Calendar className="w-5 h-5 mr-2 text-fm-magenta-600" />
                   Recent Content
