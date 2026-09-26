@@ -70,6 +70,7 @@ export default function ServicesPage() {
             Placeholder films until each service has its own footage. */}
         <LetterWindow
           mode="still"
+          tone="duotone"
           films={['astroo_apaar', 'kanha', 'giovanni', 'skr_group', 'renny', 'concept_studio']}
           lines={['Six things,', 'done properly.']}
         >

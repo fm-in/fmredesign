@@ -1087,7 +1087,7 @@
   [data-site] .lw-wall video { position: absolute; left: 0; top: -6%; width: 100%; height: 112%; object-fit: cover;
     /* Letters take the film's own colour, so a near-white frame would erase
        them. A small dip in brightness keeps every letter readable. */
-    filter: brightness(0.88) contrast(1.06) saturate(1.12); }
+    filter: brightness(0.8) contrast(1.12) saturate(1.35); }
   [data-site] .lw-knock { position: absolute; inset: 0; z-index: 2; background: #fff; mix-blend-mode: screen; will-change: transform; }
   [data-site] .lw-ring {
     position: absolute;
@@ -1111,18 +1111,33 @@
     color: #000;
   }
   [data-site] .lw-tint { position: absolute; inset: 0; z-index: 3; background: var(--site-ground); mix-blend-mode: multiply; pointer-events: none; }
-  /* The outline: the same headline, laid exactly over the cut-out, with a
-     transparent fill and a thin stroke in the brand accent (the lighter
-     magenta in dark theme, via the token). Half the stroke falls outside the
-     letter, half inside, so it reads on bright and dark frames alike. */
-  [data-site] .lw-outline { position: absolute; inset: 0; z-index: 3; pointer-events: none; will-change: transform; }
-  [data-site] .lw-outline .wrap { padding-top: clamp(6.5rem, 14vh, 9rem); }
-  [data-site] .lw-outline .lw-h {
-    color: transparent;
-    -webkit-text-stroke: max(1px, 0.009em) var(--site-accent);
-    paint-order: stroke;
+  /* Legibility without an outline: each letter's colour is pushed away from
+     the ground it sits on. On the light page the films are deepened, so no
+     frame can turn a letter paper-white; on the dark page they are lifted, and
+     a faint accent is screened over them so no frame can turn a letter black. */
+  :root[data-theme='dark'] [data-site] .lw-wall video { filter: brightness(1.3) contrast(1.05) saturate(1.3); }
+  :root[data-theme='dark'] [data-site] .lw-wall::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgba(238, 66, 118, 0.22);
+    mix-blend-mode: screen;
+    pointer-events: none;
   }
-  [data-site] .lw--still .lw-outline .wrap { padding-block: clamp(7rem, 16vh, 10rem) clamp(2rem, 4vw, 3.5rem); }
+  /* Duotone (inner pages): the films in the brand's magenta-to-gold, with
+     their light and shade intact. */
+  [data-site] .lw--duotone .lw-wall video { filter: grayscale(1) contrast(1.25) brightness(0.78); }
+  [data-site] .lw--duotone .lw-wall::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(115deg, #c9325d, #f2b84b 55%, #c9325d);
+    mix-blend-mode: color;
+    pointer-events: none;
+  }
+  :root[data-theme='dark'] [data-site] .lw--duotone .lw-wall video { filter: grayscale(1) contrast(1.1) brightness(1.45); }
   :root[data-theme='dark'] [data-site] .lw-knock { background: #000; mix-blend-mode: multiply; }
   :root[data-theme='dark'] [data-site] .lw-knock .lw-h { color: #fff; }
   :root[data-theme='dark'] [data-site] .lw-tint { mix-blend-mode: screen; }
@@ -1364,39 +1379,51 @@
   [data-site] .cursor-preview video { display: none; width: 100%; height: 100%; object-fit: cover; }
   [data-site] .cursor-preview.is-video video { display: block; }
   [data-site] .cursor-preview.is-video img { display: none; }
-  [data-site] .cap-media { display: none; }
-  /* Phones: the active row shows its clip as a card at its right edge. It
-     fades and turns in without changing the row's height, so nothing below
-     moves while the visitor scrolls. */
-  @media (max-width: 700px) {
-    [data-site] .cap-row { padding-right: 104px; }
-    [data-site] .cap-media {
-      display: block;
-      position: absolute;
-      right: 0;
-      top: 50%;
-      width: 84px;
-      aspect-ratio: 4 / 5;
-      overflow: hidden;
-      border-radius: 5px;
-      box-shadow: var(--site-film-shadow);
-      background: var(--site-raised);
-      opacity: 0;
-      transform: translateY(-50%) scale(0.82) rotate(0deg);
-      transition: opacity 0.45s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    [data-site] .cap-media video,
-    [data-site] .cap-media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: left top; }
-    [data-site] .cap-row.is-active .cap-media { opacity: 1; transform: translateY(-50%) scale(1) rotate(-3deg); }
+  /* ---------- list + stage (LoopStage) ----------
+     A compact list beside one frame playing the selected item's loop. Rows
+     never change height; the selected item's words sit under the frame. */
+  [data-site] .lstage {
+    display: grid;
+    grid-template-columns: var(--split-cols);
+    grid-template-areas: "list stage";
+    gap: 32px var(--split-gap);
+    align-items: start;
   }
-
-  /* ---------- service loops (ServiceLoop) ----------
-     The mascot explaining a service. The loop is drawn on the light ground,
-     so it is framed as a card: it reads as an object in both themes. */
-  [data-site] .service-loop {
-    margin: clamp(24px, 3vw, 36px) 0 0;
+  [data-site] .lstage-list { grid-area: list; list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--site-line); }
+  [data-site] .lstage-row { position: relative; border-bottom: 1px solid var(--site-line); }
+  [data-site] .lstage-pick {
     width: 100%;
-    max-width: 380px;
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    gap: 8px 28px;
+    align-items: baseline;
+    padding: clamp(16px, 2vw, 24px) 0;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+  }
+  [data-site] .lstage-pick:focus-visible { outline: 2px solid var(--site-accent); outline-offset: 4px; }
+  [data-site] .lstage-name {
+    font-family: var(--site-font-display);
+    font-size: clamp(1.6rem, 3.2vw, 2.7rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: color-mix(in srgb, var(--site-text) 42%, var(--site-ground));
+    transition: color 0.35s ease;
+  }
+  [data-site] .lstage-sub { grid-column: 2; color: var(--site-muted); font-size: 0.9375rem; font-weight: 500; transition: color 0.35s ease; }
+  [data-site] .lstage-row.is-on .lstage-name,
+  [data-site] .lstage-pick:hover .lstage-name { color: var(--site-text); }
+  [data-site] .lstage-row.is-on .lstage-sub { color: var(--site-accent); }
+  [data-site] .lstage-rule { position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; overflow: hidden; }
+  [data-site] .lstage-rule i { display: block; height: 100%; background: var(--site-accent); transform: scaleX(0); transform-origin: left center; }
+  [data-site] .lstage-row:not(.is-on) .lstage-rule { display: none; }
+  [data-site] .lstage-stage { grid-area: stage; position: sticky; top: 104px; }
+  [data-site] .lstage-frame {
+    position: relative;
+    margin: 0;
+    width: 100%;
+    max-width: 440px;
     aspect-ratio: 4 / 5;
     overflow: hidden;
     border-radius: 12px;
@@ -1404,9 +1431,19 @@
     background: #f7f4ef;
     box-shadow: var(--site-film-shadow);
   }
-  [data-site] .service-loop video { display: block; width: 100%; height: 100%; object-fit: cover; }
-  @media (min-width: 1024px) {
-    [data-site] .service-side { position: sticky; top: 104px; align-self: start; }
+  [data-site] .lstage-frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.45s ease; }
+  [data-site] .lstage-frame video.is-on { opacity: 1; }
+  [data-site] .lstage-caption { max-width: 440px; margin-top: 18px; min-height: 5.5em; }
+  [data-site] .lstage-caption p { margin: 0 0 12px; color: var(--site-muted); font-size: 0.9375rem; }
+  @media (max-width: 899px) {
+    [data-site] .lstage { grid-template-columns: minmax(0, 1fr); grid-template-areas: "stage" "list"; }
+    [data-site] .lstage-stage { position: static; }
+    [data-site] .lstage-frame { max-width: 380px; }
+    [data-site] .lstage-pick { grid-template-columns: 36px 1fr; gap: 4px 14px; padding-block: 14px; }
+    [data-site] .lstage-name { font-size: 1.5rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-site] .lstage-frame video { transition: none; }
   }
 
   /* ---------- close: confetti from the mascot ---------- */

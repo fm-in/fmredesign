@@ -9,7 +9,7 @@ import { SiteLoader } from '@/components/site/SiteLoader';
 import { LetterWindow } from '@/components/site/LetterWindow';
 import { ReelRow } from '@/components/site/ReelRow';
 import { SwipeRow } from '@/components/site/SwipeRow';
-import { FilmVideo } from '@/components/site/FilmVideo';
+import { LoopStage } from '@/components/site/LoopStage';
 import { CursorPreview } from '@/components/site/CursorPreview';
 import { BrainMark } from '@/components/site/BrainMark';
 import { CalButton } from '@/components/ui/CalButton';
@@ -118,27 +118,8 @@ const CAMPAIGNS = [
 ] as const;
 
 // Names come from the catalogue so the home page, /services and the footer
-// cannot call the same service three different things again ("Performance
-// marketing" here was "Pay-Per-Click (PPC) Advertising" on /services).
-// The work each service shows under the cursor on hover — real client
-// pieces, served through the image optimiser at preview size.
-const PREVIEW: Record<string, string> = {
-  seo: '/work/websites/restronaut_website.jpg',
-  social: '/work/services/harsh-service1.jpg',
-  performance: '/work/services/elisa-service1.jpg',
-  branding: '/work/websites/mohdiamond_website.jpg',
-  web: '/work/websites/mahua_house_website.jpg',
-  content: '/videos/renny-poster.jpg',
-};
-const preview = (src: string) => `/_next/image?url=${encodeURIComponent(src)}&w=640&q=75`;
-// Placeholders until each service has its own clip: the nearest existing film.
-const PREVIEW_FILM: Record<string, string> = {
-  social: 'giovanni',
-  performance: 'adi',
-  branding: 'concept_studio',
-  content: 'renny',
-};
-
+// cannot call the same service three different things again. Each service's
+// mascot loop lives in /public/videos/services/{id}.mp4.
 const CAPABILITY = [
   ['seo', 'Get found. Get chosen.', 'Data-driven SEO that puts you where customers are already looking.'],
   ['social', 'Stop posting. Start connecting.', 'Thumb-stopping content that turns followers into customers.'],
@@ -344,40 +325,18 @@ export default async function Home() {
               </p>
             </div>
 
-            <CursorPreview listSelector=".cap" />
-            <div className="cap">
-              {CAPABILITY.map(([id, sub, desc], i) => {
-                const name = getService(id)?.title ?? id;
-                return (
-                <Link
-                  className="cap-row"
-                  key={id}
-                  href={serviceHref(id)}
-                  data-preview={PREVIEW_FILM[id] ? `/videos/${PREVIEW_FILM[id]}-poster.jpg` : preview(PREVIEW[id])}
-                  data-preview-video={PREVIEW_FILM[id] ? `/videos/${PREVIEW_FILM[id]}.mp4` : undefined}
-                >
-                  <span className="tag n">{String(i + 1).padStart(2, '0')}</span>
-                  <span>
-                    <span className="cap-name">{name}</span>
-                    <span className="cap-sub">{sub}</span>
-                  </span>
-                  <span className="cap-go" aria-hidden>
-                    &rarr;
-                  </span>
-                  <span className="cap-desc">{desc}</span>
-                  {/* Phones have no hover: the row nearest mid-screen opens and plays this. */}
-                  <span className="cap-media" aria-hidden>
-                    {PREVIEW_FILM[id] ? (
-                      <FilmVideo id={PREVIEW_FILM[id]} preload="none" />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={preview(PREVIEW[id])} alt="" loading="lazy" decoding="async" />
-                    )}
-                  </span>
-                </Link>
-                );
-              })}
-            </div>
+            <LoopStage
+              label="Services"
+              base="/videos/services/"
+              items={CAPABILITY.map(([id, sub, desc]) => ({
+                id,
+                name: getService(id)?.title ?? id,
+                sub,
+                desc,
+                href: serviceHref(id),
+                linkLabel: `How we do ${getService(id)?.name ?? id}`,
+              }))}
+            />
           </div>
         </section>
 

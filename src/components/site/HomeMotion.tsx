@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
-import { loadGsap, observeReveal, prefersReducedMotion } from '@/lib/motion';
+import { loadGsap, observeReveal } from '@/lib/motion';
 
 /**
  * The home page's motion, in one place.
  *
  * Word-mask headline reveals, the two client marquees (which speed up and lean
- * with the visitor's scroll), the capability row that opens on phones, and the
- * closing band arriving through the ink circle. The hero (LetterWindow), the
- * work row (ReelRow) and the hover preview (CursorPreview) are their own
+ * with the visitor's scroll) and the closing band arriving through the ink
+ * circle. The hero (LetterWindow), the work row (ReelRow), the services
+ * (LoopStage) and the logo hover preview (CursorPreview) are their own
  * components; the campaign strip animates in CSS with a scroll timeline.
  *
  * Renders nothing. Every effect targets markup the server already sent, so the
@@ -21,8 +21,6 @@ export function HomeMotion() {
   useEffect(() => {
     const cleanups: Array<() => void> = [];
     let cancelled = false;
-
-    cleanups.push(capabilityOnPhones());
 
     // Reveals need no timeline, so they never pull GSAP in.
     cleanups.push(observeReveal(document.querySelectorAll('[data-reveal]')));
@@ -178,38 +176,6 @@ export function HomeMotion() {
   }, []);
 
   return null;
-}
-
-/**
- * Phones have no hover, so the capability preview becomes inline: the row
- * nearest the middle of the screen shows and plays its clip as a card at its
- * edge; the others hide theirs. Rows never change height.
- * Nothing loads until a row is active. Desktop keeps the cursor preview.
- */
-function capabilityOnPhones(): () => void {
-  if (!window.matchMedia('(max-width: 700px)').matches || prefersReducedMotion()) return () => {};
-  if (typeof IntersectionObserver === 'undefined') return () => {};
-  const rows = Array.from(document.querySelectorAll<HTMLElement>('.cap-row'));
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        const row = entry.target as HTMLElement;
-        row.classList.toggle('is-active', entry.isIntersecting);
-        const video = row.querySelector('video');
-        if (!video) continue;
-        if (entry.isIntersecting) {
-          video.preload = 'auto';
-          void video.play().catch(() => {});
-        } else {
-          video.pause();
-        }
-      }
-    },
-    // A thin band across the middle of the screen: one row at a time.
-    { rootMargin: '-46% 0px -46% 0px' },
-  );
-  rows.forEach((row) => observer.observe(row));
-  return () => observer.disconnect();
 }
 
 /** A burst of paper confetti from behind the mascot, in the brand colours. */

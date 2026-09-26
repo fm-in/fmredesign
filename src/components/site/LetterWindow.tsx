@@ -33,6 +33,7 @@ export function LetterWindow({
   endLine,
   as: Heading = 'h1',
   mode = 'scroll',
+  tone = 'colour',
   children,
 }: {
   /** Six film ids from /public/videos. */
@@ -45,6 +46,12 @@ export function LetterWindow({
   endLine?: string;
   as?: 'h1' | 'h2';
   mode?: 'scroll' | 'still';
+  /**
+   * `colour`: the films as shot (the home hero, where they are the work).
+   * `duotone`: tinted in the brand's magenta-to-gold (inner pages, where the
+   * letters are the point, not the footage).
+   */
+  tone?: 'colour' | 'duotone';
   /** The copy: lede, actions, proof. */
   children?: ReactNode;
 }) {
@@ -90,7 +97,6 @@ export function LetterWindow({
       const rowCount = heading.querySelectorAll('.lw-br-w').length + 1;
       const byWidth = (100 * column) / natural;
       const byHeight = room / (rowCount * 0.9);
-      // One size for the cut-out and its outline.
       stage.style.setProperty('--lw-size', `${Math.floor(Math.min(byWidth, byHeight))}px`);
     };
     fit();
@@ -108,21 +114,20 @@ export function LetterWindow({
     const shade = section.querySelector<HTMLElement>('.lw-shade');
     const ring = section.querySelector<HTMLElement>('.lw-ring');
     const copy = section.querySelector<HTMLElement>('.lw-copy');
-    const outline = section.querySelector<HTMLElement>('.lw-outline');
     const strips = Array.from(videos);
-    if (!wall || !shade || !ring || !copy || !outline) return stopPlayback;
+    if (!wall || !shade || !ring || !copy) return stopPlayback;
     const rows = Array.from(copy.children) as HTMLElement[];
 
     // The ink circle opens from the middle of the headline.
     let o = { x: 0, y: 0 };
     let reach = 1;
     const measure = () => {
-      knock.style.transform = outline.style.transform = 'none';
+      knock.style.transform = 'none';
       fit();
       const st = stage.getBoundingClientRect();
       const h = heading.getBoundingClientRect();
       o = { x: h.left - st.left + h.width * 0.5, y: h.top - st.top + h.height * 0.5 };
-      knock.style.transformOrigin = outline.style.transformOrigin = `${o.x}px ${o.y}px`;
+      knock.style.transformOrigin = `${o.x}px ${o.y}px`;
       reach = Math.hypot(Math.max(o.x, st.width - o.x), Math.max(o.y, st.height - o.y)) + 40;
     };
     measure();
@@ -141,17 +146,14 @@ export function LetterWindow({
       const e = easeInOut(span(p, 0.1, 0.6));
       const grow = 1 + 0.3 * e;
       const r = reach * e;
-      knock.style.transform = outline.style.transform = `scale(${grow})`;
+      knock.style.transform = `scale(${grow})`;
       // Inside the circle the white sheet is gone, so the films show at full
       // strength: never a half-faded, milky frame. Mask coordinates are in
       // the knock's own (scaled) space.
       const mask = e <= 0 ? 'none' : e >= 1 ? 'linear-gradient(transparent, transparent)'
         : `radial-gradient(circle ${r / grow}px at ${o.x}px ${o.y}px, transparent calc(100% - 1px), #000 100%)`;
-      // The outline travels with the letters and vanishes inside the circle with them.
-      for (const el of [knock, outline]) {
-        el.style.maskImage = mask;
-        el.style.setProperty('-webkit-mask-image', mask);
-      }
+      knock.style.maskImage = mask;
+      knock.style.setProperty('-webkit-mask-image', mask);
       const ringOn = e > 0 && e < 1;
       ring.style.visibility = ringOn ? 'visible' : 'hidden';
       if (ringOn) {
@@ -233,7 +235,7 @@ export function LetterWindow({
   );
 
   return (
-    <section ref={sectionRef} className={`lw lw--${mode}`}>
+    <section ref={sectionRef} className={`lw lw--${mode} lw--${tone}`}>
       <div className="lw-stage">
         <div className="lw-wall" aria-hidden>
           {films.map((id) => (
@@ -248,13 +250,6 @@ export function LetterWindow({
           </div>
         </div>
         <div className="lw-tint" aria-hidden />
-        {/* A thin brand-coloured outline traced over the cut-out, so every
-            letter keeps its edge whatever frame is playing inside it. */}
-        <div className="lw-outline" aria-hidden>
-          <div className="wrap">
-            <p className="lw-h">{headline}</p>
-          </div>
-        </div>
         {mode === 'scroll' && <div className="lw-ring" aria-hidden />}
         {mode === 'scroll' && <div className="lw-shade" aria-hidden />}
         {mode === 'scroll' && copy}
