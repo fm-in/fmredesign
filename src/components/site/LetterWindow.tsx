@@ -71,10 +71,10 @@ export function LetterWindow({
      */
     const fit = () => {
       if (stage.clientWidth <= 700) {
-        heading.style.fontSize = '';
+        stage.style.removeProperty('--lw-size');
         return;
       }
-      heading.style.fontSize = '100px';
+      stage.style.setProperty('--lw-size', '100px');
       heading.style.width = 'max-content';
       const natural = heading.getBoundingClientRect().width;
       heading.style.width = '';
@@ -90,7 +90,8 @@ export function LetterWindow({
       const rowCount = heading.querySelectorAll('.lw-br-w').length + 1;
       const byWidth = (100 * column) / natural;
       const byHeight = room / (rowCount * 0.9);
-      heading.style.fontSize = `${Math.floor(Math.min(byWidth, byHeight))}px`;
+      // One size for the cut-out and its outline.
+      stage.style.setProperty('--lw-size', `${Math.floor(Math.min(byWidth, byHeight))}px`);
     };
     fit();
 
@@ -107,20 +108,21 @@ export function LetterWindow({
     const shade = section.querySelector<HTMLElement>('.lw-shade');
     const ring = section.querySelector<HTMLElement>('.lw-ring');
     const copy = section.querySelector<HTMLElement>('.lw-copy');
+    const outline = section.querySelector<HTMLElement>('.lw-outline');
     const strips = Array.from(videos);
-    if (!wall || !shade || !ring || !copy) return stopPlayback;
+    if (!wall || !shade || !ring || !copy || !outline) return stopPlayback;
     const rows = Array.from(copy.children) as HTMLElement[];
 
     // The ink circle opens from the middle of the headline.
     let o = { x: 0, y: 0 };
     let reach = 1;
     const measure = () => {
-      knock.style.transform = 'none';
+      knock.style.transform = outline.style.transform = 'none';
       fit();
       const st = stage.getBoundingClientRect();
       const h = heading.getBoundingClientRect();
       o = { x: h.left - st.left + h.width * 0.5, y: h.top - st.top + h.height * 0.5 };
-      knock.style.transformOrigin = `${o.x}px ${o.y}px`;
+      knock.style.transformOrigin = outline.style.transformOrigin = `${o.x}px ${o.y}px`;
       reach = Math.hypot(Math.max(o.x, st.width - o.x), Math.max(o.y, st.height - o.y)) + 40;
     };
     measure();
@@ -139,14 +141,17 @@ export function LetterWindow({
       const e = easeInOut(span(p, 0.1, 0.6));
       const grow = 1 + 0.3 * e;
       const r = reach * e;
-      knock.style.transform = `scale(${grow})`;
+      knock.style.transform = outline.style.transform = `scale(${grow})`;
       // Inside the circle the white sheet is gone, so the films show at full
       // strength: never a half-faded, milky frame. Mask coordinates are in
       // the knock's own (scaled) space.
       const mask = e <= 0 ? 'none' : e >= 1 ? 'linear-gradient(transparent, transparent)'
         : `radial-gradient(circle ${r / grow}px at ${o.x}px ${o.y}px, transparent calc(100% - 1px), #000 100%)`;
-      knock.style.maskImage = mask;
-      knock.style.setProperty('-webkit-mask-image', mask);
+      // The outline travels with the letters and vanishes inside the circle with them.
+      for (const el of [knock, outline]) {
+        el.style.maskImage = mask;
+        el.style.setProperty('-webkit-mask-image', mask);
+      }
       const ringOn = e > 0 && e < 1;
       ring.style.visibility = ringOn ? 'visible' : 'hidden';
       if (ringOn) {
@@ -196,6 +201,22 @@ export function LetterWindow({
   const narrowEnds = ends(lines);
   const wideEnds = ends(wideLines ?? lines);
 
+  const headline = words.map((w, i) => (
+    <Fragment key={i}>
+      {w}
+      {/* A space always follows a word, so the heading's text reads as words
+          even where a line break stands in for it. Where only one width
+          breaks here, the space is shown only at the other (a space before a
+          break just collapses). */}
+      {i < words.length - 1 &&
+        (narrowEnds.has(i) === wideEnds.has(i) ? ' ' : (
+          <span className={narrowEnds.has(i) ? 'lw-sp-w' : 'lw-sp-n'}> </span>
+        ))}
+      {narrowEnds.has(i) && <br className="lw-br-n" />}
+      {wideEnds.has(i) && <br className="lw-br-w" />}
+    </Fragment>
+  ));
+
   const copy = (
     <div className="wrap lw-copy-wrap">
       <div className="lw-copy">
@@ -223,26 +244,17 @@ export function LetterWindow({
         </div>
         <div className="lw-knock">
           <div className="wrap">
-            <Heading className="lw-h">
-              {words.map((w, i) => (
-                <Fragment key={i}>
-                  {w}
-                  {/* A space always follows a word, so the heading's text reads
-                      as words even where a line break stands in for it. Where
-                      only one width breaks here, the space is shown only at
-                      the other (a space before a break just collapses). */}
-                  {i < words.length - 1 &&
-                    (narrowEnds.has(i) === wideEnds.has(i) ? ' ' : (
-                      <span className={narrowEnds.has(i) ? 'lw-sp-w' : 'lw-sp-n'}> </span>
-                    ))}
-                  {narrowEnds.has(i) && <br className="lw-br-n" />}
-                  {wideEnds.has(i) && <br className="lw-br-w" />}
-                </Fragment>
-              ))}
-            </Heading>
+            <Heading className="lw-h">{headline}</Heading>
           </div>
         </div>
         <div className="lw-tint" aria-hidden />
+        {/* A thin brand-coloured outline traced over the cut-out, so every
+            letter keeps its edge whatever frame is playing inside it. */}
+        <div className="lw-outline" aria-hidden>
+          <div className="wrap">
+            <p className="lw-h">{headline}</p>
+          </div>
+        </div>
         {mode === 'scroll' && <div className="lw-ring" aria-hidden />}
         {mode === 'scroll' && <div className="lw-shade" aria-hidden />}
         {mode === 'scroll' && copy}

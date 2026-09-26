@@ -1105,14 +1105,26 @@
     font-family: var(--site-font-display);
     font-weight: 400;
     /* Script fits this exactly to the column; this is the no-script guess. */
-    font-size: min(13vw, 26svh);
+    font-size: var(--lw-size, min(13vw, 26svh));
     line-height: 0.9;
     letter-spacing: -0.025em;
     color: #000;
   }
   [data-site] .lw-tint { position: absolute; inset: 0; z-index: 3; background: var(--site-ground); mix-blend-mode: multiply; pointer-events: none; }
+  /* The outline: the same headline, laid exactly over the cut-out, with a
+     transparent fill and a thin stroke in the brand accent (the lighter
+     magenta in dark theme, via the token). Half the stroke falls outside the
+     letter, half inside, so it reads on bright and dark frames alike. */
+  [data-site] .lw-outline { position: absolute; inset: 0; z-index: 3; pointer-events: none; will-change: transform; }
+  [data-site] .lw-outline .wrap { padding-top: clamp(6.5rem, 14vh, 9rem); }
+  [data-site] .lw-outline .lw-h {
+    color: transparent;
+    -webkit-text-stroke: max(1px, 0.009em) var(--site-accent);
+    paint-order: stroke;
+  }
+  [data-site] .lw--still .lw-outline .wrap { padding-block: clamp(7rem, 16vh, 10rem) clamp(2rem, 4vw, 3.5rem); }
   :root[data-theme='dark'] [data-site] .lw-knock { background: #000; mix-blend-mode: multiply; }
-  :root[data-theme='dark'] [data-site] .lw-h { color: #fff; }
+  :root[data-theme='dark'] [data-site] .lw-knock .lw-h { color: #fff; }
   :root[data-theme='dark'] [data-site] .lw-tint { mix-blend-mode: screen; }
   [data-site] .lw-shade {
     position: absolute;
