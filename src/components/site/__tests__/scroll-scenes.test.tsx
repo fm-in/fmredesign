@@ -41,7 +41,7 @@ describe('LetterWindow', () => {
   it('renders the headline as one real heading, with the films hidden from assistive tech', () => {
     stubMatchMedia(reduced);
     const { container } = render(<LetterWindow films={FILMS} lines={['Ideas', 'that move', 'markets.']} />);
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ideasthat movemarkets.');
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ideas that move markets.');
     expect(container.querySelectorAll('.lw-wall video')).toHaveLength(6);
     expect(container.querySelector('.lw-wall')?.getAttribute('aria-hidden')).toBe('true');
   });

@@ -1066,7 +1066,8 @@
     overflow: hidden;
     isolation: isolate;
   }
-  [data-site] .lw.is-scroll { height: 240svh; }
+  /* A little over three screens: the reveal gets room to breathe. */
+  [data-site] .lw.is-scroll { height: 330svh; }
   [data-site] .lw.is-scroll .lw-stage { position: sticky; top: 0; height: 100svh; }
   [data-site] .lw--still .lw-stage { height: auto; min-height: 0; }
   [data-site] .lw-wall {
@@ -1103,7 +1104,8 @@
     margin: 0;
     font-family: var(--site-font-display);
     font-weight: 400;
-    font-size: min(15.5vw, 25svh, 15rem);
+    /* Script fits this exactly to the column; this is the no-script guess. */
+    font-size: min(13vw, 26svh);
     line-height: 0.9;
     letter-spacing: -0.025em;
     color: #000;
@@ -1120,56 +1122,56 @@
     pointer-events: none;
     background: linear-gradient(to top, rgba(11, 10, 12, 0.84), rgba(11, 10, 12, 0.22) 62%, rgba(11, 10, 12, 0.1));
   }
+  /* Words break differently by width: three lines on phones, two wide.
+     Each break has a partner space that shows at the width it does not
+     break at (`-n` = narrow, `-w` = wide). */
+  [data-site] .lw-br-w,
+  [data-site] .lw-sp-w { display: none; }
+  @media (min-width: 701px) {
+    [data-site] .lw-br-n,
+    [data-site] .lw-sp-n { display: none; }
+    [data-site] .lw-br-w,
+    [data-site] .lw-sp-w { display: inline; }
+  }
+
+  /* The copy: a row along the bottom at rest (lede and proof left, actions
+     right, under a rule); over the open wall, one line and the actions. */
   [data-site] .lw-copy-wrap {
     position: absolute;
     inset: 0;
     z-index: 5;
     display: flex;
     align-items: flex-end;
-    justify-content: flex-end;
-    padding-bottom: clamp(2.5rem, 8vh, 5rem);
+    padding-bottom: clamp(1.5rem, 5vh, 3rem);
     pointer-events: none;
   }
-  [data-site] .lw-copy { pointer-events: auto; width: min(100%, 30rem); }
-  /* At rest on wider screens the copy spans the headline's own height: the
-     proof line sits level with the first line, and the lede and actions end
-     level with the last, so the right column balances the letters instead
-     of hanging below them. The height is the headline's: 3 lines at 0.9. */
+  [data-site] .lw-copy { pointer-events: auto; width: 100%; }
+  [data-site] .lw-end-line { display: none; }
   @media (min-width: 701px) {
-    [data-site] .lw:not(.is-open) .lw-copy-wrap { align-items: flex-start; padding-top: clamp(6.5rem, 14vh, 9rem); padding-bottom: 0; }
     [data-site] .lw:not(.is-open) .lw-copy {
-      /* Never wider than the space the widest line ("that move", ~4.2em)
-         leaves, so the copy cannot touch the letters on a narrow laptop. */
-      width: min(30rem, calc(100% - 4.2 * min(15.5vw, 25svh, 15rem) - 32px));
-      height: calc(2.7 * min(15.5vw, 25svh, 15rem));
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: var(--split-gap);
+      align-items: center;
+      padding-top: clamp(16px, 2.4vh, 24px);
+      border-top: 1px solid var(--site-line);
     }
-    [data-site] .lw:not(.is-open) .lw-copy .hero-proof {
-      order: -1;
-      margin-top: 0;
-      padding-top: 0;
-      padding-bottom: 18px;
-      border-top: 0;
-      border-bottom: 1px solid var(--site-line);
-    }
-    [data-site] .lw:not(.is-open) .lw-copy .lede { margin-top: auto; }
+    [data-site] .lw:not(.is-open) .lw-copy .lede { grid-column: 1; max-width: 58ch; margin: 0; }
+    [data-site] .lw:not(.is-open) .lw-copy .hero-proof { grid-column: 1; margin: 6px 0 0; padding: 0; border: 0; max-width: none; font-size: 0.875rem; }
+    [data-site] .lw:not(.is-open) .lw-copy .hero-actions { grid-column: 2; grid-row: 1 / span 2; margin: 0; flex-wrap: nowrap; }
   }
-  [data-site] .lw-copy .hero-actions { margin-top: 22px; }
-  [data-site] .lw-end-h {
-    display: none;
-    margin: 0 0 18px;
-    font-family: var(--site-font-display);
-    font-size: clamp(2.6rem, 6vw, 5.6rem);
-    line-height: 0.95;
-    letter-spacing: -0.02em;
-  }
-  [data-site] .lw.is-open .lw-copy-wrap { justify-content: flex-start; }
-  [data-site] .lw.is-open .lw-copy { width: min(100%, 44rem); color: #f3ede6; }
-  [data-site] .lw.is-open .lw-end-h { display: block; }
+  [data-site] .lw.is-open .lw-copy { max-width: 46rem; color: #f3ede6; }
   [data-site] .lw.is-open .lw-copy .lede,
-  [data-site] .lw.is-open .lw-copy .hero-proof { color: rgba(243, 237, 230, 0.82); border-color: rgba(243, 237, 230, 0.22); }
+  [data-site] .lw.is-open .lw-copy .hero-proof { display: none; }
+  [data-site] .lw.is-open .lw-end-line {
+    display: block;
+    margin: 0;
+    font-family: var(--site-font-display);
+    font-size: clamp(2rem, 4.4vw, 3.8rem);
+    line-height: 1;
+    letter-spacing: -0.015em;
+  }
+  [data-site] .lw.is-open .lw-copy .hero-actions { margin-top: 22px; }
   [data-site] .lw.is-open .btn--ghost { color: #f3ede6; border-color: rgba(243, 237, 230, 0.42); }
   /* Still mode: the letters are the page header; copy sits beneath in flow. */
   [data-site] .lw--still .lw-knock { position: relative; }
@@ -1186,6 +1188,7 @@
       padding-top: calc(clamp(6.5rem, 14vh, 9rem) + 3 * 0.9 * 23vw + 24px);
       padding-bottom: 24px;
     }
+    [data-site] .lw-copy .hero-actions { margin-top: 20px; }
     [data-site] .lw--still .lw-copy-wrap { padding-top: 0; }
     [data-site] .lw.is-open .lw-copy-wrap { align-items: flex-end; padding-top: 0; }
     [data-site] .lw-copy .hero-proof { display: none; }

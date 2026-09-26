@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, type ReactNode } from 'react';
 import { FilmVideo } from './FilmVideo';
 import { easeInOut, playWhileVisible, prefersReducedMotion, span, stickyScene } from '@/lib/motion';
 
@@ -9,9 +9,10 @@ import { easeInOut, playWhileVisible, prefersReducedMotion, span, stickyScene } 
  * films running behind it, so every letter shows a different piece of work.
  *
  * Two modes:
- * - `scroll` (home hero): the section grows tall and its stage sticks. As the
- *   visitor scrolls, the letters grow and dissolve into the full wall, and the
- *   copy returns over it. The wall keeps playing throughout.
+ * - `scroll` (home hero): full-width type over the films, with the copy in a
+ *   row along the bottom. Scrolling holds on the letters, opens an ink circle
+ *   through them into the full wall, holds on the wall, then brings in a
+ *   closing line and the actions. The wall keeps playing throughout.
  * - `still` (inner pages): the same cut-out, no scroll scene.
  *
  * How the cut-out works, with no canvas and no SVG mask: a sheet the colour of
@@ -21,24 +22,30 @@ import { easeInOut, playWhileVisible, prefersReducedMotion, span, stickyScene } 
  * paper. Dark theme runs the same trick inverted (black sheet, white letters,
  * multiply; then screen the ground back in).
  *
- * Progressive: the server renders the finished resting frame (letters over
- * posters, copy beside), which is also exactly what reduced-motion and no-JS
- * visitors keep. The section only becomes tall once script confirms motion.
+ * Progressive: the server renders the finished resting frame, which is also
+ * what reduced-motion and no-JS visitors keep. The section only becomes tall
+ * once script confirms motion.
  */
 export function LetterWindow({
   films,
   lines,
+  wideLines,
+  endLine,
   as: Heading = 'h1',
   mode = 'scroll',
   children,
 }: {
   /** Six film ids from /public/videos. */
   films: readonly string[];
-  /** The headline, one entry per line. */
+  /** The headline, one entry per line, as set on phones. */
   lines: readonly string[];
+  /** The same words broken differently for wide screens. Defaults to `lines`. */
+  wideLines?: readonly string[];
+  /** Scroll mode: the line the open wall ends on, above the actions. */
+  endLine?: string;
   as?: 'h1' | 'h2';
   mode?: 'scroll' | 'still';
-  /** The copy: lede, actions, proof. Shown beside the letters, then over the open wall. */
+  /** The copy: lede, actions, proof. */
   children?: ReactNode;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
@@ -48,48 +55,94 @@ export function LetterWindow({
     if (!section) return;
     const videos = section.querySelectorAll('video');
     const stopPlayback = playWhileVisible(videos, films.length);
-    if (mode !== 'scroll' || prefersReducedMotion()) return stopPlayback;
+    if (mode !== 'scroll') return stopPlayback;
 
-    section.classList.add('is-scroll');
     const stage = section.querySelector<HTMLElement>('.lw-stage');
     const knock = section.querySelector<HTMLElement>('.lw-knock');
     const heading = section.querySelector<HTMLElement>('.lw-h');
+    const copyWrap = section.querySelector<HTMLElement>('.lw-copy-wrap');
+    if (!stage || !knock || !heading || !copyWrap) return stopPlayback;
+
+    /*
+     * Fit the type to the width. The widest line is measured at a reference
+     * size and scaled so it spans the column exactly — CSS alone can only
+     * guess at a typeface's widths. Capped by height, so the lines always
+     * clear the copy row on a short laptop screen.
+     */
+    const fit = () => {
+      if (stage.clientWidth <= 700) {
+        heading.style.fontSize = '';
+        return;
+      }
+      heading.style.fontSize = '100px';
+      heading.style.width = 'max-content';
+      const natural = heading.getBoundingClientRect().width;
+      heading.style.width = '';
+      const box = heading.parentElement ?? stage;
+      const pad = parseFloat(getComputedStyle(box).paddingLeft) + parseFloat(getComputedStyle(box).paddingRight);
+      const column = box.clientWidth - pad;
+      const top = heading.getBoundingClientRect().top - stage.getBoundingClientRect().top;
+      // The copy row's own height plus the wrap's bottom padding: the wrap
+      // itself covers the whole stage, so its height says nothing.
+      const row = copyWrap.firstElementChild as HTMLElement | null;
+      const below = (row?.offsetHeight ?? 0) + parseFloat(getComputedStyle(copyWrap).paddingBottom);
+      const room = stage.clientHeight - top - below - 32;
+      const rowCount = heading.querySelectorAll('.lw-br-w').length + 1;
+      const byWidth = (100 * column) / natural;
+      const byHeight = room / (rowCount * 0.9);
+      heading.style.fontSize = `${Math.floor(Math.min(byWidth, byHeight))}px`;
+    };
+    fit();
+
+    if (prefersReducedMotion()) {
+      window.addEventListener('resize', fit);
+      return () => {
+        stopPlayback();
+        window.removeEventListener('resize', fit);
+      };
+    }
+
+    section.classList.add('is-scroll');
     const wall = section.querySelector<HTMLElement>('.lw-wall');
     const shade = section.querySelector<HTMLElement>('.lw-shade');
     const ring = section.querySelector<HTMLElement>('.lw-ring');
     const copy = section.querySelector<HTMLElement>('.lw-copy');
     const strips = Array.from(videos);
-    if (!stage || !knock || !heading || !wall || !shade || !ring || !copy) return stopPlayback;
-    const lines = Array.from(copy.children) as HTMLElement[];
+    if (!wall || !shade || !ring || !copy) return stopPlayback;
+    const rows = Array.from(copy.children) as HTMLElement[];
 
-    // The ink circle opens from the middle of the headline, measured at rest.
+    // The ink circle opens from the middle of the headline.
     let o = { x: 0, y: 0 };
     let reach = 1;
     const measure = () => {
       knock.style.transform = 'none';
+      fit();
       const st = stage.getBoundingClientRect();
       const h = heading.getBoundingClientRect();
       o = { x: h.left - st.left + h.width * 0.5, y: h.top - st.top + h.height * 0.5 };
       knock.style.transformOrigin = `${o.x}px ${o.y}px`;
-      // Far enough to clear the stage's farthest corner.
       reach = Math.hypot(Math.max(o.x, st.width - o.x), Math.max(o.y, st.height - o.y)) + 40;
     };
     measure();
     window.addEventListener('resize', measure);
 
+    /*
+     * The scene runs over a little over three screens of scrolling, in beats:
+     *   0.00–0.10  hold on the letters
+     *   0.06–0.16  the copy row steps away
+     *   0.10–0.60  the ink circle opens, slowly, with the ring on its edge
+     *   0.60–0.68  hold on the open wall
+     *   0.68–0.92  the closing line and actions arrive, one after another
+     *   0.92–1.00  hold, then the page carries on
+     */
     const stopScene = stickyScene(section, (p, t) => {
-      /*
-       * The letters push toward the camera while an ink circle opens through
-       * them. Inside the circle the white sheet is gone, so the films show at
-       * full strength: there is never a half-faded, milky frame. The magenta
-       * ring rides the circle's edge, the same move as the launch video and
-       * the closing band, and thins out as it leaves the screen.
-       */
-      const e = easeInOut(span(p, 0.05, 0.62));
-      const grow = 1 + 0.35 * e;
+      const e = easeInOut(span(p, 0.1, 0.6));
+      const grow = 1 + 0.3 * e;
       const r = reach * e;
       knock.style.transform = `scale(${grow})`;
-      // Mask coordinates live in the knock's own (scaled) space.
+      // Inside the circle the white sheet is gone, so the films show at full
+      // strength: never a half-faded, milky frame. Mask coordinates are in
+      // the knock's own (scaled) space.
       const mask = e <= 0 ? 'none' : e >= 1 ? 'linear-gradient(transparent, transparent)'
         : `radial-gradient(circle ${r / grow}px at ${o.x}px ${o.y}px, transparent calc(100% - 1px), #000 100%)`;
       knock.style.maskImage = mask;
@@ -107,14 +160,13 @@ export function LetterWindow({
       strips.forEach((v, i) => {
         v.style.transform = `translateY(${Math.sin(t * 0.4 + i * 1.3) * 3.5 * (i % 2 ? 1 : -1)}%)`;
       });
-      shade.style.opacity = String(span(p, 0.5, 0.72));
+      shade.style.opacity = String(span(p, 0.58, 0.74));
 
-      // The copy lifts away together, then returns line by line over the wall.
       const open = p > 0.4;
       section.classList.toggle('is-open', open);
-      copy.style.visibility = open ? (p > 0.56 ? 'visible' : 'hidden') : p < 0.2 ? 'visible' : 'hidden';
-      lines.forEach((el, i) => {
-        const k = open ? easeInOut(span(p, 0.58 + i * 0.045, 0.74 + i * 0.045)) : 1 - span(p, 0.03, 0.18);
+      copy.style.visibility = open ? (p > 0.66 ? 'visible' : 'hidden') : p < 0.17 ? 'visible' : 'hidden';
+      rows.forEach((el, i) => {
+        const k = open ? easeInOut(span(p, 0.68 + i * 0.06, 0.8 + i * 0.06)) : 1 - span(p, 0.06, 0.16);
         el.style.opacity = String(k);
         el.style.transform = `translateY(${(open ? 1 : -1) * (1 - k) * 28}px)`;
       });
@@ -128,14 +180,30 @@ export function LetterWindow({
     };
   }, [films.length, mode]);
 
+  // Words with the line breaks for both widths: `.lw-br-n` breaks on phones,
+  // `.lw-br-w` on wide screens. One heading, so assistive tech reads it once.
+  const words = lines.join(' ').split(' ');
+  const ends = (set: readonly string[]) => {
+    const out = new Set<number>();
+    let n = -1;
+    set.forEach((l) => {
+      n += l.split(' ').length;
+      out.add(n);
+    });
+    out.delete(words.length - 1);
+    return out;
+  };
+  const narrowEnds = ends(lines);
+  const wideEnds = ends(wideLines ?? lines);
+
   const copy = (
     <div className="wrap lw-copy-wrap">
       <div className="lw-copy">
-        {/* Over the open wall the headline returns in light type. The real
-            heading is the cut-out, so this copy is decorative. */}
-        {mode === 'scroll' && (
-          <p className="lw-end-h" aria-hidden>
-            {lines.join(' ')}
+        {/* Over the open wall: one short line above the actions. The real
+            heading is the cut-out, so this line is decorative. */}
+        {mode === 'scroll' && endLine && (
+          <p className="lw-end-line" aria-hidden>
+            {endLine}
           </p>
         )}
         {children}
@@ -156,11 +224,20 @@ export function LetterWindow({
         <div className="lw-knock">
           <div className="wrap">
             <Heading className="lw-h">
-              {lines.map((line, i) => (
-                <span key={line}>
-                  {line}
-                  {i < lines.length - 1 && <br />}
-                </span>
+              {words.map((w, i) => (
+                <Fragment key={i}>
+                  {w}
+                  {/* A space always follows a word, so the heading's text reads
+                      as words even where a line break stands in for it. Where
+                      only one width breaks here, the space is shown only at
+                      the other (a space before a break just collapses). */}
+                  {i < words.length - 1 &&
+                    (narrowEnds.has(i) === wideEnds.has(i) ? ' ' : (
+                      <span className={narrowEnds.has(i) ? 'lw-sp-w' : 'lw-sp-n'}> </span>
+                    ))}
+                  {narrowEnds.has(i) && <br className="lw-br-n" />}
+                  {wideEnds.has(i) && <br className="lw-br-w" />}
+                </Fragment>
               ))}
             </Heading>
           </div>

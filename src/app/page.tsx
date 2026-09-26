@@ -207,7 +207,12 @@ export default async function Home() {
         {/* ═══ HERO ═══════════════════════════════════════════════════ */}
         {/* The letter window: six client films behind the headline, opening
             into the full wall as the visitor scrolls. */}
-        <LetterWindow films={HERO_WALL} lines={['Ideas', 'that move', 'markets.']}>
+        <LetterWindow
+          films={HERO_WALL}
+          lines={['Ideas', 'that move', 'markets.']}
+          wideLines={['Ideas that', 'move markets.']}
+          endLine="Films, sites and campaigns from one team."
+        >
           <p className="lede">
             We are the marketing and digital partner for brands that intend to grow. Strategy,
             creative, performance &mdash; and the software underneath. One team.
