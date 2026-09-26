@@ -110,6 +110,37 @@ export function LetterWindow({
     }
 
     section.classList.add('is-scroll');
+
+    // First visit: the splash is still up. The words rise as it fades, so
+    // the page opens on one orchestrated moment. Timed from the splash's own
+    // animation clock, and only if it has not started fading, so nobody sees
+    // the words vanish before they rise.
+    const splash = document.querySelector<HTMLElement>('.splash');
+    const splashAt = Number(splash?.getAnimations?.()[0]?.currentTime ?? Infinity);
+    let introTimer = 0;
+    if (splash && splashAt < 1000) {
+      section.style.setProperty('--lw-delay', `${Math.round(1150 - splashAt)}ms`);
+      section.classList.add('lw-intro');
+      introTimer = window.setTimeout(() => section.classList.remove('lw-intro'), 3400);
+    }
+
+    // Window parallax: the films shift a little against the pointer, as if
+    // seen through real windows. Fine pointers only; eased every frame.
+    const aim = { x: 0, y: 0 };
+    const cur = { x: 0, y: 0 };
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const onMove = (ev: PointerEvent) => {
+      aim.x = ev.clientX / window.innerWidth - 0.5;
+      aim.y = ev.clientY / window.innerHeight - 0.5;
+    };
+    const onLeave = () => {
+      aim.x = 0;
+      aim.y = 0;
+    };
+    if (fine) {
+      stage.addEventListener('pointermove', onMove);
+      stage.addEventListener('pointerleave', onLeave);
+    }
     const wall = section.querySelector<HTMLElement>('.lw-wall');
     const shade = section.querySelector<HTMLElement>('.lw-shade');
     const copy = section.querySelector<HTMLElement>('.lw-copy');
@@ -147,11 +178,16 @@ export function LetterWindow({
       const e = easeInOut(span(p, 0.1, 0.62));
       knock.style.transform = `scale(${1 + 2.4 * e})`;
       knock.style.opacity = String(1 - easeInOut(span(p, 0.26, 0.6)));
-      wall.style.transform = `scale(${1.1 - 0.1 * e})`;
+      cur.x += (aim.x - cur.x) * 0.06;
+      cur.y += (aim.y - cur.y) * 0.06;
+      const depth = 1 - e; // the parallax settles as the wall opens
+      wall.style.transform = `translate(${-cur.x * 34 * depth}px, ${-cur.y * 24 * depth}px) scale(${1.1 - 0.1 * e})`;
       wall.style.gap = `${6 * e}px`;
       // Neighbouring strips drift in opposite directions, so the open wall never sits still.
+      // Each strip sits at its own depth, so the parallax has layers.
       strips.forEach((v, i) => {
-        v.style.transform = `translateY(${Math.sin(t * 0.4 + i * 1.3) * 3.5 * (i % 2 ? 1 : -1)}%)`;
+        const layer = [10, 22, 14, 26, 12, 18][i % 6] * depth;
+        v.style.transform = `translate(${-cur.x * layer}px, ${Math.sin(t * 0.4 + i * 1.3) * 3.5 * (i % 2 ? 1 : -1)}%)`;
       });
       shade.style.opacity = String(span(p, 0.58, 0.74));
 
@@ -169,7 +205,10 @@ export function LetterWindow({
       stopScene();
       stopPlayback();
       window.removeEventListener('resize', measure);
-      section.classList.remove('is-scroll', 'is-open');
+      window.clearTimeout(introTimer);
+      stage.removeEventListener('pointermove', onMove);
+      stage.removeEventListener('pointerleave', onLeave);
+      section.classList.remove('is-scroll', 'is-open', 'lw-intro');
     };
   }, [films.length, mode]);
 
@@ -191,7 +230,9 @@ export function LetterWindow({
 
   const headline = words.map((w, i) => (
     <Fragment key={i}>
-      {w}
+      <span className="lw-w" style={{ ['--i' as string]: i }}>
+        {w}
+      </span>
       {/* A space always follows a word, so the heading's text reads as words
           even where a line break stands in for it. Where only one width
           breaks here, the space is shown only at the other (a space before a

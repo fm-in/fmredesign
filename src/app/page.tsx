@@ -50,11 +50,10 @@ const film = (id: (typeof VIDEO_WORK)[number]['id']) => {
   const f = VIDEO_WORK.find((v) => v.id === id)!;
   return { id: f.id, client: f.client, category: f.category };
 };
-// Order matters: the first four strips sit behind the letters, so they are the
-// most colourful films; the darker two (black louvres, soil) sit to the right,
-// where they only show once the wall opens. A dark strip under a letter turns
-// it flat black.
-const HERO_WALL = ['giovanni', 'kanha', 'renny', 'adi', 'concept_studio', 'skr_group'] as const;
+// Every strip sits behind a letter now the headline spans the width, so no
+// film with a white backdrop (ADI's studio turned letters pale grey). Deep and
+// saturated footage reads best inside the cut-out.
+const HERO_WALL = ['giovanni', 'kanha', 'renny', 'astroo_apaar', 'concept_studio', 'skr_group'] as const;
 const WORK_FILMS = ['kanha', 'renny', 'skr_group', 'concept_studio'].map((id) =>
   film(id as (typeof VIDEO_WORK)[number]['id']),
 );
