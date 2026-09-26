@@ -5,6 +5,7 @@ import { SiteHeader } from '@/components/site/SiteHeader';
 import { SiteFooter } from '@/components/site/SiteFooter';
 import { Container, Display, Eyebrow, Label, Rule, Section, Text } from '@/components/site/primitives';
 import { LetterWindow } from '@/components/site/LetterWindow';
+import { ServiceLoop } from '@/components/site/ServiceLoop';
 import { SERVICES, serviceHref } from '@/lib/services-catalogue';
 import { serviceDeepDiveData } from '@/data/serviceDeepDiveData';
 
@@ -57,6 +58,9 @@ const PROCESS = [
   },
 ] as const;
 
+/** Services that have a mascot loop so far. The rest follow once approved. */
+const SERVICE_LOOPS = new Set(['seo']);
+
 export default function ServicesPage() {
   return (
     <SiteShell>
@@ -105,7 +109,8 @@ export default function ServicesPage() {
             >
               <Container>
                 <div className="grid gap-10 lg:grid-cols-[minmax(0,26ch)_1fr] lg:gap-16">
-                  <div>
+                  {/* With a loop, the column stays in view while the details are read. */}
+                  <div className={SERVICE_LOOPS.has(service.id) ? 'service-side' : undefined}>
                     <Label>{String(index + 1).padStart(2, '0')}</Label>
                     <Display level="h2" as="h2" className="mt-4">
                       {service.title}
@@ -113,6 +118,7 @@ export default function ServicesPage() {
                     <Text muted className="mt-5">
                       {service.tagline}
                     </Text>
+                    {SERVICE_LOOPS.has(service.id) && <ServiceLoop id={service.id} />}
                   </div>
 
                   <div>

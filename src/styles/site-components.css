@@ -1390,6 +1390,25 @@
     [data-site] .cap-row.is-active .cap-media { opacity: 1; transform: translateY(-50%) scale(1) rotate(-3deg); }
   }
 
+  /* ---------- service loops (ServiceLoop) ----------
+     The mascot explaining a service. The loop is drawn on the light ground,
+     so it is framed as a card: it reads as an object in both themes. */
+  [data-site] .service-loop {
+    margin: clamp(24px, 3vw, 36px) 0 0;
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 1px solid var(--site-line-soft);
+    background: #f7f4ef;
+    box-shadow: var(--site-film-shadow);
+  }
+  [data-site] .service-loop video { display: block; width: 100%; height: 100%; object-fit: cover; }
+  @media (min-width: 1024px) {
+    [data-site] .service-side { position: sticky; top: 104px; align-self: start; }
+  }
+
   /* ---------- close: confetti from the mascot ---------- */
   [data-site] .close-side { position: relative; }
   [data-site] .confetti-bit { position: absolute; width: 10px; height: 6px; border-radius: 1px; pointer-events: none; z-index: 3; }
