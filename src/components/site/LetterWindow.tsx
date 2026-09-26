@@ -51,47 +51,78 @@ export function LetterWindow({
     if (mode !== 'scroll' || prefersReducedMotion()) return stopPlayback;
 
     section.classList.add('is-scroll');
+    const stage = section.querySelector<HTMLElement>('.lw-stage');
     const knock = section.querySelector<HTMLElement>('.lw-knock');
     const heading = section.querySelector<HTMLElement>('.lw-h');
     const wall = section.querySelector<HTMLElement>('.lw-wall');
     const shade = section.querySelector<HTMLElement>('.lw-shade');
+    const ring = section.querySelector<HTMLElement>('.lw-ring');
     const copy = section.querySelector<HTMLElement>('.lw-copy');
     const strips = Array.from(videos);
-    if (!knock || !heading || !wall || !shade || !copy) return stopPlayback;
+    if (!stage || !knock || !heading || !wall || !shade || !ring || !copy) return stopPlayback;
+    const lines = Array.from(copy.children) as HTMLElement[];
 
-    // Grow from the middle of the headline, measured at rest.
-    const origin = () => {
+    // The ink circle opens from the middle of the headline, measured at rest.
+    let o = { x: 0, y: 0 };
+    let reach = 1;
+    const measure = () => {
       knock.style.transform = 'none';
-      const k = knock.getBoundingClientRect();
+      const st = stage.getBoundingClientRect();
       const h = heading.getBoundingClientRect();
-      knock.style.transformOrigin = `${h.left - k.left + h.width * 0.4}px ${h.top - k.top + h.height * 0.5}px`;
+      o = { x: h.left - st.left + h.width * 0.5, y: h.top - st.top + h.height * 0.5 };
+      knock.style.transformOrigin = `${o.x}px ${o.y}px`;
+      // Far enough to clear the stage's farthest corner.
+      reach = Math.hypot(Math.max(o.x, st.width - o.x), Math.max(o.y, st.height - o.y)) + 40;
     };
-    origin();
-    window.addEventListener('resize', origin);
+    measure();
+    window.addEventListener('resize', measure);
 
     const stopScene = stickyScene(section, (p, t) => {
-      const e = easeInOut(span(p, 0.04, 0.7));
-      knock.style.transform = `scale(${1 + 2.2 * e})`;
-      knock.style.opacity = String(1 - span(p, 0.2, 0.6));
+      /*
+       * The letters push toward the camera while an ink circle opens through
+       * them. Inside the circle the white sheet is gone, so the films show at
+       * full strength: there is never a half-faded, milky frame. The magenta
+       * ring rides the circle's edge, the same move as the launch video and
+       * the closing band, and thins out as it leaves the screen.
+       */
+      const e = easeInOut(span(p, 0.05, 0.62));
+      const grow = 1 + 0.35 * e;
+      const r = reach * e;
+      knock.style.transform = `scale(${grow})`;
+      // Mask coordinates live in the knock's own (scaled) space.
+      const mask = e <= 0 ? 'none' : e >= 1 ? 'linear-gradient(transparent, transparent)'
+        : `radial-gradient(circle ${r / grow}px at ${o.x}px ${o.y}px, transparent calc(100% - 1px), #000 100%)`;
+      knock.style.maskImage = mask;
+      knock.style.setProperty('-webkit-mask-image', mask);
+      const ringOn = e > 0 && e < 1;
+      ring.style.visibility = ringOn ? 'visible' : 'hidden';
+      if (ringOn) {
+        ring.style.width = ring.style.height = `${r * 2}px`;
+        ring.style.transform = `translate(${o.x - r}px, ${o.y - r}px)`;
+        ring.style.opacity = String(1 - span(r / reach, 0.55, 1));
+      }
       wall.style.transform = `scale(${1.1 - 0.1 * e})`;
       // Neighbouring strips drift in opposite directions, so the open wall never sits still.
       strips.forEach((v, i) => {
         v.style.transform = `translateY(${Math.sin(t * 0.4 + i * 1.3) * 3.5 * (i % 2 ? 1 : -1)}%)`;
       });
-      shade.style.opacity = String(span(p, 0.58, 0.78));
-      // The copy leaves, swaps sides while unseen, and returns over the wall.
-      const open = p > 0.45;
+      shade.style.opacity = String(span(p, 0.5, 0.72));
+
+      // The copy lifts away together, then returns line by line over the wall.
+      const open = p > 0.4;
       section.classList.toggle('is-open', open);
-      const o = open ? span(p, 0.66, 0.86) : 1 - span(p, 0.03, 0.2);
-      copy.style.opacity = String(o);
-      copy.style.visibility = o < 0.02 ? 'hidden' : 'visible';
-      copy.style.transform = open ? `translateY(${(1 - o) * 24}px)` : `translateY(${-(1 - o) * 24}px)`;
+      copy.style.visibility = open ? (p > 0.56 ? 'visible' : 'hidden') : p < 0.2 ? 'visible' : 'hidden';
+      lines.forEach((el, i) => {
+        const k = open ? easeInOut(span(p, 0.58 + i * 0.045, 0.74 + i * 0.045)) : 1 - span(p, 0.03, 0.18);
+        el.style.opacity = String(k);
+        el.style.transform = `translateY(${(open ? 1 : -1) * (1 - k) * 28}px)`;
+      });
     });
 
     return () => {
       stopScene();
       stopPlayback();
-      window.removeEventListener('resize', origin);
+      window.removeEventListener('resize', measure);
       section.classList.remove('is-scroll', 'is-open');
     };
   }, [films.length, mode]);
@@ -134,6 +165,7 @@ export function LetterWindow({
           </div>
         </div>
         <div className="lw-tint" aria-hidden />
+        {mode === 'scroll' && <div className="lw-ring" aria-hidden />}
         {mode === 'scroll' && <div className="lw-shade" aria-hidden />}
         {mode === 'scroll' && copy}
       </div>

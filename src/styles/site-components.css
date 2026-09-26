@@ -1030,7 +1030,17 @@
     /* Letters take the film's own colour, so a near-white frame would erase
        them. A small dip in brightness keeps every letter readable. */
     filter: brightness(0.84) contrast(1.08) saturate(1.1); }
-  [data-site] .lw-knock { position: absolute; inset: 0; z-index: 2; background: #fff; mix-blend-mode: screen; will-change: transform, opacity; }
+  [data-site] .lw-knock { position: absolute; inset: 0; z-index: 2; background: #fff; mix-blend-mode: screen; will-change: transform; }
+  [data-site] .lw-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 4;
+    border-radius: 50%;
+    border: 3px solid var(--site-accent-solid);
+    visibility: hidden;
+    pointer-events: none;
+  }
   [data-site] .lw-knock .wrap { padding-top: clamp(6.5rem, 14vh, 9rem); }
   [data-site] .lw-h {
     margin: 0;
@@ -1123,8 +1133,13 @@
     align-items: end;
   }
   [data-site] .lwall-copy h1 { margin: 0; font-size: clamp(2.8rem, 6.6vw, 6.2rem); }
-  [data-site] .lwall.is-open .lwall-copy-wrap { color: #f3ede6; }
-  [data-site] .lwall.is-open .lwall-copy .lede { color: rgba(243, 237, 230, 0.82); }
+  /* The ending: over the pushed-in wall, bottom left, above a scrim. Hidden
+     until the scene reveals it; never shown without script. */
+  [data-site] .lwall-end-wrap { position: absolute; left: 0; right: 0; bottom: clamp(2rem, 7vh, 4.5rem); z-index: 6; pointer-events: none; }
+  [data-site] .lwall-end { max-width: 44rem; color: #f3ede6; }
+  [data-site] .lwall-end > * { opacity: 0; }
+  [data-site] .lwall-end .lede { margin-top: 14px; color: rgba(243, 237, 230, 0.84); }
+  [data-site] .lwall-end-h { margin: 0; font-family: var(--site-font-display); font-size: clamp(2.6rem, 6vw, 5.6rem); line-height: 0.95; letter-spacing: -0.02em; }
   [data-site] .lwall-grid {
     position: relative;
     flex: 1;
@@ -1156,7 +1171,7 @@
     z-index: 5;
     opacity: 0;
     pointer-events: none;
-    background: linear-gradient(to bottom, rgba(11, 10, 12, 0.8), rgba(11, 10, 12, 0.12) 42%, rgba(11, 10, 12, 0.12) 72%, rgba(11, 10, 12, 0.45));
+    background: linear-gradient(to top, rgba(11, 10, 12, 0.86), rgba(11, 10, 12, 0.3) 48%, rgba(11, 10, 12, 0.14));
   }
   @media (max-width: 700px) {
     [data-site] .lwall-copy { grid-template-columns: minmax(0, 1fr); }
@@ -1204,7 +1219,12 @@
     [data-site] .reel-row.is-deck .reel[data-slot='2'] { z-index: 2; transform: translateX(24%) rotate(10deg) scale(0.86); filter: brightness(0.76); }
     [data-site] .reel-row.is-deck .reel[data-slot='3'] { z-index: 1; transform: translateX(30%) rotate(14deg) scale(0.8); opacity: 0; }
     /* One step more specific than the slot rules, so the leaving card wins without !important. */
-    [data-site] .reel-row.is-deck .reel.is-leaving[data-slot] { transform: translateX(-130%) rotate(-18deg); opacity: 0; }
+    [data-site] .reel-row.is-deck .reel.is-leaving[data-slot] {
+      /* A throw, not a blink: the card arcs off to the left and fades late. */
+      transform: translate(-120%, -4%) rotate(-16deg);
+      opacity: 0;
+      transition: transform 0.46s cubic-bezier(0.55, 0, 0.75, 0.2), opacity 0.3s ease 0.16s;
+    }
     [data-site] .reel-row.is-deck .reel.is-drag { transition: none; }
     [data-site] .reel-row.is-deck figcaption { transform: none; opacity: 1; }
   }
@@ -1248,18 +1268,29 @@
   [data-site] .cursor-preview.is-video video { display: block; }
   [data-site] .cursor-preview.is-video img { display: none; }
   [data-site] .cap-media { display: none; }
+  /* Phones: the active row shows its clip as a card at its right edge. It
+     fades and turns in without changing the row's height, so nothing below
+     moves while the visitor scrolls. */
   @media (max-width: 700px) {
+    [data-site] .cap-row { padding-right: 104px; }
     [data-site] .cap-media {
       display: block;
-      grid-column: 1 / -1;
-      max-height: 0;
+      position: absolute;
+      right: 0;
+      top: 50%;
+      width: 84px;
+      aspect-ratio: 4 / 5;
       overflow: hidden;
       border-radius: 5px;
-      transition: max-height 0.6s cubic-bezier(0.22, 1, 0.36, 1), margin 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: var(--site-film-shadow);
+      background: var(--site-raised);
+      opacity: 0;
+      transform: translateY(-50%) scale(0.82) rotate(0deg);
+      transition: opacity 0.45s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     }
     [data-site] .cap-media video,
-    [data-site] .cap-media img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: left top; }
-    [data-site] .cap-row.is-active .cap-media { max-height: 520px; margin-top: 14px; }
+    [data-site] .cap-media img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+    [data-site] .cap-row.is-active .cap-media { opacity: 1; transform: translateY(-50%) scale(1) rotate(-3deg); }
   }
 
   /* ---------- close: confetti from the mascot ---------- */

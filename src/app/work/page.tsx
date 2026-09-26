@@ -56,7 +56,16 @@ export default function WorkPage() {
       <main id="main-content">
         {/* The live wall: this page's job is the work, so it opens on all of
             it at once, and scrolling pushes into the middle of it. */}
-        <LiveWall tiles={WALL} centre={3}>
+        <LiveWall
+          tiles={WALL}
+          centre={3}
+          end={
+            <>
+              <p className="lwall-end-h">Real results for real brands.</p>
+              <p className="lede">Films, sites and campaigns, made by one team. All of it below.</p>
+            </>
+          }
+        >
           <h1 className="d">Real results for real brands.</h1>
           <p className="lede">
             {PORTFOLIO.websites.length} live sites, {VIDEO_WORK.length} films, and the campaign and

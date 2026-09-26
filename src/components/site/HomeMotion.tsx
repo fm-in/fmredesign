@@ -182,7 +182,8 @@ export function HomeMotion() {
 
 /**
  * Phones have no hover, so the capability preview becomes inline: the row
- * nearest the middle of the screen opens and plays its clip; the others close.
+ * nearest the middle of the screen shows and plays its clip as a card at its
+ * edge; the others hide theirs. Rows never change height.
  * Nothing loads until a row is active. Desktop keeps the cursor preview.
  */
 function capabilityOnPhones(): () => void {

@@ -29,14 +29,20 @@ export type WallTile =
 export function LiveWall({
   tiles,
   centre,
+  end,
   children,
 }: {
   /** In grid order; see the `.lwall-grid` template for which cell each fills. */
   tiles: readonly WallTile[];
   /** Index of the film the camera pushes towards. */
   centre: number;
-  /** Headline and copy: above the wall at rest, over it at the end. */
+  /** Headline and copy, above the wall at rest. */
   children: ReactNode;
+  /**
+   * What the scene ends on, over the pushed-in wall. Decorative (the real
+   * heading is in `children`), so keep links out of it.
+   */
+  end?: ReactNode;
 }) {
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -50,6 +56,7 @@ export function LiveWall({
     const stage = section.querySelector<HTMLElement>('.lwall-stage');
     const grid = section.querySelector<HTMLElement>('.lwall-grid');
     const copy = section.querySelector<HTMLElement>('.lwall-copy');
+    const endLines = Array.from(section.querySelectorAll<HTMLElement>('.lwall-end > *'));
     const scrim = section.querySelector<HTMLElement>('.lwall-scrim');
     const cells = Array.from(section.querySelectorAll<HTMLElement>('.lwall-tile'));
     const target = cells[centre];
@@ -84,20 +91,25 @@ export function LiveWall({
       cells.forEach((c, i) => {
         if (i !== centre) c.style.filter = `brightness(${1 - 0.32 * e})`;
       });
-      scrim.style.opacity = String(span(e, 0.45, 1));
-      const open = e > 0.5;
-      section.classList.toggle('is-open', open);
-      const o = open ? span(e, 0.65, 1) : 1 - span(e, 0, 0.3);
-      copy.style.opacity = String(o);
-      copy.style.visibility = o < 0.02 ? 'hidden' : 'visible';
-      copy.style.transform = `translateY(${(open ? 1 : -1) * (1 - o) * 24}px)`;
+      scrim.style.opacity = String(span(e, 0.4, 0.95));
+      // The resting copy lifts away as the push starts…
+      const out = 1 - span(e, 0, 0.28);
+      copy.style.opacity = String(out);
+      copy.style.visibility = out < 0.02 ? 'hidden' : 'visible';
+      copy.style.transform = `translateY(${-(1 - out) * 28}px)`;
+      // …and the ending settles in line by line once the camera has arrived.
+      endLines.forEach((el, i) => {
+        const k = easeInOut(span(e, 0.46 + i * 0.07, 0.72 + i * 0.07));
+        el.style.opacity = String(k);
+        el.style.transform = `translateY(${(1 - k) * 28}px)`;
+      });
     });
 
     return () => {
       stopScene();
       stopPlayback();
       window.removeEventListener('resize', measure);
-      section.classList.remove('is-scroll', 'is-open');
+      section.classList.remove('is-scroll');
       grid.style.transform = '';
     };
   }, [centre, tiles.length]);
@@ -127,6 +139,11 @@ export function LiveWall({
           ))}
         </div>
         <div className="lwall-scrim" aria-hidden />
+        {end && (
+          <div className="wrap lwall-end-wrap" aria-hidden>
+            <div className="lwall-end">{end}</div>
+          </div>
+        )}
       </div>
     </section>
   );

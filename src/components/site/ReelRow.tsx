@@ -62,7 +62,7 @@ export function ReelRow({ films }: { films: readonly ReelFilm[] }) {
     window.setTimeout(() => {
       setOrder((o) => [...o.slice(1), o[0]]);
       setLeaving(null);
-    }, prefersReducedMotion() ? 0 : 380);
+    }, prefersReducedMotion() ? 0 : 460);
   }, [leaving, order]);
 
   const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
